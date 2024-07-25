@@ -17,7 +17,7 @@ This file is the readme detailing the content and context for this repository.
 ### [tree.txt](../main/tree.txt)
 A file tree listing the files in the [`mdl`](../main/mdl) directory showing the original file timestamps as extracted from the tape image.
 ## Preferred Citation
-[filename], MDL files, 1973-1987, Massachusetts Institute of Technology, Tapes of Tech Square (ToTS) collection, MC-0741. Massachusetts Institute of Technology, Department of Distinctive Collections, Cambridge, Massachusetts.
+[filename], MDL files, 1973-1987, Massachusetts Institute of Technology, Tapes of Tech Square (ToTS) collection, MC-0741. Massachusetts Institute of Technology, Department of Distinctive Collections, Cambridge, Massachusetts. [swh:1:dir:c62b334d2c970db2ead9b1bbceef23880b69379a](https://archive.softwareheritage.org/swh:1:dir:c62b334d2c970db2ead9b1bbceef23880b69379a)
 ## Rights
 To the extent that MIT holds rights in these files, they are released under the terms of the [MIT License](https://opensource.org/licenses/MIT). See the `LICENSE` file for more information. Any questions about permissions should be directed to [permissions-lib@mit.edu](mailto:permissions-lib@mit.edu)
 ## Acknowledgements

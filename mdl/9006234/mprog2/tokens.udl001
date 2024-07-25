@@ -1,0 +1,54 @@
+<PACKAGE "TOKENS">
+
+<ENTRY TOKENS BALANCED?>
+
+<DEFINE TOKENS (STR
+		"OPTIONAL" (BRKS " ") (ENDS "")
+		"AUX" (BAL <>) (LL ("")) (L .LL) (S .STR) (S1 .S) C)
+   #DECL ((C) <OR STRING FALSE> (STR S S1 BRKS ENDS) STRING
+	  (VALUE) LIST (LL L) <LIST [REST STRING]>)
+   <REPEAT ()
+	   <COND (<OR <EMPTY? .S1>
+		      <MEMQ <1 .S1> .ENDS>
+		      <MEMQ <1 .S1> .BRKS>>
+		  <AND <N==? .S .S1>
+		       <PUTREST .L
+				<SET L
+				     (<SUBSTRUC .S
+						0
+						<- <LENGTH .S>
+						   <LENGTH .S1>>>)>>>
+		  <COND (<OR <EMPTY? .S1> <MEMQ <1 .S1> .ENDS>> <RETURN <REST .LL>>)>
+		  <SET BAL <>>
+		  <SET S <REST .S1>>)>
+	   <COND (<AND <NOT .BAL>
+		       <NOT <EMPTY? .S>>
+		       <SET C <MEMQ <1 .S> "([{">>
+		       <SET C <BALANCED? .S>>>
+		  <SET S1 .C>
+		  <SET BAL T>)>
+	   <SET S1 <REST .S1>>>>
+
+<DEFINE BALANCED? (L "OPTIONAL" (R <REST .L <LENGTH .L>>)
+		   "AUX" (OP <STRSRC <REST .L> "([{">) (BR <1 .L>) RB CL)
+	#DECL ((R) STRING (L OP CL VALUE) <OR STRING FALSE> (BR RB) CHARACTER)
+	<SET CL <MEMQ <SET RB <COND (<==? .BR !"(> !"))
+			    (<==? .BR !"[> !"])
+			    (<==? .BR !"{> !"})>>
+		      <REST .L>>>
+	<COND (<OR <NOT .OP> <AND .CL <L? <LENGTH .OP> <LENGTH .CL>>>>
+	       <AND <G? <LENGTH .CL> <LENGTH .R>> .CL>)
+	      (.CL
+	       <AND <SET L <BALANCED? .OP .R>>
+		    <MEMQ .RB <REST .L>>>)>>
+
+<DEFINE STRSRC (STR TERM "OPTIONAL" (CTRLOSS <>))
+	#DECL ((STR TERM) STRING)
+	<REPEAT ()
+		<COND (<EMPTY? .STR> <RETURN <>>)
+		      (<MEMQ <1 .STR> .TERM> <RETURN .STR>)
+		      (<AND .CTRLOSS <L=? <ASCII <1 .STR>> 32>>
+		       <RETURN .STR>)>
+		<SET STR <REST .STR>>>>
+
+<ENDPACKAGE>

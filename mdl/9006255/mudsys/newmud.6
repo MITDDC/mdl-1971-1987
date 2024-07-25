@@ -1,0 +1,100 @@
+<BLOCK (<ROOT>)> 
+	USE
+	FIXUP!-RSUBRS 
+	GLUE
+	PGLUE
+	BOOLEAN
+	ELSE
+	L-SEARCH-PATH
+<ENDBLOCK>
+
+<AND <NOT <GASSIGNED? USE>>
+     <PROG ((GLUE T) (SNM "MBPROG") (NM2 "FBIN"))
+	   <FLOAD "FIXUP">
+	   <SET SNM "LIBMUD">
+	   <FLOAD "NPCK FBIN">
+	   <SET SNM "MBPROG">
+	   <FLOAD "HELPLD">
+	   <USE "ENV" "PP" "EDIT" "FR&" "GRLOAD" "PAGES">>>
+
+<L-UNUSE "PAGES">
+
+<SETG OTHER-LIST ()>
+
+<SET LIST-OF-RSUBRS ()>
+
+<DEFINE MAP-OBS (FCN "AUX" (A <ASSOCIATIONS>) OB)
+	<REPEAT ()
+		<COND (<TYPE? <ITEM .A> OBLIST>
+		       <SET OB <ITEM .A>>
+		       <MAPF <>
+			     <FUNCTION (L)
+				  <MAPF <>
+					<FUNCTION (A)
+					     <APPLY .FCN <CHTYPE .A ATOM>>>
+					.L>>
+			     .OB>)>
+		<COND (<SET A <NEXT .A>>)
+		      (ELSE <RETURN>)>>>
+
+<DEFINE RSMUNG (A "AUX" V)
+	<COND (<OR <AND <GASSIGNED? .A> <SET V ,.A>>
+		   <AND <ASSIGNED? .A> <SET V ..A>>>
+	       <COND (<TYPE? .V RSUBR RSUBR-ENTRY>
+		      <COND (<AND <TYPE? .V RSUBR>
+				  <NOT <OR <GET .V GLUE> <GET .V PGLUE>>>>
+			     <PRINT <2 .V>>)
+			    (<AND <TYPE? .V RSUBR-ENTRY>
+				  <NOT <OR <GET <1 .V> GLUE> <GET <1 .V> PGLUE>>>>
+			     <PRINT <2 .V>>)
+			    (<NOT <MEMQ .V .LIST-OF-RSUBRS>>
+			     <SET LIST-OF-RSUBRS (<FORM SETG .A .V>
+						  !.LIST-OF-RSUBRS)>)>)
+		     (<AND <STRUCTURED? .V> <NOT <MEMQ .V ,OTHER-LIST>>>
+		      <SETG OTHER-LIST (.A .V !,OTHER-LIST)>)>)>
+	T>
+
+<USE "PURITY" "UNDECL">
+
+<SETG LR (,GOOD-CHRS!-IEDIT
+	  ,BREAK-CHRS!-IEDIT)>
+
+<DEFINE FOO ()
+	<RSUBR-LINK <>>
+	<USE-DEFER "SORTX">
+	<UNIQUE-DECLS>
+	<CLEAR-DECL-LISTS>
+	<DROP "UNDECL">
+	<L-UNUSE "UNDECL">
+	<MAP-OBS ,RSMUNG>
+	<GROUP-PURIFY LIST-OF-RSUBRS <> !,LR>
+	<KILL:PURITY>
+	<MAPF <>
+	      <FUNCTION (L)
+		   <MAPF <>
+			 <FUNCTION (A)
+			      <GUNASSIGN .A>
+			      <UNASSIGN <REMOVE .A>>>
+			 .L>>
+	      <1 .OBLIST>>
+	<RSUBR-LINK T>
+	<GC 0 T>
+	<VALRET "
+TOPLEVI
+:TYPE :INPOP PLEASE
+P
+I
+MESSAG/ PUSHJ P,MESOUT
+INITFL/ PUSHJ P,MUDINT
+PUSHJ P,PURCLNX
+PUSH TP,$TFIXX
+PUSH TP,0X
+SETZM (TP)X
+PUSH TP,$TFIXX
+PUSH TP,0X
+.MCALL 2,GCX
+">
+	<ERRET> 
+	"DONE">
+
+

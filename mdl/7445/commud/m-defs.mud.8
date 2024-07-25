@@ -1,0 +1,297 @@
+<PACKAGE "M-DEFS">
+
+<ENTRY MDEBUG?
+       DEMON?
+       DEMON-DEBUG?
+       HOME?
+       HOSTNUMBER
+       VER
+       PENDING-QUEUE
+       SYSTEM-ASYLUM
+       COMSYS-OPEN-MSG-ASYLUM
+       MSG-SPACE
+       SCRATCH-SPACE
+       QUEUE-SPACE>
+
+<ENTRY FILCHN
+       WATCH
+       ADDBACK
+       AFALSE
+       AFILE
+       LC-UC
+       ARLIST
+       ARVECTOR
+       ARSTRING>
+
+<ENTRY COMSYS-PENDING-QUEUE
+       COMSYS-MSG-MAP>
+
+<ENTRY MDBVEC
+       MVMSG
+       MVMOD
+       MVDATA
+       MVQUEUE
+       MVCHAN>
+
+<ENTRY ADDRESS
+       ANAME
+       AHOST
+       AFULL
+       APORT
+       AXTRA>
+
+<ENTRY PNQENTRY
+       QMSG
+       QADR
+       QTIM>
+
+<ENTRY PRCSTATE
+       PNAM
+       PTIM
+       PCNT
+       PFLG
+       PINC>
+
+<ENTRY ERRCOND
+       EPRC
+       ETIM
+       EERR>
+
+<ENTRY RQVECTOR
+       RQMSG
+       RQADR
+       RQERR>
+
+<ENTRY WSPEC
+       WADR
+       WACK>
+
+<USE "NEWSTRUC" "OPSYS" "CHAN" "MADMAN" "ASYLUM">
+
+\
+
+<GDECL (MUDDLE) FIX>
+
+<AND <NOT <GASSIGNED? MSG-SPACE>>
+     <SETG MSG-SPACE <>>>			;"SPACE FOR MESSAGES"
+<AND <NOT <GASSIGNED? SCRATCH-SPACE>>
+     <SETG SCRATCH-SPACE <>>>			;"TEMPORARY GARBAGE"
+<AND <NOT <GASSIGNED? QUEUE-SPACE>>
+     <SETG QUEUE-SPACE <>>>			;"PENDING QUEUE"
+
+<SETG SYSTEM-ASYLUM <>>				;"SYSTEM ASYLUM"
+<SETG COMSYS-OPEN-MSG-ASYLUM <>>	      ;"NAME OF CURRENT MESSAGE ASYLUM"
+<SETG HOSTNUMBER *012000054000*>		;"HOST NUMBER OF OUR SYSTEM"
+
+<GDECL (MSG-SPACE SCRATCH-SPACE QUEUE-SPACE) <OR FALSE SPACE>
+       (SYSTEM-ASYLUM) <OR FALSE ASYLUM>
+       (COMSYS-OPEN-MSG-ASYLUM) <OR FALSE STRING>
+       (HOSTNUMBER) FIX>
+
+<DEFINE HOME? ("OPTIONAL" HOST)
+	#DECL ((HOST) FIX)
+	<COND (<NOT <ASSIGNED? HOST>> ,HOSTNUMBER)
+	      (ELSE
+	       <COND (<0? <CHTYPE <GETBITS .HOST <BITS 8 27>> FIX>>
+		      <SET HOST
+			   <CHTYPE <PUTBITS .HOST <BITS 8 27> 10 ;"ARPA-NET">
+				   FIX>>)>
+	       <==? .HOST ,HOSTNUMBER>)>>
+
+<SETG MDEBUG? T>	;"FOR NOW"
+
+\
+
+"SUBTITLE Maniacs in System Asylum"
+
+<MSETG COMSYS-PENDING-QUEUE 1>	;"pending queue (r/w from QUEUE-SPACE)"
+<MSETG COMSYS-MSG-MAP 2>	;"asylum map (r/w from SCRATCH-SPACE)
+				  data word contains next msg id"
+
+"SUBTITLE Offsets in Message Data Base vector [MDB]"
+
+<PUTPROP MDBVEC
+	 DECL
+	 '<VECTOR FIX
+		  <OR FALSE ATOM>
+		  <VECTOR [REST ADDRESS VECTOR]>
+		  <LIST [REST ADDRESS]>
+		  <OR FALSE ASYLUM>>>
+
+<MSETG MVMSG 1>			;"message id or 0"
+<MSETG MVMOD 2>			;"message modified?"
+<MSETG MVDATA 3>		;"message data"
+<MSETG MVQUEUE 4>		;"users for whom queue has changed"
+<MSETG MVCHAN 5>		;"current asylum or false"
+
+<PUTPROP ADDRESS
+	 DECL
+	 '<LIST [REST
+		 STRING
+		 <OR FALSE STRING>
+		 <OR FALSE STRING>
+		 <OR FALSE STRING>
+		 <OR FALSE STRING>]>>
+
+<MSETG ANAME 1>	;"local name"
+<MSETG AHOST 2> ;"host or <>=local"
+<MSETG AFULL 3> ;"full name if known"
+<MSETG APORT 4> ;"port (wha?)"
+<MSETG AXTRA 5> ;"extra idiocy"
+
+"SUBTITLE Offsets in a Pending-queue Entry [PENDING-QUEUE]"
+
+<PUTPROP PNQENTRY
+	 DECL
+	 '<VECTOR FIX
+		  ADDRESS
+		  <OR FALSE FIX>>>
+
+<MSETG QMSG 1>	;"message that has work scheduled"
+<MSETG QADR 2>	;"addressee for whom work is scheduled"
+<MSETG QTIM 3>	;"when work is scheduled (<> - asap)"
+
+"SUBTITLE Offsets in a Process' State List [PROCESSING-NEEDED]"
+
+<PUTPROP PRCSTATE
+	 DECL
+	 '<LIST STRING
+		<OR FALSE FIX>
+		FIX
+		<OR FIX LIST FALSE>
+		FIX>>
+
+<MSETG PNAM 1>	;"name of process"
+<MSETG PTIM 2>	;"when to run; -1 - never, <> - asap, or time"
+<MSETG PCNT 3>	;"number of times to try"
+<MSETG PFLG 4>	;"??"
+<MSETG PINC 5>	;"increment between runs"
+
+"SUBTITLE Offsets in Error-conditions elements [ERROR-CONDITIONS]"
+
+<PUTPROP ERRCOND
+	 DECL
+	 '<LIST STRING <OR FALSE FIX> FALSE>>
+
+<MSETG EPRC 1>	;"process with error"
+<MSETG ETIM 2>	;"when reported (false if not yet reported)"
+<MSETG EERR 3>	;"false with error info"
+
+"SUBTITLE Offsets in Request Vector"
+
+<PUTPROP RQVECTOR
+	 DECL
+	 '<VECTOR <OR FALSE FIX> ADDRESS <OR ADDRESS FALSE>>>
+
+<MSETG RQMSG 1>
+<MSETG RQADR 2>
+<MSETG RQERR 3>
+
+"SUBTITLE Offsets in Watch-Conditions List"
+
+<PUTPROP WSPEC
+	 DECL
+	 '<LIST [REST
+		 ADDRESS
+		 <LIST [REST STRING <OR FALSE FIX>]>]>>
+
+<MSETG WADR 1>		;"Addressee for whom to Acknowledge"
+<MSETG WACK 2>		;"Conditions (pairs of Conditions and Times)"
+
+\
+
+<SETG VER -1>	;"DEMON VERSION"
+
+<DEFINE LC-UC (S) 
+	#DECL ((S VALUE) STRING)
+	<MAPR <>
+	      <FUNCTION (C "AUX" (E <ASCII <1 .C>>)) 
+		      #DECL ((C) STRING (E) FIX)
+		      <COND (<AND <G=? .E <ASCII !\a>> <L=? .E <ASCII !\z>>>
+			     <PUT .C 1 <ASCII <- .E 32>>>)>>
+	      .S>
+	.S>
+
+<DEFINE AFALSE ("TUPLE" ARG)
+	#DECL ((ARG) ANY)
+	<COND (<EMPTY? .ARG> <>)
+	      (ELSE <CHTYPE <ALIST ,MSG-SPACE !.ARG> FALSE>)>>
+
+<DEFINE ARLIST (SPC LST "TUPLE" FROBS "AUX" NLST)
+ 	#DECL ((SPC) SPACE (LST NLST) LIST (FROBS) TUPLE)
+	<SET NLST <ALIST .SPC !.FROBS !.LST>>
+	<ARELEASE .SPC .LST>
+	.NLST>
+
+<DEFINE ARVECTOR (SPC VEC "TUPLE" FROBS "AUX" NVEC)
+	#DECL ((SPC) SPACE (VEC NVEC) VECTOR (FROBS) TUPLE)
+	<SET NVEC <AVECTOR .SPC !.FROBS !.VEC>>
+	<ARELEASE .SPC .VEC>
+	.NVEC>
+
+<DEFINE ARSTRING (SPC STR "TUPLE" FROBS "AUX" NSTR)
+	#DECL ((SPC) SPACE (STR NSTR) STRING
+	       (FROBS) <TUPLE [REST <OR STRING CHARACTER>]>)
+	<SET NSTR <ASTRING .SPC !.FROBS !.STR>>
+	<ARELEASE .SPC .STR>
+	.NSTR>
+
+<DEFINE FILCHN (CH)
+	#DECL ((CH) CHANNEL (VALUE) STRING)
+	<FILSTR <FILPART <RNAME1 .CH>>
+		<FILPART <RNAME2 .CH>>
+		<FILPART <RDEVICE .CH>>
+		<FILPART <RDIRECTORY .CH>>>>
+
+<DEFINE FILPART (STR)
+	#DECL ((VALUE STR) STRING)
+	<MAPF ,STRING
+	      <FUNCTION (C)
+		   #DECL ((C) CHARACTER)
+		   <OPSYS (ITS
+			   <COND (<MEMQ .C " :;"> <MAPRET !\ .C>)
+				 (ELSE .C)>)
+			  (TOPS-20
+			   <COND (<MEMQ .C " :?&"> <MAPRET !\ .C>)
+				 (ELSE .C)>)>>
+	      .STR>>
+
+<DEFINE AFILE (NM1 NM2 DEV SNM "OPTIONAL" (SS ,SCRATCH-SPACE))
+	#DECL ((NM1 NM2 DEV SNM VALUE) STRING (SS) SPACE)
+	<OPSYS (TOPS-20
+		<ASTRING .SS .DEV ":<" .SNM ">" .NM1 "." .NM2>)
+	       (ITS
+		<ASTRING .SS .DEV ":" .SNM ";" .NM1 " " .NM2>)>>
+
+"INTERRUPT HANDLER SETUP FUNCTIONS"
+
+<DEFINE WATCH (ATM INT FCN
+	       "OPTIONAL" (PRI 8)
+	       "AUX" (IATM <LOOKUP .INT <INTERRUPTS>>)
+		     (HDR <AND .IATM <GET .IATM INTERRUPT>>))
+	#DECL ((INT) STRING (ATM) ATOM (IATM) <OR ATOM FALSE> (FCN) APPLICABLE
+	       (PRI) FIX (HDR) <OR IHEADER FALSE>)
+	<COND (<MEMBER .INT '["IOC" "REALT"]> <>)
+	      (<AND <GASSIGNED? .ATM> .HDR> <HANDLER .HDR ,.ATM>)
+	      (ELSE
+	       <COND (,DEMON-DEBUG? <SET FCN ,DUMMY-HANDLER>)>
+	       <SETG .ATM
+		     <COND (.HDR <HANDLER .HDR .FCN>)
+			   (ELSE <ON .INT .FCN .PRI>)>>)>>
+
+<DEFINE DUMMY-HANDLER ("TUPLE" ERR)
+	#DECL ((ERR) TUPLE)
+	<INT-LEVEL 0>>
+
+<DEFINE ADDBACK (L1 L2) 
+	#DECL ((L1 L2) LIST)
+	<PUTREST <REST .L1 <- <LENGTH .L1> 1>> .L2>
+	.L1>
+
+<GDECL (DEMON? DEMON-DEBUG?) <OR ATOM FALSE>>
+
+<SETG DEMON? <>> ;"not daemon initially"
+
+<SETG DEMON-DEBUG? <>> ;"not debugging either"
+
+<ENDPACKAGE>

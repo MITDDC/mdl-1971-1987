@@ -1,0 +1,286 @@
+I. MAILBOX FORMAT
+
+mailbox := (uname) | (uname host) | (uname host person)
+	   | (uname host person extra)
+uname   := STRING
+host    := STRING | FALSE
+person  := STRING | FALSE
+extra   := (name value name value ...)
+name    := STRING
+value   := ANY
+
+A mailbox is a list which contains at least one element. The MDL decl pattern
+for a mailbox is: <LIST STRING [OPT <OR STRING FALSE>
+                                    <OR STRING FALSE>
+                                    <LIST [REST STRING ANY]>]>
+
+[Some notes on internet addressing before proceeding to a discussion of the
+mailbox format defined above. The most general form of an internet address is:
+                       Uname@Host.Domain
+Uname is the user name of the addressee or sender. Host is the host machine
+of the addressee or sender. Domain is an administrative domain (or mail
+processing module) such as "ARPA" or "MIT" which knows Host or knows how to
+reach Host.]
+
+The first element of a mailbox is a string identifying the user name of the
+addressee or sender. For example, if the user gave "foo@bar.bletch" as an
+address, then the uname is "foo" (every character to the left of the atsign).
+The uname should NOT contain an atsign unless it has been explicitly quoted
+by the user. If only the uname is given, the default host ("XX.MIT") is 
+assumed.
+
+The second element of a mailbox (if present) is either a false (meaning
+the hostname should be defaulted) or a string specifying the host machine of
+the addressee or sender. For example, if the user gave "foo@bar.bletch" as an
+address then the hostname is "bar.bletch" (every character to the left of the
+atsign). The hostname should not contain an atsign unless it has been
+explicitly quoted by the user.
+
+The third element of a mailbox (if present) is either a false (meaning
+no personal name was supplied) or a string specifying the personal name
+of the addressee or sender. 
+
+The fourth element of a mailbox (if present) is a list of name-value pairs.
+The first item of each pair is a string which determines the meaning of
+the following MDL object. This will allow the inclusion of non-standard
+fields in a mailbox. Each name must appear in MAILBOX-TABLE (see package
+M-ENCODE) together with a the name of the function responsible for 
+translating the value of the pair. Currently, the only defined items of
+this type are: <name>      -     <value>
+               "PHONE"     -     a string containing the phone number
+               "ADDRESS"   -     a string containing the user's street address
+
+Note that the meaning of each constituent of a mailbox list critically depends
+on its position in the mailbox list!
+
+EXAMPLE: 
+The address "SHANE@XX.MIT" with associated personal name  "Shane Hartman" is
+represented as: ("SHANE" "XX.MIT" "Shane Hartman"). This mailbox could also
+be represented as ("SHANE" <> "Shane Hartman") or simply as ("SHANE") if no
+personal name were given.
+
+II. BODY FORMAT
+
+body := structure
+structure := medium | multiple_media
+multiple-media := [presentation_mode (structure structure ... )]
+medium := text | notes | enclosures | exotic 
+text := (STRING STRING ... )
+notes := ["NOTES" ((mailbox mailbox ...) text)]
+enclosures := ["ENCLOSURES" (file file ... )]
+exotic := [media_name ("EXTERNAL" source format source format source ...)]
+format := "EXTERNAL" | STRING
+media_name := "FAX" | "IMAGE" | "VOICE" | "GRAPHICS"
+file := CHANNEL | STRING
+source :=  CHANNEL | STRING | BYTES
+presentation-mode := "INDEPENDENT" | "SEQUENTIAL" | "SIMULTANEOUS" | "BRANCH"
+	             | FALSE
+
+A file is either a string (assumed to be a filename) or a channel open in
+"READB" mode. The file is expected to contain ASCII text: 5 seven-bit bytes
+per word.
+
+A source is either a bytes, a string (assumed to be a filename), or a channel
+open in "READB" mode. If a source is a file, the file is assumed to contain
+4 eight-bit bytes per word, left justified.
+
+A body element represents the actual contents of a message. A body element is
+a structure. A simple instance of a structure is a single medium. A medium is
+one of three objects:
+  (1) A list of strings. Structured ASCII text - each string in the list 
+      is considered to be a paragraph of ASCII text.
+
+  (2) A vector whose first element is a string identifying the type of medium
+      ("FAX", "IMAGE", etc.) and whose second element is a list of name-value
+      pairs. The value element of each pair is a source element. The name 
+      identifies the format of the source. Formats are varied - "PRESS", 
+      "XGP", etc. - and depend on the types of output devices available. For
+      encoding purposes, however, the format named "EXTERNAL" must be present
+      and the source must contain the medium encoded in the format specified
+      by RFC767. The contents of source are copied without checking: the medium
+      is assumed to be encoded correctly.
+
+  (3) A vector whose first element is a string identifying the type of medium
+      and whose second element is a MDL structure which requires encoding.
+      "NOTES" and "ENCLOSURES" are currently the only two media of this type.
+      The distinction between this type of medium and the previous type (2)
+      is implicit in the dispatch table which controls the processing of a text
+      element. NOTES is a vector of length two whose first element is an
+      identifier - "NOTES" - and whose second element is a list of length two:
+      the first element of the list is a list of mailboxes (to whom the note
+      is addressed) and the second element is a structure. "ENCLOSURES" is
+      a vector of length two whose first element is an identifier -
+      "ENCLOSURES" - and whose second element is a list of files (filenames or
+      channels) containing text to be included in the document.
+
+A structure may represent multiple media. Multiple media are represented as a
+vector of two elements. The first element is a string or a false. If the first
+element is a string, it names the presentation order for the media to follow
+(media may be presented simultaneously, sequentially, or independently). If
+the first element is a false, then presentation order is assumed to be
+sequential. The second element is a list containing the actual media. Note
+that multiple media may appear in the media list, allowing the nesting of 
+presentation modes.
+
+Note that a structure (with the exception of text elements) is a vector that
+contains EXACTLY two elements: an identifier and a value. Identifiers may be
+defined at will, and the value associated with an identifier is arbitrary,
+but for every identifier, an entry must appear in the appropriate dispatch 
+table of the package M-ENCODE.
+
+EXAMPLES: See examples for document format below.
+
+III. DOCUMENT FORMAT
+
+document := [name value name value ...]
+name := STRING
+value := ANY
+
+A document is the first argument to the function ENCODE-DOCUMENT: the main
+entry to the package M-ENCODE. A document is a vector of name-value pairs. A
+name is a string. The value associated with each string varies. Names defined 
+so far:
+
+"WHEN-ORIGINATED"    	FIX
+
+	A machine dependent integer which specifies the date and time a message
+        was created. (DATE)
+        
+
+"MESSAGE-ID"		STRING
+
+	A unique (with respect to COMSYS database) identifier. (MESSAGE-ID)
+
+"FROM"		<LIST mailbox [REST mailbox]>
+	
+	Identifies originator(s) of a message. (FROM)
+
+
+"SENDER"	mailbox
+
+	Identifies actual sender of message. Appears only if sender is
+	is not the message originator. (SENDER)
+
+
+"REPLY-TO"   	<LIST mailbox [REST mailbox]>
+
+	The mailbox(es) to which message reply should be directed. (REPLY-TO)
+
+
+"SUBJECT"	STRING
+
+	Brief description of contents or purpose of message. (SUBJECT)
+
+
+"IN-REPLY-TO"	STRING
+
+	Indicates message is a response to a previously received message and
+	identifies the previous message. (RE)
+
+
+"ACTION-TO"  	<LIST mailbox [REST mailbox]>
+	
+	Mailbox(es) to whom message is addressed. (TO)
+
+
+"CARBON-COPY-TO"  	<LIST mailbox [REST mailbox]>
+
+	Mailbox(es) receiving copy of message. (CC)
+
+
+"BLIND"   	<LIST mailbox [REST mailbox]>
+
+	Mailbox(es) receiving blind copy of message. (BCC)
+
+"KEYWORDS"	<LIST STRING [REST STRING]>
+
+	Identifies keywords appearing in message. (KEYWORDS)
+
+
+"REFERENCES"	<LIST STRING [REST STRING]>
+
+	Identifies documents referred to in message. (REFERENCES)
+
+
+"NOTES"         ((mailbox mailbox ...) text)
+ 
+	See description above. (NOTES)
+
+"ENCLOSURES"    (file file ...)
+
+	See description above. (ENCLOSURES)
+
+"COMMENTS"      STRING
+
+        Comments on the message. (COMMENTS)
+
+"MISCELLANEOUS" 	<LIST [REST STRING <OR STRING FIX>]>	
+
+        A list of name-value pairs. This field is intended for use as a 
+        catchall for header fields not supported by COMSYS (such as 
+        article-id, etc). 
+
+"BODY"		body
+
+	See description above. The actual body of the message. The "BODY"      
+        field should be the last element of a document vector. (BODY)
+
+Note that the "NOTES" and "ENCLOSURES" fields may appear either as toplevel
+items or as constituents of the "BODY" field.
+
+The fields of a document vector are encoded in order. Presumably, some 
+filtering process has arranged the fields of a document prior to passing it
+to ENCODE-DOCUMENT.
+
+Each of the fields defined above has a corresponding entry in the dispatch
+table DOCUMENT-TABLE in the package M-ENCODE and an entry in the name table
+DOCUMENT-NAMES in the same package. Extensions should be reflected in the 
+appropriate tables (and documentation).
+
+EXAMPLES: Documents MIT-1 and MIT-2.
+
+["WHEN-ORIGINATED"
+ 11832292846
+ "FROM"
+ (("PDL" "MIT-XX.ARPA" "P. David Lebling")
+  ("SHANE" "MIT-XX.ARPA" "Shane Hartman")
+  ("SWG" "MIT-XX.ARPA" "Stuart Galley"))
+ "SENDER"
+ ("SHANE" "MIT-XX.ARPA" "Shane Hartman")
+ "ACTION-TO"
+ (("PDL" "MIT-XX.ARPA" "P. David Lebling")
+  ("SWG" "MIT-XX.ARPA" "Stuart Galley"))
+ "CARBON-COPY-TO"
+ (("AV" "MIT-XX.ARPA" "Al Vezza")
+  ("SHANE" "MIT-XX.ARPA" "Shane Hartman"))
+ "SUBJECT"
+ "Test of the new multimedia mail system."
+ "BODY"
+ ("This is a simple use of the new multimedia mail protocols."
+  "These sentences will be encoded in the paragraph format of RFC767."
+  "More exotic applications to come!")]
+
+["WHEN-ORIGINATED"
+ 11832292846
+ "FROM"
+ (("PDL" "MIT-XX.ARPA" "P. David Lebling")
+  ("SHANE" "MIT-XX.ARPA" "Shane Hartman")
+  ("SWG" "MIT-XX.ARPA" "Stuart Galley"))
+ "SENDER"
+ ("SHANE" "MIT-XX.ARPA" "Shane Hartman")
+ "ACTION-TO"
+ (("POSTEL" "USC-ISIF.ARPA" "Jon Postel"))
+ "CARBON-COPY-TO"
+ (("AV" "MIT-XX.ARPA" "Al Vezza"))
+ "SUBJECT"
+ "Our first image."
+ "BODY"
+ ["SEQUENTIAL"
+  (("Howdy,"
+"Enclosed you will find an image of the Earth floating beneath the logo of the
+Laboratory for Computer Science. The Earth image was produced by a program 
+written at MIT-MULTICS several years ago. The program accepted two coordinates,
+latitude and longitude, and drew an Earth image centered at those coordinates.
+Yep, you guessed it, this image is centered at Cambridge. I wish you luck in
+decoding this message ... and happy hacking!")
+   ["IMAGE" ("BG" "<AMS>LCS.BG" "EXTERNAL" "<AMS>LCS.ENCODED")])]]

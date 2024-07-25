@@ -1,0 +1,182 @@
+<DEFINE FLUSH-LABELS (MODLN "AUX" (TEM ()))
+   #DECL ((MODLN) LIST (SLABS) <LIST [REST LNODE]> (NLABLS) <LIST [REST LIST]>
+	  (NNUMLABS) FIX)
+   <MAPR <>
+    <FUNCTION (Y "AUX" (X <1 .Y>)) #DECL ((Y) <LIST LNODE [REST LNODE]>
+					  (X) LNODE)
+	    <COND (<AND <NOT <MEMQ .X .SLABS>>
+			<EMPTY? <JUMPS-LN .X>>
+			<CODE-LN .X>>
+		   <REPEAT ((N .NLABLS) N1 (LL <LABLS-LN .X>))
+			   #DECL ((N1 N) <LIST [REST LIST]>
+				  (LL) <LIST [REST ATOM]>)
+			   <AND <EMPTY? .N> <RETURN>>
+			   <COND (<MEMQ <1 <1 .N>> .LL>
+				  <COND (<==? .N .NLABLS>
+					 <SET NLABLS <REST .NLABLS>>)
+					(ELSE <PUTREST .N1 <REST .N>>)>
+				  <RETURN>)>
+			   <SET N <REST <SET N1 .N>>>>
+		   <COND (<==? .Y .MODLN> <SET MODLN <REST .MODLN>>)
+			 (ELSE <PUTREST .TEM <REST .Y>> <SET Y .TEM>)>
+		   <COND (<==? <NAME-LN .X> <1 <CODE-LN .X>>>
+			  <PUT <CODE-LN .X> 1 ,NULL-INST>
+			  <SET NNUMLABS <+ .NNUMLABS 1>>)>
+		   <SET REDO "FLUSH REDUNDANT LABELS">)>
+	    <SET TEM .Y>>
+    .MODLN>
+   .MODLN>
+
+
+	<TITLE FLUSH-LABELS>
+
+	<DECLARE ("VALUE" LIST LIST)>
+	<PUSH	TP* (AB) >
+	<PUSH	TP* (AB) 1>
+	<PUSHJ	P* TAG1>
+	<JRST	|FINIS >
+TAG1	<SUBM	M* (P) >				    ; 4
+	<PUSH	TP* <TYPE-WORD LIST>>			    ; [2]
+	<PUSH	TP* [0]>				    ; [3]
+	<PUSH	TP* <TYPE-WORD LIST>>			    ; [4]
+	<PUSH	TP* [0]>				    ; [5]
+	<INTGO>
+	<MOVE	B* (TP) -4>				    ; (1)
+	<JUMPE	B* TAG2>
+TAG17	<PUSH	TP* <TYPE-WORD LIST>>			    ; 13 [6]
+	<PUSH	TP* [0]>				    ; [7]
+	<PUSH	TP* <MQUOTE %<TYPE-W LNODE VECTOR>>>	    ; [8]
+	<PUSH	TP* [0]>				    ; [9]
+	<MOVE	D* (B) 1>
+	<SKIPGE	|INTFLG >
+	<SAVAC	O* [<(*1200*) *150000*>]>
+	<MOVEM	B* (TP) -2>				    ; (7)
+	<MOVEM	B* (TP) -6>				    ; (3)
+	<MOVEM	D* (TP) >				    ; (9)
+	<MOVE	B* <MQUOTE SLABS>>
+	<PUSHJ	P* |CILVAL >
+	<MOVE	D* (TP) >				    ; (9)
+	<JUMPE	B* TAG3>
+TAG5	<CAMN	D* (B) 1>				    ; 27
+	<JRST	TAG4>
+	<HRRZ	B* (B) >
+	<JUMPN	B* TAG5>
+TAG3	<MOVE	B* (TP) >				    ; 31 (9)
+	<MOVE	D* (B) 3>
+	<JUMPN	D* TAG4>
+	<GETYP	O* (B) 4>
+	<CAIN	O* <TYPE-CODE FALSE>>
+	<JRST	TAG4>
+	<PUSH	TP* <TYPE-WORD LIST>>			    ; [10]
+	<PUSH	TP* [0]>				    ; [11]
+	<PUSH	TP* <TYPE-WORD LIST>>			    ; [12]
+	<PUSH	TP* [0]>				    ; [13]
+	<PUSH	TP* <TYPE-WORD LIST>>			    ; [14]
+	<PUSH	TP* [0]>				    ; [15]
+	<MOVE	B* <MQUOTE NLABLS>>
+	<PUSHJ	P* |CILVAL >
+	<MOVE	D* (TP) -6>				    ; (9)
+	<MOVE	PVP* (D) 1>
+TAG13	<SKIPGE	|INTFLG >				    ; 47
+	<SAVAC	O* [<(*100*) *150012*>]>
+	<JUMPN	B* TAG6>
+TAG12	<SUB	TP* [<(6) 6>]>				    ; 50
+	<JRST	TAG7>
+TAG6	<MOVEM	PVP* (TP) >				    ; 52 (15)
+	<MOVE	TVP* (B) 1>
+	<JUMPE	TVP* |CERR2 >
+	<GETYP	O* (TVP) 0>
+	<CAIN	O* <TYPE-CODE DEFER>>
+	<MOVE	TVP* (TVP) 1>
+	<GETYP	O* (TVP) 0>
+	<CAIE	O* <TYPE-CODE ATOM>>
+	<JRST	TAG8>
+	<MOVE	C* (TVP) 1>
+	<JUMPE	PVP* TAG8>
+TAG10	<CAMN	C* (PVP) 1>				    ; 63
+	<JRST	TAG9>
+	<HRRZ	PVP* (PVP) >
+	<JUMPN	PVP* TAG10>
+	<JRST	TAG8>
+TAG9	<MOVE	B* <MQUOTE NLABLS>>			    ; 68
+	<PUSHJ	P* |CILVAL >
+	<CAME	B* (TP) -4>				    ; (11)
+	<JRST	TAG11>
+	<MOVE	B* <MQUOTE NLABLS>>
+	<PUSHJ	P* |CILVAL >
+	<JUMPE	B* |CERR2 >
+	<HRRZ	B* (B) >
+	<MOVE	C* <MQUOTE NLABLS>>
+	<PUSHJ	P* |CISET >
+	<JRST	TAG12>
+TAG11	<MOVE	B* (TP) -4>				    ; 79 (11)
+	<HRRZ	B* (B) >
+	<SKIPN	(TP) -2>				    ; (13)
+	<JRST	|CERR2 >
+	<HRRM	B* @ (TP) -2>				    ; (13)
+	<JRST	TAG12>
+TAG8	<HRRZ	PVP* (B) >				    ; 85
+	<MOVEM	B* (TP) -2>				    ; (13)
+	<MOVE	B* PVP>
+	<MOVE	A* <TYPE-WORD LIST>>
+	<MOVE	PVP* (TP) >				    ; (15)
+	<JRST	TAG13>
+TAG7	<MOVE	B* (TP) -2>				    ; 91 (7)
+	<CAME	B* (TP) -8>				    ; (1)
+	<JRST	TAG14>
+	<MOVE	D* (TP) -8>				    ; (1)
+	<JUMPE	D* |CERR2 >
+	<HRRZ	D* (D) >
+	<MOVEM	D* (TP) -8>				    ; (1)
+	<JRST	TAG15>
+TAG14	<HRRZ	B* (B) >				    ; 99
+	<SKIPN	(TP) -4>				    ; (5)
+	<JRST	|CERR2 >
+	<HRRM	B* @ (TP) -4>				    ; (5)
+	<MOVE	B* (TP) -5>				    ; (4)
+	<MOVE	D* (TP) -4>				    ; (5)
+	<MOVEM	D* (TP) -2>				    ; (7)
+TAG15	<MOVE	B* (TP) >				    ; 106 (9)
+	<MOVE	D* (B) 7>
+	<MOVE	PVP* (B) 4>
+	<MOVE	TVP* (B) 5>
+	<JUMPGE	TVP* |CERR2 >
+	<GETYP	O* (TVP) 0>
+	<CAMN	D* (TVP) 1>
+	<CAIE	O* <TYPE-CODE ATOM>>
+	<JRST	TAG16>
+	<MOVE	O* <MQUOTE %<TYPE-W NULL LIST>>>
+	<MOVEM	O* (TVP) >
+	<SETZM	(TVP) 1>
+	<MOVE	B* <MQUOTE NNUMLABS>>
+	<PUSHJ	P* |CILVAL >
+	<ADDI	B* 1 >
+	<MOVE	C* <MQUOTE NNUMLABS>>
+	<PUSHJ	P* |CISET >
+TAG16	<MOVE	A* <MQUOTE "FLUSH REDUNDANT LABELS"> -1>    ; 123
+	<MOVE	B* <MQUOTE "FLUSH REDUNDANT LABELS">>
+	<MOVE	C* <MQUOTE REDO>>
+	<PUSHJ	P* |CISET >
+TAG4	<MOVE	B* (TP) -2>				    ; 127 (7)
+	<SUB	TP* [<(4) 4>]>
+	<MOVEM	B* (TP) >				    ; (5)
+	<MOVE	B* (TP) -2>				    ; (3)
+	<MOVEM	B* (TP) >				    ; (5)
+	<HRRZ	B* (B) >
+	<JUMPN	B* TAG17>
+TAG2	<MOVE	B* (TP) -4>				    ; 134 (1)
+	<SUB	TP* [<(6) 6>]>
+	<MOVE	A* <TYPE-WORD LIST>>
+	<JRST	|MPOPJ >
+	<0>
+	<(*1200*) *150000*>
+	<IMULI	TB* (B) 4>
+	<(*100*) *150012*>
+	<(6) 6>
+	<IMULI	TB* (TVP) 0>
+	<IMULI	TB* (TVP) 0>
+	<(4) 4>
+	<(1) 4>
+	<(*54510*) *457046*>
+	<0>
+	<(1) 2>

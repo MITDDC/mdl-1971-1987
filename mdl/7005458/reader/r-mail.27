@@ -1,0 +1,217 @@
+<PACKAGE "R-MAIL">
+
+<ENTRY READER-MAILER-INIT RETURN-TO-MAILER READER-MAILER READER-REPLY
+       READER-FORWARD CONFIRM>
+
+<USE "R-DEFS" "R-UTIL" "R-IO">
+
+<USE "MAIL" "BUF" "M-DEFS" "M-READ" "PRTUTI" "PRTSTR" "USRUTI" "SYMBOLS">
+
+"SUBTITLE Mailing and Reply"
+
+<DEFINE READER-MAILER-INIT ()
+	<MAILER-INIT <>>
+	<PROG (A) #DECL ((A) <OR FALSE VECTOR>)
+	      <AND <SET A <MEMQ !\ ,COMPOS-CHRTABLE>>
+		   <PUT .A 2 ,SNARF-TEXT>>>>
+
+<DEFINE RETURN-TO-MAILER ("OPTIONAL" X Y)
+	<COND (,COMPOSING? <MAILER <>>)
+	      (ELSE <READER-MAILER>)>
+	<REENTER-COMMAND-LOOP>>
+
+"READER-MAILER -- invoke mail directly"
+
+<DEFINE READER-MAILER ("OPTIONAL" (HOW "MAIL"))
+	#DECL ((HOW) STRING)
+	<GET-READER-TAILOR>
+	<COND (<OR <NOT ,COMPOSING?>
+		   <CONFIRM "You will destroy a message in composition">>
+	       <MAILER-INIT <>>
+	       <MAILER .HOW>)>>
+
+"READER-REPLY -- answer a message"
+
+<DEFINE READER-REPLY (N "AUX" (OUTCHAN .OUTCHAN))
+	#DECL ((N) <OR FALSE INVERSION> (OUTCHAN) CHANNEL)
+	<CRLF>
+	<COND (<AND ,COMPOSING?
+		    <NOT <CONFIRM
+			   "You will destroy a message in composition">>>)
+	      (.N
+	       <ITERATE (M .N)
+		        <COND (<RREAD <MSG .M>>
+			       <MAILER-INIT <>>
+			       <SETUP-TO>
+			       <SETUP-SUBJECT>
+			       <SETUP-IN-REPLY-TO>
+			       <COND (<MAILER "ANSWER">
+				      <OFFBITS .M
+					       <ORB ,R-IN-BOX
+						    ,R-OUT-BOX
+						    ,R-PENDING
+						    ,R-DISCARDED>>
+				      <ONBITS .M
+					      <ORB ,R-ACTION
+						   ,R-ANSWERED>>)>)>>)>>
+
+"READER-FORWARD -- forward a message"
+
+<DEFINE READER-FORWARD (N "OPTIONAL" (AC? T) "AUX" (OUTCHAN .OUTCHAN))
+	#DECL ((N) <OR FALSE INVERSION> (OUTCHAN) CHANNEL
+	       (AC?) <OR ATOM FALSE>)
+	<CRLF>
+	<COND (<AND ,COMPOSING?
+		    <NOT <CONFIRM
+			   "You will destroy a message in composition">>>)
+	      (.N
+	       <ITERATE (M .N)
+			<COND (<ON? .M ,R-ASYLUM>
+			       <PMID <MSG .M>>
+			       <PRINC
+" is Locally-stored.  Reader can't forward it.  Sorry.">
+			       <CRLF>)
+			      (<RREAD <MSG .M>>
+			       <MAILER-INIT <>>
+			       <SETUP-MSG-NO <MSG .M>>
+			       <COND (<MAILER "FORWAR">
+				      <OFFBITS .M
+					       <ORB ,R-IN-BOX
+						    ,R-OUT-BOX
+						    ,R-PENDING
+						    ,R-DISCARDED>>
+				      <COND (.AC? <ONBITS .M ,R-ACTION>)>
+				      <ONBITS .M ,R-FORWARDED>)>)>>)>>
+
+\
+
+"SUBTITLE Utilities for Forward and Answer"
+
+"SETUP-MSG-NO -- put message number forwarding in buffer"
+
+<DEFINE SETUP-MSG-NO (N)
+	#DECL ((N) FIX)
+	<SETG SKIP-MSG-NO T>
+	<ADDSTRING <FBUF ,MSG-NO> <UNPARSE .N>>>
+
+"SETUP-TO -- set up TO and CC fields"
+
+<DEFINE SETUP-TO ("AUX" FR FO (TB <FBUF ,TO>) (CC <FBUF ,CARBON-COPY-TO>))
+	#DECL ((FO FR) <OR FALSE LIST> (TB CC) BUFFER)
+	<SET FO <SPLIT-STUFFER "FORWARDING" .TB T>>
+	<SET FR
+	     <OR <STUFFER "REPLY-TO" .TB T>
+		 <STUFFER "FROM" .TB T>>>
+	<COND (<AND .FO .FR>
+	       <PUTREST <REST .FO <- <LENGTH .FO> 1>> .FR>)>
+	<STUFFER "ACTION-TO" .CC>
+	<STUFFER "CARBON-COPY-TO" .CC <> .FR>>
+
+"SETUP-IN-REPLY-TO -- set up Msg-id or phrase in I.R.T. field"
+
+<DEFINE SETUP-IN-REPLY-TO ("AUX" D (B <FBUF ,IN-REPLY-TO>)
+			   (I <FBUF ,ID-IRT>) DS F)
+	#DECL ((D) <OR FALSE FIX UVECTOR> (B I) BUFFER (DS) STRING
+	       (F) <OR FALSE STRING>)
+	<ADDSTRING .I <UNPARSE <MVMSG ,MDB>>>
+	<COND (<HOME? <DRDA "" "RECEIVED-FROM-HOST">>
+	       <ADDSTRING .B <DRDA "" "MESSAGE-ID">>)
+	      (<SET D <DRDA "" "WHEN-ORIGINATED">>
+	       <SET DS <S-TIME .D>>
+	       <ADDSTRING .B "Message of ">
+	       <ADDSTRING .B .DS>
+	       <COND (<SET F <DRDA "" "FROM">>
+		      <ADDSTRING .B " by ">
+		      <ADDSTRING .B .F>)>)>>
+
+"SETUP-SUBJECT -- stuff modified subject out in new subject field"
+
+<DEFINE SETUP-SUBJECT ("AUX" S (B <FBUF ,SUBJECT>))
+	#DECL ((S) <OR FALSE STRING> (B) BUFFER)
+	<COND (<SET S <DRDA "" "SUBJECT">>
+	       <ADDSTRING .B "[Re: ">
+	       <ADDSTRING .B .S>
+	       <ADDCHR .B !\]>)>>
+
+"STUFFER -- stuff a field in a buffer, optionally ignoring self and losers"
+
+<DEFINE SPLIT-STUFFER (F B "OPTIONAL" (SELF? <>) (LOSERS ()) "AUX" VAL)
+	#DECL ((F) STRING (B) BUFFER (SELF?) <OR ATOM FALSE>
+	       (LOSERS) LIST (VAL) <OR FALSE LIST>)
+	<COND (<AND <SET VAL <DRDA ,USER .F>>
+		    <TYPE? .VAL LIST>
+		    <NOT <EMPTY? .VAL>>>
+	       <SET VAL
+	       <MAPF ,LIST
+		     <FUNCTION (AA "AUX" A)
+			  #DECL ((AA) <OR LIST STRING> (A) STRING)
+			  <COND (<TYPE? .AA STRING> <SET A .AA>)
+				(<AND <NOT <EMPTY? .AA>>
+				      <TYPE? <1 .AA> STRING>>
+				 <SET A <1 .AA>>)
+				(ELSE <MAPRET>)>
+			  <COND (<AND <OR .SELF? <NOT <SELF? .A>>>
+				      <NOT <MEMK .A .LOSERS>>>
+				 <COND (<NOT <0? <BUFLENGTH .B>>>
+					<ADDSTRING .B ",">)>
+				 <ADDSTRING .B .A>
+				 <MAPRET .A>)>>
+		     .VAL>>
+	       <COND (<EMPTY? .VAL> <>)(ELSE .VAL)>)>>
+
+<DEFINE STUFFER (F B "OPTIONAL" (SELF? <>) (LOSERS ()) "AUX" VAL)
+	#DECL ((F) STRING (B) BUFFER (SELF?) <OR ATOM FALSE>
+	       (LOSERS) LIST (VAL) <OR FALSE STRING LIST>)
+	<COND (<SET VAL <DRDA "" .F>>
+	       <OR <TYPE? .VAL LIST> <SET VAL <LIST .VAL>>>
+	       <COND (<NOT <EMPTY? .VAL>>
+		      <MAPF <>
+			    <FUNCTION (AA "AUX" A)
+				 #DECL ((AA) <OR LIST STRING> (A) STRING)
+				 <COND (<TYPE? .AA STRING> <SET A .AA>)
+				       (<AND <NOT <EMPTY? .AA>>
+					     <TYPE? <1 .AA> STRING>>
+					<SET A <1 .AA>>)>
+				 <COND (<AND <OR .SELF? <NOT <SELF? .A>>>
+					     <NOT <MEMK .A .LOSERS>>>
+					<COND (<NOT <0? <BUFLENGTH .B>>>
+					       <ADDSTRING .B ",">)>
+					<ADDSTRING .B .A>)>>
+			    .VAL>)>
+	       .VAL)>>
+
+<DEFINE MEMK (A LOSERS "AUX" (AA <KEYGET .A>))
+	#DECL ((A) STRING (LOSERS) <LIST [REST STRING]> (AA) <OR STRING FALSE>)
+	<COND (.AA
+	       <MAPF <>
+		     <FUNCTION (B)
+			  #DECL ((B) STRING)
+			  <COND (<=? .AA <KEYGET .B>> <MAPLEAVE T>)>>
+		     .LOSERS>)>>
+
+<DEFINE SELF? (A "AUX" (U ,USER))
+	#DECL ((A) <OR STRING FALSE> (U) STRING)
+	<COND (<AND <SET A <KEYGET .A>> <=? .A .U>>)
+	      (<AND .A
+		    <MEMQ <EXTRACT-HOST .A> ,ITS-SITES>
+		    <=? <EXTRACT-RCVR .A> .U>>)>>
+
+\
+
+<DEFINE SNARF-TEXT (BF CHR "AUX" TXT TR (OUTCHAN .OUTCHAN))
+	#DECL ((BF) BUFFER (CHR) CHARACTER (TXT TR) <OR STRING FALSE>
+	       (OUTCHAN) CHANNEL)
+	<COND (<SET TXT <OR <DRDA "" "MESSAGE"> <DRDA "" "TEXT">>>
+	       <ADD-OFFSET-STRING .BF .TXT "   ">
+	       <ADDSTRING .BF "
+">
+	       <PRINC "[DONE]">)
+	      (ELSE <PRINC "[No 'Text' field?]">)>>
+
+<DEFINE CONFIRM (STR)
+	#DECL ((STR) STRING (VALUE) <OR ATOM FALSE>)
+	<==? *1000001*
+	     <SYMBOL *1000001* .STR " (Confirm?)" "Please answer Yes or No."
+		     '["Yes" "No"]>>>
+
+<ENDPACKAGE>

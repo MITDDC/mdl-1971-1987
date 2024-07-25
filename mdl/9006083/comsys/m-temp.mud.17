@@ -1,0 +1,144 @@
+<PACKAGE "M.TEMP">
+
+<ENTRY TEMPOPEN
+       TEMPOPEN-APPEND
+       TEMPOPEN-APPEND-NEW
+       TEMPAPPEND
+       TEMPRENAME
+       TEMPDELETE>
+
+<USE "CHAN" "M.DEFS">
+
+"functions for creating new versions of data files by
+  opening temporary file, outputting, and renaming:
+
+TEMPOPEN            -- open a new file for writing
+TEMPOPEN-APPEND     -- open an existing file (if possible), set up for append
+TEMPOPEN-APPEND-NEW -- TEMPOPEN-APPEND, but '>' makes a new file
+
+TEMPAPPEND	    -- append a file to a temporary open on a channel
+TEMPRENAME	    -- close and rename a temporary file
+TEMPDELETE	    -- close and delete a temporary file
+"
+
+<MANIFEST RNAME1 RNAME2 RDIRECTORY RDEVICE>
+
+<SETG ABUF "                    ">		       ;"for read/printstrings"
+
+<GDECL (ABUF) STRING>
+
+"TEMPOPEN -- open a temporary file for writing"
+
+<DEFINE TEMPOPEN (SP "AUX" CH) 
+	#DECL ((SP) <OR STRING VECTOR> (CH VALUE) <OR FALSE CHANNEL>)
+	<COND (<TYPE? .SP STRING>
+	       <SET CH <CHANNEL "PRINT" .SP>>)
+	      (ELSE				 ;"FOUR STRINGS"
+	       <SET CH <CHANNEL "PRINT" "DSK:FOO BAR">>
+	       <PUT .CH ,RNAME1 <1 .SP>>
+	       <PUT .CH ,RNAME2 <2 .SP>>
+	       <COND (<NOT <LENGTH? .SP 2>>
+		      <PUT .CH ,RDEVICE <3 .SP>>)>
+	       <COND (<NOT <LENGTH? .SP 3>>
+		      <PUT .CH ,RDIRECTORY <4 .SP>>)>
+	       <SET SP <FILCHN .CH>>)>
+	<PUT .CH ,RNAME1 "_TEMP_">
+	<PUT .CH ,RNAME2 ">">
+	<COND (<RESET .CH> <PUTPROP .CH FILENAME .SP> .CH)>>
+
+\
+
+"TEMPOPEN-APPEND -- given file spec, returns channel in printo mode
+  to end of file, if any, or false if open fails (print open)"
+
+<DEFINE TEMPOPEN-APPEND (SP "OPTIONAL" (NEW? <>) "AUX" CH FL (ABUF ,ABUF) SC SS) 
+	#DECL ((VALUE CH) <OR CHANNEL FALSE> (SP) <OR STRING VECTOR>
+	       (NEW?) <OR ATOM FALSE> (FL SC) FIX (ABUF SS) STRING)
+  <PROG ()
+	<COND (<AND <SET CH
+			 <COND (<TYPE? .SP STRING> <OPEN "READB" .SP>)
+			       (ELSE				 ;"FOUR STRINGS"
+				<SET CH <CHANNEL "READB" "DSK:FOO BAR">>
+				<PUT .CH ,RNAME1 <1 .SP>>
+				<PUT .CH ,RNAME2 <2 .SP>>
+				<COND (<NOT <LENGTH? .SP 2>>
+				       <PUT .CH ,RDEVICE <3 .SP>>)>
+				<COND (<NOT <LENGTH? .SP 3>>
+				       <PUT .CH ,RDIRECTORY <4 .SP>>)>
+				<RESET .CH>)>>
+		    <OR <NOT .NEW?>
+			<AND <NOT <MEMBER <NAME2 .CH> '[">" ">"]>>
+			     <NOT <MEMBER <NAME1 .CH> '[">" ">"]>>>>>
+	       <SET SC
+		    <COND (<0? <SET FL <FILE-LENGTH .CH>>> 0)
+			  (ELSE
+			   <SET FL <MAX 0 <- .FL 2>>>
+			   <ACCESS .CH .FL>
+			   <READSTRING .ABUF .CH>)>>
+	       <SET SS <FILCHN .CH>>
+	       <CLOSE .CH>
+	       <REPEAT ((CNT 5))
+		       #DECL ((CNT) FIX)
+		       <COND (<SET CH <OPEN "PRINTO" .SS>>
+			      <RETURN .CH>)
+			     (<AND <==? <3 .CH> 4980736>
+				   <NOT <0? <SET CNT <- .CNT 1>>>>>
+			      <SLEEP 6>) 
+			     (<0? .CNT> <RETURN <SET CH #FALSE (4980736)>>)
+			     (ELSE <RETURN <>>)>>
+	       <OR .CH <RETURN .CH>>
+	       <ACCESS .CH .FL>
+	       <PRINTSTRING .ABUF .CH .SC>)
+	      (ELSE
+	       <AND .NEW? .CH <CLOSE .CH>>
+	       <COND (<TYPE? .SP STRING> <SET CH <OPEN "PRINTB" .SP>>)
+		     (ELSE <SET CH <OPEN "PRINTB" !.SP>>)>)>
+	<COND (.CH <PUTPROP .CH FILENAME <FILCHN .CH>> .CH)>>>
+
+"TEMPOPEN-APPEND-NEW -- open form of tempfile-append-new"
+
+<DEFINE TEMPOPEN-APPEND-NEW (SP) 
+	#DECL ((VALUE) <OR CHANNEL FALSE> (SP) <OR STRING VECTOR>)
+	<TEMPOPEN-APPEND .SP T>>
+
+\
+
+"TEMPAPPEND -- given channel, copies any existing file of same
+  real name to end of channel, deletes old file, and renames temp
+  to be new version.  error if rename lost, or if channel not obtained
+  originally from tempfile call"
+
+<DEFINE TEMPAPPEND (CH
+		    "AUX" CH2
+			  (F
+			   <OR <GETPROP .CH FILENAME>
+			       <ERROR NO-FILE-NAME TEMPAPPEND>>))
+	#DECL ((CH) CHANNEL (F) STRING (CH2) <OR CHANNEL FALSE>)
+	<PUTPROP .CH FILENAME>
+	<COND (<SET CH2 <OPEN "READ" .F>>
+	       <FILECOPY .CH2 .CH>
+	       <CLOSE .CH2>
+	       <RENAME .F>)>
+	<COND (<RENAME .CH .F> <CLOSE .CH> T)
+	      (ELSE <ERROR CANNOT-RENAME-TEMP-FILE TEMPAPPEND>)>>
+
+"TEMPRENAME -- given channel and optional string, renames file, outputs buffers"
+
+<DEFINE TEMPRENAME (CH "AUX" (SP
+			      <OR <GETPROP .CH FILENAME>
+				  <ERROR NO-FILE-NAME TEMPRENAME>>))
+	#DECL ((CH) CHANNEL (SP) STRING (VALUE) <OR ATOM FALSE>)
+	<PUTPROP .CH FILENAME>
+	<COND (<RENAME .CH .SP> <CLOSE .CH> T)
+	      (ELSE <ERROR CANNOT-RENAME-TEMP-FILE TEMPRENAME>)>>
+
+"TEMPDELETE -- given channel open to temp file, closes and deletes it"
+
+<DEFINE TEMPDELETE (CH) 
+	#DECL ((CH) CHANNEL (VALUE) <OR FALSE 'T>)
+	<PUTPROP .CH FILENAME>
+	<CLOSE .CH>
+	<RENAME <FILCHN .CH>>>
+
+<ENDPACKAGE>
+

@@ -1,0 +1,28 @@
+	<TITLE	ROTATE>
+	<DECLARE ("VALUE" WORD <PRIMTYPE WORD> "OPTIONAL" FIX)>
+	<DPUSH	TP* (AB)>
+	<CAMGE	AB* [<(-2)>]>
+	<JRST	ROT2>
+	<PUSHJ	P* IROT1>
+	<JRST FINIS>
+
+ROT2	<DPUSH	TP* (AB) 2>
+	<PUSHJ	P* IROT>
+	<JRST	FINIS>
+
+<INTERNAL-ENTRY IROT1 1>
+	<MOVE	B* (TP)>	;"get bits"
+	<ROT	B* 1>		;"Rotate"
+	<MOVSI	A* TWORD>
+	<SUB	TP* [<2 (2)>]>
+	<POPJ	P*>
+
+<INTERNAL-ENTRY IROT 2>
+	<MOVE	A* (TP)>
+	<MOVE	B* -2 (TP)>	;"get bits"
+	<ROT	B* (A)>		;"Rotate"
+	<MOVSI	A* TWORD>
+	<SUB	TP* [<4 (4)>]>
+	<POPJ	P*>>
+
+

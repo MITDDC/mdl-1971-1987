@@ -1,0 +1,30 @@
+Compilation record for: DSK:MPROG2;MDTABL UDL009
+Output file:  DSK:LIBRM3;MDTABL NBIN
+
+It is now MONDAY, 12 DEC 1977 13:29 EST
+
+File loaded.
+Functions ordered.
+COMPILING LOOKUP-FOR-WORD!-MDTABLE!-PACKAGE
+Peephole  3% 96/93
+Job done in:  28 / 3:20
+   COMPILING RLS-FOR-CHAR!-MDTABLE!-PACKAGE
+Peephole  0% 25/25
+Job done in:  3 / 7
+  COMPILING RLS-FOR-WORD!-MDTABLE!-PACKAGE
+Peephole  0% 24/24
+Job done in:  1 / 3
+  COMPILING PTBL-LOOK!-MDTABLE!-PACKAGE
+Peephole  0% 40/40
+Job done in:  5 / 10
+    COMPILING CHAR-FOR-RLS!-MDTABLE!-PACKAGE
+Peephole  0% 61/61
+Job done in:  13 / 37
+
+
+Total time used is
+	60 sec. CPU time,
+	20 sec. garbage collector CPU time,
+	5 min. 6 sec. real time.
+CPU utilization is 19.607843%.
+Number of garbage collects = 3

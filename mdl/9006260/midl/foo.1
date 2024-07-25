@@ -1,0 +1,9 @@
+<DEFINE FOO (X Y) #DECL ((X Y) FIX)
+	<PROG ((I 0)(PROD 1))
+	      #DECL ((I PROD) FIX)
+	      <COND (<G=? .I .Y> .PROD)
+		    (ELSE <SET PROD <* .PROD .X>>
+			  <SET I <+ .I 1>>
+			  <AGAIN>)>>>
+		     
+		

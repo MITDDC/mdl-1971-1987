@@ -1,0 +1,292 @@
+<PACKAGE "R-INP">
+
+<ENTRY INPUT-READER-FILE ADD-TABLE>
+
+<USE "R-DEFS" "R-IO">
+
+<USE "MADMAN" "M-DEFS" "USRUTI">
+
+"SUBTITLE Checking the Mailbox"
+
+<SETG READER-INPUT-FILE "READER">	;"second name of reader file"
+<SETG OLD-READER-INPUT-FILE "OREADE">
+
+<GDECL (READER-INPUT-FILE OLD-READER-INPUT-FILE) STRING>
+
+"INPUT-READER-FILE -- read in and process the mailbox file"
+
+<DEFINE INPUT-READER-FILE (U NEW?
+			   "AUX" (FNM ,READER-INPUT-FILE)
+			   (OFNM ,OLD-READER-INPUT-FILE) (OUTCHAN .OUTCHAN)
+			   (OLD? <>) RCVD SENT UV IC L R)
+	#DECL ((FNM OFNM) STRING (OUTCHAN) CHANNEL (IC) <OR FALSE CHANNEL>
+	       (NEW? OLD?) <OR ATOM FALSE> (U) STRING (R) <OR ATOM FALSE>
+	       (UV) <UVECTOR FIX FIX> (L) <OR FALSE <LIST LIST LIST>>
+	       (RCVD SENT) FIX) 
+	<UPDATE-TABLE T>
+	<PROG ()
+	      <COND (<AND <NOT .OLD?>
+			  <SET IC <OPEN "READ" .U .OFNM "DSK" <HSNAME .U>>>>
+		     <SET OLD? T>)
+		    (<SET IC <OPEN "READ" .U .FNM "DSK" <HSNAME .U>>>
+		     <COND (.OLD? <UPDATE-TABLE T> <SET OLD? <>>)>)>
+	      <COND (.IC
+		     <COND (<SET L <GET-GOODIES .IC>>
+			    <ADD-TABLE .L .NEW?>
+			    <SET UV <NEW-MESSAGES .L .NEW?>>
+			    <PRINC "A">
+			    <SET RCVD <1 .UV>>
+			    <SET SENT <2 .UV>>
+			    <COND (<NOT .OLD?>
+				   <PRINC <COND (<0? .RCVD> "No")
+						(ELSE .RCVD)>>
+				   <PRINC " new message">
+				   <COND (<NOT <1? .RCVD>> <PRINC !\s>)>
+				   <COND (<NOT <0? .SENT>>
+					  <PRINC ", ">
+					  <PRINC .SENT>
+					  <PRINC " sent">)>)
+				  (ELSE
+				   <PRINC "Recovered ">
+				   <COND (<NOT <0? .RCVD>>
+					  <PRINC .RCVD>
+					  <PRINC " message">
+					  <COND (<NOT <1? .RCVD>>
+						 <PRINC !\s>)>
+					  <COND (<NOT <0? .SENT>>
+						 <PRINC ", ">)>)>
+				   <COND (<NOT <0? .SENT>>
+					  <PRINC .SENT>
+					  <COND (<0? .RCVD>
+						 <PRINC " message">
+						 <COND (<NOT <1? .SENT>>
+							<PRINC !\s>)>)>
+					  <PRINC " sent">)>)>
+			    <PRINC !\.>
+			    <CRLF>
+			    <COND (<SET R
+					<RENAME <7 .IC> <8 .IC>
+						<9 .IC> <10 .IC>
+						TO
+						<7 .IC> .OFNM>>)
+				  (<ERROR CANT-RENAME-READER-FILE .R>)>
+			    <SETG USED-READER-FILE
+				  <STRING <9 .IC> !\: <10 .IC> !\;
+					  <7 .IC> !\  .OFNM>>
+			    <UPDATE-TABLE>
+			    <COND (.OLD? <AGAIN>)
+				  (ELSE T)>)
+			   (ELSE <PRINC <1 .L>> <CRLF> <>)>)
+		    (ELSE
+		     <ADD-TABLE '(()()) .NEW?>
+		     <PRINC "No new messages.">
+		     <CRLF>
+		     0)>>>
+
+"NEW-MESSAGES -- add messages to message-table"
+
+<DEFINE NEW-MESSAGES (L NEW?
+		      "AUX" (RL <1 .L>) (SL <2 .L>) (RCNT 0) (SCNT 0)
+		      (MS ,MSG-SPACE) (SS ,SCRATCH-SPACE)
+		      (RS ,READER-SPACE) (MT ,MESSAGE-TABLE)
+		      (T <R-TUPLE .MT>) R OU (NU .MT) CU LL
+		      (RB <CHTYPE <ORB ,R-RECENT
+				       ,R-UNREAD
+				       ,R-UNSUMMARIZED
+				       ,R-IN-BOX
+				       <COND (.NEW? ,R-NEW)
+					     (ELSE 0)>>
+				  FIX>)
+		      (SB <CHTYPE <ORB ,R-SENT ,R-OUT-BOX> FIX>))
+	#DECL ((L) <LIST [2 LIST]> (RL SL) <LIST [REST FIX]>
+	       (NEW?) <OR ATOM FALSE> (RB SB LL T) FIX (MS SS RS) SPACE
+	       (R) <OR FALSE FIX> (MT OU CU NU) <UVECTOR [REST FIX]>)
+	<COND (<AND <EMPTY? .RL> <EMPTY? .SL>> '![0 0])
+	      (ELSE
+	<SET OU <ACOPY <ARESET .SS> .NU>>
+	<SET OU <REST .OU <R-HEADER .MT>>>
+	<SET NU <REST .NU <R-HEADER .MT>>>
+	<REPEAT ()
+		<COND (<AND <EMPTY? .RL> <EMPTY? .SL>>
+		       <RETURN <UVECTOR .RCNT .SCNT>>)>
+		<COND (<EMPTY? .NU>
+		       <SET CU
+			    <AIUVECTOR <ARESET .MS>
+				       <+ <LENGTH .MT> <* 100 .T>> 0>>
+		       <SUBSTRUC .NU 0 <SET LL <LENGTH .NU>> .CU>
+		       <SET NU <ACOPY <ARESET .RS> .CU>>
+		       <SET NU <REST .NU .LL>>
+		       <SETG UPDATE? T>)>
+		<SET R <>>
+		<COND (<AND <NOT <EMPTY? .RL>> <NOT <EMPTY? .SL>>
+			    <==? <1 .RL> <1 .SL>>>
+		       <SET RL <REST .RL>>
+		       <AGAIN>)
+		      (<AND <NOT <EMPTY? .RL>>
+			    <OR <EMPTY? .SL> <L? <1 .RL> <1 .SL>>>
+			    <OR <0? <1 .OU>> <L=? <1 .RL> <MSG .OU>>>>
+		       <SET R <CHTYPE <PUTBITS .RB <BITS 18> <1 .RL>> FIX>>
+		       <SET RL <REST .RL>>
+		       <SET RCNT <+ .RCNT 1>>)
+		      (<AND <NOT <EMPTY? .SL>>
+			    <OR <EMPTY? .RL> <L? <1 .SL> <1 .RL>>>
+			    <OR <0? <1 .OU>> <L=? <1 .SL> <MSG .OU>>>>
+		       <SET R <CHTYPE <PUTBITS .SB <BITS 18> <1 .SL>> FIX>>
+		       <SET SL <REST .SL>>
+		       <SET SCNT <+ .SCNT 1>>)>
+		<COND (.R
+		       <COND (<==? <CHTYPE <GETBITS .R <BITS 18>> FIX>
+				   <MSG .OU>>
+			      <PUT .NU 1 .R>
+			      <PUT .NU 2 <2 .OU>>
+			      <PUT .NU 3 <3 .OU>>
+			      <SET OU <REST .OU .T>>)
+			     (ELSE
+			      <PUT .NU 1 .R>
+			      <PUT .NU 2 0>
+			      <PUT .NU 3 0>)>
+		       <SET NU <REST .NU .T>>
+		       <SETG UPDATE? T>)
+		      (<NOT <0? <1 .OU>>>
+		       <PUT .NU 1 <1 .OU>>
+		       <PUT .NU 2 <2 .OU>>
+		       <PUT .NU 3 <3 .OU>>
+		       <SET NU <REST .NU .T>>
+		       <SET OU <REST .OU .T>>)>>)>>
+
+"GET-GOODIES -- reader for mailbox file"
+
+<DEFINE GET-GOODIES (A "AUX" (RCVD ()) (SENT ()) R (LAST <>)) 
+	#DECL ((A) CHANNEL (RCVD SENT) <LIST [REST FIX]>
+	       (LAST) <OR FALSE <LIST [2 LIST]>> (R) ANY)
+	<WATCH GETDERR "ERROR" ,READ-ERROR 4>
+	<SET LAST
+	     <REPEAT GETDACT ()
+		#DECL ((GETDACT) <SPECIAL ACTIVATION>)
+		<COND (<NOT <SET R <READ .A '<>>>>
+		       <RETURN <LIST .RCVD .SENT>>)
+		      (<NOT <TYPE? .R FIX>>
+		       <RETURN #FALSE ("Bad data in Reader input file?")>)
+		      (<G? .R 0>
+		       <SET RCVD <ADD-MESSAGE .RCVD .R>>)
+		      (ELSE
+		       <SET SENT <ADD-MESSAGE .SENT <- .R>>>)>>>
+	<OFF ,GETDERR>
+	<AND <NOT <0? <1 .A>>> <CLOSE .A>>
+	.LAST>
+
+"READ-ERROR -- readin time error handler"
+
+<DEFINE READ-ERROR ("TUPLE" STUFF) 
+	#DECL ((STUFF) TUPLE (GETDACT) ACTIVATION)
+	<COND (<AND <ASSIGNED? GETDACT> <LEGAL? .GETDACT>>
+	       <DISMISS <CHTYPE (<UNPARSE .STUFF>) FALSE>
+			.GETDACT>)>>
+
+<DEFINE ADD-MESSAGE (L R)
+	#DECL ((L) <LIST [REST FIX]> (R) FIX)
+	<COND (<EMPTY? .L> (.R))
+	      (<L? .R <1 .L>> (.R !.L))
+	      (<==? .R <1 .L>> .L)
+	      (ELSE
+	       <REPEAT ((L .L) N)
+		       #DECL ((L N) <LIST [REST FIX]>)
+		       <SET N <REST .L>>
+		       <COND (<OR <EMPTY? .N>
+				  <L? .R <1 .N>>>
+			      <PUTREST .L (.R !.N)>
+			      <RETURN>)
+			     (<==? .R <1 .N>> <RETURN>)
+			     (ELSE <SET L .N>)>>
+	       .L)>>
+
+\
+
+"ADD-TABLE -- adds messages to FIX-TABLE"
+
+<DEFINE ADD-TABLE ("OPTIONAL" (L <>) (NEW? <>) 
+		   "AUX" (L1 ()) (L2 ()) (LL 0) (SS ,SCRATCH-SPACE)
+		   WS R TBL NTBL MTBL)
+	#DECL ((L1 L2) <LIST [REST FIX]> (SS) SPACE
+	       (R) ANY (WS) FIX (LL) FIX (TBL NTBL) VECTOR
+	       (L) <OR FALSE <LIST [2 LIST]>> (NEW?) <OR ATOM FALSE>
+	       (MTBL) <OR VECTOR FALSE>)
+	<SET WS <COUNT-MESSAGES <ORB ,R-IN-BOX ,R-OUT-BOX ,R-PENDING>>>
+	<COND (.L
+	       <SET LL <+ <LENGTH <SET L1 <1 .L>>>
+			  <LENGTH <SET L2 <2 .L>>>>>)>
+	<COND (<OR <NOT .L> <NOT <SET R <RDATA ,M-FIXES>>>>
+	       <SET NTBL <AIVECTOR .SS <+ 20 .WS .LL> <>>>
+	       <SET TBL <ICOPY .NTBL <ORB ,R-IN-BOX ,R-OUT-BOX ,R-PENDING>>>)
+	      (<NOT <TYPE? .R VECTOR>> <ERROR FIX-TABLE-CHOMPS .R>)
+	      (<AND <NOT .NEW?> <0? .WS>>
+	       <SET NTBL <AIVECTOR .SS <+ 20 .LL> <>>>
+	       <SET TBL .NTBL>
+	       <ARELEASE .SS .R>)
+	      (<OR <AND <SET MTBL <MEMQ <> <SET NTBL .R>>>
+			<G=? <LENGTH .MTBL> .LL>>
+		   <AND <0? .LL>
+			<SET MTBL <REST .NTBL <LENGTH .NTBL>>>>>
+	       <SET TBL .MTBL>)
+	      (ELSE
+	       <SET TBL
+		    <AIVECTOR .SS
+			      <+ 20
+				 .LL
+				 <- <LENGTH .NTBL>
+				    <COND (.MTBL <LENGTH .MTBL>)
+					  (ELSE 0)>>>
+			      <>>>
+	       <SET TBL <VCOPY .TBL .NTBL>>
+	       <ARELEASE .SS .NTBL>)>
+	<SET TBL <LCOPY .TBL .L1>>
+	<SET TBL <LCOPY .TBL .L2>>
+	<MAPR <>
+	      <FUNCTION (TBL)
+		   #DECL ((TBL) VECTOR)
+		   <PUT .TBL 1 <>>>
+	      .TBL>
+	<SET NTBL <TOP .TBL>>
+	<RWRITE ,M-FIXES .SS .NTBL>
+	<SETG FIX-TABLE <SUBSTRUC .NTBL 0 <- <LENGTH .NTBL> <LENGTH .TBL>>>>>
+
+<DEFINE COUNT-MESSAGES (MATCH "AUX" (UV ,MESSAGE-TABLE) (L <R-TUPLE .UV>)
+			(N 0))
+	#DECL ((MATCH) <PRIMTYPE WORD> (UV) <UVECTOR [REST FIX]> (N L) FIX)
+	<SET UV <REST .UV <R-HEADER .UV>>>
+	<REPEAT ()
+		<COND (<OR <EMPTY? .UV> <0? <1 .UV>>> <RETURN .N>)
+		      (<ON? .UV .MATCH> <SET N <+ .N 1>>)>
+		<SET UV <REST .UV .L>>>>
+
+<DEFINE ICOPY (TO MATCH "AUX" (UV ,MESSAGE-TABLE) (L <R-TUPLE .UV>))
+	#DECL ((TO) VECTOR (MATCH) <PRIMTYPE WORD> (UV) <UVECTOR [REST FIX]>
+	       (L) FIX)
+	<SET UV <REST .UV <R-HEADER .UV>>>
+	<REPEAT ()
+		<COND (<OR <EMPTY? .UV> <0? <1 .UV>>> <RETURN .TO>)
+		      (<ON? .UV .MATCH>
+		       <PUT .TO 1 <MSG .UV>>
+		       <SET TO <REST .TO>>)>
+		<SET UV <REST .UV .L>>>>
+
+<DEFINE LCOPY (TO FROM)
+	#DECL ((TO) VECTOR (FROM) <LIST [REST FIX]>)
+	<REPEAT ()
+		<COND (<EMPTY? .FROM> <RETURN .TO>)
+		      (<EMPTY? .TO> <ERROR SOURCE-TOO-BIG .FROM>)
+		      (ELSE <PUT .TO 1 <1 .FROM>>)>
+		<SET TO <REST .TO>>
+		<SET FROM <REST .FROM>>>>
+
+<DEFINE VCOPY (TO FROM)
+	#DECL ((TO) VECTOR (FROM) <VECTOR [REST <OR FIX FALSE>]>)
+	<REPEAT ()
+		<COND (<OR <EMPTY? .FROM> <NOT <1 .FROM>>>
+		       <RETURN .TO>)
+		      (<EMPTY? .TO> <ERROR SOURCE-TOO-BIG .FROM>)
+		      (ELSE <PUT .TO 1 <1 .FROM>>)>
+		<SET TO <REST .TO>>
+		<SET FROM <REST .FROM>>>>
+
+<ENDPACKAGE>

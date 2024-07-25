@@ -1,0 +1,423 @@
+
+<PACKAGE "M-DLV">
+
+;"main delivery module plus interaction with nets"
+
+<ENTRY DELIVERY
+       DLV-ERR
+       NET-DELIVERY
+       DLV-HISTORY
+       NET-CLOSE>
+
+<USE "MADMAN" "CHAN" "FIELDS" "CLOCK" "M-DEFS" "M-TIME" "M-BASE"
+     "ITIME" "M-PRCD" "M-READ" "M-DAC" "M-DATA" "M-ARPANET" "M-CHAOS" "HOSTS"
+     "M-NETS" "M-TEMP" "M-ACK" "PRTUTI" "PRTSTR" "AP" "M-ERR" "USRUTI" "M-TAI">
+
+"DELIVERY PROCESS"
+
+<DEMON-PROCESS "DELIVERY"
+	       DELIVERY
+	       DLV-ERR
+	       [<+ ,FATAL ,CCCSM>					   ;1
+		,FATAL							   ;2
+		<>							   ;3
+		<+ ,FATAL ,CCCSM>					   ;4
+		,FATAL							   ;5
+		,FATAL							   ;6
+		0							   ;7
+		,FATAL							   ;8
+		,FATAL							   ;9
+		,FATAL							  ;10
+		,FATAL							  ;11
+		,FATAL							  ;12
+		,FATAL							  ;13
+		,FATAL							  ;14
+		0							  ;15
+		<+ ,FATAL ,CCCSM>					  ;16
+		0							  ;17
+		,FATAL							  ;18
+		,FATAL							  ;19
+		0							  ;20
+		0							  ;21
+		0							  ;22
+		,FATAL							  ;23
+		,FATAL							  ;24]>
+
+\ 
+
+"DELIVERY -- main message delivery function"
+
+<DEFINE DELIVERY (ADR "AUX" SPECS RES FN AFN DATA (MS ,MSG-SPACE)) 
+   #DECL ((ADR) ADDRESS (VALUE) <OR FALSE ATOM> (DATA RES FN) ANY (MS) SPACE
+	  (SPECS) <LIST [REST LIST]> (AFN) <OR APPLICABLE FALSE>)
+   <PROG ()
+	 <COND (<EMPTY? .ADR> <RETURN <AFALSE 12>>)
+	       (<AHOST .ADR> <RETURN <NET-DELIVERY .ADR>>)>
+	 <SET DATA <DRD .ADR <GETFIX "DELIVERY-SPECIFICATIONS">>>
+	 <COND (<AND .DATA <OK? <GETFIX "DELIVERY-SPECIFICATIONS"> .DATA>>
+		<SET SPECS .DATA>)
+	       (.DATA <RETURN <AFALSE 2 <ASTRING .MS <UNPARSE .DATA>>>>)
+	       (ELSE <SET SPECS ()>)>
+	 <DWT <ITIME> .ADR <GETFIX "WHEN-DELIVERED">>
+	 <REPEAT ()
+		 <COND (<EMPTY? .SPECS>
+			<COND-SIGNAL .ADR "DELIVERY">
+			<RETURN T>)
+		       (<AND <SET FN <1 <1 .SPECS>>>
+			     <MEMBER <COND (<TYPE? .FN STRING> .FN)
+					   (ELSE <UNPARSE .FN>)>
+				     <DRDMSG .ADR
+					     <GETFIX "DELIVERY-COMPLETED">>>>
+			<SET RES T>)
+		       (<SET AFN <AP? .FN>>
+			<SET RES <APPLY .AFN .ADR !<REST <1 .SPECS>>>>
+			<COND (<NOT .RES>
+			       <COND (<OR <EMPTY? .RES>
+					  <NOT <TYPE? <1 .RES> FIX>>>
+				      <SET RES
+					   <AFALSE 1
+						   <ASTRING
+						     .MS
+						     <UNPARSE .RES>>>>)>)
+			      (ELSE
+			       <DADDMSG <ACOPY .MS
+					       <COND (<TYPE? .FN STRING> .FN)
+						     (ELSE <UNPARSE .FN>)>>
+					.ADR
+					<GETFIX "DELIVERY-COMPLETED">>)>)
+		       (ELSE
+			<SET RES <AFALSE 2 <ASTRING .MS <UNPARSE .FN>>>>)>
+		 <COND (<NOT .RES>
+			<DELIVERY-RESULT .ADR .RES>
+			<RETURN .RES>)
+		       (ELSE
+			<SET SPECS <REST .SPECS>>)>>>>
+
+"DELIVERY-RESULT -- update status of message based on result of this attempt"
+
+<DEFINE DELIVERY-RESULT (ADR R "AUX" RES NDE (MS ,MSG-SPACE))
+	#DECL ((ADR) ADDRESS (R) ANY (RES) <FALSE FIX> (MS) SPACE
+	       (NDE) <OR FALSE LIST>)
+	<COND (.R)
+	      (ELSE
+	       <DAPPMSG <ALIST .MS <ITIME>>
+			.ADR
+			<GETFIX "DELIVERY-ATTEMPTS">>
+	       <SET RES <ACOPY .MS .R>>
+	       <COND (<AND <SET NDE
+				<DRDMSG .ADR <GETFIX "NET-DELIVERY-ERRORS">>>
+			   <SET NDE <MEMBER .R .NDE>>>
+		      <SET RES <1 .NDE>>)
+		     (ELSE <SET RES <ACOPY .MS .R>>)>
+	       <DAPPMSG <ALIST .MS .RES> .ADR <GETFIX "NET-DELIVERY-ERRORS">>
+	       <DWT <> .ADR <GETFIX "WHEN-DELIVERED">>
+	       <SCROUT "Delivery Failure, Code: " !.RES>
+	       .RES)>>
+
+\
+
+"NET-DELIVERY -- network output for message."
+
+<DEFINE NET-DELIVERY (ADR
+		      "AUX" (HST <AHOST .ADR>) RES (SS ,SCRATCH-SPACE)
+		      (RCVR <ANAME .ADR>) NETS NET (GW <>) F TMP METHODS)
+	#DECL ((ADR) ADDRESS (RCVR HST) STRING (NETS) <OR <UVECTOR FIX> FALSE>
+	       (NET) FIX (RES) <OR ATOM FALSE> (TMP) <OR FALSE VECTOR>
+	       (METHODS) VECTOR (GW) <OR <VECTOR ANY VECTOR> FALSE> (SS) SPACE)
+	<DWT <ITIME> .ADR <GETFIX "WHEN-DELIVERED">>
+	<PROG ()
+	      <COND (<SET NETS <SHARE-NET? .HST>>
+		     <MAPF <>
+			   <FUNCTION (HNET)
+				#DECL ((HNET) FIX)
+				<SET NET
+				     <CHTYPE <GETBITS .HNET <BITS 8 27>> FIX>>
+				<SET METHODS <DATUM "NET-DELIVERY-METHODS">>
+				<COND (<SET TMP <MEMQ .NET .METHODS>>
+				       <SET F <AP? <2 .TMP>>>)>
+				<SET RES
+				     <COND (.F
+					    <COND (.GW
+						   <SCROUT "Gating through "
+							   .HST>)>
+					    <APPLY .F
+						   .ADR
+						   .RCVR
+						   <HOST .HST .NET>>)
+					   (ELSE <AFALSE 24 .NET>)>>
+				<COND (.RES <MAPLEAVE .RES>)
+				      (<OR <EMPTY? .RES> <N==? <1 .RES> 13>>
+				       <MAPLEAVE .RES>)>>
+			   .NETS>
+		     <MAIL-RESULT .ADR .RES>)
+		    (<AND <NOT .GW> <SET GW <FIND-GATEWAY .HST>>>
+		     <SET RCVR <ASTRING .SS .RCVR !\@ .HST>>
+		     <SET HST <1 <2 .GW>>>
+		     <AGAIN>)
+		    (ELSE
+		     <AFALSE 23>)>>>
+
+<DEFINE NET-CLOSE ()
+	<FLUSH-NET-MESSAGE>
+	<ARPANET-QUIT>
+	<CHAOS-QUIT>>
+
+\ 
+
+"DLV-ERR -- delivery error handler"
+
+<DEFINE DLV-ERR (PRC ERR ADR
+		 "OPTIONAL" (NH? T)
+		 "AUX" L (ECOD <1 .ERR>) (SS ,SCRATCH-SPACE))
+	#DECL ((NH?) <OR FALSE 'T> (ECOD) FIX (L) <OR LIST FALSE> (SS) SPACE
+	       (VALUE) <OR LIST FALSE> (PRC) STRING (ADR) ADDRESS (ERR) <FALSE FIX>)
+	<SET L <ALIST .SS <ASTRING .SS "">>>
+	<COND (.NH?					     ;"TOP-LEVEL ENTRY"
+	       <COND (<MEMQ .ECOD ,NET-RETRY-CODES>    ;"SOFT ERROR SOLIDIFIED"
+		      <ADDBACK .L
+			       <ALIST .SS
+				      <ASTRING .SS
+					       
+"     DELIVERY has been attempted repeatedly for "
+					       <S-ADDR .ADR>
+					       
+"
+and failed.  A summary of the attempts follows:
+
+">>>
+		      <SET ECOD 0>)
+		     (ELSE
+		      <ADDBACK .L
+			       <ALIST .SS
+				      <ASTRING .SS
+					       "     DELIVERY to "
+					       <S-ADDR .ADR>
+					       " failed because:
+
+">>>)>)>
+	<COND (<==? .ECOD 0> <ADDBACK .L <DLV-HISTORY .ADR>>)
+	      (<==? .ECOD 1>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					
+"A user-specified function returned a failure value of:  " <2 .ERR>>>>)
+	      (<==? .ECOD 2>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					
+"The DELIVERY-SPECIFICATIONS field was not in the correct format.">>>
+	       <COND (<LENGTH? .ERR 1>)
+		     (ELSE				       ;"LOSER REPORTED"
+		      <ADDBACK .L
+			       <ALIST .SS
+				      <ASTRING .SS
+					       
+"
+The unusable specification was:
+
+"
+					       <2 .ERR>>>>)>)
+	      (<==? .ECOD 4>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					
+"The format to use for outputting the message was ill-formed in the way
+described below:
+
+"
+<2 .ERR>>>>)
+	      (<==? .ECOD 5>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					
+"The format to use for " <2 .ERR> " output was ill-formed.
+The format was:
+
+" <3 .ERR>>>>)
+	      (<==? .ECOD 6>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					
+"The format of the " <2 .ERR> " field was ill-formed.  The format was:
+
+" <3 .ERR>>>>)
+	      (<==? .ECOD 7>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					
+"The MAIL output file could not be opened.  The error code returned was:
+
+" <2 .ERR>>>>)
+	      (<==? .ECOD 8>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					
+"The user specified for output did not exist: " <2 .ERR>>>>)
+	      (<==? .ECOD 9>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					
+"The datum specified to contain the output format for " <2 .ERR>
+" was not a valid format:
+
+" <3 .ERR>>>>)
+	      (<==? .ECOD 10>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					
+"The foreign host refused the message.  I.e., the FTP connection was
+made, but no 350 reply was received on attempting to transfer the mail."
+<COND (<LENGTH? .ERR 1> "") (ELSE <ASTRING .SS "
+Last FTP reply: " <2 .ERR>>)>>>>)
+	      (<==? .ECOD 11>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					
+"An MDL error occurred during the network transfer procedure.  This
+indicates a bug in the mailer demon code, and has been reported.  The
+error arguments were:
+
+" <2 .ERR>>>>)
+	      (<==? .ECOD 12>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					
+"It was applied to the author area of the message.">>>)
+	      (<==? .ECOD 13>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					"The ICP attempt was unsuccessful.">>>)
+	      (<==? .ECOD 14>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					
+"An I/O channel error occurred during the network transfer.  Generally
+this occurs when the foreign host or net crashes.  The reason given was:
+"
+					<2 .ERR>>>>)
+	      (<==? .ECOD 15>
+	       <ADDBACK .L <ALIST .SS <ASTRING .SS
+"An IO-channel error occured as the mail was being output:
+
+" <2 .ERR>>>>)
+	      (<==? .ECOD 16>
+	       <ADDBACK .L <ALIST .SS <ASTRING .SS
+"A MDL error occured while the mail was being output.  This indicates
+a bug in one of the mail printing routines and has been reported.  The
+error was:
+
+" <2 .ERR>>>>)
+	      (<==? .ECOD 17>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					
+"The transfer was terminated by a (supposedly) transient error.
+">>>
+	       <COND (<NOT <LENGTH? .ERR 1>>
+		      <ADDBACK .L
+			       <ALIST .SS
+				      <ASTRING .SS
+					       "The FTP error reply was:
+
+"
+					       <2 .ERR>>>>)
+		     (ELSE
+		      <ADDBACK .L
+			       <ALIST .SS
+				      <ASTRING .SS
+					       
+"The probable cause is overloading of the recipient site.">>>)>)
+	      (<==? .ECOD 18>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					
+"The transfer was not acknowledged by the foreign site.  I.e., the
+message was transferred, but no 256 reply was received."
+<COND (<LENGTH? .ERR 1> "") (ELSE <ASTRING .SS "
+Last FTP reply: " <2 .ERR>>)>>>>)
+	      (<==? .ECOD 19>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					
+"The foreign site refused the message.  ">>>
+	       <COND (<NOT <LENGTH? .ERR 1>>
+		      <ADDBACK .L
+			       <ALIST .SS
+				      <ASTRING .SS
+					       "The FTP error reply was:
+
+"
+					       <2 .ERR>>>>)
+		     (ELSE
+		      <ADDBACK .L
+			       <ALIST .SS
+				      <ASTRING .SS
+					       
+"The probable cause is that
+the specified user does not have a mailbox at the site.">>>)>)
+	      (<==? .ECOD 20>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+"The destination host was known to be down.">>>)
+	      (<==? .ECOD 21>
+	       <ADDBACK .L <ALIST .SS <ASTRING .SS
+"An FTP connection was established but no herald was ever received.
+This indicates a problem with the remote site's FTP server.">>>)
+	      (<==? .ECOD 22>
+	       <ADDBACK .L <ALIST .SS <ASTRING .SS
+"Fifteen minutes passed without activity between the hosts involved.">>>)
+	      (<==? .ECOD 23>
+	       <ADDBACK .L <ALIST .SS <ASTRING .SS
+"The addressee contains an inaccessible network.">>>)
+	      (<==? .ECOD 24>
+	       <ADDBACK .L <ALIST .SS <ASTRING .SS
+"The mailer cannot talk to that network.">>>)
+	      (ELSE <SET L <>>)>
+	.L>
+
+\
+
+"DLV-HISTORY -- forms a history of delivery attempts"
+
+<DEFINE DLV-HISTORY (ADR "AUX" DA DE L (SS ,SCRATCH-SPACE)) 
+	#DECL ((ADR) ADDRESS (DA DE) <OR FALSE LIST> (SS) SPACE
+	       (VALUE L) <LIST [REST STRING]>)
+	<PROG ()
+	      <SET DA <DRDMSG .ADR <GETFIX "DELIVERY-ATTEMPTS">>>
+	      <SET DE <DRDMSG .ADR <GETFIX "NET-DELIVERY-ERRORS">>>
+	      <COND (<OR <NOT .DA> <NOT .DE> <EMPTY? .DA> <EMPTY? .DE>>
+		     <RETURN <ALIST .SS <ASTRING .SS "No history available, sorry.">>>)>
+	      <SET L <ALIST .SS <ASTRING .SS "">>>
+	      <MAPF <>
+		    <FUNCTION (DT CD "AUX" DE) 
+			    #DECL ((DT) FIX (CD) <FALSE FIX>
+				   (DE) <LIST [REST STRING]>)
+			    <ADDBACK
+			       .L
+			       <ALIST .SS
+				      <ASTRING .SS "
+     Attempt of " <S-TIME .DT> " -- ">>>
+			    <COND (<SET DE <DLV-ERR "DELIVERY" .CD .ADR <>>>
+				   <ADDBACK .L .DE>)>>
+		    .DA
+		    .DE>
+	      <REST .L>>>
+
+<ENDPACKAGE>

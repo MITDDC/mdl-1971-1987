@@ -1,0 +1,327 @@
+
+
+
+
+          THE MUDDLE PURE-MAPPING SYSTEM.
+
+          _1_.  _O_v_e_r_a_l_l _S_y_s_t_e_m
+
+                  As of MUDDLE version 53 a new pure mapping scheme will be
+          used.  These changes are internal and should not affect the user.
+          The  basic idea behind MUDDLE pure mapping is to seperate out the
+          code from RSUBRs in compiled programs.  The RSUBRs are kept in  a
+          file  known  as  an  FBIN.   These RSUBRs do not contain code but
+          point to a file which  contains  the  code.    The  code  can  be
+          dynamically  mapped  in when needed. One advantage of this scheme
+          is that it allows the user to have a virtual  core  image  larger
+          than  the  machine he is running on.  The other advantage is that
+          since the code is pure it can be shared between  several  MUDDLEs
+          using it.
+                  Previously  the code files, known as SAV files, were kept
+          in directories associated with each version of  MUDDLE.    Recent
+          versions  of MUDDLE used more than one directory to store the SAV
+          files.  In MUDDLE 52  three  directories  were  needed  for  this
+          purpose.    The need for multiple directories is due to directory
+          size limitations imposed by the  operating  systems  (ITS)  which
+          MUDDLE  runs  under.   One disadvantage of this scheme is that if
+          the too few directories are created when the MUDDLE is installed,
+          the directories can fill up.  It is almost impossible  to  expand
+          the  number  of directories after the MUDDLE is created since the
+          placement of files is determined by a hashing algoritm  based  on
+          the number of directories.
+                  The  other  problem is comes about when updating the code
+          to run in newer versions of MUDDLE.    The  pure  mapping  system
+          keeps  a  file,  known  as a FIXUP file, for each SAV file.  This
+          enables the SAV file to be updated to work in version of  MUDDLE.
+          Unfortunately   since   each   version  of  MUDDLE  has  its  own
+          directories it is only possible to fix  up  SAV  files  from  the
+          previous version of MUDDLE to the current one.
+                  The  new  mapping  scheme  also  uses FBIN, SAV and FIXUP
+          files.  The only diferrence is that a special directory structure
+          is maintained.      This  scheme  is  designed  to  remove  these
+          problems.    It  should  be  noted  that  this  scheme  is in the
+          experimental stage and may change.   Since  the  way  the  MUDDLE
+          accesses  SAV  and  FIXUP  filse is totally invisible to the user
+          this should future changes should be compatible with user code.
+                  THE new scheme uses two files.  These are  the  SAV  FILE
+          and  the  FIXUP  FILE.   Each  of  these  files  contain internal
+          directories and store all currently existent SAVs and FIXUPs  for
+          all  existing  versions of MUDDLE.  Each of these data bases have
+          similar format.
+                  Associated with each data base is a main directory.  This
+          directory is located in page 0.  This main  directory  points  to
+          subdirectories  in  the data base.  Each of these sub-directories
+          is 1 page long.  The first file name is used to  determine  which
+          subdirectory they are on.  The structure of the main directory is
+          as follows.
+                                        - 2 -
+
+
+
+          WORD 0          # of entries in the main directory
+          WORD 1-N        block number of subdirectory.
+
+                  There  can be up to 1023 subdirectories and each of these
+          subdirectories can contain approximately 500 files.   This  gives
+          us virtually an unlimited directory.
+                  WORD  0 of each subdirectory gives the length in words of
+          that subdirectory.  From WORD 1 on are directory  entries.    All
+          directory  entries have the same two word format.  The first word
+          contains the the first file name in  SIXBIT.    The  second  word
+          contains the following fields:
+
+          Length ==>      length  of  the file in blocks (a block for a sav
+                          file is 1024 words long while a block for a fixup
+                          file is 256 words long).   (bits  1-6)
+
+          Version==>      version of MUDDLE this file belongs to.     (bits
+                          8-17)
+
+          Block==>        block  in  the  data base where this file starts.
+                          (bits 18-35)
+
+                  The subdirectories are sorted by strict  numerical  order
+          (i.e AAA SAV53 comes before 1AAA SAV53).
+                  Each data-base contains a free storage table.  This table
+          is  located  at page 1 in data bases.  The first word of the page
+          is the number  of  entries  in  the  free  storage  table.    The
+          remaining entries define areas of free storage.  These are of the
+          form:
+
+                  LENGTH,,BLOCK
+
+          where LENGTH is the number of blocks for this free area and BLOCK
+          is the block number on which it starts.
+                  There are two major differences between the SAV data-base
+          and  the  FIXUP data base.  The first deals with block sizes.  In
+          the SAV file the standard block size is a page (1024 words).   In
+          the  FIXUP  data-base the standard block size is 256 words.  This
+          allows for more compaction of these small files.
+                  The second major difference is that while  there  can  be
+          many  versions of the same file in the SAV data-base (e.g. NCODGE
+          SAV53 and NCODGE SAV54) there can only  be  one  version  in  the
+          FIXUP  data-base.    This will be the fixup  most recently added.
+          The corresponding sav file for this fixup file  should  exist  to
+          allow the SAV file to be updated for future MUDDLEs.
+
+          _2_.  _T_h_e _D_e_m_o_n
+
+                  While  all  MUDDLEs can read from the data-bases there is
+          only one program which can write into the data-bases.  This is  a
+          maintainer  program  which  runs once a day to keep the data-base
+          updated.  This  demon  can  add  files,  delete  files,  and  add
+          directories to the data-base.
+                                        - 3 -
+
+
+
+                  To  facilitate  updating  of  the  data-bases  there is a
+          directory on which to put files to be added as well as  files  to
+          indicate  what  is  to  be deleted.  This is currently the MUDTMP
+          directory.  Any file on it with the second  names  of  SAV###  or
+          Fix###,  where  ### is a 2 or 3 digit number greater than 0, will
+          be added to the appropriate data-base.  If the files DELETE  SAVS
+          or  DELETE  FIXUPS  exist  then they will be used to delete files
+          from the data-base.  These musht  be  ascii  files  of  the  form
+          filename  1 followed by a space and then filename 2 followed by a
+          carriage-return.  An  example  of  a  valid  delete  file  is  as
+          follows:
+
+          NCODGE SAV53
+          1NCODGE SAV53
+
+          The  demon will ignore any deletion requests for files not in the
+          data-base.
+                  The demon does its work in several  passes.    The  basic
+          passes are the delete pass, the planning pass, the updating pass,
+          and  the salvage pass.  The delete pass deletes files if either a
+          DELETE SAVS or DELETE FIXUPS file exists on its working directory
+          (MUDTMP).  The planning stage builds a plan file by examining the
+          working directory and calculating where new files will be  placed
+          in  the  data  base.    The  plan  phase builds two files using a
+          special internal format.  These files will be used by the  update
+          pass  to  add  files  to  the  data-base.  The planning pass also
+          extends the data base files as much as  necessary  to  accomadate
+          the  new  files.   The update phase reads the plan files and adds
+          new sav and fixup files  to  the  data  base.    If  a  directory
+          overflows,  a new directory is added during this pass and all the
+          directories  are  recreated  (i.e.  all  the  files  have  to  be
+          rehashed,  since  they  were  originally  placed  in  a directory
+          according  to  a  hashing  algorithm  based  on  the  number   of
+          directories).    The  salvage  pass  is  used to pick up and free
+          storage that has been lost thru system crashes or lost thru holes
+          created during the updating of the data-base.
+                  Throughout  the  entire  processing  of   the   data-base
+          attempts  are  made  to keep the data base in a consistant state.
+          Directories are updated only after files are guaranteed to be  in
+          the  data  base.    The  plan  files  described  are used to keep
+          data-base consistent in case the system crashes while  the  demon
+          is in the update pass.
+                  A  major  goal in the design of the data-base is to allow
+          recovery in case of demon errors or system disk crashes.  To this
+          end the data base is backed up on tape once per week.   Currently
+          the  dump  bits  of  the files are turned on every Wednesday.  In
+          order to guarantee that the data base is dumped at least once per
+          a file is kept  on  MUDTMP;  called  DUMP  BIT.    This  file  is
+          recreated  every  time  the  dump bits is turned on by the demon.
+          When the file is over 7 day old the dump bits are again set.
+                  This of course leaves the problem that files added to the
+          data-base during the week could be lost in a disk crash.  To  aid
+          in  recovery  from  such  a crash all files added during the past
+                                        - 4 -
+
+
+
+          week are added to the MUDRST; directory.  Moreover a file is kept
+          indicating all the files dumped during the previous week.    This
+          file,   kept  on  MUDTMP;  is  called  ADDED  FILES.    All  this
+          information is deleted once the data base is dumped to tape.
+
+          _3_.  _U_s_e_r _P_r_o_g_r_a_m_s
+
+                  Often it is useful for a  user  to  list  the  data  base
+          directories,  to  see  if certain files are in it, and copy files
+          out of the data base.  DBMAIN is a program which allows the  user
+          to do these things.
+                  The following are functions available to the user.
+
+          _3_._1  _L_i_s_t_i_n_g _F_u_n_c_t_i_o_n_s
+
+                  CLISTF  is used to list all the files in a data-base.  It
+          takes one optional argument which is the name of  the  data  base
+          (either "SAV" or "FIXUP"). If no argument is supplied the default
+          used  is  "SAV".   This is always the default whenever a function
+          takes an optional argument specifying  the  data  base.    CLISTF
+          prints  each  file,  its  length,  and  where it is located.  The
+          format of a line of listing is as follows:
+
+          FN1     FN2     SIZE    BLOCK
+
+          where FN1 is the first file name, FN2 is the  second  file  name,
+          SIZE  is  the length of the file in blocks (1024. words for SAVs,
+          256. words for fixups), and BLOCK is the block at which the  file
+          starts.  This is the format used whenever listing files.
+                  LISTF  is  used  to  list  all  the sub-directories of an
+          entire data base.  It takes  two  optional  arguments  the  first
+          being the name of the data base to be listed. The second optional
+          argument can be one of the following:
+
+          argument is of type FIX:        list  the  subdirectory specified
+                                          by the fix.
+
+          argument is a LIST of FIXs:     list the subdirectories specified
+                                          in the list.
+
+          argument is the atom ALL        list all the subdirectories (this
+                                          is the default).
+
+                  FLIST lists free areas of storage in the data base.    It
+          lists the free storage in the form:
+
+          LENGTH  BLOCK
+
+          where  LENGTH is the length of the area of free storage and BLOCK
+          is the block number of the starting block.  This  function  takes
+          one  optional  argument  which is the name of the data base to be
+          examined.  At the end of the  listing  it  will  tell  the  total
+          amount of free storage.
+                                        - 5 -
+
+
+
+          _3_._2  _F_i_n_d _F_u_n_c_t_i_o_n_s
+
+                  FIND-FILE  is  used to find a specific file.  It takes as
+          its argument a file specification and prints the file name  along
+          with the information printed by the listing functions if the file
+          exists,  otherwise  it returns an object of type FALSE.  The file
+          specification must be of the form:
+
+                  "DIR;FN1 FN2"
+
+          where DIR is either SAV or FIXUP and FN1 and FN2  are  the  first
+          and second file names respectively.
+                  SPEC-FIND  is  used to find all files which came from the
+          same FBIN file.  It takes one required argument which is the name
+          to look for.  It takes an optional second argument which  is  the
+          data  base  to  look in.  For example the call <SPEC-FIND "MAIL">
+          would return:
+
+          MAIL    SAV53   8       140
+          1MAIL   SAV53   8       360
+
+          _3_._3  _O_t_h_e_r _F_u_n_c_t_i_o_n_s
+
+                  DELETE allows you to delete a file from  the  data  base.
+          It  takes  the  same  type  of  file specification that FIND-FILE
+          takes.  The file you specify will be deleted the  next  time  the
+          demon that maintains the data base runs.
+                  GET-FILE  allows  you  to  retrieve  a file from the data
+          base.    It  takes  two  arguments.    The  first  is  the   file
+          specification  of  the  file to retrieve out of the data base and
+          the second is the external file you wish to dump it to.
+                  STATUS gives the information about the state of the  data
+          bases.    It  tells  the  number  of files and the amount of free
+          storage in each data-base.  STATUS takes no arguments
+
+          _3_._4  _U_s_i_n_g _D_B_M_A_I_N_.
+
+                  There are several ways to use DBMAIN.  It can be used  by
+          typing
+
+          :DBMAIN --jcl line--
+
+          to  DDT.    The  jcl line is of the form FUNCTION arg1 ect. argn,
+          where FUNCTION is the name of  the  funtion  to  be  used.    For
+          example:
+
+          :DBMAIN FLIST "FIXUP"
+
+          will  list  the  free  storage  block  for the "FIXUP" data base.
+          DBMAIN will do kill itself after  finishing  and  can  be  killed
+          earlier by typing ^S.
+                  The  jcl  line  mentioned  above can be modified to allow
+          output to be routed to a file.  This can be done by preceding the
+                                        - 6 -
+
+
+
+          normal jcl line with a string specifying the  file  name  of  the
+          output file.
+
+          :DBMAIN "LISTOF SAVS" CLISTF
+
+          will produce a listing of the files in the SAV data base and will
+          print this information to the file, "LISTOF SAVS"
+                  To  simply  get  a  status  of the data base the user can
+          simply use TS DBSTAT.  To  actually  get  access  to  the  MUDDLE
+          containing  all  the functions mentioned above one simply uses TS
+          NEWLF.
+
+          _4_.  _G_a_r_b_a_g_e _C_o_l_l_e_c_t_i_o_n
+
+                  One problem of the MUDDLE pure  mapping  system  is  that
+          many  useless  sav and fixup files remain as new versions of user
+          programs are created.    To  alleviate  this  problem  a  garbage
+          collection system for the data base has been written.
+                  The major goal of this scheme is to determine which files
+          in the data base are no longer useful.  To do this a scan is made
+          on  all  files  in  the  system  to  see what SAV files are still
+          pointed to (ARCHIVES EXCLUDED).  A SAV file  can  be  pointed  to
+          from  FBINs and SAVE files.  A SAVE file contains pointers in its
+          PURVEC (PURE VECTOR).  FBINs all begin with somthing of the  form
+          '<PCODE "FOO"> where "FOO" is the name of the SAV file associated
+          with this FBIN.  If an FBIN has more than one SAV file associated
+          with  it then there can be several PCODEs at the beginning of the
+          file.  An FBIN file should never be edited because of this.    If
+          these  PCODEs  disappear  there pointers to the SAV files will go
+          with them.
+                  Garbage collections proceed by looking at every  file  in
+          the  system  to  see  if  they  have the appropriate pointers and
+          builds a lists of all files pointed to.   It  then  examines  the
+          data  base  and  any  files  not  in  the data base which are not
+          pointed to are deleted.
+                  It is possible that deletes can fragment the free area in
+          the data base.  If compaction becomes necessary  there  exists  a
+          routine to do in place compaction of the data base.
+

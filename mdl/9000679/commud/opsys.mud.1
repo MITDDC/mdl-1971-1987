@@ -1,0 +1,27 @@
+<PACKAGE "OPSYS">
+
+<ENTRY OPSYS ITS TOPS-20 TENEX>
+
+<DEFMAC OPSYS ("ARGS" A "AUX" (TOPS-20? <G? ,MUDDLE 100>) F O)
+	#DECL ((A) LIST (F) <PRIMTYPE LIST> (TOPS-20?) <OR ATOM FALSE>)
+	<SET F
+	     <MAPF ,LIST
+		   <FUNCTION (A)
+			<COND (<AND <TYPE? .A LIST>
+				    <NOT <EMPTY? .A>>
+				    <TYPE? <SET O <1 .A>> FIX ATOM>>
+			       <COND (<OR <==? .O 10> <==? .O ITS>>
+				      <COND (.TOPS-20? <MAPRET>)
+					    (ELSE <MAPRET !<REST .A>>)>)
+				     (<OR <==? .O 20> <==? .O TOPS-20>>
+				      <COND (.TOPS-20? <MAPRET !<REST .A>>)
+					    (ELSE <MAPRET>)>)
+				     (<==? .O TENEX> <ERROR OPSYS TENEX .A>)
+				     (ELSE <MAPRET !<REST .A>>)>)
+			      (ELSE <ERROR OPSYS .A>)>>
+		   .A>>
+	<COND (<EMPTY? .F> <>)
+	      (<LENGTH? .F 1> <1 .F>)
+	      (ELSE <FORM PROG '() !.F>)>>
+
+<ENDPACKAGE>

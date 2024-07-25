@@ -1,0 +1,29 @@
+<PACKAGE "M-REMAIL">
+
+<ENTRY REMAIL>
+
+<USE "M-READ" "M-DAC" "M-DEFS" "GC" "M-TAI" "M-DOUT" "M-FORM" "M-DLV" "M-PRCD"
+     "NSTR" "ITIME" "AP" "M-DATA" "FIELDS">
+
+<SETG DEMON-DEBUG? <>>			;"Flushes 'Loaded Tailor for...' junk"
+
+<GDECL (PENDING-QUEUE) <LIST FIX [REST PNQENTRY]>>
+
+<DEFINE REMAIL (WHO N "AUX" M (OUTCHAN .OUTCHAN))
+	#DECL ((N) FIX (OUTCHAN) CHANNEL)
+	<COND (<INIT>
+	       <SET M <HIGH-MESSAGE-ID>>
+	       <REPEAT ()
+		       <MREAD .N>
+		       <COND (<MEMBER .WHO <DUSERS>>
+			      <PRINT .N>
+			      <PRIN1 <READER-MAIL .WHO>>)>
+		       <COND (<==? <SET N <+ .N 1>> .M> <RETURN>)>>
+	       <DCLOSE>
+	       "DONE")
+	      (ELSE
+	       <CRLF>
+	       <PRINC "Mail Data Base not available.">
+	       T)>>
+
+<ENDPACKAGE>

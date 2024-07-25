@@ -1,0 +1,83 @@
+
+NAME____	ARGS____	MEANING_______
+?	none	type out short summary
+??	none	type out this summary
+O	1,any	Open object or the value of an atom
+V	none	toggle Verbosity
+
+MEND commands
+N	1,FIX	do Next arg steps (like ^N)
+OV	none	skip OVer current object (like ^O)
+Q	none	Quit EDIT & return to automatic mode (like ^B)
+QM	none	Quit MEND (like ^Q)
+QT	none	Quit EDIT & return T (useful when EDIT was explicitly called)
+SN	1,FIX	Set Number of lines used for stack display
+SV	1,FIX	Set leVel below which MEND will stop 1STEPping
+SD	1,num	Set Delay time between steps
+PD	1,FIX	Pprint Displayed object in level #arg
+PO	1,FIX	Pprint Original (actual) object in level #arg
+
+MEND interrupts (immediate execution)
+^E	none	End automatic mode
+^B	none	Begin automatic mode
+^N	none	Next step
+^O	none	skip Over (completely evaluate) current object
+^L	none	cLear screen and reprint stack
+^Q	none	Quit from current MEND
+^U	none	Unprint (stop displaying stack)
+^P	none	Print (start displaying stack)
+
+Debugging commands
+BK	any,any	set BreaKpoint at next object;
+		 if first arg evaluates to FALSE, don't break;
+		 rest of args are printed out at break
+KB	none	Kill all Breakpoints in open object
+KT	none	Kill This breakpoint in the object to the right of cursor
+
+Movement commands
+L	1,FIX	move Left arg objects
+R	1,FIX	move Right arg objects
+U	1,FIX	move Up arg levels
+D	none	move Down one level
+B	none	move to Back of object
+F	none	move to Front of object
+UR	1,FIX	move Up arg objects and to the Right
+DL	1,FIX	move Down arg objects and to the Left
+UT	none	Up Top -- go to the place you were just after O
+
+Editing commands
+I	any,any	Insert args to the right of cursor
+I:	2	make next (arg 2) objects into a TYPE (arg 1)
+I*	2	Imbed command:  replace all occurances of arg 1 
+		 (ATOM with default *) in arg 2 with objects to right of cursor
+X	1,ATOM	set the atom to the object to right of cursor
+G	any,any	Get evaluation of args, insert to right of cursor
+C	1,ANY	Change the next object to arg
+C:	1,TYPE	Change the type of the next object to arg
+K	1,FIX	Kill (delete) the next arg objects
+K:	none	Kill (remove) the "brackets" around the next object
+
+Search Commands
+S (SR)	1,any	Search (Right) until match (=?) is found for arg
+SL	1,any	Search Left as above
+
+Macro Commands
+M 	1,STRING execute the string as if typed to EDIT
+IT (DO) 2	ITerate the execute string (arg 1) arg 2 times
+
+Printing commands
+P	none	Pprint the next object
+PU	none	Pprint the next Upper level
+PT	none	Pprint the whole object open
+
+Cursor commands
+CU	1,ATOM	set atom to CUrrent cursor position
+GO	1,CURSOR GO to the specified cursor position
+PC	none	Print Cursor positions in the current object
+PA	none	Print All cursor positions in the toplevel object
+KC	1,ATOM	Kill the Cursor assigned to the atom
+
+^F returns you to EDIT from a higher level.
+The atom * may be used as a FIX argument whose value is the largest
+legal value for that command.
+

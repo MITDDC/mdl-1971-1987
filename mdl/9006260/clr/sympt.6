@@ -1,0 +1,102 @@
+
+<DEFINE SYMPTOM-FINDER (TRNS FIELD "AUX" (A <ANOMALIES .TRNS>)) 
+	#DECL ((TRNS) TRANSACTION (FIELD) <LIST [REST ATOM]>)
+	<COND (<MAPF <>
+		     <FUNCTION (AN) 
+			     #DECL ((AN) ANOMALY)
+			     <COND (<==? <CONSTRAINT-ID .AN> TOO-FEW-FIELDS>
+				    <MAPLEAVE T>)>>
+		     .A>
+	       <ADD-SYMPTOM .TRNS MISSING-SEPARATOR (<1 .FIELD> <2 .FIELD>)>)
+	      (<MAPF <>
+		     <FUNCTION (AN) 
+			     #DECL ((AN) ANOMALY)
+			     <COND (<==? <CONSTRAINT-ID .AN> TOO-MANY-FIELDS>
+				    <MAPLEAVE T>)>>
+		     .A>
+	       <ADD-SYMPTOM .TRNS ADDED-SEPARATOR (<1 .FIELD> <2 .FIELD>)>)
+	      (ELSE
+	       <MAPF <>
+		     <FUNCTION (SYMPT-FCN) <APPLY ,.SYMPT-FCN .TRNS .FIELD>>
+		     ,SYMPTOM-CHECKER>)>>
+
+" The following are special case symptom identifiers."
+
+" 1. Check for number too large and double digit or symbol no good
+  and double digit or too many digits and double digit"
+
+<DEFINE DOUBLE-DIGIT-SYMPTOM (TRNS FIELDS "AUX" (A <ANOMALIES .TRNS>)) 
+	#DECL ((TRNS) TRANSACTION (FIELDS) <LIST [REST ATOM]>)
+	<COND (<AND <==? <LENGTH .FIELDS> 1>
+		    <DOUBLE-DIGIT? <NTH <LIST-OF-VALUES .TRNS> ,<1 .FIELDS>>>>
+	       <MAPF <>
+		     <FUNCTION (AN) 
+			     #DECL ((AN) ANOMALY)
+			     <COND (<IS-PROBLEM? .AN
+						 '![EMPTY
+						    TOO-MANY-DIGITS
+						    NUMBER-TOO-BIG
+						    ILLEGAL-VALUE!]>
+				    <ADD-SYMPTOM .TRNS DOUBLE-DIGIT .FIELDS>)>>
+		     .A>)>>
+
+" 2. Check for numeric field containing 1 alphabetic or aphabetic containing
+     1 numeric"
+
+<DEFINE EXTRA-CHARACTER (TRNS FIELDS "AUX" (A <ANOMALIES .TRNS>)) 
+   #DECL ((TRNS) TRANSACTION (FIELDS) <LIST [REST ATOM]>)
+   <COND
+    (<AND <==? <LENGTH .FIELDS> 1>
+	  <BAD-CHARACTER <NTH <LIST-OF-VALUES .TRNS> ,<1 .FIELDS>>>>
+     <MAPF <>
+      <FUNCTION (AN) 
+	      <COND (<AND <NOT <EMPTY? <PROBLEM .AN>>>
+			  <OR <==? <1 <PROBLEM .AN>> NON-NUMERIC>
+			      <==? <1 <PROBLEM .AN>> BAD-VALUE>>>
+		     <ADD-SYMPTOM .TRNS
+				  EXTRA-CHARACTER-OF-WRONG-TYPE
+				  .FIELDS>)>>
+      .A>)>>
+
+" Routine to look for doubled character in string"
+
+<DEFINE DOUBLE-DIGIT? (S) #DECL ((S) STRING)
+	<COND (<G=? <LENGTH .S> 2>
+	       <MAPF <>
+		     <FUNCTION (C1 C2)
+			<COND (<==? .C1 .C2> <MAPLEAVE>)>>
+		      .S <REST .S>>)>>
+
+" Routine to to look for numeric in alphabetic string or visa versa"
+
+<DEFINE BAD-CHARACTER (S) #DECL ((S) STRING)
+	<COND (<NOT <EMPTY? .S>>
+	       <COND (<AND <G? <SET TEM <CHTYPE <1 .S> FIX>> 47>
+			   <L? .TEM 58>> <SET NUM T>)
+		     (ELSE <SET NUM <>>)>
+	       <MAPF <>
+		     <FUNCTION (C)
+			<COND (<AND <G? <SET C <CHTYPE .C FIX>> 47>
+				    <L? .C 58>>
+			       <COND (<NOT .NUM> <MAPLEAVE>)>)
+			      (.NUM <MAPLEAVE>)>> .S>)>>
+
+
+<DEFINE ADD-SYMPTOM (TRNS SYMPTOM FIELDS) 
+	<PUT .TRNS ,SYMPTOM-LIST ((.SYMPTOM .FIELDS) !<SYMPTOM-LIST .TRNS>)>>
+
+<DEFINE IS-PROBLEM? (AN UV "AUX" (P <PROBLEMS .AN>)) 
+	#DECL ((AN) ANOMALY (UV) <UVECTOR [REST ATOM]>)
+	<MAPF <>
+	      <FUNCTION (ATM) 
+		      <COND (<AND <==? .ATM EMPTY> <EMPTY? .P>> <MAPLEAVE>)
+			    (<MAPF <>
+				   <FUNCTION (PR) 
+					   #DECL ((PR) PROBLEM)
+					   <COND (<==? <1 .PR> .ATM>
+						  <MAPLEAVE T>)>>
+				   .P>
+			     <MAPLEAVE>)>>
+	      .UV>>
+
+<SETG SYMPTOM-CHECKER (DOUBLE-DIGIT EXTRA-CHARACTER)>

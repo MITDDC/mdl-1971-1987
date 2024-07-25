@@ -1,0 +1,18 @@
+Compilation record for: PS:<COMMUD>M-SUM.MUD.10;P777752;APT
+Output file:  DSK:<COMMUD>M-SUM.NBIN.10
+File loaded.
+Precompilation loaded.
+Functions ordered.
+COMPILING PSUMMARY!-M-SUM!-PACKAGE
+===== External variable being referenced:  OUTCHAN
+ **** .OUTCHAN **** 
+Peephole  3% 286/276
+Job done in:  15 / 42
+
+
+Total time used is
+	38 sec. CPU time,
+	20 sec. garbage collector CPU time,
+	1 min. 47 sec. real time.
+CPU utilization is 35.514018%.
+Number of garbage collects = 7

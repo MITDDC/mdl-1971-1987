@@ -1,0 +1,36 @@
+
+?	this summary
+??	complete summary
+O	Open object
+V	toggle Verbosity
+
+MEND commands
+N	Next step(s)
+OV	skip OVer
+Q	Quit EDIT
+QM	Quit MEND
+SN	Set Number of lines
+SV	Set lowest 1STEP leVel
+SD	Set Delay
+PD	Pprint Displayed object
+PO	Pprint Original object
+
+MEND interrupts
+^E	End automatic mode
+^B	Begin automatic mode
+^N	Next step
+^O	skip Over
+^L	cLear screen
+^Q	Quit MEND
+^U	Unprint stack
+^P	Print stack
+
+Debugging commands
+BK	set BreaKpoint here
+KB	Kill all Breakpoints
+KT	Kill This breakpoint
+
+^F returns you to EDIT
+* is largest legal FIX arg
+
+

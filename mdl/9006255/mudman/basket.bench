@@ -1,0 +1,42 @@
+	Here are the results of the Baskett Benchmark in MDL.
+
+a) On a 2060 (XX), naive translation from C (no optimization
+whatsoever), using subscripts (like the C program), compiled.
+
+	10.2 sec.
+
+b) As (a), but with the compiler instructed not to put in bounds checks
+on array references.
+
+	 8.5 sec.
+
+c) As (b), but "glued."  This is something we do in MDL which is
+analogous to linking; several functions are transformed into one and the
+calls among them are no longer mediated.
+
+	 7.8 sec.
+
+d) As (c), but "hand optimized."  Specifically, the recalculation of the
+row offset in things like 'fit' is moved out of the loop.  Also, the
+array initialization in 'main' is done via a MDL construct that is known
+to be very efficient (open-compiles to a BLT).  On the other hand, this
+is a construct that any MDL programmer would choose to use as a matter
+of course.
+
+	 5.4 sec.
+
+e) Same as (d), but done on a KA10 (DM).
+
+	36.0 sec.
+
+f) For reference, an interpreted run on the 2060.
+
+      1881.0 sec.
+
+     The compiled version in (d) and (e) is 1262 36-bit words long.
+Most of excess over the size of a Lisp version is probably due to the
+basic MDL object being two words long rather than one (two words to
+push, hence two instructions).  The compiler doesn't produce DMOVEs and
+DMOVEMs so that code can work on KAs as well as 20s.
+
+	Dave

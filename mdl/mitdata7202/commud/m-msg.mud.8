@@ -1,0 +1,72 @@
+<PACKAGE "M-MSG">
+
+<ENTRY SENDMSG RQOPEN RQCLOSE>
+
+<USE "M-DEFS" "M-DATA" "OPSYS" "DID">
+
+<DEFINE SENDMSG (TO SUB "OPTIONAL" TXT (FRM (<SNAME> <>))
+		 "TUPLE" FF "AUX" OUTCHAN D) 
+	#DECL ((OUTCHAN) <OR CHANNEL FALSE> (TO) <LIST [REST ADDRESS]>
+	       (TXT SUB) STRING
+	       (D) <UVECTOR [REST FIX]> (FRM) ADDRESS (FF) TUPLE)
+	<COND (<NOT <ASSIGNED? TXT>> <SET TXT .SUB> <SET SUB "">)>
+	<COND (<SET OUTCHAN <RQOPEN>>
+	       <PRINC !\[>
+	       <PRIN1 <SET D <DISPATCH-ID>>>
+	       <PRIN1 <2 .D>>
+	       <TERPRI>
+	       <PRIN1 '("MAILER")>
+	       <TERPRI>
+	       <PRINC !\(>
+	       <PRIN1 .FRM>
+	       <PRINC ")">
+	       <PRINT '"MAIL">
+	       <PRINT '"ROUTINE">
+	       <PRINT '()>
+	       <CRLF>
+	       <PRINC !\(>
+	       <PRINT "WHEN-ORIGINATED">
+	       <PRINT <2 .D>>
+	       <PRINT "TO">
+	       <PRINT .TO>
+	       <PRINT "ACTION-TO">
+	       <PRINT .TO>
+	       <COND (<NOT <EMPTY? .SUB>>
+		      <PRINT "SUBJECT">
+		      <PRINT .SUB>)>
+	       <PRINT "BODY">
+	       <PRINT [<> (.TXT)]>
+	       <PRINT "FROM">
+	       <PRINT (.FRM)>
+	       <MAPF <> <FUNCTION (F) <PRINT .F>> .FF>
+	       <PRINT "SCHEDULE">
+	       <PRINT '("SENDING")>
+	       <PRINC "
+)]
+">
+	       <RQCLOSE .OUTCHAN>
+	       T)>>
+
+\
+
+"RQOPEN -- open a new request file for writing, return channel"
+
+<DEFINE RQOPEN ("AUX" (SNM <DATUM "COMSYS-MESSAGE-DIR">) C) 
+	#DECL ((SNM) <SPECIAL STRING> (VALUE) CHANNEL (C) <OR FALSE CHANNEL>)
+	<COND (<SET C <OPEN "PRINT" "_RQST_">>)
+	      (ELSE <ERROR CANNOT-OPEN-REQUEST-FILE RQOPEN .C>)>>
+
+"RQCLOSE -- rename file on channel to a given name and close it"
+
+<DEFINE RQCLOSE (CH "AUX" R (FN <DATUM "COMSYS-NEW-FILE">))
+	#DECL ((CH) CHANNEL (R) ANY (FN) STRING)
+	<COND (<SET R 
+		    <OPSYS (TOPS-20
+			    <CLOSE .CH>
+			    <RENAME <FILCHN .CH> TO .FN>)
+			   (ITS
+			    <RENAME .CH .FN>)>>
+	       <CLOSE .CH>)
+	      (ELSE <ERROR CANNOT-RENAME-REQUEST-FILE RQCLOSE .CH .R>)>>
+
+<ENDPACKAGE>

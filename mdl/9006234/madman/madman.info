@@ -1,0 +1,315 @@
+MADMAN -- MUDDLE AREA DATA MANAGER
+
+I. SPACEs.
+
+    This package uses MUDDLE storage from the PMAP space in
+groups of ITS size pages.  Objects may be built within this
+area by use of special primitives.  Once built, these objects
+may be manipulated with few exceptions with built in MUDDLE
+subroutines (NTH, REST, BACK, etc.).  
+
+    A SPACE is a MUDDLE object of PRIMTYPE VECTOR consisting of
+four elements.
+	1.  A LIST of objects of type PBLOCK (later).
+	2.  A WORD containing the next available address in core.
+	3.  A WORD containing the lower bound of the SPACE.
+	4.  A WORD which points to the start of a free storage chain.
+	5.  A LIST the free list (currently unimplemented)
+
+    A PBLOCK is a MUDDLE object of PRIMTYPE VECTOR indicating
+a contiguous block of ITS size pages.  It's internal structure
+is:	1.  A FIX, the number of contiguous pages
+	2.  A WORD containing the highest address in the block
+	3.  A WORD containing the last address used in the PBLOCK
+	    with the following exceptions:
+	      a. 0, indicating that this PBLOCK is the one currently
+		 being used for storage allocation.  The last address
+		 in this case is the second element of the SPACE in
+		 which the PBLOCK resides.
+	      b. -1, indicating that this PBLOCK is inactive, i.e.
+		 that no data has been written or is valid in this
+		 PBLOCK (this condition occurs when ARESET is done
+		 to the SPACE containing the PBLOCK, see below).
+
+II. ALLOCATION
+
+  A. ARESERVE
+    ARESERVE is called with a FIX, the number of pages you wish
+to 'reserve' in a cache managed by APGFIND and APGGIVE (see later).
+This is useful to do with all I/O operations to insure the minumum
+amount of pointer fixups.  An additional optional argument of T may
+be given if the pages are to be made shareable [see SHARING].
+
+  B. APGFIND
+    APGFIND is called with a requested page number and a number of
+pages.  The page number is the TOP page needed.  If it is -1, APGFIND
+will find the first block of the correct size.  With a positive first
+argument, APGFIND returns the first argument or #FALSE ().  With a -1
+as first argument, APGFIND returns the LOW page found.  This is for
+consistency with PAGE-FIND.  APGFIND with a -1 argument can also return
+#FALSE () if no space is available in the cache.
+
+  C. APGGIVE
+    APGGIVE is analagous to PAGE-GIVE but the arguments are slightly
+altered in meaning.  The first argument is the TOP page number returned
+and the second is the number of pages to give from there.  APGGIVE always
+returns its first argument, and never fails.
+
+  D. AFIND
+    AFIND is the function called to allocate pages and create a
+SPACE.  Arguments are a FIX (number of pages) and an optional
+SPACE, whose structure will be used for the new SPACE to be 
+returned.
+    AFIND always returns a SPACE with exactly one PBLOCK, i.e.
+all pages are consecutive.  AFIND can return false if the request
+was excessive.  The pages returned are cleared (zeros).
+    AFIND gets its pages from APGFIND and will actually call ARESERVE
+if no pages have been ARESERVEd or none remain unused.
+    AFIND calls an internal function PAGE-FIXUP which does the actual
+APGFIND, CORBLK and PAGE-CLEAR.
+
+  E. ADD-ALLOC
+    ADD-ALLOC is an internal function which increases the size of a SPACE.
+It takes as arguments a SPACE and a FIX, the number of consecutive words
+of storage required to fill the request.  In addition, an optional argument
+of a page number may be given.  If so, ADD-ALLOC will first try to grab
+enough pages to fill the request with the HIGH page being the argument.
+ADD-ALLOC is called from all of the storage creating functions when the available
+room is not sufficient.  It returns the SPACE properly fixed up.
+    ADD-ALLOC first computes the number of pages required and then
+MAPFs down <1 SPACE>, looking at PBLOCKS.  If any are large enough
+and are inactive -1 in <3 PBLOCK>, 
+	1. this block is activated (0 is put in <3 PBLOCK>)
+	2. <2 SPACE> is put in <3 of currently active PBLOCK>
+	3. <2 PBLOCK> is put in <2 SPACE>
+	4. Low word of PBLOCK is put in <3 SPACE>
+Otherwise, a new PBLOCK is generated and added to the front of the
+PBLOCK list in <1 SPACE> and <2&3 SPACE> are fixed up accordingly.
+
+  F. ARESET
+    ARESET takes a SPACE and an optional argument for whether all
+of the pages in the SPACE should be PAGE-CLEARed.  All PBLOCKs in
+<1 SPACE> are made inactive (-1 in <3 PBLOCK>) except the last
+which is reset and <2-5 SPACE> are reset accordingly.
+
+  G. AGIVE
+    AGIVE gives back all of the pages in the SPACE and puts 0's
+in <2-5 SPACE>
+
+  H. ALENGTH
+    ALENGTH takes a SPACE and returns a word of total pages,,total words
+This information is obtained by MAPFing down <1 SPACE>
+
+  I. APLENGTH
+    APLENGTH takes a SPACE and returns max contiguous pages,,total pages
+This information is obtained as by ALENGTH
+
+  J. PLENGTH
+    PLENGTH takes a SPACE a PBLOCK, and a header length and returns
+a FIX which is the amount of words used in the PBLOCK.
+
+  K. APFREE
+    APFREE takes a SPACE and a FIX, a number of pages and returns a
+PBLOCK in which <1 PBLOCK> is greater or equal to the request.  If
+necessary, ADD-ALLOC is called to generate one. APFREE is called by
+AREAD to get storage for reading
+
+  L. AFREE
+    AFREE given a SPACE and a PBLOCK, determines whether the PBLOCK
+is empty (unused).
+
+  M. UPAGES
+    UPAGES given a SPACE returns the number of pages used in the
+SPACE (inactive pages are not used).
+
+  N. BOUNDS-CHECK
+    BOUNDS-CHECK takes a SPACE and returns a FALSE or an ERROR if
+anything inside SPACE points outside SPACE.  The FALSE/ERROR is
+switched as described in ERROR HANDLING (below).
+
+  O. ALEGAL?
+    ALEGAL? takes a SPACE and an object and returns T if the object
+lies within the SPACE AT THE TOP LEVEL ONLY.
+
+  P. AGC/ACOPY
+    AGC/ACOPY copy objects from anywhere into a SPACE.  The algorithm
+is to BLT an object into the SPACE and then MAPF down it copying its
+internal elements recursively.  The resultant object has no spaces and
+no extraneous garbage.  The difference between ACOPY and AGC is that
+AGC mungs the original object and preserves sharing and circularity
+whereas ACOPY spares the original at the expense of disallowing shared
+objects (they get copied independently) and dying horribly on circular
+ones.  AGC SHOULD NEVER BE DONE ON OBJECTS IN MUDDLE GARBAGE COLLECTED
+STORAGE!!!
+    AGC/ACOPY return the copy created.
+
+III. I/O OPERATIONS
+
+  A. APRINT
+    APRINT takes a SPACE, an OBJECT, a CHANNEL or CHANP, a disk
+address, and a FIX (the length in words allotted for this operation).
+The latter argument is used as a check and must be G=? <ALENGTH SPACE>.
+In addition, APRINT takes an optional argument (DEFAULT is FALSE)
+which says to print the space in one chunk, fixing up pointers as
+is appropriate.
+    APRINT format is as follows:
+	a. Header words
+	    i. transactions,,total pages
+	       transactions = number of READs required (equal to the
+			      number of PBLOCKs in the dumped object)
+	    ii. type WORD of the object dumped
+	    iii. value WORD of the object dumped
+	    iv. free vector chain pointer
+	b. For each PBLOCK
+	    i. <2 PBLOCK>, i.e. high core address of high page,,<1 PBLOCK>
+	    ii. number of words in this PBLOCK
+	    iii. words of data
+
+  B. AREAD
+    AREAD takes a SPACE, a CHANNEL or CHANP, a disk address, and
+a length (the length of the object from ALENGTH). There are two optional
+arguments:
+    1. Speed setting (a FIX, 1,2, or 3)
+	 1. Slowest.  Always read into contiguous pages.
+	 2. Faster.   Always read into contiguous pages but try to
+	      put the largest chunk into the pages it came from.
+	 3. Fastest.  Always try to read each chunk into the page
+	      from which it came.
+    2.  Switch for whether or not to save the free vector chain pointer
+	from the read in object (DEFAULT is T)
+    AREAD first reads the header words for the file (and the header
+words for the first PBLOCK to save I/O operations) to set up the
+transaction counter.
+    AREAD then repeats through the following process:
+	a. READ header information (already done first time)
+	b. Make room for the incoming data (see above)
+	c. READP into the SPACE
+	d. Setup for LFIXUP (pointer fixup) - described later.
+    When finished, AREAD passes information to LFIXUP/LHFIXUP
+in the form of:
+	a. If there is only one transaction,
+	   <LFIXUP <type word> <value word> <low addr> <high addr> <offset>>
+	   where offset is from header information and high and low address
+	   refer to locations read into.
+	b. If there are more than one transaction,
+	   <LHFIXUP <type word> <value word> <hairy TUPLE>>
+	   Hairy TUPLE is arranged 3 words for each PBLOCK read in and
+	   has the following format:
+	    i. low word of block read into
+	    ii. high word of block read into
+	    iii. high word of page from which this block originated,
+		 from header information
+    AREAD returns what LFIXUP/LHFIXUP returns, the object APRINTed.
+
+  C. LFIXUP/LHFIXUP/LPFIXUP/LHPFIX
+    LFIXUP/LHFIXUP is the RSUBR that updates pointers in objects
+which have been AREAD.  The general algorithm is to start at the
+high address and work linearly through the universe until the low
+address is reached.  Basically, at the last location, the next to
+last word can either be a list cell or a uvector/string/vector
+dope word which is signalled by the 4.6 bit being set.  In addition
+the 4.9 bit is used to distinguish uvectors from vectors.  The fixuper
+then dispatches on type and updates all objects within the structure
+which are known to have pointers (by type code/storage allocation type).
+Updating is done via an <XCT A*> instruction.
+    LFIXUP is the simple version which takes an offset and simply
+does an ADDM on every location which is a pointer (the instruction
+<ADDM O* (D)> is in A).
+    LHFIXUP is a bit hairier in that the third argument is a TUPLE
+in groups of three words, low address, high address, and old location.
+LHFIXUP MAPFs down this TUPLE entering the LFIXUP code with the
+low and high address argument and puts a <PUSHJ P* LHHACK> in A.
+LHHACK goes through the TUPLE and finds the entry corresponding to
+the current pointer.  It then computes the offset and does the ADDM.
+This process is obviously much hairier than the simple case and is
+observed to be much slower.  However, this is done only in fairly
+few cases.  [Code is commented somewhat]
+    LPFIXUP is the function called by APRINT to simulate the dumping
+of a space as if it were in one piece.  It takes a dummy argument,
+a UVECTOR of TYPE/VALUE pair, and a TUPLE in groups of three words
+(as for LHFIXUP) which are low address, high address, and offset for
+pointers between those limits.  The offset is calculated in APRINT.
+LPFIXUP *MUNGS* the original object grossly.  The UVECTOR is also
+fixed up so that the object pointer (words 2&3 of APRINT format) will
+be pointing to the correct place.  I'm not sure what LPFIXUP returns
+but it mungs the UVECTOR to have the right thing in it.
+    LPFIXUP is also used in the function BOUNDS-CHECK which checks
+a SPACE for pointers to structures not residing in the SPACE.  In this
+case, the third element of each group in the TUPLE is 0.  Its sole
+purpose is to generate an ERROR if an out-of-bounds condition exists.
+    LHPFIX is used to update a pointer to a particular word and is
+currently used to fix up the free vector chain pointer.  It is called
+with a WORD and returns a fixed-up copy of the WORD.
+
+
+IV. SHARED OBJECTS
+
+    A facility exists for the sharing of MADMAN spaces (i.e. between
+jobs).  The following describe primitives for doing so.  In these
+descriptions, the STARTING process will be that process which first sets up
+the SPACE.
+
+  A. ARESERVE (again)
+    ARESERVE takes a FIX, the number of pages to reserve, and an
+argument which, if T, indicates that the pages should be shared.
+The STARTING process must____ do an ARESERVE before calling ASHARE.
+Other processes, must not___ do an ARESERVE before calling ASHARE.
+ARESERVE returns the HIGH page number reserved and this number must____
+be used by all other processes sharing the SPACE.
+
+  B. ASHARE
+    ASHARE is the shared equivalent of AFIND.  It takes a number of
+pages (FIX) and the high page in the block (from ARESERVE, FIX).  
+Also, the STARTING process must pass a third argument (FIX), which is the
+length of a VECTOR which may be used by all sharing processes to pass
+information.  ASHARE returns a SPACE always for the STARTING process, and
+returns a SPACE or a FALSE for other processes.  A FALSE is returned if
+the required pages are not available in that process.
+
+  C. ASHARE-RESET
+    ASHARE-RESET is an analog of ARESET, but leaves a CLEARED version of
+the information VECTOR in place.  The argument is a SPACE and the SPACE
+is returned.
+
+  D. ASHARE-VECTOR
+    ASHARE-VECTOR takes a SPACE and returns the information VECTOR located
+within.
+
+
+V. STRUCTURE CREATION
+
+    Structures are created with RSUBRs similar to SUBRs in
+MUDDLE.  These are all prefixed with the letter A.  The
+difference between these and MUDDLEs is that the first argument
+is a SPACE to build the strucure in.  If the second letter of
+the RSUBR is L, the SPACE argument will be the Lval of the
+atom CURSPACE.  This allows <MAPF ,ALLIST ....> to work properly.
+The currently available primitives are:
+
+  P1. <ALLIST <-TUPLE of elements, including STRINGs>->
+      [ALIST with explicit 1st argument a SPACE]
+  P2. <ALVECTOR <-TUPLE of elements>->
+      [AVECTOR ...]
+  P3. <ALUVECTOR <-TUPLE of elements>->
+      [AUVECTOR ...]
+  P4. <ALSTRING <-TUPLE of CHARACTERs or STRINGs>->
+      [ASTRING ...]
+  P5. <ALILIST <-length>- "OPTIONAL" <-item, but not STRING>->
+      [AILIST ...]
+  P6. <ALIVECTOR <-length>- "OPTIONAL" <-item>->
+      [AIVECTOR ...]
+  P7. <ALIUVECTOR <-length>- "OPTIONAL" <-item>->
+      [AIUVECTOR ...]
+  P8. <ALISTRING <-length>- "OPTIONAL" <-character>->
+      [AISTRING ...]
+  P9. <APUT <-space>- <-object>- <-fix>- <-object 2>->
+      [like MUDDLE's PUT and known about DEFERs]
+  P10. <APUTC <-space>- <-object>- <-FIX>- <-object 2>->
+      Like APUT but does an ALEGAL? on object 2 and APUTs 
+      an ACOPY if it is not ALEGAL?.
+
+   Internally, structures are built from high addresses to low addresses,
+for convenience in programming.  Storage is allocated by an entry called
+ABLOCK, which first tries to find space at the top (low addresses) of the
+SPACE and then tries to find space in the free vector chain.  If both
+fail, ABLOCK calls ADD-ALLOC to get additional storage.

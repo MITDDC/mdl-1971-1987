@@ -1,0 +1,124 @@
+<PACKAGE "M.SUM">
+
+"MESSAGE SUMMARY"
+
+<ENTRY PSUMMARY RSUMMARY>
+
+<USE "M.READ" "ITIME" "FIELDS">
+
+<DEFINE PSUMMARY (N "AUX" S (OUTCHAN .OUTCHAN) (ST <+ 21 <14 .OUTCHAN>>)) 
+	#DECL ((S) <OR FALSE STRING> (OUTCHAN) CHANNEL (N ST) FIX)
+	<COND (<G=? .N 100000>)
+	      (<G=? .N 10000> <PRINC " ">)
+	      (<G=? .N 1000> <PRINC "  ">)
+	      (<G=? .N 100> <PRINC "   ">)
+	      (<G=? .N 10> <PRINC "    ">)
+	      (ELSE <PRINC "     ">)>
+	<PRINC !\#>
+	<PRINC .N>
+	<PRINC ": ">
+	<DPRT <DRDMSG "" <GETFIX "WHEN-ORIGINATED">>>
+	<INDENT-TO .ST>
+	<COND (<SET S <DRDMSG "" <GETFIX "FROM">>>
+	       <PRINC .S>)
+	      (ELSE <PRINC "??">)>
+	<PRINC " => ">
+	<APRT <DRDMSG "" <GETFIX "ACTION-TO">> .ST>
+	<COND (<SET S <DRDMSG "" <GETFIX "SUBJECT">>> <SPRT .S .ST>)
+	      (<SET S <OR <DRDMSG "" <GETFIX "MESSAGE">>
+			  <DRDMSG "" <GETFIX "TEXT">>>>
+	       <SPRT .S .ST <>>)>>
+
+\
+
+<DEFINE RSUMMARY (N "AUX" S L (OUTCHAN .OUTCHAN) (ST <+ 13 <14 .OUTCHAN>>)) 
+	#DECL ((S) <OR FALSE STRING> (OUTCHAN) CHANNEL (N ST) FIX
+	       (L) <OR FALSE LIST>)
+	<DPRT <DRDMSG "" <GETFIX "REMIND">>>
+	<COND (<AND <SET L <DRDMSG "" <GETFIX "ACTION-TO">>>
+		    <NOT <LENGTH? .L 1>>>
+	       <PRINC "  => ">
+	       <APRT .L .ST>)>
+	<COND (<AND <SET S <DRDMSG "" <GETFIX "SUBJECT">>>
+		    <N=? <MEMBER "REMINDER for " .S> .S>>
+	       <SPRT .S .ST>)
+	      (<SET S <OR <DRDMSG "" <GETFIX "MESSAGE">>
+			  <DRDMSG "" <GETFIX "TEXT">>>>
+	       <SPRT .S .ST <>>)>>
+
+\
+
+<DEFINE SPRT (S "OPTIONAL" (ST 21) (S? T)
+	      "AUX" (OUTCHAN .OUTCHAN) (R <- <13 .OUTCHAN> <14 .OUTCHAN>>) SX SL)
+	#DECL ((S SX) <OR STRING FALSE> (R SL ST) FIX (OUTCHAN) CHANNEL
+	       (S?) <OR ATOM FALSE>)
+	<COND (<SET S <ANY? .S>>
+	       <COND (<AND .S? <=? <MEMBER "Re: " .S> .S>>
+		      <SET S <REST .S 4>>)>
+	       <COND (<SET SX <MEMQ <ASCII 13> .S>>
+		      <SET SL <- <LENGTH .S> <LENGTH .SX>>>)
+		     (<SET SL <LENGTH .S>>)>
+	       <COND (<AND .S? <G? <+ .SL 6> .R>>
+		      <CRLF>
+		      <INDENT-TO .ST>)
+		     (<PRINC "  ">)>
+	       <SET R <- <13 .OUTCHAN> <14 .OUTCHAN> 4>>
+	       <COND (.S? <PRINC "Re: ">)
+		     (ELSE <PRINC !\"> <SET R <- .R 1>>)>
+	       <SET R <PRINTSTRING .S
+				   .OUTCHAN
+				   <MIN .R .SL>>>
+	       <COND (<NOT .S?>
+		      <COND (<G? <LENGTH .S> .R>
+			     <PRINC "...">)>
+		      <PRINC "\"">)>)>>
+
+<DEFINE ANY? (S)
+	#DECL ((S) STRING (VALUE) <OR STRING FALSE>)
+	<MAPR <>
+	      <FUNCTION (S)
+		#DECL ((S) STRING)
+		<AND <NOT <MEMQ <1 .S> " 	
+">>
+		     <MAPLEAVE .S>>>
+	      .S>>
+
+<DEFINE APRT (L "OPTIONAL" (ST 21) "AUX" (OUTCHAN .OUTCHAN) R S SX SL)
+	#DECL ((L) <OR FALSE <LIST [REST STRING]>> (OUTCHAN) CHANNEL
+	       (S SX) <OR STRING FALSE> (R SL ST) FIX)
+	<COND (.L
+	       <REPEAT ()
+		       <COND (<EMPTY? .L> <RETURN>)>
+		       <SET R <- <13 .OUTCHAN> <14 .OUTCHAN>>>
+		       <SET S <1 .L>>
+		       <COND (<SET SX <MEMQ <ASCII 13> .S>>
+			      <SET SL <- <LENGTH .S> <LENGTH .SX>>>)
+			     (<SET SL <LENGTH .S>>)>
+		       <COND (<G? <+ .SL 2> .R> <CRLF> <INDENT-TO .ST>)>
+		       <PRINTSTRING .S .OUTCHAN .SL>
+		       <COND (<NOT <LENGTH? .L 1>> <PRINC ", ">)>
+		       <SET L <REST .L>>>)
+	      (ELSE <PRINC "??">)>>
+
+<DEFINE DPRT (DT "AUX" D (OUTCHAN .OUTCHAN)) 
+	#DECL ((DT) <OR FALSE FIX UVECTOR LIST>
+	       (D) <LIST [2 <LIST [3 FIX]>] STRING>
+	       (OUTCHAN) CHANNEL)
+	<COND (<NOT .DT> <PRINC "??/?? ??:??">)
+	      (ELSE
+	       <COND (<TYPE? .DT LIST> <SET D .DT>)
+		     (<TYPE? .DT UVECTOR FIX> <SET D <LTIME .DT>>)>
+	       <PNUM <2 <1 .D>>>
+	       <PRINC !\/>
+	       <PNUM <3 <1 .D>>>
+	       <PRINC !\ >
+	       <PNUM <1 <2 .D>>>
+	       <PRINC !\:>
+	       <PNUM <2 <2 .D>>>)>>
+
+<DEFINE PNUM (N "AUX" (OUTCHAN .OUTCHAN))
+	#DECL ((N) FIX (OUTCHAN) CHANNEL)
+	<COND (<L? .N 10> <PRINC !\0>)>
+	<PRINC .N>>
+
+<ENDPACKAGE>

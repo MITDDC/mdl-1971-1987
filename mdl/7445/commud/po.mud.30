@@ -1,0 +1,107 @@
+<DEFINE PACKORDER ("AUX" POB (POBL <GET PACKAGE OBLIST>))
+	#DECL ((POB) VECTOR (POBL) OBLIST)
+	<SET POB
+	     <MAPF ,VECTOR
+		   <FUNCTION (L)
+			#DECL ((L) <LIST [REST ATOM]>)
+			<MAPRET !.L>>
+		   .POBL>>
+	<MAPR <>
+	      <FUNCTION (POB)
+		   #DECL ((POB) VECTOR)
+		   <PUT .POB 1 (<1 .POB>)>>
+	      .POB>
+	<MAPF <>
+	      <FUNCTION (P "AUX" OBL)
+		   #DECL ((P) LIST (OBL) <LIST [REST OBLIST]>)
+		   <COND (<LENGTH? .P 1>
+			  <PUTREST .P (() 0)>
+			  <PUT .P
+			       2
+			       <MAPF ,LIST
+				     <FUNCTION (OB "AUX" P)
+					  #DECL ((OB) OBLIST)
+					  <COND (<AND <N==? .OB <ROOT>>
+						      <SET P
+							   <PFIND <GET .OB OBLIST>
+								  .POB>>> 
+						 <MAPRET .P>)
+						(ELSE <MAPRET>)>>
+				     <COND (<GASSIGNED? <1 .P>>
+					    <REST <SET OBL ,<1 .P>> 2>)
+					   (ELSE ())>>>)>>
+	      .POB>
+	<MAPF <>
+	      <FUNCTION (P)
+		   #DECL ((P) <LIST ATOM LIST FIX>)
+		   <MAPF <>
+			 <FUNCTION (P)
+			      #DECL ((P) <LIST ATOM LIST FIX>)
+			      <PUT .P 3 <+ <3 .P> 1>>>
+			 <2 .P>>>
+	      .POB>
+	<SORT ,REFCOUNT .POB>
+	.POB>
+
+<DEFINE REFCOUNT (P1 P2)
+	#DECL ((P1 P2) <LIST ATOM LIST FIX>)
+	<G? <3 .P1> <3 .P2>>>
+
+<DEFINE PFIND (A POB)
+	#DECL ((A) ATOM (POB) VECTOR)
+	<MAPF <>
+	      <FUNCTION (P)
+		   #DECL ((P) <LIST ATOM>)
+		   <COND (<==? <1 .P> .A> <MAPLEAVE .P>)>>
+	      .POB>>
+
+<DEFINE PACKP (PL "AUX" (OUTCHAN .OUTCHAN) (X 10)
+	       (OBLIST (<GET PACKAGE OBLIST> <ROOT>)))
+	#DECL ((PL) LIST (OUTCHAN) CHANNEL
+	       (X) FIX (OBLIST) <SPECIAL <LIST [REST OBLIST]>>)
+	<MAPF <>
+	      <FUNCTION (P)
+		   #DECL ((P) <OR LIST VECTOR>)
+		   <COND (<TYPE? .P LIST>
+			  <SET X <MAX .X <FLATSIZE <1 .P> 70>>>)
+			 (ELSE
+			  <MAPF <>
+				<FUNCTION (P)
+				     #DECL ((P) LIST)
+				     <SET X <MAX .X <FLATSIZE <1 .P> 70>>>>
+				.P>)>>
+	      .PL>
+	<MAPF <>
+	      <FUNCTION (P)
+		   #DECL ((P) <OR LIST VECTOR>)
+		   <COND (<TYPE? .P LIST> <PACKUSES .P .X>)
+			 (ELSE
+			  <PRINC "vvvvv">
+			  <CRLF>
+			  <MAPF <>
+				<FUNCTION (P)
+				     #DECL ((P) LIST)
+				     <PACKUSES .P .X>>
+				.P>
+			  <PRINC "^^^^^">
+			  <CRLF>)>>
+	      .PL>>
+
+<DEFINE PACKUSES (P X "AUX" (OUTCHAN .OUTCHAN))
+	#DECL ((P) <LIST ATOM <LIST [REST ATOM]>> (X) FIX (OUTCHAN) CHANNEL)
+	<PRINC <1 .P>>
+	<PRINC ":">
+	<INDENT-TO .X>
+	<MAPF <>
+	      <FUNCTION (A)
+		   #DECL ((A) ATOM)
+		   <COND (<NOT <FLATSIZE .A <- <13 .OUTCHAN>
+					       <14 .OUTCHAN>>>>
+			  <CRLF>
+			  <INDENT-TO .X>)>
+		   <PRINC .A>
+		   <COND (<FLATSIZE !\  <- <13 .OUTCHAN>
+					   <14 .OUTCHAN>>>
+			  <PRINC !\ >)>>
+	      <2 .P>>
+	<CRLF>>

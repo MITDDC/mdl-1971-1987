@@ -1,0 +1,63 @@
+÷” Ã—ø1â Eø4ìÓ©ø5>A
+ 
+÷‘gT¥û( Ó³úu ÔAø4ìÕ­ôhC©ôfÁ±ô(C©÷È A
+ 
+÷•iÅ[ú“êA™ô Ó³ù•f¢}
+ 
+÷”âÔôhC©ô_÷h’ ƒù“'Ãƒú“é ù3&E‰ôH A
+ 
+÷”âÔôfÁ±ôŸ÷h¦A¥øñiÔAøÔ¢ÅAøS'Ã—ôã ¯ùô¢SE
+ 
+÷”âÔôjO©ôß÷hªO©ø3F¥ø±PWŸúQ)¢A
+ 
+÷”âÔô&Eô÷h¦Eøõ$ ŸøÈ"A©ø( Ò‹ø( A
+ 
+÷”âÔô(C©ô_÷h’ ‰ø5  ƒúQ` «úqb"A
+ 
+÷“`Î“øÑiÔAø4!ÔAø3`ØAø5'ÔAø”!Ô}
+ 
+÷”âÔôiÙ«úÈI«úÑaÔŸúH a÷Ï A
+ 
+÷”âÔôjÖeô$Õ­ø°êO¥ô#¯ùô¢ Uö0aö0aö>}
+
+<DEFINE ASYSTAT (D
+		 "OPTIONAL" (UV ,ASYUV)
+		 "AUX" (ALLOC <* <ALLOCPAGE .D> 1024>) (DUV ,DUV1) (LENMX 0) (LENTOT 0)
+		       DTOT)
+	#DECL ((D) ASYLUM (ALLOC LENMX LENTOT DTOT) FIX (DUV UV) UVECTOR)
+	<ALLOC-MAP .D>
+	<PUT .UV
+	     ,APCT
+	     </ <* </ <- <CHTYPE <ORB <GETBITS <1 <GET-LOC .ALLOC .DUV>> <BITS 18 18>>
+				      #WORD *777777000000*>
+				 FIX>
+			 2>>
+		   100>
+		511>>
+	<REPEAT ((UV ,AUV2) (ALPTR <1 <GET-LOC .ALLOC ,DUV1>>) LEN
+		 (CNT
+		  <CHTYPE <ORB <GETBITS .ALPTR <BITS 18 18>> #WORD *777777000000*> FIX>)
+		 (ALOC
+		  <+ <CHTYPE <ANDB <GETBITS .ALPTR <BITS 18 0>> #WORD *000000001777*>
+			     FIX>
+		     .ALLOC>))
+		#DECL ((UV) UVECTOR (ALPTR) WORD (CNT ALOC LEN) FIX)
+		<GET-LOC .ALOC .UV>
+		<SET LEN <CHTYPE <1 .UV> FIX>>
+		<SET LENTOT <+ .LEN .LENTOT>>
+		<AND <G? .LEN .LENMX> <SET LENMX .LEN>>
+		<SET ALOC <+ .ALOC 2>>
+		<SET CNT <+ .CNT 2>>
+		<AND <0? .CNT> <RETURN>>>
+	<PUT .UV ,AMAX .LENMX>
+	<PUT .UV ,ATOT .LENTOT>
+	<PUT .UV
+	     ,DPCT
+	     </ <* <CHTYPE <1 <GET-LOC <+ .ALLOC 1022> .DUV>> FIX> 100>
+		<SET DTOT
+		     <CHTYPE <1 <GET-LOC <+ <* <MFDPAGE .D> 1024> ,MAXADR> .DUV>>
+			     FIX>>>>
+	<PUT .UV ,DLEN .DTOT>> 
+ 
+<ENDPACKAGE>   
+ 

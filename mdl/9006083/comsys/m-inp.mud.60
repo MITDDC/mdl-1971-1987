@@ -1,0 +1,234 @@
+
+<PACKAGE "M.INP">
+
+<ENTRY RQ-DO LST-DO RDPAIRS SUCCESS TRY-LATER NONE MOBY>
+
+<GDECL (RDHAN) HANDLER>
+
+<USE "CHAN" "M.DEFS" "MADMAN" "ASYLUM" "M.READ" "M.DAC" "M.DATA" "M.TIME"
+     "ITIME" "RQFILE" "USRUTI" "M.ACK" "ACHOMP">
+
+"RQ-DO -- processes next request file for daemon
+
+  -- returns atom success if file was winner, and may have added stuff for queue.
+	in this case, a message will be still locked, and
+	the file will be in a 'save' file, to be deleted
+	when the daemon finishes clearing the queue.
+
+-- if file encountered temporary failure, it will be renamed and
+	may be tried later.  in this case, the return arg is
+	atom try-later.
+
+-- atom none returned if no request files exist
+
+-- else, renames file to loser, returns false(loser-name reason parameter-vect)
+   where loser-name and reason are strings, parameter-vect is vector
+   of 3 elements, or false if none was obtained yet
+"
+
+<DEFINE RQ-DO ("AUX" L RES C CC)
+	#DECL ((VALUE) <OR ATOM FALSE> (L) <OR LIST FALSE>
+	       (CC) CHANNEL (C) <OR FALSE ACHANNEL> (RES) <OR FALSE VECTOR>)
+	<UPDMSG>
+	<SET C <RQNEXT>>
+	<COND (<NOT .C> NONE)
+	      (<AND <=? <7 <SET CC <ACCHAN .C>>> "M">
+		    <G? <FILE-LENGTH .CC> <* 4 5 1024>>>
+	       <CLOSE .CC>
+	       <RENAME <7 .CC> <8 .CC> <9 .CC> <10 .CC>
+		       TO <DATUM "COMSYS-MOBY-FILE">>
+	       MOBY)
+	      (ELSE						;"PROCESS FILE"
+	       <COND (<SET L <RDPAIRS .C>>		;"GOT DATA, PROCESS IT"
+		      <SET RES <LST-DO .L>>)
+		     (ELSE					    ;"BAD FILE"
+		      <SET RES .L>)>
+	       <COND (.RES
+		      <RQTEMP .C>
+		      <DMPMSG>
+		      SUCCESS)
+		     (ELSE					 ;"FATAL ERROR"
+		      <RQLOSE .C>
+		      <CHTYPE (<COND (<EMPTY? .RES> "FALSE IN FIELD")
+				     (ELSE <1 .RES>)>
+			       <FILCHN .CC>
+			       <COND (<LENGTH? .RES 1> #FALSE ())
+				     (ELSE <2 .RES>)>)
+			      FALSE>)>)>>
+
+\ 
+
+"LST-DO -- given a list of commands (instead of file) do them...
+
+ -- optional parameter vector gives current state
+     of message, addressee, error-to settings.  if message
+     is given, it is assumed to be locked already.
+
+ -- returns terminal parameter vector if winner, else false
+    containing reason string, and parameter vector
+
+ -- all lossages are fatal except 'lock failed' which may be retried
+     later by the caller
+
+"
+
+<DEFINE INPERR ("TUPLE" STUFF "AUX" IACT "ACT" ERRACT) 
+	#DECL ((STUFF) TUPLE (INPACT IACT ERRACT) ACTIVATION
+	       (LERR\ !-INTERRUPTS) <SPECIAL FRAME>)
+	<COND (<AND <ASSIGNED? INPACT> <LEGAL? <SET IACT .INPACT>>>
+	       <SCROUT ">>>> Error During Request File Input, Args -- "
+		       .STUFF
+		       " <<<<">
+	       <SET LERR\ !-INTERRUPTS <CHTYPE .ERRACT FRAME>>
+	       <FRAMES 20>
+	       <FRATM>
+	       <BUFOUT .OUTCHAN>
+	       <DISMISS #FALSE ("ERROR IN FILE INPUT") .IACT>)
+	      (ELSE T)>>
+
+<SETG RQLST <VECTOR <> "" <>>>
+
+<GDECL (RQLST) RQVECTOR>
+
+<DEFINE LST-DO (LST "OPTIONAL" P
+		"AUX" ADR RES CUR ARG TIM CMD FLD (MS ,MSG-SPACE)) 
+   #DECL ((LST) LIST (CUR ARG) ANY (CMD) <OR FALSE STRING> (RES) <OR 'T FALSE>
+	  (VALUE) <OR VECTOR <FALSE STRING VECTOR>> (FLD) <OR FIX STRING>
+	  (TIM) <OR FALSE FIX LIST> (ADR) STRING (MS) SPACE (P) RQVECTOR)
+   <WATCH IHAN "ERROR" ,INPERR 4>
+   <COND (<NOT <ASSIGNED? P>>
+	  <AND ,READ-WRITE? <SCROUT "Resetting Msg space">>
+	  <ARESET .MS>
+	  <SET P ,RQLST>
+	  <PUT .P ,RQMSG <>>
+	  <PUT .P ,RQADR <SET ADR "">>
+	  <PUT .P ,RQERR <>>)
+	 (ELSE <SET ADR <RQADR .P>>)>
+   <SET RES
+	<REPEAT INPACT ()
+		#DECL ((INPACT) <SPECIAL ACTIVATION>)
+		<COND (<EMPTY? .LST> <RETURN T>)
+		      (<LENGTH? .LST 1> <RETURN #FALSE ("IMPROPER LENGTH")>)>
+		<SET CUR <1 .LST>>
+		<SET ARG <ACOPY .MS <2 .LST>>>
+		<SET LST <REST .LST 2>>
+		<SET CMD <>>
+		<COND (<TYPE? .CUR STRING>	        ;"SHORT-CUT FOR 'STORE'"
+		       <COND (<=? .CUR "MSG-NO">
+			      <COND (<TYPE? .ARG FIX>
+				     <PROG (R)
+					   #DECL ((R) <OR FIX FALSE>)
+					   <COND (<SET R <MREAD .ARG>>)
+						 (ELSE
+						  <COND
+						    (<EMPTY? .R>
+						     <SET R #FALSE ("LOST")>)
+						    (<TYPE? <1 .R> FIX>
+						     <SET R
+							  <CHTYPE
+							    (<NTH
+							       ,DATA-ERRORS
+							       <1 .R>>)
+							    FALSE>>)
+						    (ELSE
+						     <SET R #FALSE ("ERROR")>)>
+						  <RETURN .R .INPACT>)>>
+				     <PUT .P ,RQMSG .ARG>)
+				    (ELSE <RETURN #FALSE ("IMPROPER FORMAT")>)>)
+			     (<=? .CUR "ADDRESSEE">
+			      <COND (<AND <TYPE? .ARG STRING> <KEYGET .ARG>>
+				     <PUT .P ,RQADR <SET ADR .ARG>>)
+				    (ELSE
+				     <RETURN #FALSE ("IMPROPER USER ID")>)>)
+			     (<=? .CUR "ERROR-TO">
+			      <COND (<AND <TYPE? .ARG STRING> <KEYGET .ARG>>
+				     <PUT .P ,RQERR .ARG>)
+				    (ELSE
+				     <RETURN #FALSE ("IMPROPER ERROR-TO")>)>)
+			     (<=? .CUR "SCHEDULE">
+			      <COND (<OR <NOT <TYPE? .ARG LIST>> <EMPTY? .ARG>>
+				     <RETURN #FALSE ("IMPROPER SCHEDULE FORMAT")>)>
+			      <COND (<LENGTH? .ARG 1>
+				     <PRCADD .ADR <1 .ARG> <> 10 <>>)
+				    (ELSE
+				     <COND (<TYPE? <SET TIM <2 .ARG>> LIST>
+					    <PUT .ARG
+						 2
+						 <BTIME !<1 .TIM> !<2 .TIM>>>)>
+				     <COND (<LENGTH? .ARG 2>
+					    <PRCADD .ADR
+						    <1 .ARG>
+						    <2 .ARG>
+						    10
+						    <>>)
+					   (ELSE <PRCADD .ADR !.ARG>)>)>)
+			     (<=? .CUR "EMERGENCY">
+			      <COND (<OR <NOT <TYPE? .ARG LIST>>
+					 <N==? <LENGTH? .ARG 1> 1>>
+				     <RETURN #FALSE ("IMPROPER EMERGENCY FORMAT")>)
+				    (ELSE
+				     <EMERGENCY .ADR <1 .ARG>>)>)
+			     (<=? .CUR "SIGNAL"> <COND-SIGNAL .ADR .ARG>)
+			     (ELSE <SET CMD "STORE"> <SET FLD .CUR>)>)
+		      (<TYPE? .CUR LIST>		      ;"FULLY SPECIFIED"
+		       <SET FLD <1 .CUR>> <SET CMD <2 .CUR>>)
+		      (ELSE <RETURN #FALSE ("IMPROPER COMMAND FORMAT")>)>
+		<COND (.CMD					   ;"DO COMMAND"
+		       <COND (<NOT <RQMSG .P>>		       ;"MAKE A MESSAGE"
+			      <PUT .P ,RQMSG <NEWMESSAGE>>)>
+		       <COND (<=? .CMD "STORE"> <DWT .ARG .ADR .FLD>)
+			     (<=? .CMD "APPEND"> <DAPP .ARG .ADR .FLD>)
+			     (<=? .CMD "DELETE"> <DWT <> .ADR .FLD>)
+			     (<=? .CMD "REMOVE"> <DRMV .ARG .ADR .FLD>)
+			     (<=? .CMD "ADD"> <DADD .ARG .ADR .FLD>)
+			     (ELSE <RETURN #FALSE ("UNRECOGNIZED COMMAND")>)>)>>>
+   <OFF ,IHAN>
+   <COND (.RES .P)
+	 (ELSE
+	  <SCROUT ">>> Bad request file encountered: " <1 .RES> " <<<">
+	  <CHTYPE (<1 .RES> .P) FALSE>)>>
+
+\ 
+
+"RDPAIRS -- given a channel, read pairs of objects from it, returning list
+  of all objects read
+
+-- returns list or false, has error handler, which will
+  intercept errors and return falses
+  false will contain reason in string
+"
+
+<DEFINE RDPAIRS (CH
+		 "AUX" RES (SS <ARESET ,SCRATCH-SPACE>) (L <ALIST .SS 0>)
+		       (LB .L) CURSPACE)
+   #DECL ((CH) ACHANNEL (VALUE) <OR FALSE LIST> (L LB) LIST (RES) ANY
+	  (SS) SPACE (CURSPACE) <SPECIAL SPACE>)
+   <AND ,READ-WRITE? <SCROUT "Resetting Scratch space">>
+   <WATCH RDHAN "ERROR" ,RDHAND 4>
+   <SET RES
+	<REPEAT RD-ACT (D1 D2)
+		#DECL ((RD-ACT) <SPECIAL ACTIVATION> (D2 D1) ANY)
+		<SET D1 <>>
+		<SET D2 <>>
+		<SETG CURSPACE <SET CURSPACE .SS>>
+		<COND (<SET D1 <ACHOMP .CH '<>>>
+		       <SET D2 <ACHOMP .CH '#FALSE ("UNPAIRED DATA")>>)
+		      (<RETURN T>)>
+		<COND (<AND .D1 .D2>
+		       <COND (<=? .D1 "MSG-NO">
+			      <PUTREST .LB <ACONS .SS .D1 <ACONS .SS .D2 <REST .LB>>>>
+			      <AND <==? .L .LB> <SET L <REST .L 2>>>)
+			     (ELSE
+			      <PUTREST .L <ALIST .SS .D1 .D2>>
+			      <SET L <REST .L 2>>)>)
+		      (<NOT .D1> <RETURN .D1>)
+		      (<RETURN .D2>)>>>
+   <OFF ,RDHAN>
+   <COND (.RES <REST .LB>) (ELSE .RES)>>
+
+<DEFINE RDHAND ("TUPLE" STUFF) 
+	#DECL ((STUFF) TUPLE)
+	<COND (<AND <ASSIGNED? RD-ACT> <LEGAL? .RD-ACT>>
+	       <DISMISS #FALSE ("ERROR IN READING") .RD-ACT>)>>
+
+<ENDPACKAGE>

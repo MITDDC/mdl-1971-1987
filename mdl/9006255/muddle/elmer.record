@@ -1,0 +1,42 @@
+Compilation record for: DSK:MUDDLE;ELMER UBT150
+Output file:  DSK:MUDDLE;ELMER NBIN
+
+It is now Wednesday, 26 Aug 1981 17:39 EDT
+
+File loaded.
+Precompilation loaded.
+Functions ordered.
+COMPILING GET-SURV!-IGLUE!-GLUE!-PACKAGE
+===== Computed decl of variable:  NA!-IGLUE!-GLUE!-PACKAGE is:  <OR ATOM LINK>
+Peephole  0% 175/175
+Job done in:  52 / 1:32
+    
+***********************************************************
+*        ERROR ERROR ERROR ERROR ERROR ERROR ERROR        *
+***********************************************************
+
+to wit,
+NEXTBITS 
+ALREADY-DEFINED-ERRET-NON-FALSE-TO-REDEFINE!-ERRORS 
+
+Compilation totally aborted.
+Status at death was:
+
+
+Files not yet loaded.
+
+Total time used is
+	2 min. 11 sec. CPU time,
+	1 min. 6 sec. garbage collector CPU time,
+	4 min. 11 sec. real time.
+CPU utilization is 52.191235%.
+Number of garbage collects = 9
+
+
+
+Total time used is
+	2 min. 31 sec. CPU time,
+	1 min. 13 sec. garbage collector CPU time,
+	5 min. 33 sec. real time.
+CPU utilization is 45.345345%.
+Number of garbage collects = 10

@@ -1,0 +1,457 @@
+Compilation record for: DSK:XCOMPI;PEEPH UCR093
+Output file:  DSK:XCOMPI;PEEPH NBIN
+
+It is now Friday, 23 Jan 1981 23:18 EST
+
+File loaded.
+Functions ordered.
+COMPILING INSTYPE!-IPEEPH!-PEEPH!-PACKAGE
+===== Computed decl of variable:  QX!-IPEEPH!-PEEPH!-PACKAGE is:  FIX
+===== Computed decl of variable:  QY!-IPEEPH!-PEEPH!-PACKAGE is:  FIX
+Peephole  3% 144/139
+Job done in:  45 / 1:45
+   COMPILING NFIND-LAB!-IPEEPH!-PEEPH!-PACKAGE
+===== Non-specific structure for MAPF/R:   **** .INST!-IPEEPH!-PEEPH!-PACKAGE **
+** 
+ type is:  STRUCTURED
+ **** <MAPF #FALSE () <FUNCTION ("AUX" X) #DECL ((VALUE) FALSE) <COND (<SET X 
+ ...
+Peephole  4% 67/64
+Job done in:  17 / 1:36
+    COMPILING FIND-NOD!-IPEEPH!-PEEPH!-PACKAGE
+Peephole  0% 45/45
+Job done in:  7 / 25
+    COMPILING INSFIX!-IPEEPH!-PEEPH!-PACKAGE
+===== Computed decl of variable:  XD!-IPEEPH!-PEEPH!-PACKAGE is:  LIST
+===== Not open compiled because type is:  <OR FALSE 
+LNODE!-IPEEPH!-PEEPH!-PACKAGE>
+<LIST <1 .XD!-IPEEPH!-PEEPH!-PACKAGE>  **** <NTH <4 .X> 4> **** >
+===== Not open compiled because type is:  <OR FALSE 
+LNODE!-IPEEPH!-PEEPH!-PACKAGE>
+(ELSE <LIST  **** <NTH <4 .X> 4> **** >)
+Peephole  0% 112/111
+Job done in:  31 / 1:19
+   COMPILING PRT!-PEEPH!-PACKAGE
+===== Non-specific structure for MAPF/R:   **** .X **** 
+ type is:  STRUCTURED
+ **** <MAPF #FALSE () <FUNCTION ("AUX" X) #DECL ((VALUE) ATOM) <COND (<TYPE? .
+ ...
+===== External variable being referenced:  OUTCHAN
+<COND (<TYPE? .X ATOM>) (ELSE <PRINC "	"  **** .OUTCHAN **** >)>
+===== External variable being referenced:  OUTCHAN
+<PRIN1 .X  **** .OUTCHAN **** >
+===== External variable being referenced:  OUTCHAN
+<CRLF  **** .OUTCHAN **** >
+Peephole  0% 66/66
+Job done in:  17 / 34
+COMPILING FF!-IPEEPH!-PEEPH!-PACKAGE
+===== Non-specific structure for MAPF/R:  <MAPF #FALSE () ,&  **** .X **** >
+ type is:  STRUCTURED
+ **** <MAPF #FALSE () ,& .X> **** 
+===== External variable being referenced:  OUTCHAN
+<CRLF  **** .OUTCHAN **** >
+Peephole  0% 44/44
+Job done in:  5 / 9
+   COMPILING HACK-PRINT!-IPEEPH!-PEEPH!-PACKAGE
+===== External variable being referenced:  OUTCHAN
+<FUNCTION (X) <PRIN1 <INSFIX .X>  **** .OUTCHAN **** >>
+Peephole  0% 26/26
+Job done in:  3 / 7
+    COMPILING SKIPPABLE!-IPEEPH!-PEEPH!-PACKAGE
+Peephole  8% 61/56
+Job done in:  17 / 59
+  COMPILING DEL-JUMP-LN!-IPEEPH!-PEEPH!-PACKAGE
+===== Computed decl of variable:  QD!-IPEEPH!-PEEPH!-PACKAGE is:  LIST
+Peephole  0% 79/79
+Job done in:  18 / 1:50
+ COMPILING CHANGE-COND!-IPEEPH!-PEEPH!-PACKAGE
+Peephole  2% 42/41
+Job done in:  14 / 1:57
+   COMPILING MAKE:LABEL!-IPEEPH!-PEEPH!-PACKAGE
+===== Computed decl of variable:  XX!-IPEEPH!-PEEPH!-PACKAGE is:  STRING
+===== External variable being referenced:  LABNUM!-IPEEPH!-PEEPH!-PACKAGE
+<+  **** .LABNUM!-IPEEPH!-PEEPH!-PACKAGE ****  1>
+===== External variable being SET:  LABNUM!-IPEEPH!-PEEPH!-PACKAGE
+ **** <SET LABNUM!-IPEEPH!-PEEPH!-PACKAGE <+ .LABNUM!-IPEEPH!-PEEPH!-PACKAGE 1
+ ...
+Peephole  0% 66/66
+Job done in:  7 / 17
+   COMPILING NEXTS!-IPEEPH!-PEEPH!-PACKAGE
+Peephole  1% 62/61
+Job done in:  17 / 1:34
+    COMPILING CROSS-OPT!-IPEEPH!-PEEPH!-PACKAGE
+===== Computed decl of variable:  NEWLN!-IPEEPH!-PEEPH!-PACKAGE is:  
+LNODE!-IPEEPH!-PEEPH!-PACKAGE
+===== Computed decl of variable:  LABL!-IPEEPH!-PEEPH!-PACKAGE is:  ATOM
+===== Computed decl of variable:  NEEDLABEL!-IPEEPH!-PEEPH!-PACKAGE is:  <OR 
+ATOM FALSE>
+===== External variable being SET: REDO
+ **** <SET REDO "CROSS-OPTIMIZATION"> **** 
+===== External variable being referenced:  NLABLS!-IPEEPH!-PEEPH!-PACKAGE
+ **** .NLABLS!-IPEEPH!-PEEPH!-PACKAGE **** 
+===== External variable being SET: NLABLS!-IPEEPH!-PEEPH!-PACKAGE
+ **** <SET NLABLS!-IPEEPH!-PEEPH!-PACKAGE (<LIST .LABL!-IPEEPH!-PEEPH!-PACKAGE
+ ...
+===== External variable being referenced:  MODLN!-IPEEPH!-PEEPH!-PACKAGE
+ **** .MODLN!-IPEEPH!-PEEPH!-PACKAGE **** 
+===== External variable being SET:  MODLN!-IPEEPH!-PEEPH!-PACKAGE
+ **** <SET MODLN!-IPEEPH!-PEEPH!-PACKAGE <LIST .NEWLN!-IPEEPH!-PEEPH!-PACKAGE 
+ ...
+===== Frame being generated.
+ **** <FUNCTION (TOPCOD!-IPEEPH!-PEEPH!-PACKAGE NCOD!-IPEEPH!-PEEPH!-PACKAGE 
+" ...
+Peephole  3% 300/290
+Job done in:  2:31 / 15:05
+ COMPILING BACKS!-IPEEPH!-PEEPH!-PACKAGE
+Peephole  5% 59/56
+Job done in:  17 / 2:12
+    COMPILING ADDON!-IPEEPH!-PEEPH!-PACKAGE
+Peephole  0% 33/33
+Job done in:  5 / 28
+  COMPILING FIND-LAB!-IPEEPH!-PEEPH!-PACKAGE
+===== Non-specific structure for MAPF/R:   **** .INST!-IPEEPH!-PEEPH!-PACKAGE **
+** 
+ type is:  STRUCTURED
+ **** <MAPF #FALSE () <FUNCTION ("AUX" X) #DECL ((VALUE) FALSE) <COND (<TYPE? 
+ ...
+Peephole  7% 53/49
+Job done in:  16 / 1:37
+COMPILING PSEUDO?!-IPEEPH!-PEEPH!-PACKAGE
+Peephole  13% 97/84
+Job done in:  19 / 1:45
+ COMPILING MUNG-LAB!-IPEEPH!-PEEPH!-PACKAGE
+===== Non-specific structure for MAPF/R:   **** .INST!-IPEEPH!-PEEPH!-PACKAGE **
+** 
+ type is:  STRUCTURED
+ **** <MAPR #FALSE () <FUNCTION ("AUX" IN (OB!-IPEEPH!-PEEPH!-PACKAGE <NTH .IN
+ ...
+===== Not open compiled because type is:  <STRUCTURED ANY>
+ **** <NTH .IN 1> **** 
+===== Not open compiled because type is: <STRUCTURED ANY>
+ **** <PUT .IN 1 .OB!-IPEEPH!-PEEPH!-PACKAGE> **** 
+Peephole  1% 86/85
+Job done in:  19 / 1:44
+   COMPILING PEEP-PRINT!-IPEEPH!-PEEPH!-PACKAGE
+===== External reference to LVAL:  OUTL!-IPEEPH!-PEEPH!-PACKAGE
+<NOT  **** <ASSIGNED? OUTL!-IPEEPH!-PEEPH!-PACKAGE> **** >
+===== External variable being referenced:  OUTCHAN
+<PRINC "Peephole  "  **** .OUTCHAN **** >
+===== Arithmetic can't open compile because:  <-  **** .LN!-IPEEPH!-PEEPH!-PACKA
+GE ****  .NUMLABS!-IPEEPH!-PEEPH!-PACKAGE>
+ is of type:  <OR FIX FLOAT>
+ **** <- .LN!-IPEEPH!-PEEPH!-PACKAGE .NUMLABS!-IPEEPH!-PEEPH!-PACKAGE> **** 
+===== Arithmetic can't open compile because:  <- .LN!-IPEEPH!-PEEPH!-PACKAGE  **
+** .NUMLABS!-IPEEPH!-PEEPH!-PACKAGE **** >
+ is of type:  <OR FIX FLOAT>
+ **** <- .LN!-IPEEPH!-PEEPH!-PACKAGE .NUMLABS!-IPEEPH!-PEEPH!-PACKAGE> **** 
+===== Arithmetic can't open compile because:   **** .NLN!-IPEEPH!-PEEPH!-PACKAGE
+ **** 
+ is of type:  <OR FIX FLOAT>
+ **** <- .NLN!-IPEEPH!-PEEPH!-PACKAGE .NUMLABS!-IPEEPH!-PEEPH!-PACKAGE <- .
+NNU ...
+===== Arithmetic can't open compile because:   **** .NUMLABS!-IPEEPH!-PEEPH!-PAC
+KAGE **** 
+ is of type:  <OR FIX FLOAT>
+ **** <- .NLN!-IPEEPH!-PEEPH!-PACKAGE .NUMLABS!-IPEEPH!-PEEPH!-PACKAGE <- .
+NNU ...
+===== Arithmetic can't open compile because:   **** <- .NNUMLABS!-IPEEPH!-PEEPH!
+-PACKAGE> **** 
+ is of type:  <OR FIX FLOAT>
+ **** <- .NLN!-IPEEPH!-PEEPH!-PACKAGE .NUMLABS!-IPEEPH!-PEEPH!-PACKAGE <- .
+NNU ...
+===== Arithmetic can't open compile because:  <-  **** .LN!-IPEEPH!-PEEPH!-PACKA
+GE ****  .NLN!-IPEEPH!-PEEPH!-PACKAGE>
+ is of type:  <OR FIX FLOAT>
+ **** <- .LN!-IPEEPH!-PEEPH!-PACKAGE .NLN!-IPEEPH!-PEEPH!-PACKAGE> **** 
+===== Arithmetic can't open compile because:  <- .LN!-IPEEPH!-PEEPH!-PACKAGE  **
+** .NLN!-IPEEPH!-PEEPH!-PACKAGE **** >
+ is of type:  <OR FIX FLOAT>
+ **** <- .LN!-IPEEPH!-PEEPH!-PACKAGE .NLN!-IPEEPH!-PEEPH!-PACKAGE> **** 
+===== Arithmetic can't open compile because:   **** .LN!-IPEEPH!-PEEPH!-PACKAGE 
+**** 
+ is of type:  <OR FIX FLOAT>
+ **** </ <FLOAT <- .LN!-IPEEPH!-PEEPH!-PACKAGE .NLN!-IPEEPH!-PEEPH!-PACKAGE>> 
+ ...
+===== Arithmetic can't open compile because:   **** </ <FLOAT <- .LN!-IPEEPH!-PE
+EPH!-PACKAGE .NLN!-IPEEPH!-PEEPH!-PACKAGE>> 
+ ...
+ is of type:  <OR FIX FLOAT>
+ **** <* 100 </ <FLOAT <- .LN!-IPEEPH!-PEEPH!-PACKAGE .
+NLN!-IPEEPH!-PEEPH!-PAC ...
+===== External variable being referenced:  OUTCHAN
+ **** .OUTCHAN **** 
+===== External variable being referenced:  OUTCHAN
+<PRINC "% "  **** .OUTCHAN **** >
+===== External variable being referenced:  OUTCHAN
+<PRIN1 .LN!-IPEEPH!-PEEPH!-PACKAGE  **** .OUTCHAN **** >
+===== External variable being referenced:  OUTCHAN
+<PRINC "/"  **** .OUTCHAN **** >
+===== External variable being referenced:  OUTCHAN
+<PRIN1 .NLN!-IPEEPH!-PEEPH!-PACKAGE  **** .OUTCHAN **** >
+===== Arithmetic can't open compile because:  <-  **** .LN!-IPEEPH!-PEEPH!-PACKA
+GE ****  .NUMLABS!-IPEEPH!-PEEPH!-PACKAGE>
+ is of type:  <OR FIX FLOAT>
+ **** <- .LN!-IPEEPH!-PEEPH!-PACKAGE .NUMLABS!-IPEEPH!-PEEPH!-PACKAGE> **** 
+===== Arithmetic can't open compile because:  <- .LN!-IPEEPH!-PEEPH!-PACKAGE  **
+** .NUMLABS!-IPEEPH!-PEEPH!-PACKAGE **** >
+ is of type:  <OR FIX FLOAT>
+ **** <- .LN!-IPEEPH!-PEEPH!-PACKAGE .NUMLABS!-IPEEPH!-PEEPH!-PACKAGE> **** 
+===== Arithmetic can't open compile because:   **** .NLN!-IPEEPH!-PEEPH!-PACKAGE
+ **** 
+ is of type:  <OR FIX FLOAT>
+ **** <- .NLN!-IPEEPH!-PEEPH!-PACKAGE .NUMLABS!-IPEEPH!-PEEPH!-PACKAGE <- .
+NNU ...
+===== Arithmetic can't open compile because:   **** .NUMLABS!-IPEEPH!-PEEPH!-PAC
+KAGE **** 
+ is of type:  <OR FIX FLOAT>
+ **** <- .NLN!-IPEEPH!-PEEPH!-PACKAGE .NUMLABS!-IPEEPH!-PEEPH!-PACKAGE <- .
+NNU ...
+===== Arithmetic can't open compile because:   **** <- .NNUMLABS!-IPEEPH!-PEEPH!
+-PACKAGE> **** 
+ is of type:  <OR FIX FLOAT>
+ **** <- .NLN!-IPEEPH!-PEEPH!-PACKAGE .NUMLABS!-IPEEPH!-PEEPH!-PACKAGE <- .
+NNU ...
+===== Arithmetic can't open compile because:  <-  **** .LN!-IPEEPH!-PEEPH!-PACKA
+GE ****  .NLN!-IPEEPH!-PEEPH!-PACKAGE>
+ is of type:  <OR FIX FLOAT>
+ **** <- .LN!-IPEEPH!-PEEPH!-PACKAGE .NLN!-IPEEPH!-PEEPH!-PACKAGE> **** 
+===== Arithmetic can't open compile because:  <- .LN!-IPEEPH!-PEEPH!-PACKAGE  **
+** .NLN!-IPEEPH!-PEEPH!-PACKAGE **** >
+ is of type:  <OR FIX FLOAT>
+ **** <- .LN!-IPEEPH!-PEEPH!-PACKAGE .NLN!-IPEEPH!-PEEPH!-PACKAGE> **** 
+===== Arithmetic can't open compile because:   **** .LN!-IPEEPH!-PEEPH!-PACKAGE 
+**** 
+ is of type:  <OR FIX FLOAT>
+ **** </ <FLOAT <- .LN!-IPEEPH!-PEEPH!-PACKAGE .NLN!-IPEEPH!-PEEPH!-PACKAGE>> 
+ ...
+===== Arithmetic can't open compile because:   **** </ <FLOAT <- .LN!-IPEEPH!-PE
+EPH!-PACKAGE .NLN!-IPEEPH!-PEEPH!-PACKAGE>> 
+ ...
+ is of type:  <OR FIX FLOAT>
+ **** <* 100 </ <FLOAT <- .LN!-IPEEPH!-PEEPH!-PACKAGE .
+NLN!-IPEEPH!-PEEPH!-PAC ...
+Peephole  0% 180/180
+Job done in:  55 / 3:22
+  COMPILING FIND-END-OF-CHAIN!-IPEEPH!-PEEPH!-PACKAGE
+===== Computed decl of variable:  DEFAULT is:  <OR FALSE 
+LNODE!-IPEEPH!-PEEPH!-PACKAGE>
+===== Not open compiled because type is:  <OR FALSE 
+LNODE!-IPEEPH!-PEEPH!-PACKAGE>
+<NTH  **** <NTH <4 .JMP!-IPEEPH!-PEEPH!-PACKAGE> 3> ****  1>
+===== Not open compiled because type is:  STRUCTURED
+ **** <NTH <NTH <4 .JMP!-IPEEPH!-PEEPH!-PACKAGE> 3> 1> **** 
+Peephole  4% 46/44
+Job done in:  18 / 1:09
+  COMPILING FLUSH-LABELS!-IPEEPH!-PEEPH!-PACKAGE
+===== Computed decl of variable:  TEM!-IPEEPH!-PEEPH!-PACKAGE is:  LIST
+===== External variable being referenced:  SLABS!-IPEEPH!-PEEPH!-PACKAGE
+<NOT <MEMQ .X  **** .SLABS!-IPEEPH!-PEEPH!-PACKAGE **** >>
+===== External variable being referenced:  NLABLS!-IPEEPH!-PEEPH!-PACKAGE
+ **** .NLABLS!-IPEEPH!-PEEPH!-PACKAGE **** 
+===== External variable being referenced:  NLABLS!-IPEEPH!-PEEPH!-PACKAGE
+<==? .N!-IPEEPH!-PEEPH!-PACKAGE  **** .NLABLS!-IPEEPH!-PEEPH!-PACKAGE **** >
+===== External variable being referenced:  NLABLS!-IPEEPH!-PEEPH!-PACKAGE
+<REST  **** .NLABLS!-IPEEPH!-PEEPH!-PACKAGE ****  1>
+===== External variable being SET:  NLABLS!-IPEEPH!-PEEPH!-PACKAGE
+ **** <SET NLABLS!-IPEEPH!-PEEPH!-PACKAGE <REST .
+NLABLS!-IPEEPH!-PEEPH!-PACKAG ...
+===== External variable being referenced:  NNUMLABS!-IPEEPH!-PEEPH!-PACKAGE
+<+  **** .NNUMLABS!-IPEEPH!-PEEPH!-PACKAGE ****  1>
+===== External variable being SET:  NNUMLABS!-IPEEPH!-PEEPH!-PACKAGE
+ **** <SET NNUMLABS!-IPEEPH!-PEEPH!-PACKAGE <+ .
+NNUMLABS!-IPEEPH!-PEEPH!-PACKA ...
+===== External variable being SET: REDO
+ **** <SET REDO "FLUSH REDUNDANT LABELS"> **** 
+Peephole  0% 151/150
+Job done in:  52 / 3:19
+ COMPILING CLEAN-IT-UP!-IPEEPH!-PEEPH!-PACKAGE
+===== Not open compiled because type is:  <OR FALSE TUPLE>
+ **** <NTH <3 .LND!-IPEEPH!-PEEPH!-PACKAGE> 1> **** 
+===== Not open compiled because type is:  STRUCTURED
+ **** <NTH <BACK <3 .LND!-IPEEPH!-PEEPH!-PACKAGE> 1> 1> **** 
+===== Not open compiled because type is:  STRUCTURED
+ **** <NTH .FIN-LNODE!-IPEEPH!-PEEPH!-PACKAGE 2> **** 
+===== Not open compiled because type is: #FALSE ()
+ **** <PUT .FIN-LNODE!-IPEEPH!-PEEPH!-PACKAGE 2 <ADDON <LIST .
+JMPL!-IPEEPH!-PE ...
+Peephole  0% 164/164
+Job done in:  37 / 1:37
+  COMPILING PEEP!-PEEPH!-PACKAGE
+===== Computed decl of variable:  COD!-IPEEPH!-PEEPH!-PACKAGE is:  TUPLE
+===== Computed decl of variable:  QXD!-IPEEPH!-PEEPH!-PACKAGE is:  <OR FALSE 
+LNODE!-IPEEPH!-PEEPH!-PACKAGE>
+*** NOTE	Special variable never used: LABNUM 
+===== Computed decl of variable:  LN!-IPEEPH!-PEEPH!-PACKAGE is:  <FIX (0 
+34359738367)>
+===== Computed decl of variable:  TOPCOD!-IPEEPH!-PEEPH!-PACKAGE is:  TUPLE
+===== Computed decl of variable:  TEMP!-COMPDEC!-PACKAGE is:  TUPLE
+===== Computed decl of variable:  AOJ-FLG!-IPEEPH!-PEEPH!-PACKAGE is:  <OR ATOM 
+FALSE>
+===== Computed decl of variable:  NEWLAB!-IPEEPH!-PEEPH!-PACKAGE is:  <PRIMTYPE 
+LIST>
+===== Computed decl of variable:  NC!-IPEEPH!-PEEPH!-PACKAGE is:  TUPLE
+===== Computed decl of variable:  NC!-IPEEPH!-PEEPH!-PACKAGE is:  TUPLE
+===== Computed decl of variable:  NC!-IPEEPH!-PEEPH!-PACKAGE is:  TUPLE
+===== Computed decl of variable:  IT!-IPEEPH!-PEEPH!-PACKAGE is:  
+OPCODE!-OP!-PACKAGE
+===== Computed decl of variable:  COMPS!-IPEEPH!-PEEPH!-PACKAGE is:  LIST
+===== Computed decl of variable:  NC!-IPEEPH!-PEEPH!-PACKAGE is:  TUPLE
+===== Computed decl of variable:  PTR1!-IPEEPH!-PEEPH!-PACKAGE is:  TUPLE
+===== Computed decl of variable:  PTR2!-IPEEPH!-PEEPH!-PACKAGE is:  TUPLE
+===== Computed decl of variable:  X is:  TUPLE
+===== Computed decl of variable:  N!-IPEEPH!-PEEPH!-PACKAGE is:  FIX
+===== Not open compiled because type is:  <OR FALSE 
+LNODE!-IPEEPH!-PEEPH!-PACKAGE>
+<NOT <SET TMP  **** <NTH <4 .INST!-IPEEPH!-PEEPH!-PACKAGE> 3> **** >>
+===== Arithmetic can't open compile because:  <NOT <G?  **** <1 .INST!-IPEEPH!-P
+EEPH!-PACKAGE> ****  224>>
+ is of type:  <OR FIX FLOAT>
+<NOT  **** <G? <1 .INST!-IPEEPH!-PEEPH!-PACKAGE> 224> **** >
+===== Arithmetic can't open compile because:  <G?  **** <1 .QD!-IPEEPH!-PEEPH!-P
+ACKAGE> ****  224>
+ is of type:  <OR FIX FLOAT>
+ **** <G? <1 .QD!-IPEEPH!-PEEPH!-PACKAGE> 224> **** 
+===== Arithmetic can't open compile because:  <G?  **** <1 .INST!-IPEEPH!-PEEPH!
+-PACKAGE> ****  224>
+ is of type:  <OR FIX FLOAT>
+ **** <G? <1 .INST!-IPEEPH!-PEEPH!-PACKAGE> 224> **** 
+===== Not open compiled because type is:  <OR FALSE 
+LNODE!-IPEEPH!-PEEPH!-PACKAGE>
+ **** <NTH <4 .QD!-IPEEPH!-PEEPH!-PACKAGE> 2> **** 
+===== Not open compiled because type is: <OR <FALSE ANY <PRIMTYPE LIST>> <
+LNODE!-IPEEPH!-PEEPH!-PACKAGE LIST LIST <OR FALSE TUPLE> ATOM>>
+ **** <PUT <4 .QD!-IPEEPH!-PEEPH!-PACKAGE> 2 .NEWLAB!-IPEEPH!-PEEPH!-PACKAGE>
+  ...
+===== Not open compiled because type is:  <OR FALSE 
+LNODE!-IPEEPH!-PEEPH!-PACKAGE>
+<NEXTS  **** <NTH <4 .INST!-IPEEPH!-PEEPH!-PACKAGE> 3> ****  T>
+===== Not open compiled because type is:  STRUCTURED
+ **** <NTH <1 .TEMP!-COMPDEC!-PACKAGE> 4> **** 
+===== Not open compiled because type is:  <OR FALSE 
+LNODE!-IPEEPH!-PEEPH!-PACKAGE>
+ **** <NTH <4 .INST!-IPEEPH!-PEEPH!-PACKAGE> 2> **** 
+===== Not open compiled because type is: <OR <FALSE ANY <PRIMTYPE LIST>> <
+LNODE!-IPEEPH!-PEEPH!-PACKAGE LIST LIST <OR FALSE TUPLE> ATOM>>
+ **** <PUT <4 .INST!-IPEEPH!-PEEPH!-PACKAGE> 2 <ADDON <LIST .
+NCOD!-IPEEPH!-PEE ...
+===== Not open compiled because type is:  <OR FALSE 
+LNODE!-IPEEPH!-PEEPH!-PACKAGE>
+<REST  **** <NTH <4 .QD!-IPEEPH!-PEEPH!-PACKAGE> 3> ****  1>
+===== Not open compiled because type is:  STRUCTURED
+ **** <REST <NTH <4 .QD!-IPEEPH!-PEEPH!-PACKAGE> 3> 1> **** 
+===== Not open compiled because type is: #FALSE ()
+ **** <PUT <BACKS .NCOD!-IPEEPH!-PEEPH!-PACKAGE .
+TOPCOD!-IPEEPH!-PEEPH!-PACKAG ...
+===== Cond predicate always FALSE:   **** <AND <OR <AND <TYPE? <SET QD!-IPEEPH!-
+PEEPH!-PACKAGE <1 .
+NCOD!-IPEEPH!-P ...
+
+ **** <COND (<EMPTY? <SET NCOD!-IPEEPH!-PEEPH!-PACKAGE <REST .
+NCOD!-IPEEPH!-PE ...
+===== Arithmetic can't open compile because:  <G=?  **** <1 .QD!-IPEEPH!-PEEPH!-
+PACKAGE> ****  208>
+ is of type:  <OR FIX FLOAT>
+ **** <G=? <1 .QD!-IPEEPH!-PEEPH!-PACKAGE> 208> **** 
+===== Arithmetic can't open compile because:  <L=?  **** <1 .QD!-IPEEPH!-PEEPH!-
+PACKAGE> ****  215>
+ is of type:  <OR FIX FLOAT>
+ **** <L=? <1 .QD!-IPEEPH!-PEEPH!-PACKAGE> 215> **** 
+===== Not open compiled because type is: #FALSE ()
+ **** <PUT .TEM!-IPEEPH!-PEEPH!-PACKAGE 4 <4 .QD!-IPEEPH!-PEEPH!-PACKAGE>>
+ *** ...
+===== Not open compiled because type is:  <OR FALSE 
+LNODE!-IPEEPH!-PEEPH!-PACKAGE>
+ **** <NTH .QD!-IPEEPH!-PEEPH!-PACKAGE 2> **** 
+===== Non-specific structure for MAPF/R:   **** <NTH .QD!-IPEEPH!-PEEPH!-PACKAGE
+ 2> **** 
+ type is:  STRUCTURED
+ **** <MAPF #FALSE () <FUNCTION ("AUX" X) #DECL ((VALUE) ATOM) <COND (<NOT <OR
+ ...
+===== Not open compiled because type is:  STRUCTURED
+<NOT <OR <TYPE?  **** <NTH .X 1> ****  NULL> <==? <NTH <NTH .X 1> 1> 172>>>
+===== Not open compiled because type is:  STRUCTURED
+<NOT <OR <TYPE? <NTH .X 1> NULL> <==? <NTH  **** <NTH .X 1> ****  1> 172>>>
+===== Not open compiled because type is:  STRUCTURED
+<NOT <OR <TYPE? <NTH .X 1> NULL> <==?  **** <NTH <NTH .X 1> 1> ****  172>>>
+===== Not open compiled because type is:  <OR FALSE 
+LNODE!-IPEEPH!-PEEPH!-PACKAGE>
+ **** <NTH .QD!-IPEEPH!-PEEPH!-PACKAGE 4> **** 
+===== Not open compiled because type is:  <OR FALSE 
+LNODE!-IPEEPH!-PEEPH!-PACKAGE>
+ **** <NTH .QD!-IPEEPH!-PEEPH!-PACKAGE 2> **** 
+===== Non-specific structure for MAPF/R:   **** <NTH .QD!-IPEEPH!-PEEPH!-PACKAGE
+ 2> **** 
+ type is:  STRUCTURED
+ **** <MAPF #FALSE () <FUNCTION ("AUX" X (IT!-IPEEPH!-PEEPH!-PACKAGE <COND (<
+= ...
+===== Not open compiled because type is:  <OR FALSE 
+LNODE!-IPEEPH!-PEEPH!-PACKAGE>
+ **** <NTH .QD!-IPEEPH!-PEEPH!-PACKAGE 4> **** 
+===== Not open compiled because type is: #FALSE ()
+ **** <PUT <INSTYPE <FORM .IT!-IPEEPH!-PEEPH!-PACKAGE <2 .
+INST!-IPEEPH!-PEEPH! ...
+===== Not open compiled because type is: #FALSE ()
+ **** <PUT .X 1 <PUT <INSTYPE <FORM .IT!-IPEEPH!-PEEPH!-PACKAGE <2 .
+INST!-IPEE ...
+===== Not open compiled because type is:  STRUCTURED
+ **** <NTH <1 .CMP!-IPEEPH!-PEEPH!-PACKAGE> 3> **** 
+===== Not open compiled because type is:  STRUCTURED
+<==?  **** <NTH <1 .CMP!-IPEEPH!-PEEPH!-PACKAGE> 1> ****  172>
+===== Not open compiled because type is:  STRUCTURED
+ **** <NTH <1 .CMP!-IPEEPH!-PEEPH!-PACKAGE> 3> **** 
+===== Not open compiled because type is:  STRUCTURED
+<==?  **** <NTH <1 .CMP!-IPEEPH!-PEEPH!-PACKAGE> 1> ****  172>
+===== Not open compiled because type is:  STRUCTURED
+<==?  **** <NTH .X 2> ****  .PTR1!-IPEEPH!-PEEPH!-PACKAGE>
+===== Not open compiled because type is: <STRUCTURED ANY TUPLE>
+ **** <PUT .X 2 .PTR2!-IPEEPH!-PEEPH!-PACKAGE> **** 
+===== Not open compiled because type is:  <OR FALSE 
+LNODE!-IPEEPH!-PEEPH!-PACKAGE>
+ **** <NTH <4 .XD!-IPEEPH!-PEEPH!-PACKAGE> 2> **** 
+===== Not open compiled because type is:  STRUCTURED
+ **** <MEMQ .PTR1!-IPEEPH!-PEEPH!-PACKAGE <NTH <4 .XD!-IPEEPH!-PEEPH!-PACKAGE>
+ ...
+===== Not open compiled because type is: <STRUCTURED <TUPLE ANY>>
+ **** <PUT <MEMQ .PTR1!-IPEEPH!-PEEPH!-PACKAGE <NTH <4 .
+XD!-IPEEPH!-PEEPH!-PAC ...
+===== Not open compiled because type is:  STRUCTURED
+<==?  **** <NTH .X 2> ****  .PTR1!-IPEEPH!-PEEPH!-PACKAGE>
+===== Not open compiled because type is:  STRUCTURED
+<PUT .PTR2!-IPEEPH!-PEEPH!-PACKAGE 1  **** <NTH .X 1> **** >
+===== Not open compiled because type is:  STRUCTURED
+<FIND-NOD .MODLN!-IPEEPH!-PEEPH!-PACKAGE  **** <NTH .X 1> **** >
+===== Not open compiled because type is: <OR <FALSE [2 ANY] TUPLE> <
+LNODE!-IPEEPH!-PEEPH!-PACKAGE LIST LIST TUPLE ATOM>>
+ **** <PUT <FIND-NOD .MODLN!-IPEEPH!-PEEPH!-PACKAGE <NTH .X 1>> 3 .
+PTR2!-IPEEP ...
+===== Not open compiled because type is:  <OR FALSE 
+LNODE!-IPEEPH!-PEEPH!-PACKAGE>
+ **** <NTH <4 .P1!-IPEEPH!-PEEPH!-PACKAGE> 2> **** 
+===== Not open compiled because type is:  STRUCTURED
+ **** <MEMQ .PTR1!-IPEEPH!-PEEPH!-PACKAGE <NTH <4 .P1!-IPEEPH!-PEEPH!-PACKAGE>
+ ...
+===== Not open compiled because type is: <STRUCTURED <TUPLE ANY>>
+ **** <PUT <MEMQ .PTR1!-IPEEPH!-PEEPH!-PACKAGE <NTH <4 .
+P1!-IPEEPH!-PEEPH!-PAC ...
+===== Not open compiled because of defer.
+ **** <PUT .XCOD!-IPEEPH!-PEEPH!-PACKAGE 1 <1 .COD!-IPEEPH!-PEEPH!-PACKAGE>>
+ * ...
+===== Not open compiled because type is:  NO-RETURN!-ICC!-CC!-PACKAGE
+ **** <EMPTY? .NNCOD!-IPEEPH!-PEEPH!-PACKAGE> **** 
+===== External reference to LVAL:  PEEP!-PEEPH!-PACKAGE
+<AND  **** <ASSIGNED? PEEP!-PEEPH!-PACKAGE> ****  .PEEP!-PEEPH!-PACKAGE>
+===== External variable being referenced:  PEEP!-PEEPH!-PACKAGE
+<AND <ASSIGNED? PEEP!-PEEPH!-PACKAGE>  **** .PEEP!-PEEPH!-PACKAGE **** >
+===== Frame being generated.
+ **** <FUNCTION (XCOD!-IPEEPH!-PEEPH!-PACKAGE "TUPLE" 
+COD!-IPEEPH!-PEEPH!-PACK ...
+Peephole  2% 2424/2352
+Job done in:  52:50 / 3:49:29
+    
+
+Total time used is
+	1 hours 3 min. 35 sec. CPU time,
+	24 min. 28 sec. garbage collector CPU time,
+	4 hours 38 min. 2 sec. real time.
+CPU utilization is 22.868960%.
+Number of garbage collects = 120

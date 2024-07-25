@@ -1,0 +1,107 @@
+Compilation record for: DSK:COMPIL;GETORD UCR020
+Output file:  DSK:CLR;FOO NBIN
+
+It is now FRIDAY, 8 APR 1977 12:06 EST
+
+File loaded.
+Functions ordered.
+MUDDLE COMPILER
+COMPILING CHECK
+*** WARNING	TYPE? ALWAYS TRUE 
+ **** <TYPE? .ATM ATOM> **** 
+
+ 
+Compilation done in 3 seconds cpu time, 
+15 seconds  real time. 
+Peephole optimization reduced code by 7%.     41 -> 38
+Starting assembler
+Job done in:  5 seconds cpu time, 22 seconds real time.
+   MUDDLE COMPILER
+COMPILING PREV
+Compilation done in 8 seconds cpu time, 
+41 seconds  real time. 
+Peephole optimization reduced code by 0%.     35 -> 35
+Starting assembler
+Job done in:  9 seconds cpu time, 51 seconds real time.
+  MUDDLE COMPILER
+COMPILING SPLOUTEM
+Compilation done in 5 seconds cpu time, 
+23 seconds  real time. 
+Peephole optimization reduced code by 0%.     77 -> 77
+Starting assembler
+Job done in:  13 seconds cpu time, 1 minute and 58 seconds real time.
+    MUDDLE COMPILER
+COMPILING REVERSE
+Compilation done in 3 seconds cpu time, 
+26 seconds  real time. 
+Peephole optimization reduced code by 0%.     28 -> 28
+Starting assembler
+Job done in:  4 seconds cpu time, 33 seconds real time.
+    MUDDLE COMPILER
+COMPILING CALLME
+Compilation done in 3 seconds cpu time, 
+16 seconds  real time. 
+Peephole optimization reduced code by 0%.     38 -> 38
+Starting assembler
+Job done in:  11 seconds cpu time, 1 minute and 32 seconds real time.
+ MUDDLE COMPILER
+COMPILING ALLREACH
+Compilation done in 6 seconds cpu time, 
+36 seconds  real time. 
+Peephole optimization reduced code by 0%.     78 -> 78
+Starting assembler
+Job done in:  17 seconds cpu time, 1 minute and 56 seconds real time.
+    MUDDLE COMPILER
+COMPILING CORDER
+Compilation done in 38 seconds cpu time, 
+6 minutes and 34 seconds  real time. 
+Peephole optimization reduced code by 2%.     198 -> 194
+Starting assembler
+Job done in:  46 seconds cpu time, 7 minutes and 20 seconds real time.
+   MUDDLE COMPILER
+COMPILING ORDEREM
+Compilation done in 45 seconds cpu time, 
+7 minutes and 46 seconds  real time. 
+Peephole optimization reduced code by 1%.     236 -> 233
+Starting assembler
+Job done in:  59 seconds cpu time, 10 minutes and 33 seconds real time.
+ MUDDLE COMPILER
+COMPILING REMEMIT
+Compilation done in 3 seconds cpu time, 
+1 minute and 16 seconds  real time. 
+Peephole optimization reduced code by 0%.     40 -> 40
+Starting assembler
+Job done in:  5 seconds cpu time, 1 minute and 33 seconds real time.
+   MUDDLE COMPILER
+COMPILING EMACRO
+*** NOTE	 COMPILING ANONYMOUS FUNCTION 
+*** WARNING	VARIABLE NEVER USED: FR 
+Peephole optimization reduced code by 0%.     45 -> 45
+Starting assembler
+*** NOTE	 FINISHED ANONYMOUS FUNCTION 
+Compilation done in 15 seconds cpu time, 
+3 minutes and 33 seconds  real time. 
+Peephole optimization reduced code by 0%.     108 -> 108
+Starting assembler
+Job done in:  18 seconds cpu time, 3 minutes and 49 seconds real time.
+   MUDDLE COMPILER
+COMPILING CHK-GVAL
+Compilation done in 14 seconds cpu time, 
+1 minute and 26 seconds  real time. 
+Peephole optimization reduced code by 15%.     106 -> 90
+Starting assembler
+Job done in:  24 seconds cpu time, 3 minutes and 7 seconds real time.
+   MUDDLE COMPILER
+COMPILING FINDREC
+Compilation done in 22 seconds cpu time, 
+5 minutes and 16 seconds  real time. 
+Peephole optimization reduced code by 2%.     239 -> 234
+Starting assembler
+Job done in:  37 seconds cpu time, 8 minutes and 56 seconds real time.
+  MUDDLE COMPILER
+COMPILING FINDEM
+Compilation done in 1 second cpu time, 
+1 minute and 22 seconds  real time. 
+Peephole optimization reduced code by 0%.     33 -> 33
+Starting assembler
+Job done in:  2 seconds cpu time, 1 minute and 29 seconds real time.

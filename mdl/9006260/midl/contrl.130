@@ -1,0 +1,386 @@
+;"offsets for act-list & def-act"
+
+<PROG ()
+      <SETG ACT-NAME 1>
+      <SETG ACT-MCODE 2>
+      <SETG AGAIN-LOC 3>
+      <SETG RETURN-LOC 4>
+      <SETG RETURN-VAR 5>
+      <SETG BINDINGS 6>
+      ;<SETG UNWINDERS?>
+      <SETG ACT-NLEVEL 7>        
+      <MANIFEST ACT-NAME STACK-STATE AGAIN-LOC RETURN-LOC
+		RETURN-VAR ACT-NLEVEL>>      
+
+<DEFINE COMPILE:PROG (MOBJ RETVAR REF NXT ACT-LIST DEF-ACT
+		      MAP-LIST SYMBOLS NLEVEL "AUX" RMOBJ
+		      (ACT-NAME <>) (HEWITT <>) DCL (BINDINGS 0)
+		      AUXL AUXDCL  ANXT AUXVAR)	
+	#DECL ((MOBJ) FORM (RETVAR) <OR VARIABLE FALSE>
+	       (REF NXT) FORWRD (ACT-LIST DEF-ACT MAP-LIST) LIST
+	       (RMOBJ) LIST (SYMBOLS) <LIST [REST SYMBOL-TABLE]>
+	       (NLEVEL) FIX (DCL) DECL (BINDINGS) FIX (AUXL) LIST
+	       (HEWITT ACT-NAME) <OR ATOM VARIABLE FALSE>
+	       (ANXT) FORWRD (AUXDCL) <OR ATOM FORM> (AUXVAR) ANY)
+	<SET SYMBOLS (<MAKE-SYMBOL-TABLE> !.SYMBOLS)>
+	<COND (<NOT .RETVAR> <SET RETVAR <GENSYM>>)>
+	<COND (<LENGTH? .MOBJ 1>
+	       <REPORT-ERROR NO-AUX-LIST-IN-PROG COMPILE:PROG>)
+	      (ELSE
+	       <COND (<TYPE? <2 .MOBJ> ATOM>
+		      ;"HEWITT atom."
+		      <SET HEWITT <2 .MOBJ>>
+		      <SET RMOBJ <REST .MOBJ 2>>)
+		     (ELSE
+		      <SET RMOBJ <REST .MOBJ 1>>)>
+	       ;"build a frame, (which may be flushed by CLEANG)."
+	       <MCODIFY '<BUILD-FRAME> .REF <SET REF <GENREF>>>
+	       ;"***WHAT ABOUT RECORDING IT FOR LATER DELETION?***"
+	       ;"process the AUX list to the PROG:"
+	       <COND (<NOT <TYPE? <1 .RMOBJ> LIST>>
+		      <REPORT-ERROR NO-AUX-LIST-IN-PROG COMPILE:PROG>)
+		     (ELSE
+		      ;"get aux list and flush it."
+		      <SET AUXL <1 .RMOBJ>>		      
+		      <SET RMOBJ <REST .RMOBJ>>
+		      ;"get DECL and flush it"
+		      <COND (<EMPTY? .RMOBJ>
+			     <REPORT-ERROR NO-PROG-BODY COMPILE:PROG>)
+			    (<TYPE? <1 .RMOBJ> DECL>
+			     <SET DCL <1 .RMOBJ>>
+			     <SET RMOBJ <REST .RMOBJ>>)
+			    (ELSE <SET DCL #DECL ()>)>
+		      ;"frob the aux variables."
+		      <REPEAT ()
+		        <COND (<EMPTY? .AUXL><RETURN>)
+			      (ELSE <SET AUXVAR <1 .AUXL>>)>
+			<COND (<TYPE? .AUXVAR ATOM>
+			       <NEW-BINDING .AUXVAR
+					    <FIND-DECL .AUXVAR .DCL>>)
+			      (<TYPE? .AUXVAR LIST>
+			       <COND (<OR <NOT <==? <LENGTH .AUXVAR> 2>>
+					  <NOT <TYPE? <1 .AUXVAR> ATOM>>>
+				      <REPORT-ERROR
+				       BAD-AUX-LIST-IN-PROG
+				       COMPILE:PROG>)
+				     (ELSE
+				      ;"frob symbol-table, make binding if SPECIAL."  
+				      <NEW-BINDING .AUXVAR
+						   <FIND-DECL <1 .AUXVAR> .DCL>>)>)
+			      (ELSE <RETURN>)>
+			<SET AUXL <REST .AUXL>>>
+		       ;"bind hewitt atom, if it exists"
+		       <COND (.HEWITT
+			      <SET HEWITT
+				   <NEW-BINDING .HEWITT
+				    <FIND-DECL .HEWITT .DCL>>>)>
+		       ;"frob ACT, NAME."
+		       <PROG ()
+		        <COND (<NOT <EMPTY? .AUXL>>
+			       <SET AUXVAR <1 .AUXL>>)
+			      (ELSE <RETURN>)>
+			<COND (<OR <=? .AUXVAR "ACT">
+				  <=? .AUXVAR "NAME">>
+			       <SET AUXL <REST .AUXL>>
+			       <COND (<NOT <AND <1? <LENGTH .AUXL>>
+						<TYPE? <1 .AUXL> ATOM>>>
+				      <REPORT-ERROR
+				       MEANINGLESS-AUX-LIST-IN-PROG
+				       COMPILE:PROG>)
+				     (ELSE
+				      ;"bind activation name."
+				      <SET ACT-NAME
+					   <NEW-BINDING <1 .AUXL>
+					    <FIND-DECL <1 .AUXL> .DCL>>>)>)>>)>
+	       ;"auxlist better be empty."
+	       ;"start body of prog."	       
+	       <COND (<NOT <EMPTY? .AUXL>>
+		      <REPORT-ERROR MEANINGLESS-AUX-LIST-IN-PROG COMPILE:PROG>)
+		     (<EMPTY? .RMOBJ>
+		      <REPORT-ERROR EMPTY-PROG-BODY COMPILE:PROG>)		     
+		     (ELSE
+		      ;"***WHAT ABOUT RECORDING IT?***"
+		      <EMIT-ACTIVATION>
+		      ;"*MAYBE BIND LPROG HERE.*"
+		      ;"compile body into sequential code:"
+		      <TRANSLATE-CLAUSE .RMOBJ .RETVAR .REF .NXT
+		       .ACT-LIST .ACT-LIST .MAP-LIST .SYMBOLS .NLEVEL>)>)>>
+
+<DEFMAC EMIT-ACTIVATION ()
+	'<BIND (TMP)
+	      #DECL ((TMP) <OR VARIABLE FALSE ATOM>)
+	      <COND (<AND .ACT-NAME
+			  <OR <AND <NOT .HEWITT> .ACT-NAME>
+			      <AND <SPECIAL-ATOM? .ACT-NAME>
+				   <NOT <SPECIAL-ATOM? .HEWITT>>>>>
+		     <SET TMP .HEWITT>
+		     <SET HEWITT .ACT-NAME>
+		     <SET ACT-NAME .TMP>)>
+	      <COND (<TYPE? .HEWITT ATOM>
+		     <COND (<TYPE? .ACT-NAME ATOM>
+			    <MCODIFY <FORM MSET <SET AVAR <GENSYM>>
+					   '<MAKE-ACTIVATION>>
+				     .REF <SET REF <GENREF>>>
+			    <MCODIFY <FORM SET .HEWITT .AVAR>
+				     .REF <SET REF <GENREF>>>
+			    <MCODIFY <FORM SET .ACT-NAME .AVAR>
+				     .REF <SET REF <GENREF>>>)
+			   (.ACT-NAME
+			    <MCODIFY <FORM MSET .ACT-NAME '<MAKE-ACTIVATION>>
+				     .REF <SET REF <GENREF>>>
+			    <MCODIFY <FORM SET .HEWITT .ACT-NAME>
+				     .REF <SET REF <GENREF>>>)
+			   (ELSE
+			    <MCODIFY <FORM MSET <SET AVAR <GENSYM>>
+					   '<MAKE-ACTIVATION>>
+				     .REF <SET REF <GENREF>>>)>)
+		    (.HEWITT
+		     <COND (.ACT-NAME
+			    <MCODIFY <FORM MSET .ACT-NAME '<MAKE-ACTIVATION>>
+				     .REF <SET REF <GENREF>>>
+			    <MCODIFY <FORM MSET .HEWITT .ACT-NAME>
+				     .REF <SET REF <GENREF>>>)
+			   (ELSE
+			    <MCODIFY <FORM MSET .HEWITT '<MAKE-ACTIVATION>>
+				     .REF <SET REF <GENREF>>>)>)>
+	      <SET ACT-LIST (<BIND ((L ()))
+				   <COND (.HEWITT
+					  <SET L (.HEWITT !.L)>)>
+				   <COND (.ACT-NAME
+					  <SET L (.ACT-NAME !.L)>)> .L>
+			     <COND (<OR .HEWITT .ACT-NAME>
+				    <LAST-MCODE ,MFUNCTION>)
+				   (ELSE <>)>
+			     .REF .NXT .RETVAR .BINDINGS
+			     .NLEVEL !.ACT-LIST)>>>
+
+<DEFINE COMPILE:RETURN (MOBJ RETVAR REF NXT ACT-LIST DEF-ACT MAP-LIST
+		        SYMBOLS NLEVEL "AUX" ACT SUCCESSOR RET ACT-VAR)
+	#DECL ((MOBJ) FORM (RETVAR) <OR VARIABLE FALSE> (REF NXT) FORWRD
+	       (ACT-LIST DEF-ACT MAP-LIST) LIST (NLEVEL) FIX
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]> (ACT) LIST
+	       (SUCCESSOR) LIST (ACT-VAR RET) ANY)
+	;"wonder what this should return? $0 for now"
+	;"LATER COMPARE LEVELS OF MAPF AND ACT."
+	<COND (<LENGTH? .MOBJ 2>
+	       ;"RETURN with unspecified activation."
+	       <COND (<NOT <ACT-MCODE .DEF-ACT>>
+		      ;"***UNBIND SPECIALS***"
+		      <MCODIFY <FORM GO <RETURN-LOC .DEF-ACT>>
+			       .REF <SET REF <GENREF>>>)
+		     (ELSE
+		      ;"record various information for CLEANG."
+		      <RECORD-RETURN <CHTYPE <+ <CHTYPE ,LAST-MCODE FIX> 1> MCODE>
+				     <ACT-MCODE .DEF-ACT>
+				     .RETVAR>
+		      ;"EVAL argument to RETURN, set return variable."
+		      <COND (<LENGTH? .MOBJ 1>
+			     <SET RETVAL
+				  <MCODE-DISPATCH <2 .MOBJ> <RETURN-VAR .DEF-ACT>
+						  .REF <SET REF <GENREF>>
+						  .ACT-LIST .DEF-ACT .MAP-LIST
+						  .SYMBOLS .NLEVEL>>)
+			    (ELSE <SET RETVAL T>)>
+		      <COND (<AND <TYPE? .RETVAL VARIABLE>
+				  <0? <CHTYPE .RETVAL FIX>>>
+			     <WARNING RETURN-VALUE-WILL-BE-IGNORED
+				      COMPILE:RETURN>
+			     <MCODIFY '<RETURN> .REF <SET REF <GENREF>>>)
+			    (ELSE
+			     <MCODIFY <FORM RETURN .RETVAL>
+				      .REF <SET REF <GENREF>>>)>
+		      <APPEND-BBLOCK-SUCCESSORS
+		       <CURRENT-BBLOCK ,MFUNCTION>
+		       <RETURN-LOC .DEF-ACT>>
+		      <PUT ,MFUNCTION ,CURRENT-BBLOCK <MAKE-BBLOCK>>)>)
+	      (<LENGTH? .MOBJ 3>
+	       <SET RET
+		    <MCODIFY <FORM RETURN
+				   <MCODE-DISPATCH <2 .MOBJ> <>
+						   .REF <SET REF <GENREF>>
+						   .ACT-LIST .DEF-ACT .MAP-LIST
+						   .SYMBOLS .NLEVEL>
+				   <SET ACT-VAR
+					<MCODE-DISPATCH <3 .MOBJ> <>
+							.REF <SET REF <GENREF>>
+							.ACT-LIST .DEF-ACT .MAP-LIST
+							.SYMBOLS .NLEVEL>>>
+				  .REF <SET REF <GENREF>>>>
+	       <COND (<TYPE? .ACT-VAR VARIABLE ATOM>
+		      <RECORD-RETURN
+		       <CHTYPE <+ <CHTYPE <LAST-MCODE ,MFUNCTION>
+					  FIX> 1>
+			       MCODE>
+		       .ACT-VAR
+		       .RETVAR>
+		      <APPEND-BBLOCK-SUCCESSORS
+		       <CURRENT-BBLOCK ,MFUNCTION>
+		       !<RETURN-LOCS .ACT-VAR .ACT-LIST>>
+		      <PUT ,MFUNCTION ,CURRENT-BBLOCK <MAKE-BBLOCK>>)
+		     (ELSE <ERROR DLD-BLEW-HIS-SPECIAL-ACTIVATION-HACK
+				  COMPILE:RETURN>)>
+	       .RET)>>
+
+<DEFINE COMPILE:AGAIN (MOBJ RETVAR REF NXT ACT-LIST DEF-ACT MAP-LIST
+		       SYMBOLS NLEVEL "AUX" RET ACT-VAR SUCCESSOR)
+	#DECL ((MOBJ) ANY (RETVAR) <OR VARIABLE FALSE> (REF NXT) FORWRD
+	       (ACT-LIST DEF-ACT MAP-LIST) LIST
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]>
+	       (NLEVEL) FIX (RET ACT-VAR) ANY (SUCCESSOR) LIST)
+	;"return VARIABLE doesn't matter."
+	<COND (<G=? <LENGTH .MOBJ> 3>
+	       <REPORT-ERROR TOO-MANY-ARGS-TO-AGAIN COMPILE:AGAIN>)
+	      (<LENGTH? .MOBJ 1>
+	       <COND (<NOT <ACT-MCODE .DEF-ACT>>
+		      ;"** UNBIND LOWER-LEVEL SPECIALS **"
+		      ;"**USING DIFFERENCE BETWEEN ACT-LIST AND DEF-ACT."
+		      <SET RET <MCODIFY <SET MFORM <FORM GO <AGAIN-LOC .DEF-ACT>>>
+					.REF <SET REF <GENREF>>>>
+		      <FORWRD-REF <REST .MFORM>>
+		      .RET)
+		     (ELSE
+		      <RECORD-AGAIN
+		       <CHTYPE <+ <CHTYPE <LAST-MCODE ,MFUNCTION>
+					  FIX> 1> MCODE>
+		       <ACT-MCODE .DEF-ACT>>
+		      <MCODIFY '<AGAIN> .REF <SET REF <GENREF>>>
+		      <APPEND-BBLOCK-SUCCESSORS
+		       <CURRENT-BBLOCK ,MFUNCTION>
+		       <AGAIN-LOC .DEF-ACT>>
+		      <PUT ,MFUNCTION ,CURRENT-BBLOCK <MAKE-BBLOCK>>)>)
+	      (<LENGTH? .MOBJ 2>
+	       ;"AGAIN with an argument specifying the activation to repeat."	       
+	       <SET RET 
+		    <MCODIFY <FORM AGAIN
+				   <SET ACT-VAR
+					<MCODE-DISPATCH <2 .MOBJ> <>
+							.REF <SET REF <GENREF>>
+							.ACT-LIST .DEF-ACT .MAP-LIST
+							.SYMBOLS .NLEVEL>>>
+			     .REF <SET REF <GENREF>>>>
+	       ;"***WHAT ABOUT WHEN ACT-VAR IS NOT AN ATOM OR VARIABLE?***"
+	       <APPEND-BBLOCK-SUCCESSORS
+		<CURRENT-BBLOCK ,MFUNCTION>
+		!<AGAIN-LOCS .ACT-VAR .ACT-LIST>>
+	       <PUT ,MFUNCTION ,CURRENT-BBLOCK <MAKE-BBLOCK>>
+	       <COND (<TYPE? .RET VARIABLE ATOM>
+		      <RECORD-AGAIN
+		       <LAST-MCODE ,MFUNCTION>
+		       .ACT-VAR>)
+		     (ELSE <ERROR DLD-BLEW-HIS-SPECIAL-ACTIVATION-HACK
+				  COMPILE:AGAIN>)>
+	       .RET)>>
+
+<DEFINE SPECIAL-ATOM? (ATM DCL "AUX" ADCL)
+	#DECL ((VALUE) <OR FALSE 'T> (ATM) ATOM
+	       (DCL) DECL (ADCL) <OR ATOM FORM>)
+	<SET ADCL <FIND-DECL .ATM .DCL>>
+	<COND (<AND <TYPE? .ADCL FORM>
+		    <G=? <LENGTH .ADCL> 2>
+		    <==? <1 .ADCL> SPECIAL>> T)>>	       
+
+<DEFINE FIND-DECL (ATM DCL)
+	#DECL ((VALUE) <OR ATOM FORM>
+	       (ATM) ATOM (DCL) DECL)
+	<REPEAT ((DCL <CHTYPE .DCL LIST>))
+	 #DECL ((DCL) LIST)
+	 <COND (<EMPTY? .DCL><RETURN ANY>)	       
+	       (<NOT <TYPE? <1 .DCL> LIST>>
+		<REPORT-ERROR ILLEGAL-DECL FIND-DECL>)
+	       (<MEMQ .ATM <1 .DCL>>
+		<RETURN <2 .DCL>>)
+	       (<LENGTH? .DCL 1>
+		<REPORT-ERROR ILLEGAL-DECL FIND-DECL>)
+	       (ELSE <SET DCL <REST .DCL 2>>)>>>
+
+<DEFMAC NEW-BINDING ('BND 'DCL)
+	<FORM PROG ((BND .BND) (DCL .DCL) VAL?)
+	      #DECL ((BND) <OR ATOM LIST> (DCL) <OR ATOM FORM>
+		     (VAL) <OR ATOM FALSE>)
+	      '<COND (<TYPE? .BND LIST>
+		      <SET ATM <1 .BND>>
+		      <SET VAL T>)
+		     (ELSE <SET ATM .BND>
+			   <SET VAL <>>)>
+	      '<COND (<AND <TYPE? .DCL FORM>
+			   <NOT <EMPTY? .DCL>>
+			   <==? <1 .DCL> SPECIAL>>
+		      ;"then it's special"
+		      ;"**put in hack to record specials**"
+		      <SET RET
+			   <NEW-SYMBOL <SPNAME .ATM> .ATM .DCL .SYMBOLS>>
+		      <MCODIFY <FORM BIND-SPECIAL .ATM .DCL> .REF <SET REF <GENREF>>>
+		      <SET BINDINGS <+ .BINDINGS 1>>
+		      ;"set to initial value, if .BND is a list."
+		      <COND (.VAL
+			     <MCODIFY <FORM SET .ATM
+					    <MCODE-DISPATCH
+					     <2 .BND> <>
+					     .REF <SET REF <GENREF>>
+					     .ACT-LIST .DEF-ACT .MAP-LIST
+					     .SYMBOLS .NLEVEL>>
+				      .REF <SET REF <GENREF>>>)>)
+		     (ELSE
+		      ;"non-special"
+		      <SET RET
+			   <NEW-SYMBOL <SPNAME .ATM> <GENSYM .ATM .DCL>
+				       .DCL .SYMBOLS>>
+		      ;"set to initial value if .BND is a list."
+		      <COND (.VAL
+			     <MCODE-DISPATCH
+			      <2 .BND> .RET
+			      .REF <SET REF <GENREF>>
+			      .ACT-LIST .DEF-ACT .MAP-LIST
+			      .SYMBOLS .NLEVEL>)>)>	      
+	      '.RET>>
+
+<DEFINE RECORD-RETURN (RET-MC ACT-ID RETVAR)
+	#DECL ((RET-MC) MCODE (ACT-ID) <OR MCODE VARIABLE>
+	       (RETVAR) <OR VARIABLE FALSE>)
+	<PUT ,MFUNCTION
+	     ,RETURNS
+	     <TAILCONS <RETURNS ,MFUNCTION> (.RET-MC .ACT-ID .RETVAR)>>>
+
+<DEFINE RECORD-AGAIN (AGAIN-MC ACT-ID)
+	#DECL ((AGAIN-MC) MCODE (ACT-ID) <OR MCODE VARIABLE>)
+	<PUT ,MFUNCTION
+	     ,AGAINS
+	     <TAILCONS <AGAINS ,MFUNCTION> (.AGAIN-MC .ACT-ID)>>>
+
+<DEFINE RETURN-LOCS (ACT-VAR ACT-LIST "AUX" RL)
+	#DECL ((ACT-VAR) <OR ATOM VARIABLE> (ACT-LIST) LIST
+	       (RL) <OR FORWRD BBLOCK>)
+	;"list all possible return places."			
+	<MAPF ,LIST
+	      <FUNCTION ()
+			<COND (<EMPTY? .ACT-LIST>
+			       <MAPSTOP>)
+			      (<EMPTY? <ACT-NAME .ACT-LIST>>
+			       ;"activation is not named,"
+			       ;"so it can only be reached by default."
+			       <SET ACT-LIST <REST .ACT-LIST 7>>
+			       <MAPRET>)
+			      (ELSE
+			       <SET RL <RETURN-LOC .ACT-LIST>>
+			       <SET ACT-LIST <REST .ACT-LIST 7>>
+			       <MAPRET .RL>)>>>>
+
+<DEFINE AGAIN-LOCS (ACT-VAR ACT-LIST "AUX" AL)
+	#DECL ((ACT-VAR) <OR ATOM VARIABLE> (ACT-LIST) LIST
+	       (AL) <OR FORWRD BBLOCK>)
+	;"list all possible return places."			
+	<MAPF ,LIST
+	      <FUNCTION ()
+			<COND (<EMPTY? .ACT-LIST>
+			       <MAPSTOP>)
+			      (<EMPTY? <ACT-NAME .ACT-LIST>>
+			       ;"activation is not named,"
+			       ;"so it can only be reached by default."
+			       <SET ACT-LIST <REST .ACT-LIST 7>>
+			       <MAPRET>)
+			      (ELSE
+			       <SET AL <AGAIN-LOC .ACT-LIST>>
+			       <SET ACT-LIST <REST .ACT-LIST 7>>
+			       <MAPRET .AL>)>>>>
+
+

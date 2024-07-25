@@ -1,0 +1,173 @@
+<FLOAD "MADMAN;MGC NBIN">
+<USE "MADMAN">
+
+<SETG OBJECT
+      '["JONES@78"
+	[[#FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  "JONES@78"
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  (0 ("DELIVERY" 11608977040 10 #FALSE () 10922))
+	  (("DELIVERY" 11608966118))
+	  ("DELIVERY" 1.0829677)
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  (11608966118)
+	  (#FALSE (13))
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  "LISKOV"
+	  #FALSE ()]
+	 []]
+	"LISKOV"
+	[[#FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  "LISKOV"
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  11608966058
+	  (0)
+	  (("RECEIVER-PROCESSING" 11608966054) ("DELIVERY" 11608966070))
+	  ("DELIVERY" 1.6288518 "RECEIVER-PROCESSING" 0.26043987)
+	  #FALSE ()
+	  #FALSE ()
+	  ("LOGIN-MAIL")
+	  #FALSE ()
+	  #FALSE ()
+	  (("DELIVERY" 11608966067))
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()]
+	 []]
+	""
+	[[137006
+	  "<[MIT-DMS].137006>"
+	  "LISKOV"
+	  #FALSE ()
+	  3073
+	  ("JONES@78" "LISKOV")
+	  #FALSE ()
+	  ("JONES@78")
+	  #FALSE ()
+	  11608966021
+	  "visit"
+	  "Dear Anita,  Sorry to be so slow in answering your
+note, but I've been sick.  Actually the whole family
+has been sick.  Hoppefully it's over now.
+     Tentatively, I'm thinking of coming to Pittsburg on
+the evening of Mar. 4.  I could arrive at 7;10.  I would
+leave on mar 6 in the afternoon -- maybe even fairly
+early afternoon, or it could be late afternoon.  Tell
+me what you think of this.
+     As far as people to talk to are concerned, of course
+there is you and Bill and Mary and Nico.  Other than that
+I'm not sure, but I'm particularly interested in distributed
+computing now, so perhaps you can suggest someone.
+     See you soon.    Barbara"
+	  #FALSE ()
+	  #FALSE ()
+	  98
+	  #FALSE ()
+	  #FALSE ()
+	  (0 ("ACKNOWLEDGMENT" 11609490339 10 #FALSE () 10922))
+	  (("SENDING" 11608966033)
+	   ("EXPANSION" 11608966042)
+	   ("AUTHOR-PROCESSING" 11608966045)
+	   ("TRANSMISSION" 11608966051)
+	   ("ACKNOWLEDGMENT" 11608966073))
+	  ("ACKNOWLEDGMENT"
+	   0.15188884
+	   "TRANSMISSION"
+	   0.76031589
+	   "AUTHOR-PROCESSING"
+	   0.10269546
+	   "EXPANSION"
+	   0.73393154
+	   "SENDING"
+	   0.74691772E-1)
+	  ("LISKOV" "JONES@78")
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()
+	  ()
+	  ()
+	  ("JONES@78" ("DELIVERY" 11609490339))
+	  #FALSE ()
+	  #FALSE ()
+	  #FALSE ()]
+	 ["BLIND-CARBON-TO" ("LISKOV")]]]>
+
+
+
+<SETG CNT 0>
+<ON "REALT"
+    <FUNCTION ()
+	 <COND (<0? <MOD <SETG CNT <+ ,CNT 1>> 20>> <PRINC "(GC)"> <GC>)>
+	 <PRINC !\*>>
+    4>
+<REALTIMER 1>
+
+<SETG SCRATCH-SPACE <AFIND 5>>
+<SETG MSG-SPACE <AFIND 5>>
+
+<DEFINE AGCTEST ("AUX" OBJ
+		(S1 ,SCRATCH-SPACE) (S2 ,MSG-SPACE) NOBJ (CNT 0))
+	#DECL ((NOBJ OBJ) ANY (S1 S2) SPACE)
+	<ARESET .S2 T T>
+	<SET OBJ <ACOPY .S2 ,OBJECT>>
+	<REPEAT ()
+	<PRINT <SET CNT <+ .CNT 1>>>
+	<ARESET .S1 T T>
+	<COND (<SET NOBJ <AGC .S1 .OBJ>>
+	       <COND (<N=? .NOBJ ,OBJECT>
+		      <ERROR AGC-TO-TEMP-DECL-VIOLATION!-ERRORS .NOBJ>)>
+	       <ARESET .S2 T T>
+	       <COND (<SET OBJ <AGC .S2 .NOBJ>>
+		      <COND (<N=? .OBJ ,OBJECT>
+			     <ERROR AGC-TO-SOURCE-DECL-VIOLATION!-ERRORS .OBJ>)
+			    (ELSE .OBJ)>)
+		     (ELSE <ERROR AGC-TO-SOURCE-FAILED!-ERRORS .OBJ>)>)
+	      (ELSE <ERROR AGC-TO-TEMP-FAILED!-ERRORS .OBJ>)>>>
+
+<DEFINE ACOPYTEST ("AUX" (S1 ,SCRATCH-SPACE) NOBJ (CNT 0) (OBJ ,OBJECT))
+	#DECL ((NOBJ OBJ) ANY (S1 S2) SPACE)
+	<REPEAT ()
+		<PRINT <SET CNT <+ .CNT 1>>>
+		<ARESET .S1 T T>
+		<COND (<SET NOBJ <ACOPY .S1 .OBJ>>
+		       <COND (<N=? .NOBJ ,OBJECT>
+			      <ERROR AGC-TO-TEMP-DECL-VIOLATION!-ERRORS .NOBJ>)>)
+		      (ELSE <ERROR AGC-TO-TEMP-FAILED!-ERRORS .OBJ>)>>>

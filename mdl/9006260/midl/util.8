@@ -1,0 +1,12 @@
+;"user interface and randomness for compiler"
+
+<DEFINE REPORT-ERROR ("TUPLE" ERR-INFO)
+	;"TEMPORARILY:"
+	<ERROR !.ERR-INFO>>
+
+<DEFINE WARNING ("TUPLE" WARN-INFO)
+	;"TEMPORARILY"
+	<MAPF <>
+	      <FUNCTION (W) <PRINT .W>>
+	      .WARN-INFO>
+	<CRLF>>

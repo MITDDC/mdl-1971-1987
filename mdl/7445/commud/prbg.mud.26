@@ -1,0 +1,220 @@
+<PACKAGE "PRBG">
+
+<ENTRY PRESENT-BITGRAPH-IMAGE PRESENT-BITMAP-IMAGE>
+
+<USE "SCR" "WINDOW" "M-DEFS" "MADMAN">
+
+<SETG BG-BUFFER-SIZE 500>
+<SETG BG-MODE 3>
+<SETG BG-BOX 16>
+<GDECL (BG-BOX BG-BUFFER-SIZE BG-MODE) FIX>
+
+<DEFINE PRESENT-BITGRAPH-IMAGE (TXT OUTCHAN
+				"AUX" (CH <>) STR SIZ HIGH WIDE
+				(HI -1) (OHI -2) TMP L (SS ,SCRATCH-SPACE))
+	#DECL ((CH) <OR CHANNEL FALSE> (STR) STRING (SIZ) <LIST [2 FIX]>
+	       (SS) SPACE (L) <OR FALSE FIX> (HIGH WIDE HI OHI) FIX)
+	<COND (<TYPE? .TXT CHANNEL> <SET CH .TXT>)
+	      (<TYPE? .TXT STRING>
+	       <COND (<NOT <SET CH <OPEN "READB" .TXT>>>
+		      <PRINC "	**File not presentable: ">
+		      <PRIN1 .CH>
+		      <CRLF>
+		      <SET CH <>>)>)>
+	<COND (.CH
+	       <SET STR <AISTRING <ARESET .SS> ,BG-BUFFER-SIZE>>
+	       <SET SIZ <SIZE-OF-BG-IMAGE .CH .STR>>
+	       <SET HIGH <2 .SIZ>>
+	       <SET WIDE <1 .SIZ>>
+	       <REPEAT ()
+		       <COND (<G? .HIGH 0>
+			      <SET HI <MIN ,BG-BOX .HIGH>>
+			      <SET HIGH <- .HIGH .HI>>)
+			     (ELSE <RETURN>)>
+		       <UP-CURSOR ,STREAM>
+		       <COND (<N==? .OHI .HI>
+			      <SET TMP
+				   <ASTRING .SS
+					    "P:"
+					    <UNPARSE ,BG-MODE> !\;
+					    <UNPARSE .WIDE> !\;
+					    <UNPARSE .HI> !\s>>
+			      <SET OHI .HI>)>
+		       <IMAGE-OUT ,STREAM .TMP>
+		       <REPEAT ()
+			       <COND (<SET L
+					   <READSTRING .STR
+						       .CH
+						       ,CRSTR
+						       '<>>>
+				      <READCHR .CH>
+				      <READCHR .CH>
+				      <IMAGE-OUT ,STREAM .STR .L>)
+				     (ELSE <SET L -1>)>
+			       <COND (<OR <L? .L 0>
+					  <0? <SET HI <- .HI 1>>>>
+				      <RETURN>)>>
+		       <WINOP .OUTCHAN ,SCRLF> ;"simulate crlf">
+	       <TTY-RESET ,STREAM>
+	       <ARESET .SS>
+	       T)
+	      (<TYPE? .TXT BYTES>
+	       <MAPF <>
+		     <FUNCTION (C)
+			  #DECL ((C) FIX)
+			  <IMAGE-OUT ,STREAM .C>>
+		     .TXT>
+	       <TTY-RESET ,STREAM>
+	       T)>>
+
+<SETG CRSTR <STRING <ASCII 13>>>
+
+<DEFINE SIZE-OF-BG-IMAGE (C BUF "AUX" S (X 0) (Y 0)) 
+	#DECL ((VALUE) <OR LIST FALSE> (BUF) STRING (C) <OR CHANNEL FALSE>
+	       (S) <OR STRING FALSE> (X Y) FIX)
+	<READSTRING .BUF .C "s">
+	<READCHR .C>
+	<READCHR .C>
+	<READCHR .C>
+	<COND (<SET S <MEMQ !\; <MEMBER "P:" .BUF>>>
+	       <SET S <REST .S>>
+	       <SET X <READ-FIX .S>>
+	       <COND (<SET S <MEMQ !\; <REST .S>>>
+		      <SET S <REST .S>>
+		      <SET Y <READ-FIX .S>>)>)>
+	<LIST .X .Y>>
+
+<DEFINE READ-FIX (STR "AUX" (ANS 0))
+	#DECL ((VALUE ANS) FIX (STR) STRING)
+	<REPEAT (N (N0 <ASCII !\0>) (N9 <ASCII !\9>))
+		#DECL ((N N0 N9) FIX)
+		<COND (<OR <EMPTY? .STR>
+			   <G? .N0 <SET N <ASCII <1 .STR>>>>
+			   <L? .N9 .N>>
+		       <RETURN .ANS>)>
+		<SET ANS <+ <* 10 .ANS> <- .N .N0>>>
+		<SET STR <REST .STR>>>>
+
+\
+
+"PRESENT-BITMAP-IMAGE -- present a bitmap image on the BitGraph, converting
+to appropriate format as we go."
+
+<DEFINE PRESENT-BITMAP-IMAGE (INPUT OUTCHAN "OPTIONAL" (W 662) (H 901)
+		  "AUX" CH NB (WRD 0) (CNT 2) WW DIFF TMP)
+	#DECL ((W H WRD CNT WW DIFF) FIX (NB) <OR FIX FALSE> (OUTCHAN) CHANNEL
+	       (TMP) STRING (CH) <OR CHANNEL FALSE> (INPUT) <OR STRING CHANNEL>)
+	<COND (<TYPE? .INPUT CHANNEL> <SET CH .INPUT>)
+	      (ELSE
+	       <COND (<NOT <SET CH <OPEN "READB" .INPUT>>>
+		      <PRINC "	**File not presentable: ">
+		      <PRIN1 .CH>
+		      <CRLF>
+		      <SET CH <>>)>)>
+	<COND (.CH
+	       <COND (<NOT <GASSIGNED? STREAM>>
+		      <SETG STREAM <GET-TTY ,OUTCHAN ,INCHAN>>)>
+	       <SET DIFF <MOD <- 8 <MOD .W 8>> 8>>
+	       <SET WW <SET W <+ .W .DIFF>>>
+	       <SET DIFF <MOD <- 16 <MOD .W 16>> 16>>
+	       <SETG OUTCNT 0>
+	       <SETG CNT 1>
+	       <SETG WRD 0>
+	       <REPEAT ((SS ,SCRATCH-SPACE) HI (OHI -1))
+		       #DECL ((SS) SPACE (HI OHI) FIX)
+		       <COND (<G? .H 0>
+			      <SET HI <MIN ,BG-BOX .H>>
+			      <SET H <- .H .HI>>)
+			     (ELSE
+			      <ARESET .SS>
+			      <TTY-RESET ,STREAM>
+			      <CLOSE .CH>
+			      <RETURN>)>
+		       <UP-CURSOR ,STREAM>
+		       <COND (<N==? .OHI .HI>
+			      <SET TMP
+				   <ASTRING .SS
+					    "P:"
+					    <UNPARSE ,BG-MODE> !\;
+					    <UNPARSE .W> !\;
+					    <UNPARSE .HI> !\s>>
+			      <SET OHI .HI>)>
+		       <IMAGE-OUT ,STREAM .TMP>
+		       <REPEAT ((LINE? <>))
+			       #DECL ((LINE?) <OR ATOM FALSE>)
+			       <COND (<SET NB <NEXT-BYTE .CH>>
+				      <SET WRD <CHTYPE <ORB <LSH .WRD 8> .NB> FIX>>
+				      <COND (<SET LINE? <0? <SET WW <- .WW 8>>>>
+					     <SET WRD
+						  <CHTYPE <LSH .WRD .DIFF> FIX>>
+					     <SET CNT 1>
+					     <SET WW .W>)>
+				      <COND (<0? <SET CNT <- .CNT 1>>>
+					     <OUTPUT-TRIPLE .WRD>
+					     <SET WRD 0>
+					     <SET CNT 2>)>
+				      <COND (.LINE?
+					     <COND (<G? ,OUTCNT 0>
+						    <IMAGE-OUT ,STREAM
+							       ,OUTBUF
+							       ,OUTCNT>
+						    <SETG OUTCNT 0>)>
+					     <COND (<0? <SET HI <- .HI 1>>>
+						    <WINOP .OUTCHAN ,SCRLF>
+						    <RETURN>)>)>)
+				     (ELSE
+				      <COND (<G? ,OUTCNT 0>
+					     <IMAGE-OUT ,STREAM ,OUTBUF ,OUTCNT>
+					     <SETG OUTCNT 0>)>
+				      <RETURN>)>>>)>>
+
+<SETG WRD 0>
+<SETG CNT 1>
+<SETG UV <UVECTOR 0>>
+<GDECL (UV) UVECTOR (CNT WRD) FIX>
+
+<DEFINE NEXT-BYTE (CH "AUX" (CNT ,CNT) (WRD ,WRD))
+	#DECL ((CNT WRD) FIX)
+	<PROG ()
+	      <COND (<0? <SETG CNT <- .CNT 1>>>
+		     <COND (<0? <READB ,UV .CH>>
+			    <RETURN <>>)
+			   (ELSE
+			    <SET WRD <SETG WRD <1 ,UV>>>
+			    <SETG CNT 4>)>)>
+	      <SETG WRD <SET WRD <CHTYPE <ROT .WRD 8> FIX>>>
+	      <CHTYPE <ANDB .WRD *377*> FIX>>>
+
+<SETG OUTCNT 0>
+<SETG OUTBUF <ISTRING <* </ 768 16> 3>>>
+<GDECL (OUTBUF) STRING (OUTCNT) FIX>
+
+<DEFINE OUTPUT-TRIPLE (WRD "AUX" (OUTBUF ,OUTBUF) (OUTCNT ,OUTCNT)
+		       (OUTL <LENGTH .OUTBUF>))
+	#DECL ((WRD) FIX (OUTBUF) STRING (OUTCNT) FIX)
+	<COND (<G? .WRD *1777*>
+	       <PUT .OUTBUF
+		    <SET OUTCNT <+ .OUTCNT 1>>
+		    <ASCII <+ 64 <CHTYPE <ANDB <LSH .WRD -10> *77*> FIX>>>>
+	       <COND (<==? .OUTL .OUTCNT>
+		      <IMAGE-OUT ,STREAM .OUTBUF>
+		      <SET OUTCNT <SETG OUTCNT 0>>)
+		     (ELSE <SETG OUTCNT <+ ,OUTCNT 1>>)>)>
+	<COND (<G? .WRD *17*>
+	       <PUT .OUTBUF
+		    <SET OUTCNT <+ .OUTCNT 1>>
+		    <ASCII <+ 64 <CHTYPE <ANDB <LSH .WRD -4> *77*> FIX>>>>
+	       <COND (<==? .OUTL .OUTCNT>
+		      <IMAGE-OUT ,STREAM .OUTBUF>
+		      <SET OUTCNT <SETG OUTCNT 0>>)
+		     (ELSE <SETG OUTCNT <+ ,OUTCNT 1>>)>)>
+	<PUT .OUTBUF
+	     <SET OUTCNT <+ .OUTCNT 1>>
+	     <ASCII <+ 48 <CHTYPE <ANDB .WRD *17*> FIX>>>>
+	<COND (<==? .OUTL .OUTCNT>
+	       <IMAGE-OUT ,STREAM .OUTBUF>
+	       <SETG OUTCNT 0>)
+	      (ELSE <SETG OUTCNT <+ ,OUTCNT 1>>)>
+	.WRD>
+
+<ENDPACKAGE>

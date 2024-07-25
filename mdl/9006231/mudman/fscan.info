@@ -1,0 +1,59 @@
+
+TS FSCAN is a Muddle program that scans files and finds all ATOMs
+which are not inside the ROOT oblist. It then prints out the ATOMs
+in alphabetical order. It is mainly used for quick checkings of
+possible misspelling of ATOM names.
+
+It can be used in 2 ways:
+
+[1] With JCL
+
+    :FSCAN <-out1>-_<-in>-, <-out2>-_<-in2>-, <-out3>-_<-in3>-, ... <CR>
+
+<-out>'s- and <-in>-'s should be standard ITS file specifications. As usual,
+^Q can be used to quote back-arrows and commas [Note 1]. <-out>-'s and
+back-arrows are optional. If missing, the output files will be defaulted
+to TTY:.
+
+[2] Without JCL
+
+    :FSCAN <CR>
+
+This gets a Muddle loaded with the FSCAN routines. The function to do 
+file-scanning is called FILE-SCAN.
+
+    <FILE-SCAN <-infile>- "OPTIONAL" (<-obs>- ()) (<-option>- 1) (<-outchan>- .OUTCHAN)>
+
+Where
+    <-infile>- should be a file specification string;
+    <-obs>- should be a list of OBLISTs, or an OBLIST. ATOMs in <-obs>- are
+        ignored in file scanning;
+    <-option>- should be either 1, 2, or 3;
+    <-outchan>- should be an output CHANNEL.
+
+In Option 1, FILE-SCAN uses a READ-TABLE to turn off !-,!",%,#,(,),[,],<,>,
+{,},',. and comma so that no new types or garbages are generated. This is
+the standard option, and invoking FSCAN with JCL will use this option.
+
+Option 2 turns off !-,#,%; changes {}'s to ()'s (to avoid building templates);
+but retains all others. This way structures will be built and would be slower
+than Option 1. One would want to use Option 2 if one wants to check balance of
+parentheses and brackets as well.
+
+In Option 3, everything is turned of except letters (A-Z,a-z) and numerals (0-9).
+It can be used to check files containing mainly English words.
+    
+------------
+
+[Note 1] To quote semi-colons, colons and spaces, one needs to use 2 (TWO___) ^Q's.
+The first ^Q is processed by the JCL-parser, and the second ^Q is processed by
+the Muddle file name parser (in OPEN). Also the Muddle file name parser has some
+known shortcomings.
+
+[Note 2] TS FSCAN does NOT___ contain any of the preloaded rsubrs, which are not
+normally needed in this application. Nevertheless the ROOT oblist contains all
+the ATOMs found in ROOT of a normal Muddle. Ie, ATOMs like USE, PACKAGE, EDIT,
+GROUP-LOAD, PPRINT and others would be there even tough these rsubrs are not
+loaded.
+
+

@@ -1,0 +1,22 @@
+Compilation record for: PS:<COMMUD>M-RDR.MUD.11;P777752;APT
+Output file:  DSK:<COMMUD>M-RDR.NBIN.11
+File loaded.
+Precompilation loaded.
+Functions ordered.
+COMPILING READER-MAIL!-M-RDR!-PACKAGE
+Peephole  2% 124/121
+Job done in:  10 / 25
+COMPILING READER-CITATION!-M-RDR!-PACKAGE
+Peephole  0% 176/175
+Job done in:  14 / 43
+COMPILING READER-DELIVERY!-M-RDR!-PACKAGE
+Peephole  2% 373/364
+Job done in:  42 / 1:59
+
+
+Total time used is
+	1 min. 31 sec. CPU time,
+	55 sec. garbage collector CPU time,
+	4 min. 24 sec. real time.
+CPU utilization is 34.469696%.
+Number of garbage collects = 18

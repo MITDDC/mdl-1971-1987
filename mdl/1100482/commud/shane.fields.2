@@ -1,0 +1,208 @@
+                    DEFINITION OF DATA STRUCTURES
+
+  mailbox   :=   (uname) | (uname host) | (uname host person)
+
+                 | (uname host person extension)
+
+  uname   :=   STRING
+
+  host   :=   STRING | FALSE
+
+  person   :=   STRING | FALSE
+                 
+  extension   :=   (pairlist)
+
+  pairlist   :=   name value | name value pairlist
+
+  name    :=   STRING
+
+  value   :=   ANY
+
+The MDL decl pattern for a mailbox is:
+
+<NEWTYPE mailbox LIST
+	'<LIST STRING "OPT" <OR STRING FALSE>
+        	     	    <OR STRING FALSE>
+                	    <LIST [REST STRING ANY>>>
+
+A mailbox is a list containing at least one element. The first element is a
+string which is the user name of the addressee or sender. The second element
+of a mailbox list, if present, is either a false or a string identifying the
+host machine of the addressee or sender. The third element of a mailbox list,
+if present, is either a false or a string identifying the personal name of the
+addressee or sender. The fourth element of a mailbox list, if present, is a
+list of name-value pairs. The first item of each pair is a string identifier
+which determines the meaning of the following item. This will allow the 
+inclusion of non-standard fields within a mailbox.
+
+  EXAMPLE: The mailbox SHANE@XX.MIT.ARPANET.INTERNET with associated
+           personal name "Shane Hartman" is represented as follows:
+
+           ("SHANE" "XX.MIT.ARPANET.INTERNET" "Shane Hartman")
+
+           For local delivery, this mailbox could have been represented
+           simply as:
+  
+          ("SHANE")
+
+  text		 :=  medium | multiple_media
+  multiple-media :=  [presentation_mode (text text ... )]
+  medium	 :=  plain_text | notes | enclosures | exotic 
+  plain_text	 :=  (STRING STRING ... )
+  exotic	 :=  [media_name source]
+  media_name	 :=  "FAX" | "IMAGE" | "VOICE" | "GRAPHICS"
+  file		 :=  CHANNEL | STRING
+  source	 :=  file | BYTES
+  presentation-mode :=  "INDEPENDENT" | "SEQUENTIAL" | "SIMULTANEOUS"
+	                  | "BRANCH" | FALSE
+  notes   :=   ["NOTES" ((mailbox mailbox ...) text)]
+  enclosures   :=   ["ENCLOSURES" (file file ... )]
+
+The MDL decl pattern for a text element can be rendered as:
+	
+  <NEWTYPE text VECTOR '<OR medium multiple_media>>
+
+  <NEWTYPE medium STRUCTURED
+	  '<OR <LIST STRING> <VECTOR STRING <OR STRING STRUCTURED>>>>
+
+  <NEWTYPE multiple_media VECTOR '<VECTOR <OR STRING FALSE> <LIST text>>>
+
+A text element represents the actual contents of a message. A simple instance
+of a text element is a single medium. A medium is one of four objects:
+
+  (1) A string. ASCII text that can be conveniently represented as a single
+      string (a brief note, for example).
+
+  (2) A list of strings. Structured ASCII text - each string in the list 
+      is considered to be a paragraph of ASCII text.
+
+  (3) A vector whose first element is a string identifying the type of medium
+      ("FAX", "IMAGE", etc.) and whose second element is either a string, a
+      channel, a bytes (8-bit), or a uvector of 36-bit words (8-bit bytes, left
+      justified). If the second element of a medium vector is a string (a 
+      filename) or a channel, then the named file is assumed to contain the
+      actual representation of the medium. In addition, the file is expected
+      to contain 36-bit words, each word containing four 8-bit bytes left 
+      justified. If the second element of a medium is a bytes or a uvector,
+      then the bytes or uvector is assumed to be a representation of the
+      medium. In each case "representation of the medium" means that the
+      medium has been previously encoded to conform with the appropriate
+      protocol and need only be copied. The medium is assumed to be encoded
+      correctly; NO CHECKING IS PERFORMED. 
+     
+  (4) A vector whose first element is a string identifying the type of medium
+      and whose second element is a MDL structure which requires encoding.
+      "NOTES" and "ENCLOSURES" are currently the only two media of this type.
+      The distinction between this type of medium and the previous type (3)
+      is implicit in the dispatch table which controls the processing of a text
+      element.
+
+      Notes and enclosures are represented as follows:
+
+	      ["ENCLOSURES" (file file ...)]
+
+    	      Identifies files to be included in message. This will
+              require opening a channel to each of the files named and copying
+              their contents into the message output buffer.
+
+
+              ["NOTES" ((mailbox mailbox ... ) text)]
+
+              The list of mailboxes identifies intended recipients of the note.
+              text element contains the actual text of the note.
+
+A text element may contain multiple media. Multiple media are represented as a
+vector of two elements. The first element is a string or a false. If the first
+element is a string, it names the presentation order for the media to follow
+(media may be presented simultaneously, sequentially, or independently). If
+the first element is a false, then presentation order is assumed to be
+sequential. The second element is a list containing the actual media. Note
+that a text element may appear in the media list; this allows structuring and
+nesting of presentation modes.
+  
+message   :=   [ name value name value ... ]
+
+name   :=   STRING
+
+value   :=   ANY
+
+A message object is a vector of name-value pairs. A name is a string.
+The value associated with each string varies. Fields defined so far include:
+
+"WHEN-ORIGINATED"    	FIX
+
+	A machine dependent integer which specifies the date and time a message
+        was created. (DATE)
+        
+
+"MESSAGE-ID"		STRING
+
+	A unique (with respect to COMSYS database) identifier. (MESSAGE-ID)
+
+
+"FROM"		<LIST mailbox [REST mailbox]>
+	
+	Identifies originator(s) of a message. (FROM)
+
+
+"SENDER"	mailbox
+
+	Identifies actual sender of message. Appears only if sender is
+	is not the message originator. (SENDER)
+
+
+"REPLY-TO"   	mailbox
+
+	The mailbox to which message reply should be directed. (REPLY-TO)
+
+
+"SUBJECT"	STRING
+
+	Brief description of contents or purpose of message. (SUBJECT)
+
+
+"IN-REPLY-TO"	STRING
+
+	Indicates message is a response to a previously received message and
+	identifies the previous message. (RE)
+
+
+"ACTION-TO"  	<LIST mailbox [REST mailbox]>
+	
+	Mailbox(es) to whom message is addressed. (TO)
+
+
+"CARBON-COPY-TO"  	<LIST mailbox [REST mailbox]>
+
+	Mailbox(es) receiving copy of message. (CC)
+
+
+"BLIND"   	<LIST mailbox [REST mailbox]>
+
+	Mailbox(es) receiving blind copy of message. (BCC)
+
+"KEYWORDS"	<LIST STRING [REST STRING]>
+
+	Identifies keywords appearing in message. (KEYWORDS)
+
+
+"REFERENCES"	<LIST STRING [REST STRING]>
+
+	Identifies documents referred to in message. (REFERENCES)
+
+
+"NOTES"         ((mailbox mailbox ...) text)
+
+        See description above. (NOTES)
+
+
+"ENCLOSURES"    (file file ...)
+
+	See description above. (ENCLOSURES)
+
+"TEXT"		text
+
+	The actual body of the message. (BODY)
+
+Note that the "NOTES" and "ENCLOSURES" fields may appear either as header
+items or as constituents of the "TEXT" field.

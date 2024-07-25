@@ -1,0 +1,73 @@
+<PACKAGE "NEW-LIST">
+
+<ENTRY NEW-LIST RECOMPILE REGLUE REPDUMP>
+
+<USE "FILINF">
+
+"NEW-LIST returns the packages in a MDL which need updating in some way.  The
+default is NBINs which need to be FBINed, and it does not require that there
+already be an FBIN for that NBIN.  Supplying a first argument of T will enforce
+that restriction instead."
+
+<DEFINE NEW-LIST ("TUPLE" TT
+		  "AUX" (REQ? <>) (NM1 "NBIN") (NM2 "FBIN") POB PL C1 C2 S)
+	#DECL ((TT) TUPLE (REQ?) ANY (NM1 NM2) STRING (POB) OBLIST (PL) LIST
+	       (S) STRING (C1 C2) <OR CHANNEL FALSE>)
+	<COND (<==? <LENGTH .TT> 3>
+	       <SET REQ? <1 .TT>>
+	       <SET NM1 <2 .TT>>
+	       <SET NM2 <3 .TT>>)
+	      (<==? <LENGTH .TT> 2>
+	       <COND (<TYPE? <1 .TT> STRING>
+		      <SET NM1 <1 .TT>>
+		      <SET NM2 <2 .TT>>)
+		     (ELSE
+		      <SET REQ? <1 .TT>>
+		      <SET NM1 <2 .TT>>)>)
+	      (<==? <LENGTH .TT> 1>
+	       <COND (<TYPE? <1 .TT> STRING>
+		      <SET NM1 <1 .TT>>)
+		     (ELSE <SET REQ? <1 .TT>>)>)>
+	<SET POB <GET PACKAGE OBLIST>>
+	<SET PL
+	     <MAPF ,LIST
+		   <FUNCTION (L)
+			#DECL ((L) LIST)
+			<SET L
+			     <MAPF ,LIST
+				   <FUNCTION (A)
+					#DECL ((A) ATOM)
+					<SET S <SPNAME .A>>
+					<COND (<SET C1
+						    <OPEN "READ"
+							  <STRING .S !\. .NM1>>>
+					       <SET C2
+						    <OPEN "READ"
+							  <STRING .S !\. .NM2>>>
+					       <COND (.C2
+						      <COND (<G? <CREATION-DATE .C1>
+								 <CREATION-DATE .C2>>
+							     <CLOSE .C1>
+							     <CLOSE .C2>
+							     <MAPRET .S>)
+							    (ELSE
+							     <CLOSE .C1>
+							     <CLOSE .C2>
+							     <MAPRET>)>)
+						     (ELSE
+						      <CLOSE .C1>
+						      <COND (.REQ? <MAPRET>)
+							    (ELSE
+							     <MAPRET .S>)>)>)
+					      (ELSE <MAPRET>)>>
+				   .L>>
+			<MAPRET !.L>>
+		   .POB>>>
+
+<DEFINE RECOMPILE () <NEW-LIST "MUD" "NBIN">>
+
+<DEFINE REGLUE () <NEW-LIST "NBIN" "GBIN">>
+
+<DEFINE REPDUMP () <NEW-LIST "NBIN" "FBIN">>
+
+<ENDPACKAGE>

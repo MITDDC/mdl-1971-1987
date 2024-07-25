@@ -1,0 +1,316 @@
+<PACKAGE "M-BASE">
+
+"basic net-mail sending functions"
+
+<ENTRY UPDATE-DEAD-HOSTS
+       MAIL-TEMP-FILE
+       FLUSH-NET-MESSAGE
+       NET-MESSAGE
+       MAIL-RESULT
+       NEXT-DELIVERY-ATTEMPT
+       ESCAPING-ITS-HEADER?
+       QPEEK
+       XRCP-LIST
+       ERRHND EHAN TIMED-OUT IOCHND IHAN
+       IGNORE
+       ICP-TRIES>
+
+<USE "MADMAN" "CHAN" "FIELDS" "CLOCK" "M-DEFS" "M-TIME"
+     "ITIME" "M-PRCD" "M-READ" "M-DAC" "M-DOUT" "NETFTP" "HOSTS"
+     "M-DATA" "M-TEMP" "M-ACK" "PRTUTI" "PRTSTR" "AP" "M-ERR" "USRUTI" "M-TAI">
+
+<GDECL (IHAN EHAN) HANDLER
+       (DF) FLOAT
+       (NET-INC ICP-TRIES) FIX
+       (NET-RETRY-CODES) <UVECTOR FIX>>
+
+<SETG ICP-TRIES 2>
+
+<SETG NET-RETRY-CODES '![7 10 11 13 14 17 18 20 21 22!]
+      					   ;"CODES WHICH ARE NON-FATAL ERRORS">
+
+<SETG NET-INC </ 262144 24>		    ;"INITIAL INCREMENT BETWEEN TRIES">
+
+\
+
+<DEFINE MAIL-TEMP-FILE (ADR "AUX" (SPLIT? <SPLITS? .ADR>)
+			TCH DATA AFMT FORMAT (MS ,MSG-SPACE)
+			(QSEND? <DRDMSG "" "QSEND">))
+	#DECL ((ADR) STRING (SPLIT?) <OR ATOM FALSE> (TCH) <OR CHANNEL FALSE>
+	       (FORMAT) LIST (MS) SPACE)
+	<COND
+	 (<AND <SET TCH ,NET-MESSAGE> <NOT .SPLIT?> <RESET .TCH>> .TCH)
+	 (ELSE
+	  <FLUSH-NET-MESSAGE>
+	  <SET DATA
+	       <COND (.QSEND? "DDT-FORMAT")
+		     (<AND <NOT <HOME? <DRD "" "RECEIVED-FROM-HOST">>>
+			   <NOT <DRD "" "FORWARDING">>
+			   <NOT <ESCAPING-ITS-HEADER? <EXTRACT-HOST .ADR>>>>
+		      <DRD "" <GETFIX "NET-FORWARDING-FORMAT">>)
+		     (ELSE
+		      <DRD "" <GETFIX "NET-DELIVERY-FORMAT">>)>>
+	  <COND (<COND (<SET AFMT <AP? .DATA>>)
+		       (<TYPE? .DATA LIST> <SET FORMAT .DATA>)
+		       (ELSE
+			<AFALSE 5
+				<ASTRING .MS "NETWORK-MAIL">
+				<ASTRING .MS <UNPARSE .DATA>>>)>
+		 <COND (<SET TCH <OPEN "PRINTB" <DATUM "COMSYS-NET-TEMP">>>
+			<COND (<COND (.AFMT <DO-APPLY .ADR .AFMT .TCH>)
+				     (ELSE <DO-OUTPUT .ADR .FORMAT .TCH>)>
+			       <CLOSE .TCH>
+			       <FILCHN .TCH>)>)
+		       (ELSE
+			<AFALSE 7 <ASTRING .MS <UNPARSE .TCH>>>)>)>)>>
+
+\
+
+"FLUSH-NET-MESSAGE -- get rid of NETMSG file"
+
+<DEFINE FLUSH-NET-MESSAGE ("AUX" (TCH ,NET-MESSAGE))
+	#DECL ((TCH) <OR CHANNEL FALSE>)
+	<COND (.TCH
+	       <CLOSE .TCH>
+	       <RENAME <FILCHN .TCH>>
+	       <SCROUT "Net message flushed">
+	       <SETG NET-MESSAGE <>>)>>
+
+<SETG NET-MESSAGE <>>
+<GDECL (NET-MESSAGE) <OR FALSE CHANNEL>>
+
+\
+
+"QPEEK -- obscenity to see if the current run of a process is the last one
+currently scheduled for that process.  Used for XRCP disgust to determine
+when to actually send the message."
+
+<DEFINE QPEEK (P HOST "AUX" (PNQ ,PENDING-QUEUE) (MDB ,MDB) (ADR <>)
+	       PN PP PT MSG)
+   #DECL ((ADR) <OR STRING FALSE> (HOST P) STRING (PNQ) <LIST ANY>
+	  (PP) LIST (PN) LIST (MSG PT) <OR FALSE FIX> (MDB) MDBVEC)
+   <SET MSG <COND (<G? <MVMSG .MDB> 0> <MVMSG .MDB>)>>
+   <MAPF <>
+    <FUNCTION (QE "AUX" QT) 
+       #DECL ((QE) PNQENTRY (QT) <OR FALSE FIX>)
+       <SET QT <QTIM .QE>>
+       <COND (<OR <NOT .QT> <L? .QT <ITIME>>>
+	      <COND (<AND .MSG <==? <QMSG .QE> .MSG>>
+		     <SET ADR <2 .QE>>)
+		    (.ADR <MAPLEAVE>)>)
+	     (ELSE <MAPLEAVE>)>>
+    <REST .PNQ>>
+   <COND (<AND .ADR
+	       <NOT <SPLITS? .ADR>>
+	       <=? .HOST <HOST <EXTRACT-HOST .ADR>>>
+	       <SET PN <DRDMSG .ADR <GETFIX "PROCESSING-NEEDED">>>
+	       <NOT <LENGTH? .PN 1>>>
+	  <SET PP <2 .PN>>
+	  <COND (<AND <OR <NOT <SET PT <2 .PP>>> <L? .PT <ITIME>>>
+		      <=? <1 .PP> .P>>)>)>>
+
+"xrcp goodies"
+
+<SETG XRCP-LIST ()>	;"addressees who have had XRCP done for them"
+<GDECL (XRCP-LIST) <LIST [REST STRING]>>
+
+\
+
+<DEFINE ESCAPING-ITS-HEADER? (HST)
+	#DECL ((HST) FIX)
+	<AND <DRDMSG "" "ITS-HEADER">
+	     <NOT <MEMQ .HST <DATUM "ITS-SITES">>>>>
+
+\
+
+"MAIL-RESULT -- update status of message based on result of this attempt"
+
+<DEFINE MAIL-RESULT (ADR R "OPTIONAL" (NET? T) "AUX" RES NDE (MS ,MSG-SPACE))
+	#DECL ((ADR) STRING (R) ANY (RES) <FALSE FIX> (MS) SPACE
+	       (NDE) <OR FALSE LIST>)
+	<COND (.R
+	       <COND (.NET? <COND-SIGNAL .ADR "DELIVERY">)>
+	       T)
+	      (ELSE
+	       <DAPPMSG <ALIST .MS <ITIME>>
+			.ADR
+			<GETFIX "DELIVERY-ATTEMPTS">>
+	       <SET RES <ACOPY .MS .R>>
+	       <COND (<AND <SET NDE
+				<DRDMSG .ADR <GETFIX "NET-DELIVERY-ERRORS">>>
+			   <SET NDE <MEMBER .R .NDE>>>
+		      <SET RES <1 .NDE>>)
+		     (ELSE <SET RES <ACOPY .MS .R>>)>
+	       <DAPPMSG <ALIST .MS .RES> .ADR <GETFIX "NET-DELIVERY-ERRORS">>
+	       <DWT <> .ADR <GETFIX "WHEN-DELIVERED">>
+	       <COND (<AND .NET? <==? <1 .RES> 20>>
+		      <SCROUT "Placing message in hold until host reappears.">)
+		     (ELSE
+		      <SCROUT "Delivery Failure, Code: " !.RES>)>
+	       <COND (<AND .NET? <MEMQ <1 .RES> ,NET-RETRY-CODES>>
+		      <OR <NEXT-DELIVERY-ATTEMPT .ADR> .RES>)
+		     (ELSE .RES)>)>>
+
+\
+
+"NEXT-DELIVERY-ATTEMPT -- schedule next delivery attempt or return false"
+
+<DEFINE NEXT-DELIVERY-ATTEMPT (ADR "AUX" DA DF B?)
+	#DECL ((ADR) STRING (DF) FIX (DA) LIST (B?) <OR ATOM FALSE>)
+	<SET DA <DRDMSG .ADR <GETFIX "DELIVERY-ATTEMPTS">>>
+	<SET B? <BEDRIDDEN? <EXTRACT-HOST .ADR>>>
+	<COND (<AND <NOT <EMPTY? .DA>>
+		    <G? <ITIME> <+ <1 .DA> <* 30 262144>>>>
+	       <SCROUT
+		"Sick of trying this loser, it's been 30 days.  I give up.">
+	       <>)
+	      (ELSE
+	       <COND (.B? <SET DF <* 30 262144> ;"30 DAYS">)
+		     (<LENGTH? .DA 2> <SET DF ,NET-INC>)
+		     (ELSE
+		      <SET DA <REST .DA <- <LENGTH .DA> 2>>>	  ;"GET LAST 2"
+		      <SET DF <- <2 .DA> <1 .DA>>>		   ;"LAST WAIT"
+		      <COND (<AND <L? .DF 262144> <NOT <LENGTH? .DA 10>>>
+			     <SET DF <+ .DF ,NET-INC>>)>)>
+	       <COND (.B?
+		      <SCROUT "Host will someday be up, will try in "
+			      <CHTYPE <GETBITS .DF <BITS 18 18>> FIX>
+			      " days.">)
+		     (ELSE
+		      <SCROUT "Delivery failed, will try in "
+			      </ <CHTYPE <GETBITS <QTIME .DF> <BITS 18>> FIX>
+				 60>
+			      " minutes.">)>
+	       <PRCADD .ADR
+		       "DELIVERY"
+		       <+ <ITIME> .DF>
+		       10
+		       <>>
+	       T)>>
+
+\
+
+"UPDATE-DEAD-HOSTS -- hack for handling dead hosts and checking to
+see if they have come alive."
+
+<SETG LAST-CHECK 0>
+<GDECL (LAST-CHECK) FIX>
+
+<DEFINE UPDATE-DEAD-HOSTS (ODH "AUX" (DH <DATUM "DEAD-HOSTS">)
+			     P (WON? <>) (I <+ <ITIME> 262144>))
+	#DECL ((ODH DH) <OR FALSE VECTOR> (P) LIST (WON?) <OR ATOM FALSE>
+	       (I) FIX)
+	<COND (<AND .DH .ODH
+		    <=? .ODH .DH>
+		    <G? <ITIME> <+ ,LAST-CHECK </ 262144 4>>>>
+	       <SETG LAST-CHECK <ITIME>>
+	       <SET DH
+		    <MAPF ,VECTOR
+			  <FUNCTION (H "AUX" F)
+			       #DECL ((H) FIX
+				      (F) <OR FALSE <LIST [2 CHANNEL]>>)
+			       <SCROUT "Confirming death of " <HOST .H>>
+			       <COND (<SET F <ICP .H 3>>
+				      <SCROUT "!!! It's alive! !!!">
+				      <SET WON? T>
+				      <MAPRET>)
+				     (ELSE
+				      <SCROUT ">>> Still dead. <<<">
+				      <MAPRET .H>)>>
+			  .ODH>>
+	       <MAKE-DATUM "DEAD-HOSTS" .DH>)>
+	<COND (.WON?
+	       <REPEAT ()
+		       <SET WON? <>>
+		       <SET P ,PENDING-QUEUE>
+		       <COND
+			(.DH
+			 <MAPF
+			  <>
+			  <FUNCTION (M "AUX" (MSG <QMSG .M>) (ADR <QADR .M>)
+				     PN D)
+			       #DECL ((M) PNQENTRY (ADR) STRING
+				      (PN) <OR FALSE LIST>
+				      (D) <OR FALSE <LIST [REST <FALSE FIX>]>>
+				      (MSG) FIX)
+			       <COND (<AND <NOT <EMPTY? .ADR>>
+					   <NOT <MEMQ <EXTRACT-HOST .ADR> .DH>>
+					   <QTIM .M>
+					   <G? <QTIM .M> .I>
+					   <MREAD .MSG>
+					   <SET PN
+						<DRD .ADR "PROCESSING-NEEDED">>
+					   <MAPF <>
+						 <FUNCTION (N)
+						      #DECL ((N) PRCSTATE)
+						      <COND (<=? <PNAM .N>
+								 "DELIVERY">
+							     <MAPLEAVE T>)>>
+						 <REST .PN>>
+					   <SET D
+						<DRD .ADR
+						     "NET-DELIVERY-ERRORS">>
+					   <NOT <EMPTY? .D>>
+					   <==? 20 <1 <NTH .D <LENGTH .D>>>>>
+				      <SCROUT .MSG
+					      ": Rescheduling DELIVERY to "
+					      .ADR
+					      ".">
+				      <PRCADD .ADR "DELIVERY">
+				      <MSGPNQ>
+				      <SET WON? T>
+				      <MAPLEAVE>)>>
+			  <REST .P>>)>
+		       <COND (<NOT .WON?> <RETURN>)>>
+	       <UPDMSG T>)>>
+
+\
+
+<DEFINE IGNORE (ATM "AUX" HAN)
+	#DECL ((ATM) ATOM (HAN) ANY)
+	<COND (<GASSIGNED? .ATM>
+	       <SET HAN ,.ATM>
+	       <COND (<TYPE? .HAN HANDLER>
+		      <OFF .HAN>)>)>>
+
+"interrupt handlers for network delivery"
+
+<DEFINE IOCHND (REASON ECHAN "AUX" NACT (MS ,MSG-SPACE)) 
+	#DECL ((REASON) FALSE (NACT NETOUT) ACTIVATION (ECHAN) CHANNEL
+	       (MS) SPACE)
+	<COND (<AND <ASSIGNED? NETOUT>
+		    <LEGAL? <SET NACT .NETOUT>>>
+	       <SCROUT ">>>> Ioc During Net Delivery: " .REASON " <<<<">
+	       <SCROUT ">>>> Channel in Error: " .ECHAN "<<<<">
+	       <DISMISS <AFALSE 14 <ASTRING .MS <1 .REASON>>> .NACT>)
+	      (ELSE T)>>
+
+<DEFINE TIMED-OUT (C "AUX" NACT) 
+	#DECL ((NACT NETOUT) ACTIVATION)
+	<COND (<AND <ASSIGNED? NETOUT> <LEGAL? <SET NACT .NETOUT>>>
+	       <SCROUT ">>>> Transaction timed out: 15 minutes! <<<<">
+	       <DISMISS <AFALSE 22> .NACT>)
+	      (ELSE T)>>
+
+<DEFINE ERRHND ("TUPLE" STUFF "AUX" NACT (MS ,MSG-SPACE) "ACT" ERRACT) 
+	#DECL ((STUFF) TUPLE (OUT-ACT ERRACT NETOUT NACT) ACTIVATION
+	       (MS) SPACE (LERR\ !-INTERRUPTS) <SPECIAL FRAME>)
+	<COND (<AND <ASSIGNED? NETOUT> <LEGAL? <SET NACT .NETOUT>>>
+	       <COND (<==? <2 .STUFF> BAD-CHANNEL!-ERRORS>
+		      <DISMISS
+		        <AFALSE 14
+				<ASTRING .MS
+					 "Channel closed during Net delivery">>
+			.NACT>)
+		     (T
+		      <SCROUT ">>>> Error Inside Net Delivery Area, Args -- "
+			      .STUFF
+			      " <<<<">
+		      <SET LERR\ !-INTERRUPTS <CHTYPE .ERRACT FRAME>>
+		      <FRAMES 20>
+		      <FRATM>
+		      <BUFOUT .OUTCHAN>
+		      <DISMISS <AFALSE 11 <ASTRING .MS <UNPARSE .STUFF>>> .NACT>)>)
+	      (ELSE T)>>
+
+<ENDPACKAGE>

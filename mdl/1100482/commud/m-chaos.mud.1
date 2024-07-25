@@ -1,0 +1,209 @@
+<PACKAGE "M-CHAOS">
+
+;"interaction with CHAOSNET"
+
+<ENTRY CHAOSNET-DELIVERY
+       MAIL-FILE
+       CHAOS-QUIT
+       CHAOS-SOAK?>
+
+<USE "MADMAN" "CHAN" "CLOCK" "ITIME" "HOSTS" "CHAOS">
+
+<USE "FIELDS" "M-DEFS" "M-TIME" "M-PRCD" "M-READ" "M-DAC" "M-DOUT"
+     "M-DATA" "M-BASE" "PRTUTI" "PRTSTR" "M-ERR" "USRUTI">
+
+<SETG CHAOS-SOAK? <>>
+<SETG CHAOS-CONNECTION <>>
+<GDECL (CHAOS-SOAK?) <OR ATOM FALSE>
+       (CHAOS-CONNECTION) <OR FALSE <LIST FIX STRING>>>
+
+\
+
+"CHAOSNET-DELIVERY -- CHAOSnet output for message."
+
+<DEFINE CHAOSNET-DELIVERY (ADR RCVR HST "AUX" TMPFIL)
+	#DECL ((ADR RCVR) STRING (HST) FIX (TMPFIL) <OR STRING CHANNEL>)
+	<COND (<SET TMPFIL <MAIL-TEMP-FILE .ADR>>
+	       <MAIL-FILE .ADR .RCVR .HST .TMPFIL>)>>
+
+\
+
+"CHAOS-ICP -- open a CHAOSNET connection"
+
+<DEFINE CHAOS-ICP (HOST "OPTIONAL" (SERVICE "MAIL")
+		   "AUX" (HST <>) (ICPCNT ,ICP-TRIES) FTP FIL)
+	#DECL ((HST) <OR FALSE STRING> (ICPCNT) FIX
+	       (VALUE) <OR FALSE <LIST FIX STRING>>
+	       (HOST) <OR FIX STRING> (FTP) <OR FALSE FIX>)
+	<COND (<TYPE? .HOST FIX> <SET HST <HOST .HOST>>)
+	      (ELSE <SET HST .HOST>)>
+	<COND (.HST
+	       <SET FIL <STRING .HST "." .SERVICE>>
+	       <SETG CHAOS-CONNECTION <>>
+	       <REPEAT ()
+		       <COND (<SET FTP <CHAOS-OPEN .FIL>>
+			      <RETURN <SETG CHAOS-CONNECTION (.FTP .FIL)>>)
+			     (<AND <NOT <EMPTY? .FTP>>
+				   <=? <1 .FTP> "DEVICE NOT READY">>
+			      <SCROUT "CHAOSnet apparently down">
+			      <RETURN .FTP>)
+			     (<L? <SET ICPCNT <- .ICPCNT 1>> 0>
+			      <RETURN .FTP>)
+			     (ELSE
+			      <SLEEP 5>
+			      <SCROUT "Retrying ICP">)>>)>>
+
+\
+
+"MAIL-FILE -- given addressee and file containing mail, send it"
+
+<DEFINE MAIL-FILE (ADR RCVR HST TMPFIL "AUX" (SPLIT? <SPLITS? .ADR>)
+		   RES TCH C (QSEND? <DRDMSG "" "QSEND">)
+		   FTP CCH REPLY (MS ,MSG-SPACE))
+	#DECL ((ADR RCVR) STRING (TCH) <OR CHANNEL FALSE> (MS) SPACE
+	       (HST CCH) FIX (FTP) <OR FALSE <LIST FIX STRING>> (C) CINT
+	       (QSEND? REPLY) <OR FIX FALSE>
+	       (TMPFIL) <OR STRING CHANNEL> (RES) ANY
+	       (SPLIT?) <OR ATOM FALSE>)
+	<SET RES
+	     <PROG MF ()
+		   #DECL ((MF) ACTIVATION)
+		   <COND (<SET TCH
+			       <OR <AND <TYPE? .TMPFIL CHANNEL> .TMPFIL>
+				   <OPEN "READ" .TMPFIL>>>
+			  <SETG NET-MESSAGE .TCH>
+			  <SET RES
+			       <PROG NETOUT ()
+				     #DECL ((NETOUT) <SPECIAL ACTIVATION>)
+				     <WATCH EHAN "ERROR" ,ERRHND 4>
+				     <WATCH IHAN "IOC" ,IOCHND 4>
+				     <SET C <ALARM ,TIMED-OUT 900.0>>
+				     <COND
+				      (<SET FTP <CONNECTED? .HST>>
+				       <SET CCH <1 .FTP>>)
+				      (ELSE
+				       <CHAOS-QUIT>
+				       <COND (<SET FTP
+						   <CHAOS-ICP .HST
+							      <COND (.QSEND? "SEND")
+								    (ELSE "MAIL")>>>
+					      <SET CCH <1 .FTP>>
+					      <SCROUT "ICP Successful">)
+					     (ELSE <RETURN <AFALSE 13>>)>
+				       <SETG XRCP-LIST ()>)>
+				     <PR .RCVR .CCH>
+				     <COND (<SET REPLY <CHAOS-WAIT .CCH>>
+					    <SETG XRCP-LIST
+						  (.ADR !,XRCP-LIST)>)
+					   (ELSE
+					    <RETURN
+					     <AFALSE 19
+						     <ACOPY .MS
+							    <1 .REPLY>>>>)>
+				     <COND (<OR .SPLIT?
+						<NOT <QPEEK "DELIVERY"
+							    <2 .FTP>>>>
+					    <SET REPLY <SEND-MAIL .TCH .CCH>>
+					    <MAPF <>
+						  <FUNCTION (A)
+						       #DECL ((A) STRING)
+						       <MAIL-RESULT .A .REPLY>>
+						  ,XRCP-LIST>
+					    <SETG XRCP-LIST ()>)>
+				     <RETURN T .MF>>>
+			  <IGNORE EHAN>
+			  <IGNORE IHAN>
+			  <ALARM-OFF .C>
+			  .RES)
+			 (ELSE
+			  <AFALSE 7 <ASTRING .MS <UNPARSE .TCH>>>)>>>
+	<COND (.SPLIT? <FLUSH-NET-MESSAGE>)>
+	.RES>
+
+\
+
+"CONNECTED?"
+
+<DEFINE CONNECTED? (HST "AUX" (FTP ,CHAOS-CONNECTION))
+	#DECL ((HST) <OR FIX VECTOR> (FTP) <OR FALSE <LIST FIX STRING>>)
+	<COND (<AND .FTP <=? <HOST .HST> <2 .FTP>>> .FTP)>>
+
+\
+
+"CHAOS-QUIT -- flush ftp connection"
+
+<DEFINE CHAOS-QUIT ("AUX" (FTP ,CHAOS-CONNECTION))
+	#DECL ((FTP) <OR FALSE <LIST FIX STRING>>)
+	<COND (.FTP
+	       <CHAOS-CLOSE <1 .FTP>>
+	       <SCROUT "CHAOS closed">
+	       <SETG CHAOS-CONNECTION <>>)>>
+
+\
+
+"SEND-MAIL -- copy mail file open on first arg to ftp."
+
+<DEFINE SEND-MAIL (TCH CCH "AUX" RES)
+	#DECL ((TCH) CHANNEL (CCH) FIX)
+	<SET RES
+	     <PROG WAIT-ACT ()
+		   #DECL ((WAIT-ACT) <SPECIAL ACTIVATION>)
+		   <CHAOS-OUT *215* .CCH>
+		   <CHAOS-COPY .TCH .CCH>
+		   <CHAOS-OPER 3 .CCH>
+		   <CHAOS-WAIT .CCH>>>
+	<FTP-REPLY .RES 19 17 18>>
+
+<DEFINE CHAOS-COPY (TCH CCH "AUX" N (TMP ,TEMPSTR))
+	#DECL ((TCH) CHANNEL (CCH) FIX (N) <OR FIX FALSE> (TMP) STRING)
+	<REPEAT ()
+		<COND (<SET N <READSTRING .TMP .TCH <LENGTH .TMP> '<>>>
+		       <CHAOS-OUT .TMP .CCH .N>)
+		      (ELSE
+		       <CLOSE .TCH>
+		       <RETURN>)>>>
+
+<SETG TEMPSTR <ISTRING 100>>
+<GDECL (TEMPSTR) STRING>
+
+<DEFINE CHAOS-WAIT (CCH "AUX" N (OUTCHAN .OUTCHAN) (TMP ,TEMPSTR) RES)
+	#DECL ((CCH) FIX (N) <OR FIX FALSE> (OUTCHAN) CHANNEL
+	       (RES) CHARACTER (TMP) STRING)
+	<COND (<AND <SET N <CHAOS-RESP .TMP .CCH>> <G? .N 0>>
+	       <COND (<NOT ,CHAOS-SOAK?>
+		      <OR <0? <14 .OUTCHAN>> <CRLF>>
+		      <PRINC "CHA: ">
+		      <PRINTSTRING .TMP .OUTCHAN .N>
+		      <CRLF>)>
+	       <COND (<==? <SET RES <1 .TMP>> !\+> .N)
+		     (ELSE
+		      <CHTYPE (<SUBSTRUC .TMP 0 .N>) FALSE>)>)>>
+
+"FTP-REPLY -- analyzes an FTP reply and returns an appropriate false
+if it is not a winner."
+
+<DEFINE FTP-REPLY (REPLY PERM TEMP RAND "AUX" (MS ,MSG-SPACE) S CD)
+	#DECL ((REPLY) ANY (S) STRING (PERM TEMP RAND) FIX
+	       (CD) CHARACTER (MS) SPACE)
+	<COND (.REPLY)
+	      (<AND <NOT <EMPTY? .REPLY>>
+		    <SET S <1 .REPLY>>
+		    <SET CD <1 .S>>>
+	       <AFALSE <COND (<==? .CD !\%> .TEMP)
+			     (ELSE .PERM)>
+		       <ACOPY .MS .S>>)
+	      (ELSE <AFALSE .RAND>)>>
+
+"PR -- print message to net channel and script"
+
+<DEFINE PR (RCVR CCH "AUX" (SOAK? ,CHAOS-SOAK?) (OUTCHAN .OUTCHAN))
+	#DECL ((CCH) FIX (OUTCHAN) CHANNEL (RCVR) STRING)
+	<OR <0? <14 .OUTCHAN>> <CRLF>>
+	<COND (<NOT .SOAK?>
+	       <PRINC "     ">
+	       <PRINC .RCVR>)>
+	<CHAOS-OUT .RCVR .CCH>
+	<CHAOS-OUT *215* .CCH>
+	<CHAOS-OPER *21* .CCH>>
+
+<ENDPACKAGE>

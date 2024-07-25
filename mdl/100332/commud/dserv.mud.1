@@ -1,0 +1,13 @@
+;"define roles of and services known by demon"
+
+<MAKE-DATUM "SERVICES"
+	    '[["MAIL" ["MAILER" DO-MAIL]]
+	      ["FORWARD" ["MAILER" DO-FORWARD]]
+	      ["CORRECT" ["MAILER" DO-CORRECTION]]
+	      ["REPLIED-TO" ["MAILER" DO-REPLIED]]
+	      ["REMIND" ["MAILER" DO-REMIND]]
+	      ["REGISTER" ["MAILER" DO-REGISTER]]
+	      ["ARCHIVE" ["MAILER" DO-REGISTER]]]>
+
+<MAKE-DATUM "ROLES"
+	    '["MAILER"]>

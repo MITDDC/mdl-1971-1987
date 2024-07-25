@@ -1,0 +1,844 @@
+6 March 1979 (PDL, TAA)
+
+The SUBRs LSH and ROT have been added, a la Lisp.
+
+MUDDLE 55		21 November 1978 (btb, clr, lim, pdl, taa)
+
+Note:  there have been significant changes in the preloaded packages for
+MUDDLE 55.  Consult MUDMAN;PRELOD RECENT for details.  Not all of the
+changes are upward-compatible.
+
+1) I/O system
+
+	Six-character device names can be used in muddle 55.  This
+allows one to use things like the DIRHNG device, which previously could
+only be accessed via hand-coded routines.
+	'Unknown' devices (devices that no one has put special code into
+muddle for:  'known' devices include STY, TTY, and USR) are now assumed
+to act like the DSK device.  On ITS this mainly fixes some lingering
+bugs with things like the MLARC device; on TOPS-20, when muddle 105 is
+created, this will be much more reasonable for things like PS:, SYS:,
+and other logical names.
+
+	The SUBR FILE-EXISTS? can be used to test the existence of a
+file without creating a channel (70-140 words of garbage).  It takes
+file name arguments just like OPEN, with the same defaults, and returns
+either T or a FALSE.  The false has two elements:  the first is a string
+describing the error; the second is the numerical error code obtained
+from the system.  Thus:
+
+	<FILE-EXISTS? "TAA;TAA LOGIN">
+T
+	<FILE-EXISTS? "TAA;ZORK FEEP">
+#FALSE ("FILE NOT FOUND" 1048576)
+
+	The TTY output channel normally is not in display mode.  This
+means that IOC errors will rarely occur when one is typing in strings
+containing ctrl-P's; however, if you have hand-coded routines that
+expect display mode to be on, they will no longer work.  This can be
+corrected by doing a .CALL IOT and supplying the display mode bit
+(%TJDIS, 4000 octal) as a control argument.  PRINC of a string causes
+the display bit to be turned on temporarily, for the benefit of things
+like the BUF package.
+
+2) OFFSETs
+
+	OFFSETs are essentially FIXes with DECLs attached--they allow
+you to specify the type of structure an offset refers to.  If used
+properly, this can make debugging considerably easier; it will
+eventually also help the compiler generate more efficient code.  At
+present the compiler knows nothing about them, so don't complain if you
+lose.
+	The SUBR OFFSET takes two arguments, a FIX and a DECL, and
+returns an object of TYPE OFFSET (the PRIMTYPE of an OFFSET is also
+OFFSET).  An offset may be given as an argument to NTH and PUT, just
+like a FIX; it may also be applied to arguments.  The only difference is
+that the structure you're referring to must match the DECL contained in
+the OFFSET, or an error will result.  Thus:
+	<SETG FOO <OFFSET 1 '<CHANNEL FIX>>>
+%<OFFSET 1 '<CHANNEL FIX>>
+; Note that the DECL must be quoted if it's a form, since OFFSET is a
+; SUBR.
+	<FOO ,INCHAN>
+1
+	<FOO <ROOT>>
+*ERROR*
+ARG-WRONG-TYPE
+NTH
+LISTENING-AT-LEVEL 2 PROCESS 1
+
+	Note:  when the compiler gets around to understanding OFFSETs,
+it will not do the right thing with them unless they are MANIFEST. 
+Since there's no good reason not to manifest them, this isn't a problem.
+
+The SUBR INDEX, given an OFFSET, returns the FIX:
+	<INDEX ,FOO>
+1
+
+The SUBRs GET-DECL and PUT-DECL have been modified so they can be used
+for manipulating OFFSETs.  GET-DECL of an OFFSET returns the associated
+DECL; PUT-DECL of an OFFSET and a DECL returns a new OFFSET with the
+same INDEX as the argument, but with a new DECL:
+	<GET-DECL ,FOO>
+<CHANNEL FIX>
+	<PUT-DECL ,FOO OBLIST>
+%<OFFSET 1 OBLIST>
+	,FOO
+%<OFFSET 1 '<CHANNEL FIX>>
+
+An OFFSET is not a structured object, as this should make clear.
+
+	A note to hackers:  OFFSETs are stored as single words, with the
+INDEX in the right half and the DECL in the left half.  Since the DECL
+can be either an ATOM or a FORM, the pointer is really a pointer to a
+list cell, which points to the actual DECL.  This is not as
+space-efficient as it might be.  As a special hack, ANY is recognized as
+a special case:  if it is given as the DECL, then the DECL pointer is 0
+and no list cell is created.  Thus, if you're making the final version
+of your system and want to bum some storage, you can do something like
+<SETG FOO <PUT-DECL ,FOO ANY>> for all OFFSETs.
+
+
+3) PUT
+
+	In muddle 55, one may apply a FIX (or an OFFSET) to two
+arguments, in which case it turns into PUT.  This is analogous to the
+one-argument case, which turns into NTH.  Note that the compiler has
+not yet been taught about this, either; when it is, the PUT will
+unambiguously be a PUT into a structure rather than a PUTPROP.
+
+
+4) Garbage collector
+
+	A mark-sweep garbage collector exists.  It is never used in the
+normal case, but some users may find it desirable to use it in some
+cases.  The mark-sweep garbage collector does no compaction (and no
+copying); therefore, it uses considerably less CPU time than the normal
+garbage collector.  Also, its paging behavior is arbitrarily superior. 
+However, it will not cause your core image to shrink:  garbage is put on
+free lists, and recycled by muddle's various structure builders.
+	This can prove useful in a system (such as the compiler) where
+the size of the core image rarely changes, but where structure is being
+created and thrown away continuously.  No tests have been run, but use
+of the mark-sweep garbage collector is expected to save a fair amount of
+time in some situations.
+	You can cause it to be used by supplying the optional third
+argument to GC:
+	<GC 0 T 10>
+says to mark-sweep 10 times between uses of the full-copy garbage
+collector.  0 means never use SGC; <MIN> means always use it.
+	When the mark-sweep garbage collector is invoked with GC-MON on,
+it prints MSGIN ... MSGOUT rather than GIN ... GOUT.  Note that only
+free-storage garbage collects can use it:  since relocation does not
+happen, GC's for things like PDL overflow must use the 'real' garbage
+collector.
+
+
+5) Internals
+
+	For those of you who write assembly language routines, or who
+debug compiler output, the following:  if an illegal uuo occurs, the JPC
+will be saved in the location SAVJPC.  This will point to the last jump
+(POPJ, PUSHJ, JRST, etc.) executed, which is frequently more useful than
+the location of the losing UUO.  In MUDDLE 54, the UUO handler does a
+JRST before deciding whether a UUO is legal, so the JPC always points to
+an uninteresting location.
+
+
+6) R.I.P.
+
+	The SUBRs DISPLAY, ERASE, FREE, and STORE have gone west.  No
+funeral arrangements have been announced.
+	For hysterical reasons, the type STORAGE continues to exist, as
+does the SUBR ISTORAGE.
+
+
+MUDDLE 54 January 27, 1977 (clr & btb)
+
+	MUDDLE 54 contains only upward compatible changes.
+The major change to MUDDLE 54 is the fact that the garbage collector
+does not reside in the users core image unless it is being used.  This
+change should be invisible (ha, ha) except that there will be more
+address space available to user programs and data structures.  The
+other additions to MUDDLE are listed below.
+
+1)	^S
+
+	There has been a minor change made in how the ^S handler
+finds the frame to go back to.   Previously, it looked down the
+stack for the nearest LISTEN or ERROR frame and returned to that.
+Now it uses the current binding of LERR\ !-INTERRUPTS to find
+the appropriate frame.
+
+2)	!\
+
+	An object of type CHARACTER may now be typed in as either
+!" or !\ followed by the character.  The output is always !\
+followed by the character.  This was done to make realtime TECO
+users happy.
+
+3)	Byte Strings
+
+	There is a new data type called BYTES that is a string
+of uniformly sized bytes.  The bytes may be any size between 1
+and 36 bits.  Two new SUBRs exist associated with byte strings.
+BYTES takes one required argument which is a FIX specifying a
+byte size and any number of PRIMTYPE words.  It returns an
+object of type BYTES of that byte size containing the objects
+of PRIMTYPE word as elements.  These objects will be anded
+with the appropriate mask to fit in the byte size.  IBYTES
+takes two required fixes and one optional argument.  It
+uses the first fix to specify a byte size  and other than that
+behaves like ISTRING, IUVECTOR etc.  The elements of a byte
+string are always of type FIX.  Other than that, they look
+very similar to STRINGs including the unfortunate requirement
+of deferred pointers.  Byte string may also be input in the
+following format:
+
+	#n {b1 b2 b3 ... bm}
+
+where n is the byte size and b1 ... bm are m bytes.  A special
+DECL also exists for byte strings.  It has the following format:
+
+	<BYTES n m>
+
+This decls a byte string of n-bit bytes of minimum length m.
+
+4)	I/O Changes
+
+	If OPEN, OPEN-NR or CHANNEL are passed four strings (name1, name2,
+device and sname) as an argument, it will open exactly the file specified
+without any attempt to parse the strings.
+
+	Many I/O subroutines and interrupt handlers indicate errors by
+returning FALSE with a string indicating the error.  This has been improved
+to have a three element FALSE with one error string, the file name as
+a string and a number which is the system I/O status word.  Currently
+the RENAME SUBR is an exception, it returns a two element false
+containing the error string and the status.
+
+5)	DECL additions.
+
+	Besides the change to DECLs to handle byte strings, two other
+changes have been made.  The default DECL for structures if no
+REST clause is specified is that there can any number of additional
+elements of any type.  If the structure DECL is specified in an object of
+type SEGMENT instead of FORM, it means that this an exact size specification.
+For example:
+
+	#DECL ((X) !<LIST FIX FIX>)
+
+This declares X to be a LIST of exactly 2 FIXES whereas:
+
+	#DECL ((X) <LIST FIX FIX>)
+
+declares X to be LIST containing at least two FIXes.  The other DECL
+change is concerned with optional elements in a structure DECL.  If instead
+of REST or a fix in the first element of a vector in a decl, either the
+atom OPT or OPTIONAL is found, it means the types specified in the vector
+can be there but aren't required.
+
+6)	SPECIAL/UNSPECIAL
+
+	Interpreter SPECIAL/UNSPECIAL handling has been improved to more
+closely reflect the behavior of compiled code.
+
+7)	"OPT"
+
+	The string "OPT" can now be used in place of "OPTIONAL" in arg
+lists of functions and rsubrs.
+
+8)	BIND
+
+	A new FSUBR, BIND, exists.  It is identical to PROG except that it
+does not bind LPROG\ !-INTERRUPTS and therefore RETURNs and AGAINS will
+not default to it.  This could prove useful to MACRO writers.
+
+9)	L-INS and L-OUTS
+
+	If the atom L-INS has a value and it is a LIST, it will be used
+as a ring-buffer of objects typed into the READ/EVAL/PRINT loop.  The
+most recent object will be at the front of the LIST and the oldest at
+the end.  The user can decide how much to save based on the length of
+the LIST.  Do not make the list circular!  L-OUTS performs a similar
+feat for values returned from the EVAL.  LAST-OUT still exists as
+before.
+
+
+MUDDLE 53 (addition) August 26, 1976 (clr)
+
+	A change to MAPF/MAPR has been installed in the current MUDDLE.
+MAPF or MAPR may now take only two arguments.  In this case the iteration
+function is applied to no arguments each time and the mapping continues
+indefinitely until either a MAPLEAVE or MAPSTOP is invoked.  This feature
+gives MAPF and MAPR all the features of STACKFORM which we hope to phase
+out.
+
+Example:
+
+	<DEFINE LNUM (X) #DECL ((X) FIX)
+		<MAPF ,LIST <FUNCTION () <COND (<0? <SET X <- .X 1>>> <MAPSTOP 0>)
+					      (ELSE .X)>>>>
+
+The above function returns a LIST of the numbers from its arg minus
+1 to 0.
+
+
+
+MUDDLE 53 (clr & btb) April 28, 1976
+
+	MUDDLE version 53 has been released as NMUDDL.  Once again, there
+are no major changes and the small changes should generally be
+compatible.
+
+1)	New Pure Fbin implementation.
+
+	The FBIN mapping mechanism has been rewritten to get around
+the ITS directory size limitations, avoid using the archive device and
+allow for some reasonable garbage collection of the pure files.  These
+features should have no impact on current programs except that a new
+PDUMP for MUD53 will be released soon.  WARNING:  After the new PDUMP
+is released, it will be inadvisable to edit FBIN files in any way.
+
+2)	New Interrupts
+
+	A new interrupt has been implemented for TTY output channels.
+If a "CHAR" interrupt is setup for a TTY output channel, it will be triggered
+every time a line feed is output and whenever the system generates a MORE
+interrupt.  The handling function should take one or two arguments.  If two
+arguments are supplied to the handling function, it is a line feed interrupt
+and the first arg is the line number and the second is the channel.  If
+only one argument is supplied, it is a MORE interrupt and the argument is the
+channel.
+
+3)	IMAGE
+
+	IMAGE now has an internal entry and it should not fool
+around with other TTY bits when it is used.
+
+4)	GC-DUMP
+
+	GC-DUMP will now dump purified structures.
+
+5)	New DECL feature.
+
+	If an atom used in a DECL is not a type name or a special decl atom
+(STRUCTURED, ANY etc.), the DECL checker will attempt to do a GET on the
+atom and DECL and use the result.
+
+6)	PDL overflow features
+
+	A PDL overflow buffer exhausted is no longer a fatal error.
+It is just a MUDDLE error.
+
+7)	SUBSTRUC
+
+	SUBSTRUC of a large string should no longer lose.
+
+8)	Alt Mode Rubout
+
+	In many but not all cases, it is now possible to rub out the
+alt mode typed in if you are typeing to READ and you have not closed
+your expression.
+
+9)	STRING Uniformity
+
+	Byte pointers to STRINGs are now uniform such that pointers
+to the same string are always ==?.
+
+10)	MUDDLE Oblist
+
+	The MUDDLE oblist has been almost completely thrown away.
+The compiler and assembler will be updated not to need it.
+
+
+MUDDLE 52 (btb, bkd & clr)  December 12, 1975
+
+	MUDDLE version 52 has been released as NMUDDL.  There are no
+earth shattering new features, but there are many small changes, most
+of which should be compatible.
+
+1)	VALID-TYPE?
+
+	A new SUBR called VALID-TYPE? has been added.  It takes one
+argument which must be an atom and returns #FALSE () if this atom is
+not a type name or TYPE-C of the atom if it is.  Also a change has been
+made to permit the interpeter to go from a type name to a type code
+much faster than before.
+
+2)	QCALL
+
+	A new faster call UUO has been implemented.  Unfortunately the
+speedup is not as much as we had hoped.  Calls to RSUBRs are about
+30% faster and calls to RSUBR-ENTRYs are about 50% faster.  This UUO
+will be generated by forthcoming versions of the compiler.
+
+3)	EVALTYPE, APPLYTYPE and PRINTTYPE CHANGES
+
+	Any of the above SUBRs may be applied to one argument, a type
+name, and they will return either:
+
+	a)	#FALSE ()	--	meaning this type's EVALTYPE etc.
+					is in its initial state.
+
+	b)	another TYPE	--	meaning this type's EVALTYPE etc.
+					is the same as that of the returned 
+					type in an initial MUDDLE.
+
+	c)	applicable obj	--	meaning this is the EVALTYPE etc.
+					function.
+
+	Also if the second arg to EVALTYPE is ,EVAL or the second arg to
+APPLYTYPE is ,APPLY or the second arg to PRINTTYPE is ,PRINT, the appropriate
+xTYPE will be reset to its initial state.
+
+4)	PURIFY
+
+	PURIFY now takes a TUPLE of arguments and purifies all of them.
+It along with GC-DUMP attempts to be more specific when it gives the
+famous STRUCTURE-CONTAINS-UNDUMPABLE-TYPE error.
+
+5)	SPNAME
+
+	This SUBR is identical to PNAME except that it returns a STRING
+that shares with the ATOM's pname.  PUTting into such a STRING will cause
+an ERROR.
+
+6)	CRLF
+
+	This SUBR is identical to TERPRI except that it returns T instead
+of #FALSE ().
+
+7)	FAST SUBSYSTEM
+
+	A method of subsystem startup has been implemented that goes
+directly to RESTORE without going through an INIT file.  Just answer the
+appropriate questions to SUBSYS MAKER to win.
+
+8)	GC SPEED UP
+
+	Parts of the garbage collector have been rewritten to be faster.
+This combined with purification of the preloaded RSUBRs makes garbage
+collection of an initial MUDDLE about twice as fast as in MUDDLE 51.
+
+9)	GC-MON, RSUBR-LINK, DECL-CHECK AND OVERFLOW
+
+	In an attempt to bring about uniformity, the above SUBRs now
+all behave in the same way.  Calling them with no arguments returns
+the current state.  Calling them with one argument sets the state and
+returns the previous state.
+
+10)	CHANNEL RECYCLE
+
+	In previous MUDDLEs, when an attempt to open a file using OPEN failed,
+a channel was built and thrown away, generating unnecessary garbage.  This
+feature has been fixed so that these dead channels are recycled.  This
+should have no effect on user programs, except that they will create less
+garbage.
+
+11)	PC-LOSER
+
+	In the hope of ultimately achieving more efficient compiled
+code which is also interruptable, a feature has been implemented to
+allow a compiled program to run interruptably without worrying about
+keeping the types of the items that are in the ACs somewhere or checking
+the INTFLG.  This is achieved by telling the interrupt system to back
+up to a certain point if the code is restarted from an interrupt.  The
+facility is similar to the ITS PC loser concept.
+
+12)	EXPANDED ERROR MESSAGES
+
+	There are now more ERRORs in compiled code to try to be more
+specific about the problem.  Also the PC of the ERROR is passed to
+ERROR as an aid in debugging.
+
+13)	LARGE UVECTOR DECL CHECK
+
+	DECLs of the form <UVECTOR [REST a-single-type]> will cause the
+interpreter to check only the UTYPE of the UVECTOR rather than every
+element.
+
+14)	SAVE/FSAVE
+
+	The old SAVE has been removed.  SAVE and FSAVE are now identical.
+
+15)	AND?/OR?
+
+	These are SUBR forms of AND and OR respectively.  They are useful
+for the first arguments to MAPF and MAPR.
+
+16)	NEW BLOAT ARGS (PGOOD AND TPGOOD)
+
+	BLOAT now takes two more optional arguments at the end.  They
+specify the most desirable size for the auxiliary stack and control
+stack respectively.
+
+17)	START ADDRESS FIX
+
+	Doing an "G" to a MUDDLE subsystem no longer causes an illegal
+UUO.
+
+18)	SUBSTRUC OF A TUPLE
+
+	SUBSTRUC now takes a TUPLE as its first arg and treats it like
+a vector.
+
+19)	TYPE-C and TYPE-W
+
+	Both now automatically do a NEWTYPE instead of getting an ERROR
+if the argument is not a type.
+
+20)	1STEP
+
+	A fix allows starting BKD's DEBUGGER from an interrupt.
+
+MUDDLE 51
+		July 28,1975 (clr & btb)
+
+	Most changes in MUDDLE 51 are related to the garbage collector.
+MUDDLE 51 will have a full copy garbage collector and will work with only
+one garbage collected space, rather than the pair and vector spaces used
+previously.
+
+	Along with this new garbage collector are changes to SUBRs inter-
+facing with it. Major among these are the additions of a dumper and a
+purifier.  There is also a new pre-garbage-collect interrupt.
+
+	The dumper is a facility to copy the core image representation
+of an object into a file or UVECTOR.  This dumped object in every way
+resembles the original (e.g. it preserves sharing).  All MUDDLE objects
+can be dumped out with the exclusion of items pointing to the stack
+(e.g. FRAMES, ENVIRONMENTS, LOCATIVES to LOCAL and GLOBAL values),
+and other internal pointers (e.g. PROCESSES). Also no PURE objects with
+the exclusion of atoms may be dumped.  The call to dump is as follows:
+
+		<GC-DUMP <-object-> <-channel or false-> >
+
+	The first argument is the object you wish dumped.  The second
+can either be a PRINTB channel or FALSE.  If it is  of type FALSE GC-DUMP
+will create a UVECTOR of UTYPE LOSE with the dumped object in it.  In the
+case GC-DUMP will return this UVECTOR otherwise it will return the object
+given.  Both arguments to GC-DUMP are required.
+
+	Multiple GC-DUMPs to the same file are allowed.
+
+	In order to read-in a GC-DUMPed file you must use GC-READ.
+GC-READ's call looks like.
+
+		<GC-READ <-channel-> <-eof-> >
+
+	The first argument must be a READB channel.  The second argument
+is an optional end-of-file routine.  If none is provided and an eof
+condition occurs the channels eof routine is used.  If GC-READ is successful
+it returns the object read-in, otherwise it returns whatever the eof
+routine returns.
+
+	The PURIFY subr allows a user to copy a MUDDLE object into MUDDLE's
+pure space. Once this is done that object will never be looked at by the
+garbage collector.  Also that object can be shared.  PURIFY takes one
+argument and this is the object to be purified.  The same restrictions
+on objects to GC-DUMP hold for objects to PURIFY. Currently the user
+interface to PURIFY RSUBRs is not yet available.  Imformation regarding
+the purification of RSUBRs will be released when is is available.  
+
+	FSAVE must be used to save a MUDDLE with purified structure.  If
+this is done the purified structure will be saved as well.
+
+	A new pre-garbage-collector interrupt exists to enable defferring
+garbage collects to a later time.  If a garbage collect for free storage
+which can be deffered is about to occur and the "DIVERT-AGC" interrupt is
+enabled, the handler for this interrupt is run. This handler can allocate
+storage if it wishes or cause a garbage collect.  If no handler exists or
+the handler was not able to satisfy the pending request for free storage
+a garbage collect will occur.  A handler for this interrupt is passed two
+arguments.  The first is a FIX equal to the number of words requested
+and the second is an atom indicating the reason for the request.  A user
+can allocate free storage by using BLOAT.
+
+	A minor change has been made to the GC subr.  The subr now takes
+two arguments.  The first is the number of words of free storage it should
+try to get.  The second argument if given and is non-false will cause a
+more comprehensive and time consuming garbage collect which will be able
+to recover more garbage than a usual garbage collect can.
+
+	Several changes have been made to the BLOAT subr.
+The fredif parameter no longer exists.  Also a new parameter specifying the
+minimum space to be used for maping in the pure part of FBINS.
+Using this parameter may help avoid the thrashing caused by continual
+mapping in and out of the pure part of FBINS.
+  
+	A new subr OVERFLOW exists.  It may be used to enable and disable
+the OVERFLOW error associated with arithmetic subrs (+, -, *, and /).
+It is called with one argument.  If the argument is of type FALSE,
+the overflow error is disabled otherwise it is enabled (the initial
+state is enabled).  OVERFLOW returns T or #FALSE () reflecting its
+previous state.
+
+MUDDLE 50	May 29, 1975	(clr & btb)
+
+	Most of the MUDDLE 50 changes are related to the garbage
+collector and PRINT.  Only one change reuires changing existing
+software and it is related to the "GC" interrupt.
+
+1)	Garbage Collector Changes
+
+	See MUDMAN;GCINFO > for detailed information.
+
+2)	PRINT Changes
+
+	The entire PRINT module has been overhauled.  This includes
+PRINT, PRIN1, PRINC, TERPRI, FLATSIZE and UNPARSE.  In the process
+PRINTTYPE has been fixed to work in all cases.  None of the PRINT
+family of SUBRs now takes a list of channels as an argument.  FLATSIZE
+has one new optional argument, namely the radix for number conversion.
+Also, PUSHJ entries have been added for all of the SUBRs for the
+convenience of compiled and assembled code.  This incudes special
+entries for printing string, characters and atoms.  See BTB;CONVEN >
+for calling sequences of internal PRINT routines.
+
+3)	SUBSTRUC
+
+	A new SUBR has been added to facilitate the construction of
+structures that are composed of sub-parts of existing structures.  A
+special case of this would be a SUBSTRING function.  The calling
+sequence is:
+
+	<SUBSTRUC <-obj>- <-rest>- <-amount>- <-where-to>- >
+
+where:
+	<-obj>-		an object of primtype STRING, LIST, VECTOR or
+			UVECTOR
+
+	<-rest>-		number of element from the beginning of the object
+			to start getting sub-object (optional -- default=0)
+
+	<=amount>-	number of elements to incude in the new object
+			(optional -- default all remaining elements)
+
+	<-where-to>-	an object whose type is the primtype of obj, the
+			new object is copied into this one (optional --
+			a new object is built)
+
+WARNING_______:  a known bug exists if any sharing exists between <-obj>- and
+<-where-to>-.
+î
+Note:	If <-where-to>- is not supplied, the new object returned never_____
+shares with the original object.
+
+Examples:
+
+	in:	<SUBSTRUC (1 2 3)>
+	out:	(1 2 3)		; "The entire object is copied."
+
+	in:	<SUBSTRUC [1 2 3 4 5] 1 3>
+	out:	[2 3 4]		; "A sub-object is built."
+
+4)	GBOUND? and GLOC
+
+	Prior to the existance of GDECL and MANIFEST, being globally
+assigned and globally bound meant the same thing.  Now, however,
+giving a gdecl to an atom or making it manifest can cause it to
+have a value slot (i.e. be bound) without being assigned.  This
+situation necessitated a way of finding out if an atom is globally
+bound.  GBOUND? does this.  It takes one arg, an atom, and returns T or
+#FALSE ().
+
+	GLOC now takes an optional second arg which if supplied and not
+false, causes a value slot to exist if one didn't already.
+
+5)	LAST-OUT
+
+	The atom LAST-OUT is set to the last object returned by EVAL in
+the standard LISTEN loop.  This is very useful for recovering a lost
+value.
+
+6)	The SUBR EXIT has been removed.
+
+7)	MANIFEST Changes
+
+	REDEFINE now controls whether SETG will complain if an attempt
+to change a manifest variable is made.  Also if an attempt to SETG
+a manifest variable to its current value is made, SETG will not complain.
+(current value means ==? as opposed to =?)
+
+8)	New PUSHJ Entries Added
+
+	The following SUBRS now have PUSHJ entries available:  LOOKUP,
+INSERT, REMOVE, ATOM and STRCOMP.
+
+9)	New SUBR OPEN-NR
+
+	Identical to OPEN, except that the reference date of the opened
+file is not changed.
+
+MUDDLE 49	March 7, 1975 (bkd & clr)
+
+	Changes have been made to the MUDDLE Reader so that
+comments will not be lost on input (even top-level comments).
+Also EDIT and PPRINT have been changed so that all comments
+will be properly handled on output and none forgotten or lost.
+It is important to notice that every comment will be seen
+by PPRINT only when the flag QUICKPRINT is set to FALSE.
+However since the default setting for QUICKPRINT is T,
+(reasonable and faster for debugging and random hacking around)
+any "important" use of PPRINT where loss of comments
+is not tolerable should be done with QUICKPRINT set to FALSE.
+GROUP-DUMP and PPRINF now automatically bind the QUICKPRINT flag
+to FALSE while performing their output and will not miss comments.
+	Also PPRINT has been rewritten and group-compiled;
+and is now about twice as fast as previous versions.
+
+
+MUDDLE 49	January 8, 1975 (clr)
+
+	Once again there are a substantial number of changes in the new
+version of MUDDLE.  As far as I know, none of the new features should
+adversely affect existing software.  Among the more interesting features
+are a template data structure facility, an UNWINDer, EVAL macros and
+SPECIAL/UNSPECIAL checking in the interpreter.
+
+1)	Template Data Structure
+
+	The interpreter can now handle non-standard data formats that
+permit tighter bit packing and therefore more efficient space utilization.
+Currently no user interface exists for defining these data structures;
+therefore, further information will not exist until the user interface
+is written.
+
+2)	UNWIND
+
+	UNWIND is an FSUBR that takes 2 forms.  It EVALs the first one,
+and, if the EVAL returns normally, the value of the EVAL call is the value
+of UNWIND.  If, however, during the EVAL a non-local return attempts
+to return below the UNWIND in the stack, the second form is EVALed, its
+value is ignored, and the non-local return is completed.  The second form
+is evaluated in the environment that was present when the call to UNWIND was
+made.  This facility is useful for cleaning up data bases that are in
+inconsistent states and closing temporary channels that may be left around.
+FLOAD sets up an UNWIND to close its channel if the user attempts to ERRET
+without finishing the FLOAD.
+
+3)	EVAL Macros
+
+	EVAL macros provide the convenience of a function without the
+overhead of calling and SPECIALs etc.  Basically an EVAL macro acts
+like a function, except that it re-evaluates its value.  For example:
+
+	<DEFMAC INC (ATM "OPTIONAL" (N 1))
+		 <FORM SET .ATM <FORM + <FORM LVAL .ATM> .N>>>
+
+The above is a macro for incrementing the value of an atom.  If it were
+applied as follows:
+
+	<SET X 1>
+	<INC X>
+
+the INC would return 2, and X would have the value 2.  This is because
+the first evaluation of <INC X> results in <SET X <+ .X 1>>, which does
+the above when EVALed.  To avoid strange compilation problems, the first
+evaluation of the macro call is done in the top-level environment.
+	The macro INC prints out as:
+
+	#MACRO (#FUNCTION (.......))
+
+Obviously DEFMAC is almost the same as DEFINE, except that it CONSes its
+function into a LIST and returns that changed into a MACRO.  Eventually
+macros will be able to be compiled and <1 <-a compiled macro>- > will be
+an RSUBR.
+	Macros really exhibit their advantages when they are compiled.
+The compiler will simply cause the first evaluation to occur and compile
+the result.  The new subr EXPAND exists for this purpose and for the
+purpose of debugging macros.  It takes a macro form and returns the expansion.
+
+4)	Interpreter SPECIAL and UNSPECIAL checking.
+
+	One of the most common user compiler bugs is forgetting to DECL
+an atom to be SPECIAL, because up to now there has been no way of making
+the interpreter do SPECIAL checking.  MUDDLE 49 attempts to solve this
+problem.  The user may put his MUDDLE into a mode where normal SPECIAL
+checking is performed at run time.  This feature may at any time be
+disabled, and the MUDDLE will act like previous MUDDLEs and treat all
+local values as SPECIALs.  The user may also specify whether normal mode
+is SPECIAL or UNSPECIAL.  Two new SUBRs exist to handle this:
+
+	<SPECIAL-CHECK <-false or non-false>- >
+
+turns checking on and off and returns the old state.  If it is called
+with no arguments, it simply returns the current state.
+
+	<SPECIAL-MODE <-SPECIAL or UNSPECIAL>- >
+
+sets the normal mode and returns the previous mode.  It may also be called
+with no arguments.
+
+5)	GDECL and MANIFEST
+
+	GDECL and MANIFEST have been implemented in the interpreter in an
+attempt to narrow the differences between compiled and interpreted code.
+Both have the same calling sequences as the corresponding functions in
+the compiler.  The checking is only done when DECL checking is being done
+(see DECL-CHECK).
+
+6)	GET-DECL and PUT-DECL
+
+	These two subrs permit the DECL of a global or local value to
+be examined and changed.  GET-DECL takes a locative to a local or global
+value (#LOCD) and returns either the decl, false if there is none or the atom
+MANIFEST.  PUT-DECL takes a locative and a new DECL which can't be false
+or MANIFEST.
+
+7)	DISMISS
+
+	DISMISS permits an interrupt handler to return an arbitrary value
+to an arbitrary activation at an arbitrary interrupt level.  The call is
+as follows:
+
+	<DISMISS <-value>- -<-activation>-- -<-int-level>-- >
+
+where only the value is required.  If activation is omitted, return is
+to the place interrupted from.  If int-level is omitted, the int-level
+prior to the current interrupt is restored.
+
+8)	RUNTIME and REALTIME interrupts
+
+	The RUNTIME interrupt causes an interrupt to happen when the
+specified amount of run time has occurred.  The REALTIME interrupt
+causes an interrupt every time the specified amount of time has elapsed
+(for example, every 10 seconds).
+	To enable these interrupts, call ON or EVENT of "RUNT" or "REALT".
+The interrupt functions should take no arguments in either case.
+	To set the time periods for either interrupt, call RUNTIMER or
+REALTIMER with the number of seconds (fix or float).
+
+9)	PARITY interrupt
+
+	A new interrupt that is fatal if not handled has been implemented.
+It occurs if a user-mode parity error occurs in the MUDDLE.  It is fatal
+during garbage collection.
+
+10)	Garbage Channels
+
+	MUDDLE will now automatically close any CHANNELs not pointed to
+by anything except CHANLIST.  This must for obvious reasons occur only
+during garbage collection.
+
+11)	Change to MEMBER
+
+	If the second argument to MEMBER is a string, the first arg may
+be either a character or another string.  If the first argument is a
+string, a substring search is done by MEMBER.
+
+12)	SLEEP and HANG changes
+
+	SLEEP and HANG both take an optional second argument.  It is
+evaluated every time an interrupt occurs and is dismissed back into the
+SLEEP or HANG.  If the result of the evaluation is not FALSE, the result
+is returned as the value of the SLEEP or HANG.
+
+13)	Changes to FRAME, ARGS and FUNCT
+
+	All three of these may now take a process as the argument.  They
+return the top frame, args tuple or function name of the process.  If
+the process is the current one, they return the current frame etc.
+
+

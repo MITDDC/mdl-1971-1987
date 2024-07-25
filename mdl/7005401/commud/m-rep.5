@@ -1,0 +1,40 @@
+<PACKAGE "M-REP">
+
+<ENTRY REPLY-FIELD>
+
+<USE "FIELDS"
+     "M-DEFS"
+     "M-READ"
+     "M-MSG"
+     "MADMAN">
+
+<DEFINE REPLY-FIELD (ADR "AUX" (FR <DRDMSG "" <GETFIX "FROM">>)
+		     (IRT <DRDMSG "" <GETFIX "ID-IRT">>)
+		     (ORIG <DRDMSG "" <GETFIX "WHEN-ORIGINATED">>)
+		     C)
+	#DECL ((FR IRT ORIG) ANY (C) <OR FALSE CHANNEL> (ADR) STRING)
+	<COND (<AND <EMPTY? .ADR>
+		    .FR
+		    <TYPE? .FR STRING>
+		    .IRT
+		    <TYPE? .IRT FIX>
+		    .ORIG
+		    <TYPE? .ORIG FIX>
+		    <SET C <RQOPEN>>>
+	       <PROG ((OUTCHAN .C))
+		     #DECL ((OUTCHAN) CHANNEL)
+		     <PRINT "MSG-NO">
+		     <PRIN1 .IRT>
+		     <PRINT "ADDRESSEE">
+		     <PRIN1 .FR>
+		     <PRINT "REPLIED-TO">
+		     <PRINC " (">
+		     <PRIN1 <MVMSG ,MDB>>
+		     <PRINC !\ >
+		     <PRIN1 .ORIG>
+		     <PRINC !\)>
+		     <CRLF>>
+	       <RQCLOSE .C>)>
+	T>
+
+<ENDPACKAGE>

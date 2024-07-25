@@ -1,0 +1,725 @@
+
+<BLOCK (<ROOT>)>
+
+ITS 
+
+TENEX 
+
+<ENDBLOCK>
+
+<BLOAT 20000 0 0 50>
+
+<OR <LOOKUP "COMPILE" <ROOT>>
+    <PROG (TMP)
+	  <COND (<L? ,MUDDLE 100> <SETG ITS T>)
+		(ELSE <SETG ITS <>>)>>>
+
+<USE "SORTX">
+
+<COND (,ITS <USE "JCL">)>
+
+"LOW 6 BITS OF WORD"
+
+<SETG LOW-BITS <BITS 6>>
+
+<COND (,ITS <SETG PAGE 1024>) (<SETG PAGE 512>)>
+
+<MANIFEST LOW-BITS>
+
+"OFFSETS INTO UVECTOR OF INFORMATION RETURNED BY SRCH-DIR"
+
+<SETG N_NM1 3>
+
+<SETG NAME-FIELD 1>
+
+<SETG VERSION-FIELD 2>
+
+<SETG LENGTH-FIELD 3>
+
+<SETG BLOCK-FIELD 4>
+
+<MANIFEST NAME-FIELD
+	  VERSION-FIELD
+	  BLOCK-FIELD
+	  LENGTH-FIELD>
+
+"OFFSETS INTO LIST RETURNED BY FILPRS"
+
+<SETG D_NM1 1>
+
+<SETG D_NM2 2>
+
+<SETG D_DEV 3>
+
+<SETG D_SNM 4>
+
+<MANIFEST D_NM1 D_NM2 D_DEV D_SNM>
+
+<COND (,ITS
+       <SETG WRKDIR "MUDTMP">
+       <SETG MNDIR "MUDSAV">)
+      (ELSE
+       <SETG WRKDIR "MDL">
+       <SETG MNDIR "MDL">)>
+
+<SETG STRBUF <ISTRING 50>>
+
+<SETG RCL ![0!]>
+
+<SETG DIRBUF <IUVECTOR ,PAGE 0>>
+
+<SETG SDIRBUF <IUVECTOR 256 0>>
+
+<SETG VERSION-FD <BITS 10 18>>
+
+<SETG VERSION-FD1 <BITS 18 0>>
+
+<SETG LENGTH-FD <BITS 7 28>>
+
+<SETG BLOCK-FD <BITS 18 0>>
+
+"THESE ARE UTILITY ROUTINES TO HACK THE MUDDLE DATA BASE"
+
+<DEFINE LISTF LF ("OPTIONAL" (DIRNAM "SAV") (PARAMS ALL)
+		  "AUX" (ND <SUBSTRUC .DIRNAM 0 3>) NUMDIRS
+			(CH <OPEN "READB" .DIRNAM "FILE" "DSK" ,MNDIR>))
+   #DECL ((NUMDIRS) FIX (DIRNAM) STRING)
+   <OR .CH <RETURN #FALSE ("BAD ARG TO LISTF") .LF>>
+   <UNWIND
+    <PROG ()
+	  <READB ,RCL .CH>
+	  <SET NUMDIRS <1 ,RCL>>
+	  <COND (<TYPE? .PARAMS FIX>
+		 <COND (<AND <L=? .PARAMS .NUMDIRS> <G? .PARAMS 0>>
+			<LIST-IT .CH .PARAMS .ND>)
+		       (<CLOSE .CH> <RETURN #FALSE ("BAD ARG TO LISTF") .LF>)>)
+		(<TYPE? .PARAMS LIST>
+		 <MAPF <>
+		       <FUNCTION (X) 
+			       <COND (<AND <TYPE? .X FIX>
+					   <G? .X 0>
+					   <L=? .X .NUMDIRS>>
+				      <LIST-IT .CH .X .ND>)
+				     (<CLOSE .CH>
+				      <RETURN #FALSE ("BAD ARG TO LISTF")
+					      .LF>)>>
+		       .PARAMS>)
+		(<==? .PARAMS ALL>
+		 <REPEAT ((N 1))
+			 <LIST-IT .CH .N .ND>
+			 <COND (<G? <SET N <+ .N 1>> .NUMDIRS> <RETURN>)>>)
+		(<CLOSE .CH> <RETURN #FALSE ("BAD ARG TO LISTF") .LF>)>
+	  <CLOSE .CH>>
+    <CCLOSE .CH>>
+   <CRLF>>
+
+"LIST-IT ACTUALLY LISTS A DIRECTORY. IT TAKES A NUMBER OF THE DIRECTORY AS AN ARGUMENT"
+
+<DEFINE LIST-IT (CH DIRNUM STR "AUX" DL) 
+	#DECL ((CH) CHANNEL (DL DIRNUM) FIX)
+	<ACCESS .CH .DIRNUM>
+	<TERPRI>
+	<TERPRI>
+	<PRINC "DIRECTORY # ">
+	<PRIN1 .DIRNUM>
+	<TERPRI>
+	<TERPRI>
+	<READB ,RCL .CH>
+	<SET DL <* <1 ,RCL> ,PAGE>>
+	<ACCESS .CH .DL>
+	<READB ,DIRBUF .CH>
+	<SET DL </ <1 ,DIRBUF> 2>>
+	<REPEAT (DT DX (DIRPTR <REST ,DIRBUF>))
+		#DECL ((DT) FIX (DX) <PRIMTYPE WORD>)
+		<AND <0? .DL> <RETURN>>
+		<LISTIT <1 .DIRPTR> <2 .DIRPTR> .STR>
+		<SET DIRPTR <REST .DIRPTR 2>>
+		<COND (<0? <SET DL <- .DL 1>>> <RETURN>)>>
+	T>
+
+"A ROUTINE TO PRINT A 6BIT WORD OUT. ASSUMES WORD IS LEFT JUSTIFIED"
+
+<DEFINE PRINT-6BIT (WD) 
+	#DECL ((WD) <PRIMTYPE WORD>)
+	<REPEAT ((CNT 0) (BTS <BITS 6 30>) CHR)
+		#DECL ((CHR) FIX)
+		<SET CHR <CHTYPE <GETBITS .WD .BTS> FIX>>
+		<AND <0? .CHR> <RETURN>>
+		<PRINC <ASCII <+ .CHR 32>>>
+		<AND <==? <SET CNT <+ .CNT 1>> 6> <RETURN>>
+		<SET BTS <CHTYPE <- <CHTYPE .BTS FIX> 6442450944> BITS>>>>
+
+"THIS ROUTINE PRINTS THE CONTENTS OF THE FREE STORAGE LIST"
+
+<DEFINE FLIST ("OPTIONAL" (FIL "SAV")
+	       "AUX" (NLNT 0) (LNT 0)
+		     (CH <OPEN "READB" .FIL "FILE" "DSK" ,MNDIR>))
+   #DECL ((NLNT LNT) FIX)
+   <PROG ()
+     <OR .CH <RETURN #FALSE ("BAD ARG TO FLIST")>>
+     <UNWIND
+      <PROG ()
+	    <TERPRI>
+	    <ACCESS .CH ,PAGE>
+	    <READB ,DIRBUF .CH>
+	    <PRINC "FREE STORAGE">
+	    <TERPRI>
+	    <REPEAT ((N <1 ,DIRBUF>) (DIRPTR <REST ,DIRBUF>))
+		    <AND <0? .N> <RETURN>>
+		    <TERPRI>
+		    <PRIN1 <SET NLNT
+				<CHTYPE <GETBITS <1 .DIRPTR> <BITS 18 18>>
+					FIX>>>
+		    <SET LNT <+ .LNT .NLNT>>
+		    <PRINC "	">
+		    <PRIN1 <CHTYPE <GETBITS <1 .DIRPTR> <BITS 18 0>> FIX>>
+		    <SET N <- .N 1>>
+		    <SET DIRPTR <REST .DIRPTR>>>
+	    <CLOSE .CH>>
+      <CCLOSE .CH>>>
+   <CRLF>
+   <CRLF>
+   <PRIN1 .LNT>
+   <PRINC " BLOCKS">
+   <CRLF>>
+
+<DEFINE STATUS ("AUX" CH "NAME" STATUS-FAIL) 
+	<SET CH <OPEN "READB" "SAV" "FILE" "DSK" ,MNDIR>>
+	<COND (.CH <PROG ()
+			 <UNWIND <ISTATUS .CH> <CCLOSE .CH>>
+			 <CLOSE .CH>>)
+	      (<RETURN .CH .STATUS-FAIL>)>
+	<SET CH <OPEN "READB" "FIXUP" "FILE" "DSK" ,MNDIR>>
+	<COND (.CH <UNWIND <PROG ()
+				 <ISTATUS .CH>
+				 <CLOSE .CH>> <CCLOSE .CH>>)
+	      (<RETURN .CH .STATUS-FAIL>)>
+	<CRLF>>
+
+<DEFINE ISTATUS (CH "AUX" (TDIRS 0)) 
+	#DECL ((CH) CHANNEL)
+	<CRLF>
+	<CRLF>
+	<ACCESS .CH 0>
+	<READB ,RCL .CH>
+	<CRLF>
+	<PRINC <N_NM1 .CH>>
+	<PRINC " FILE">
+	<CRLF>
+	<CRLF>
+	<REPEAT ((CNT <1 ,RCL>) (DIR 1))
+		#DECL ((DIR CNT) FIX)
+		<ACCESS .CH .DIR>
+		<READB ,RCL .CH>
+		<PRINC "DIRECTORY #">
+		<PRIN1 .DIR>
+		<PRINC "		">
+		<ACCESS .CH <* <1 ,RCL> ,PAGE>>
+		<READB ,RCL .CH>
+		<PRIN1 </ <1 ,RCL> 2>>
+		<PRINC "	FILES">
+		<SET TDIRS <+ .TDIRS <1 ,RCL>>>
+		<TERPRI>
+		<COND (<0? <SET CNT <- .CNT 1>>> <RETURN>)>
+		<SET DIR <+ .DIR 1>>>
+	<CRLF>
+	<PRINC "TOTAL NUMBER OF FILES= ">
+	<PRIN1 </ .TDIRS 2>>
+	<CRLF>
+	<ACCESS .CH ,PAGE>
+	<READB ,DIRBUF .CH>
+	<SET TDIRS 0>
+	<REPEAT ((CNT <1 ,DIRBUF>) (TPR <REST ,DIRBUF>))
+		<COND (<0? .CNT> <RETURN>)>
+		<SET TDIRS
+		     <+ .TDIRS <CHTYPE <GETBITS <1 .TPR> <BITS 18 18>> FIX>>>
+		<SET TPR <REST .TPR>>
+		<SET CNT <- .CNT 1>>>
+	<PRINC "TOTAL FREE SPACE= ">
+	<PRIN1 .TDIRS>
+	<CRLF>>
+
+<DEFINE DELETE (FZ "AUX" LN XY (FL <FILPRS .FZ>) (FN <D_SNM .FL>) CH) 
+   #DECL ((XX) STRING)
+   <PROG ()
+	 <COND
+	  (<OR <=? <D_SNM .FL> "SAV"> <=? <D_SNM .FL> "FIXUP">>
+	   <SET CH
+		<OPEN "READB" "DELETE" <STRING .FN !\S> "DSK" ,WRKDIR>>
+	   <UNWIND <PROG ()
+			 <COND (.CH
+				<SET LN <MAX 0 <- <FILE-LENGTH .CH> 2>>>
+				<SET XY <READSTRING ,STRBUF .CH>>
+				<CLOSE .CH>)
+			       (ELSE
+				<SET LN 0>
+				<SET CH
+				     <OPEN "PRINTB"
+					   "DELETE"
+					   <STRING .FN !\S>
+					   "DSK"
+					   ,WRKDIR>>
+				<CLOSE .CH>
+				<SET XY 0>)>
+			 <OR <SET CH
+				  <OPEN "PRINTO"
+					"DELETE"
+					<STRING .FN !\S>
+					"DSK"
+					,WRKDIR>>
+			     <RETURN <>>>
+			 <ACCESS .CH 0>
+			 <PRINTSTRING ,STRBUF .CH .XY>
+			 <PRINTSTRING <D_NM1 .FL> .CH>
+			 <PRINTSTRING " " .CH>
+			 <PRINTSTRING <D_NM2 .FL> .CH>
+			 <PRINTSTRING "
+" .CH>
+			 <CLOSE .CH>>
+		   <CCLOSE .CH>>
+	   T)>>>
+
+"ROUTINE TO CONVERT A STRING TO SIXBIT"
+
+<DEFINE SIXBIT (STR "AUX" (WORD 0) (POS 30) (CHR 0)) 
+	#DECL ((STR) STRING (WORD POS CHR) FIX)
+	<REPEAT ()
+		<COND (<OR <EMPTY? .STR> <L? .POS 0>>
+		       <RETURN <CHTYPE .WORD FIX>>)
+		      (<OR <L? <SET CHR <CHTYPE <1 .STR> FIX>> 32>
+			   <G? .CHR 122>>
+		       <ERROR "BAD CHAR IN SIXBIT" <1 .STR>>
+		       <RETURN 0>)
+		      (<G=? .CHR 96> <SET CHR <- .CHR 64>>)
+		      (<SET CHR <- .CHR 32>>)>
+		<SET WORD <PUTBITS .WORD <BITS 6 .POS> .CHR>>
+		<SET STR <REST .STR>>
+		<SET POS <- .POS 6>>>>
+
+<DEFINE GET-FILE (FN1 FN2 "AUX" XT (FL <FILPRS .FN1>) ITEM CH1 CH2) 
+   #DECL ((FL) <LIST [4 STRING]> (CH1 CH2) <OR FALSE CHANNEL> (FN1 FN2) STRING
+	  (ITEM) <OR FALSE <UVECTOR [4 FIX]>>)
+   <SET CH1 <OPEN "READB" <D_SNM .FL> "FILE" "DSK" ,MNDIR>>
+   <SET CH2 <OPEN "PRINTB" .FN2>>
+   <UNWIND
+    <PROG ()
+	  <SET XT
+	       <AND .CH1
+		    .CH2
+		    <SET ITEM
+			 <SRCH-DIR <SET D_NM1 <SIXBIT <D_NM1 .FL>>>
+				   <PARSE <REST <D_NM2 .FL> 3>>
+				   <LOAD-DIRECTORY .CH1 .D_NM1>>>
+		    <PROG (DIR)
+			  <ACCESS .CH1
+				  <* <BLOCK-FIELD .ITEM>
+				     <COND (<=? <D_SNM .FL> "FIXUP">
+					    <SET DIR ,SDIRBUF>
+					    256)
+					   (<SET DIR ,DIRBUF> ,PAGE)>>>
+			  <REPEAT ((LN <LENGTH-FIELD .ITEM>))
+				  #DECL ((LN) FIX)
+				  <READB .DIR .CH1>
+				  <PRINTB .DIR .CH2>
+				  <COND (<0? <SET LN <- .LN 1>>> <RETURN>)>>>>>
+	  <AND .CH1 <CLOSE .CH1>>
+	  <AND .CH2 <CLOSE .CH2>>>
+    <PROG ()
+	  <CCLOSE .CH1>
+	  <CCLOSE .CH2>>>
+   .XT>
+
+<DEFINE FIND-FILE (NAM "AUX" ITEM (FL <FILPRS .NAM>)) 
+	#DECL ((NAM) STRING (ITEM) <OR FALSE <UVECTOR [4 FIX]>>
+	       (FL) <LIST [4 STRING]>)
+	<SET ITEM <IFIND-FILE .NAM>>
+	<COND (.ITEM
+	       <TERPRI>
+	       <PRINC <D_NM1 .FL>>
+	       <PRINC "	">
+	       <PRINC <D_NM2 .FL>>
+	       <PRINC "	">
+	       <PRIN1 <LENGTH-FIELD .ITEM>>
+	       <PRINC "	">
+	       <PRIN1 <BLOCK-FIELD .ITEM>>
+	       <CRLF>)
+	      (#FALSE ("File not found"))>>
+
+"THESE ARE A GROUP OF ROUTINES USED TO FIND FILES IN THE SAV AND FIXUP
+ DATA BASES."
+
+"ROUTINE TO LOAD A DIRECTORY GIVEN A CHANNEL TO THE FILE AND A FIRST NAME."
+
+<DEFINE LOAD-DIRECTORY (CHN NAME) 
+	#DECL ((CHN) CHANNEL (NAME) FIX)
+	<REPEAT (CH)
+		#DECL ((CH) FIX)
+		<SET CH <CHTYPE <GETBITS .NAME ,LOW-BITS> FIX>>
+		<COND (<NOT <0? .CH>> <SET NAME .CH> <RETURN>)
+		      (<SET NAME </ .NAME 64>>)>>
+	<ACCESS .CHN 0>
+	<READB ,RCL .CHN>
+	<ACCESS .CHN <+ 1 <MOD .NAME <1 ,RCL>>>>
+	<READB ,RCL .CHN>
+	<ACCESS .CHN <* <1 ,RCL> ,PAGE>>
+	<READB ,DIRBUF .CHN>
+	,DIRBUF>
+
+"ROUTINE TO DO A BINARY SEARCH ON A DIRECTORY FOR THE FIRST NAME AND RETURN A FALSE
+ IF NOT FOUND OR THE RESTED DOWN DIRECTORY IF FOUND."
+
+<DEFINE IFIND-FILE (NAM "AUX" XT (FL <FILPRS .NAM>) CH D_NM1) 
+	#DECL ((D_NM1) FIX (NAM) STRING (FL) <LIST [4 STRING]>
+	       (CH) <OR CHANNEL FALSE>)
+	<SET CH <OPEN "READB" <D_SNM .FL> "FILE" "DSK" ,MNDIR>>
+	<UNWIND <PROG ()
+		      <SET XT
+			   <AND .CH
+				<SRCH-DIR <SET D_NM1 <SIXBIT <D_NM1 .FL>>>
+					  <PARSE <REST <D_NM2 .FL> 3>>
+					  <LOAD-DIRECTORY .CH .D_NM1>>>>
+		      <AND .CH <CLOSE .CH>>>
+		<CCLOSE .CH>>
+	.XT>
+
+<DEFINE BINSRCH (D_NM1 DIR LNT "AUX" (EXIT .LNT)) 
+	#DECL ((D_NM1) FIX (LNT) FIX (DIR) <UVECTOR [REST <PRIMTYPE WORD>]>)
+	<REPEAT UP ()
+		<COND (<0? <SET LNT <CHTYPE <ANDB </ .LNT 2> -2> FIX>>>
+		       <REPEAT ()
+			       <COND (<L=? .EXIT 0> <RETURN <> .UP>)
+				     (<SET EXIT <- .EXIT 2>>
+				      <AND <==? .D_NM1 <1 .DIR>>
+					   <RETURN .DIR .UP>>
+				      <SET DIR <REST .DIR 2>>)>>)
+		      (<==? .D_NM1 <1 .DIR>> <RETURN .DIR>)
+		      (<G=? .D_NM1 <NTH .DIR <+ .LNT 1>>>
+		       <SET DIR <REST .DIR .LNT>>)>
+		<SET EXIT <- .EXIT .LNT>>>>
+
+"ROUTINE TO SEARCH A DIRECTORY FOR A FILE.  IT TAKES AS ARGUMENTS A DIRECTORY,
+ A FIRST NAME, AND A VERSION #.  IT RETURNS A FALSE IF NOT FOUND OR A UVECTOR
+ OF INFORMATION IF FOUND.  THIS UVECTOR CONTAINS:
+	1.  FIRST FILE NAME (6BIT)
+	2.  VERSION # (FIX)
+	3.  LENGTH OF FILE
+	4.  BLOCK OF START OF FILE"
+
+<DEFINE SRCH-DIR (D_NM1 D_NM2 DIR "AUX" RDIR) 
+   #DECL ((RDIR) <OR <UVECTOR FIX> FALSE> (D_NM1 D_NM2) FIX (DIR) <UVECTOR
+								   FIX>)
+   <SET RDIR <BINSRCH .D_NM1 <REST .DIR> <1 .DIR>>>
+   <COND (.RDIR
+	  <COND (<L? .D_NM2 <CHTYPE <GETBITS <2 .RDIR> ,VERSION-FD> FIX>>
+		 <REPEAT ()
+			 <COND (<==? <SET RDIR <BACK .RDIR>> <TOP .RDIR>>
+				<SET RDIR <>>
+				<RETURN>)>
+			 <SET RDIR <BACK .RDIR>>
+			 <COND (<NOT <==? <1 .RDIR> .D_NM1>>
+				<SET RDIR <>>
+				<RETURN>)
+			       (<==? <CHTYPE <GETBITS <2 .RDIR> ,VERSION-FD>
+					     FIX>
+				     .D_NM2>
+				<RETURN>)>>)
+		(<G? .D_NM2 <CHTYPE <GETBITS <2 .RDIR> ,VERSION-FD> FIX>>
+		 <REPEAT ()
+			 <COND (<EMPTY? <SET RDIR <REST .RDIR 2>>>
+				<SET RDIR <>>
+				<RETURN>)>
+			 <COND (<NOT <==? <1 .RDIR> .D_NM1>>
+				<SET RDIR <>>
+				<RETURN>)
+			       (<==? <CHTYPE <GETBITS <2 .RDIR> ,VERSION-FD>
+					     FIX>
+				     .D_NM2>
+				<RETURN>)>>)>)>
+   <COND (.RDIR
+	  ![.D_NM1
+	    .D_NM2
+	    <CHTYPE <GETBITS <2 .RDIR> ,LENGTH-FD> FIX>
+	    <CHTYPE <GETBITS <2 .RDIR> ,BLOCK-FD> FIX>!])
+	 (ELSE #FALSE ("File not found"))>>
+
+"ROUTINE TO LIST THE ENTIRE DATA-BASE FOR EITHER THE SAV OR FIXUP DATA-BASES"
+
+"BOOTSTRAP ROUTINE TO CREATE THE APPROPRIATE UVECTORS"
+
+<PROG ((CH <OPEN "READB" "SAV" "FILE" "DSK" ,MNDIR>))
+      <READB ,RCL .CH>
+      <SETG SAV-UVEC <IUVECTOR <* <1 ,RCL> ,PAGE> 0>>
+      <CLOSE .CH>>
+
+<PROG ((CH <OPEN "READB" "FIXUP" "FILE" "DSK" ,MNDIR>))
+      <READB ,RCL .CH>
+      <SETG FIX-UVEC <IUVECTOR <* <1 ,RCL> ,PAGE> 0>>
+      <CLOSE .CH>>
+
+"A ROUTINE TO DO A COMPLETE LISTING OF A DATA-BASE DIRECTORY"
+
+<DEFINE CLISTF RETPNT ("OPTIONAL" (FNM "SAV")
+		       "AUX" UV UVEC
+			     (CH <OPEN "READB" .FNM "FILE" "DSK" ,MNDIR>))
+	#DECL ((UVEC) <UVECTOR [REST FIX]>)
+	<COND (<NOT .CH> <RETURN #FALSE ("BAD DATA BASE NAME") .RETPNT>)>
+	<UNWIND <PROG ()
+		      <SET UVEC <GATHER-FILES .CH>>
+		      <SORT <> .UVEC 2 0>
+		      <CRLF>
+		      <PRINC .FNM>
+		      <PRINC " DIRECTORY">
+		      <CRLF>
+		      <SET UV .UVEC>
+		      <REPEAT ()
+			      <COND (<EMPTY? .UVEC> <RETURN>)
+				    (<G? <1 .UVEC> 0> <RETURN>)
+				    (<SET UVEC <REST .UVEC 2>>)>>
+		      <CRLF>
+		      <LIST-FILES .UVEC .FNM>
+		      <SET UV
+			   <SUBSTRUC .UV
+				     0
+				     <- <LENGTH .UV> <LENGTH .UVEC>>
+				     <REST .UV <LENGTH .UVEC>>>>
+		      <LIST-FILES .UV .FNM>
+		      <CLOSE .CH>>
+		<CCLOSE .CH>>
+	<CRLF>>
+
+"ROUTINE TO GATHER ALL THE DIRECTORIES TOGETHER IN A UVECTOR AND RETURN THE UVECTOR"
+
+<DEFINE GATHER-FILES (CH "AUX" UVEC TUVEC LNT) 
+	#DECL ((CH) CHANNEL (TUVEC UVEC) <UVECTOR [REST FIX]>)
+	<ACCESS .CH 0>
+	<COND (<=? <N_NM1 .CH> "SAV"> <SET UVEC ,SAV-UVEC>)
+	      (<=? <N_NM1 .CH> "FIXUP"> <SET UVEC ,FIX-UVEC>)
+	      (<ERROR BAD-CHANNEL-TO-GATHER-FILES!-ERRORS>)>
+	<SET TUVEC .UVEC>
+	<MAPR <> <FUNCTION (ZER) <PUT .ZER 1 0>> .UVEC>
+	<READB ,RCL .CH>
+	<REPEAT ((NLNT <1 ,RCL>) (ACC 1))
+		<COND (<0? .NLNT> <RETURN>)>
+		<ACCESS .CH .ACC>
+		<READB ,RCL .CH>
+		<ACCESS .CH <* <1 ,RCL> ,PAGE>>
+		<READB ,DIRBUF .CH>
+		<SET LNT <1 ,DIRBUF>>
+		<SUBSTRUC ,DIRBUF 1 .LNT .UVEC>
+		<SET UVEC <REST .UVEC .LNT>>
+		<SET NLNT <- .NLNT 1>>
+		<SET ACC <+ .ACC 1>>>
+	<SUBSTRUC .TUVEC
+		  0
+		  <- <LENGTH .TUVEC> <LENGTH .UVEC>>
+		  <REST .TUVEC <LENGTH .UVEC>>>>
+
+<DEFINE LIST-FILES (UVEC NM1 "AUX" (NM <SUBSTRUC .NM1 0 3>)) 
+	#DECL ((UVEC) <UVECTOR [REST FIX]>)
+	<REPEAT ()
+		<COND (<EMPTY? .UVEC> <RETURN>)>
+		<LISTIT <1 .UVEC> <2 .UVEC> .NM>
+		<SET UVEC <REST .UVEC 2>>>>
+
+<DEFINE SPEC-FIND (NAM
+		   "OPTIONAL" (FILE "SAV")
+		   "AUX" (CH <OPEN "READB" .FILE "FILE" "DSK" ,MNDIR>) STR1 STR2
+			 (NN <SIXBIT .NAM>))
+   #DECL ((FILE NAME STR1 STR2) STRING)
+   <COND (<NOT .CH> <ERROR CANT-OPEN-MAIN-FILE!-ERRORS>)>
+   <UNWIND
+    <PROG ()
+      <READB ,RCL .CH>
+      <REPEAT ((ND <1 ,RCL>) (OD 1))
+	      <ACCESS .CH .OD>
+	      <READB ,RCL .CH>
+	      <ACCESS .CH <* ,PAGE <1 ,RCL>>>
+	      <READB ,DIRBUF .CH>
+	      <REPEAT ((NENT <1 ,DIRBUF>) (PTR <REST ,DIRBUF>))
+		      <SET NAM <1 .PTR>>
+		      <SET BYTEL 30>
+		      <REPEAT (IT)
+			      <SET IT
+				   <CHTYPE <GETBITS .NAM <BITS 6 .BYTEL>> FIX>>
+			      <COND (<NOT <AND <G? .IT 15> <L? .IT 26>>>
+				     <COND (<EQNNAM .NN .NAM .BYTEL>
+					    <LISTIT <1 .PTR>
+						    <2 .PTR>
+						    <SUBSTRUC .FILE 0 3>>
+					    <RETURN>)>
+				     <RETURN>)
+				    (<EQNNAM .NN .NAM .BYTEL>
+				     <LISTIT <1 .PTR>
+					     <2 .PTR>
+					     <SUBSTRUC .FILE 0 3>>
+				     <RETURN>)>
+			      <SET BYTEL <- .BYTEL 6>>
+			      <COND (<L? .BYTEL 0>
+				     <ERROR "FILE ALL NUMBERS?">)>>
+		      <SET PTR <REST .PTR 2>>
+		      <COND (<0? <SET NENT <- .NENT 2>>> <RETURN>)>>
+	      <COND (<0? <SET ND <- .ND 1>>> <RETURN>)>
+	      <SET OD <+ .OD 1>>>
+      <CLOSE .CH>>
+    <CCLOSE .CH>>
+   <CRLF>>
+
+<DEFINE EQNNAM (NM1 NM2 BYTEL) 
+	<==? <GETBITS .NM1 <BITS <+ .BYTEL 6> <- 30 .BYTEL>>>
+	     <GETBITS .NM2 <BITS <+ .BYTEL 6> 0>>>>
+
+<DEFINE LISTIT (NM1 NM2 FILE) 
+	<CRLF>
+	<PRINT-6BIT .NM1>
+	<PRINC "	">
+	<PRINC .FILE>
+	<PRIN1 <CHTYPE <GETBITS .NM2 ,VERSION-FD> FIX>>
+	<PRINC "	">
+	<PRIN1 <CHTYPE <GETBITS .NM2 ,LENGTH-FD> FIX>>
+	<PRINC "	">
+	<PRIN1 <CHTYPE <GETBITS .NM2 ,BLOCK-FD> FIX>>>
+
+<DEFINE CCLOSE (CH) <COND (<AND .CH <NOT <0? <1 .CH>>>> <CLOSE .CH>)>>
+
+<DEFINE 6TOCHS (SIX "AUX" (STR <ISTRING 6>) (PTR 6)) 
+	<SET SIX <CHTYPE .SIX FIX>>
+	<REPEAT ()
+		<COND (<0? .PTR> <RETURN>)>
+		<SET NUM <GETBITS .SIX <BITS 6 0>>>
+		<PUT .STR .PTR <CHTYPE <+ <CHTYPE .NUM FIX> 32> CHARACTER>>
+		<SET PTR <- .PTR 1>>
+		<SET SIX <CHTYPE <GETBITS .SIX <BITS 30 6>> FIX>>>
+	.STR>
+
+<DEFINE FB (CH "AUX" LN CNAM (LST ()) NM) 
+   <PROG ()
+     <SET LN <FILE-LENGTH .CH>>
+     <REPEAT TOP ()
+       <COND (<L? <SET LN <- .LN 1>> 0> <RETURN .LST .TOP>)>
+       <READB ,RCL .CH>
+       <COND
+	(<NOT <0? <1 ,RCL>>>
+	 <SET CNAM <SUBSTRUC <6TOCHS <1 ,RCL>> 0 3>>
+	 <REPEAT ()
+		 <COND (<L? <SET LN <- .LN 1>> 0> <RETURN .LST .TOP>)>
+		 <READB ,RCL .CH>
+		 <COND (<0? <SET NM <1 ,RCL>>> <RETURN>)>
+		 <COND (<L? <SET LN <- .LN 1>> 0> <RETURN .LST .TOP>)>
+		 <READB ,RCL .CH>
+		 <SET LST
+		  (<STRING <6TOCHS .NM>
+			   " "
+			   .CNAM
+			   <UNPARSE <CHTYPE <GETBITS <1 ,RCL> ,VERSION-FD1>
+					    FIX>>>
+		   !.LST)>>)>>
+     <CLOSE .CH>>
+   .LST>
+
+<DEFINE BUILD-LIST ("AUX" CH (LST ())) 
+	<COND (<SET CH <OPEN "READB" "ADDED" "FILE" "DSK" ,WRKDIR>>
+	       <UNWIND <PROG ()
+			     <SET LST (<FB .CH> !.LST)>
+			     <CLOSE .CH>>
+		       <CCLOSE .CH>>)>
+	<COND (<SET CH <OPEN "READB" "ADDED" "FILES" "DSK" ,WRKDIR>>
+	       <UNWIND <PROG ()
+			     <SET LST (<FB .CH> !.LST)>
+			     <CLOSE .CH>>
+		       <CCLOSE .CH>>)>
+	.LST>
+
+<DEFINE DUMP-LF (NM "OPTIONAL" (FLG T) "AUX" JNM) 
+	<COND (<=? <SAVE .NM .FLG> "RESTORED">
+	       <COND (<=? <JNAME> "DBSTAT">
+		      <CRLF>
+		      <CRLF>
+		      <PRINC "STATUS">
+		      <STATUS>
+		      <QUIT>)
+		     (<=? <JNAME> "SCCONS">
+		      <SCCONS>
+		      <QUIT>)
+		     (<=? <JNAME> "DBMAIN">
+		      <CRLF>
+		      <HACK-JCL>)
+		    (ELSE <PRINC "NEWLF IS READY."> <CRLF>)>)
+	      ("DONE")>>
+
+<DEFINE HACK-JCL ("AUX" (JCL <JCL?>) RDELE (CH .OUTCHAN) ITEM) 
+   <UNWIND
+    <PROG ()
+	  <COND
+	   (.JCL
+	    <SET RDELE <LPARSE <READJCL>>>
+	    <COND (<EMPTY? .RDELE> <WARN "NO JCL LINE">)>
+	    <COND (<TYPE? <SET ITEM <1 .RDELE>> STRING>
+		   <COND (<SET CH <OPEN "PRINT" .ITEM>>
+			  <COND (<EMPTY? <SET RDELE <REST .RDELE>>>
+				 (<WARN "NOTHING TO DO">))>)
+			 (<WARN "BAD SCRIPT FILE NAME">)>)>
+	    <COND (<AND <TYPE? <SET ITEM <1 .RDELE>> ATOM>
+			<GASSIGNED? .ITEM>
+			<APPLICABLE? <SET ITEM ,.ITEM>>>
+		   <PROG ((OUTCHAN .CH))
+			 #DECL ((OUTCHAN) <SPECIAL CHANNEL>)
+			 <PRINT <APPLY .ITEM !<REST .RDELE>>>>
+		   <QUIT>)
+		  (<WARN "BAD JCL LINE">)>)
+	   (<WARN "NO JCL LINE">)>>
+    <PROG ()
+	  <QUIT>>>>
+
+<DEFINE WARN (STR) #DECL ((STR) STRING) <PRINC "ERROR-- "> <PRINC .STR> <QUIT>>
+
+<DEFINE FREE-AREAS (
+		    "OPTIONAL" (NM "SAV")
+		    "AUX" (CH <OPEN "READB" .NM "FILE" "DSK" ,MNDIR>) (LST ()))
+   #DECL ((NM) STRING (LST) LIST)
+   <COND
+    (<NOT .CH> #FALSE ("BAD DATA-BASE NAME"))
+    (<UNWIND
+      <PROG ()
+	    <PRINC "FREE AREAS">
+	    <CRLF>
+	    <CRLF>
+	    <ACCESS .CH ,PAGE>
+	    <READB ,DIRBUF .CH>
+	    <REPEAT ((PTR <REST ,DIRBUF>) (SIZE <1 ,DIRBUF>) VAL VAL1)
+		    <COND (<0? .SIZE> <RETURN>)>
+		    <SET VAL <CHTYPE <GETBITS <1 .PTR> <BITS 18 18>> FIX>>
+		    <COND (<SET VAL1
+				<REPEAT ((PTR .LST))
+					#DECL ((PTR) LIST)
+					<COND (<EMPTY? .PTR> <RETURN <>>)>
+					<COND (<==? <1 .PTR> .VAL>
+					       <RETURN .PTR>)>
+					<SET PTR <REST .PTR 2>>>>
+			   <PUT .VAL1 2 <+ <2 .VAL1> 1>>)
+			  (<SET LST (.VAL 1 !.LST)>)>
+		    <SET PTR <REST .PTR>>
+		    <SET SIZE <- .SIZE 1>>>
+	    <REPEAT ((PTR <SORT <> [!.LST] 2 0>))
+		    <COND (<EMPTY? .PTR> <RETURN>)>
+		    <PRIN1 <1 .PTR>>
+		    <INDENT-TO 4>
+		    <PRINC "-- ">
+		    <PRIN1 <2 .PTR>>
+		    <SET PTR <REST .PTR 2>>
+		    <CRLF>>
+	    <CRLF>>
+      <PROG ()
+	    <CCLOSE .CH>>>)>>
+
+<DEFINE SCCONS ("AUX" CH) 
+	<SET CH <OPEN "PRINTO" "OLD" "SCRIPT" "DSK" ,WRKDIR>>
+	<ACCESS .CH <FILE-LENGTH .CH>>
+	<REPEAT (CH1)
+		<COND (<NOT <SET CH1 <OPEN "READ" "SCRIPT" ">" "DSK" ,WRKDIR>>>
+		       <CLOSE .CH>
+		       <RETURN>)>
+		<FILECOPY .CH1 .CH>
+		<CRLF .CH>
+		<CRLF .CH>
+		<CLOSE .CH1>
+		<RENAME "SCRIPT" "<" "DSK" ,WRKDIR>>>

@@ -1,0 +1,275 @@
+
+<PACKAGE "M-MTP">
+
+;"main delivery module plus interaction with ARPANET"
+
+<ENTRY MTP-DELIVERY
+       MTP-DEBUG?
+       MAIL-FILE
+       MTP-QUIT
+       USER-LOSERS>
+
+<USE "MADMAN" "CHAN" "FIELDS" "CLOCK" "M-DEFS" "M-TIME"
+     "M-BASE" "ITIME" "M-PRCD" "M-READ" "M-DAC" "M-DOUT" "NETFTP" "HOSTS"
+     "M-DATA" "M-TEMP" "M-ACK" "PRTUTI" "PRTSTR" "AP" "M-ERR" "USRUTI" "M-TAI">
+
+\ 
+
+<SETG MTP-DEBUG? <>>
+
+<GDECL (NET-MESSAGE) <OR FALSE CHANNEL>
+       (MTP-CONNECTION) <OR FALSE <LIST [2 CHANNEL]>>
+       (IHAN EHAN) HANDLER
+       (CR EOM) STRING
+       (ICP-TRIES) FIX
+       (DF) FLOAT
+       (NET-RETRY-CODES USER-LOSERS) <UVECTOR FIX>>
+
+<SETG MTP-CONNECTION <>>
+
+<SETG CR <STRING <ASCII 13> <ASCII 10>>>
+
+<SETG NET-RETRY-CODES '![7 10 11 13 14 17 18 20 21 22!]
+      					   ;"CODES WHICH ARE NON-FATAL ERRORS">
+
+<SETG USER-LOSERS '![450 451]	     ;"TEMPORARY ERRORS TO TREAT AS PERMANENT">
+
+<SETG EOM <STRING <ASCII 13> <ASCII 10> "." <ASCII 13> <ASCII 10>>>
+
+\
+
+"MTP-DELIVERY -- network output for message.  Note that this reads
+  'net-delivery-format' from the author rather than receiver area; this
+  is to allow chomps like inquire updating to work, besides, what net
+  receiver would have a tailor, anyway?"
+
+<DEFINE MTP-DELIVERY (ADR RCVR HST "AUX" TMPFIL)
+	#DECL ((ADR RCVR) STRING (HST) FIX (TMPFIL) <OR STRING CHANNEL>)
+	<COND (<SET TMPFIL <MAIL-TEMP-FILE .ADR>>
+	       <MAIL-FILE .ADR .RCVR .HST .TMPFIL>)>>
+
+\
+
+"MTP-OPEN -- open an MTP connection"
+
+<DEFINE MTP-OPEN (HST "AUX" (ICPCNT ,ICP-TRIES) MTP)
+	#DECL ((HST) FIX (ICPCNT) FIX
+	       (VALUE MTP) <OR FALSE <LIST [2 CHANNEL]>>)
+	<REPEAT ()
+		<COND (,MTP-DEBUG? <RETURN (.INCHAN .OUTCHAN)>)
+		      (<SET MTP <ICP .HST 25>>
+		       <RETURN .MTP>)
+		      (<=? <1 .MTP> "DEVICE NOT READY">
+		       <SCROUT "ARPAnet apparently down">
+		       <RETURN <>>)
+		      (<L? <SET ICPCNT <- .ICPCNT 1>> 0>
+		       <RETURN <>>)
+		      (ELSE
+		       <SLEEP 5>
+		       <SCROUT "Retrying ICP">)>>>
+
+\
+
+"MAIL-FILE -- given addressee and file containing mail, send it"
+
+<DEFINE MAIL-FILE (ADR RCVR HST TMPFIL "AUX" (SPLIT? <SPLITS? .ADR>) RES
+		   TCH C LAST? MTP OCH ICH REPLY FROM (MS ,MSG-SPACE))
+  #DECL ((ADR RCVR) STRING (TCH) <OR CHANNEL FALSE> (MS) SPACE
+	 (HST) FIX (MTP) <OR FALSE <LIST [2 CHANNEL]>> (C) CINT
+	 (LAST?) <OR ATOM FALSE> (REPLY) <OR FIX FALSE>
+	 (ICH OCH) CHANNEL (TMPFIL) <OR STRING CHANNEL> (RES) ANY
+	 (FROM) STRING (SPLIT?) <OR ATOM FALSE>)
+  <SET RES
+       <PROG MF ()
+	     #DECL ((MF) ACTIVATION)
+	     <COND (<SET TCH
+			 <OR <AND <TYPE? .TMPFIL CHANNEL> .TMPFIL>
+			     <OPEN "READ" .TMPFIL>>>
+		    <SETG NET-MESSAGE .TCH>
+		    <SET RES
+			 <PROG NETOUT ()
+			       #DECL ((NETOUT) <SPECIAL ACTIVATION>)
+			       <WATCH EHAN "ERROR" ,ERRHND 4>
+			       <WATCH IHAN "IOC" ,IOCHND 4>
+			       <SET C <ALARM ,TIMED-OUT 900.0>>
+			       <COND (<SET FROM
+					   <OR <DRD "" <GETFIX "REPLY-TO">>
+					       <DRD "" <GETFIX "SENDER">>
+					       <DRD "" <GETFIX "FROM">>>>
+				      <COND (<HOME? <EXTRACT-HOST .FROM>>
+					     <SET FROM <EXTRACT-RCVR .FROM>>)>
+				      <SET FROM
+					   <ASTRING .MS
+						    .FROM
+						    "@"
+						    <HOST <HOME?>>>>)>
+			       <COND
+				(<SET MTP <CONNECTED? .HST>>
+				 <SET ICH <1 .MTP>>
+				 <SET OCH <2 .MTP>>
+				 <SET LAST?
+				      <OR .SPLIT?
+					  <NOT <QPEEK "DELIVERY"
+						      <COND (,MTP-DEBUG?
+							     <HOST .HST>)
+							    (ELSE
+							     <HOST <6 .ICH>>)>>>>>)
+				(ELSE
+				 <MTP-QUIT>
+				 <COND (<SET MTP <MTP-OPEN .HST>>
+					<SCROUT "ICP Successful">
+					<SLEEP 5>
+					<SET ICH <1 .MTP>>
+					<SET OCH <2 .MTP>>)
+				       (ELSE <RETURN <AFALSE 13>>)>
+				 <COND (<SET REPLY <NETRESP .ICH '(220)>>
+					<PR .OCH
+					    <STRING "HELO " <HOST <HOME?>>>>
+					<COND (<SET REPLY
+						    <NETRESP .ICH '(250)>>
+					       <SETG MTP-CONNECTION .MTP>
+					       <PR .OCH
+						   "MAIL FROM:<" .FROM ">">
+					       <COND (<SET REPLY
+							   <NETRESP .ICH '(250)>>)
+						     (ELSE
+						      <CLOSE .ICH>
+						      <CLOSE .OCH>
+						      <SETG MTP-CONNECTION <>>
+						      <RETURN <AFALSE 21>>)>)
+					      (ELSE
+					       <CLOSE .ICH>
+					       <CLOSE .OCH>
+					       <SETG MTP-CONNECTION <>>
+					       <RETURN <AFALSE 21>>)>)
+				       (ELSE
+					<CLOSE .ICH>
+					<CLOSE .OCH>
+					<SETG MTP-CONNECTION <>>
+					<RETURN <AFALSE 21>>)>
+				 <SET LAST?
+				      <OR .SPLIT?
+					  <NOT <QPEEK "DELIVERY"
+						      <HOST <6 .ICH>>>>>>
+				 <SETG XRCP-LIST ()>)>
+			       <PR .OCH "RCPT TO:<" .RCVR ">">
+			       <SET REPLY
+				    <NETRESP .ICH '(250 251 452)>>
+			       <COND (<OR <==? .REPLY 250> <==? .REPLY 251>>
+				      <SETG XRCP-LIST
+					    (.ADR !,XRCP-LIST)>)
+				     (<==? .REPLY 452>
+				      <SET LAST? T>)
+				     (ELSE
+				      <RETURN
+				       <AFALSE 19
+					       <ACOPY .MS
+						      <1 .REPLY>>>>)>
+			       <COND (.LAST?
+				      <SET REPLY <SEND-MAIL .TCH .ICH .OCH>>
+				      <MAPF <>
+					    <FUNCTION (A)
+						 #DECL ((A) STRING)
+						 <MAIL-RESULT .A .REPLY>>
+					    ,XRCP-LIST>
+				      <SETG XRCP-LIST ()>)>
+			       <RETURN T .MF>>>
+		    <IGNORE EHAN>
+		    <IGNORE IHAN>
+		    <ALARM-OFF .C>
+		    <COND (.RES T)>)
+		   (ELSE
+		    <AFALSE 7 <ASTRING .MS <UNPARSE .TCH>>>)>>>
+  <COND (.SPLIT? <FLUSH-NET-MESSAGE>)>
+  .RES>
+
+\
+
+"CONNECTED?"
+
+<DEFINE CONNECTED? (HST "AUX" (MTP ,MTP-CONNECTION) ICH CHST)
+	#DECL ((HST) <OR FIX FALSE VECTOR> (CHST) FIX
+	       (MTP) <OR FALSE <LIST CHANNEL CHANNEL>> (ICH) CHANNEL)
+	<COND (<AND .MTP
+		    <NOT <0? <1 <SET ICH <1 .MTP>>>>>
+		    <NOT <0? <1 <2 .MTP>>>>>
+	       <SET CHST <6 .ICH>>
+	       <COND (<==? .HST .CHST> .MTP)>
+	       <SCROUT "MTP connection to "
+		       <HOST .CHST>
+		       " exists">
+	       .MTP)>>
+
+\
+
+"MTP-QUIT -- flush ftp connection"
+
+<DEFINE MTP-QUIT ("AUX" (MTP ,MTP-CONNECTION))
+	#DECL ((MTP) <OR FALSE <LIST CHANNEL CHANNEL>>)
+	<COND (.MTP
+	       <PR <2 .MTP> "QUIT">
+	       <NETRESP <1 .MTP> '(221)>
+	       <CLOSE <1 .MTP>>
+	       <CLOSE <2 .MTP>>
+	       <SCROUT "MTP closed">
+	       <SETG MTP-CONNECTION <>>)>>
+
+\
+
+"SEND-MAIL -- copy mail file open on first arg to ftp."
+
+<DEFINE SEND-MAIL (CH ICH OCH "AUX" RES)
+	#DECL ((CH ICH OCH) CHANNEL)
+	<COND (<AND <PR .OCH "DATA"> <NETRESP .ICH '(354)>>
+	       <SET RES
+		    <PROG WAIT-ACT ()
+			  #DECL ((WAIT-ACT) <SPECIAL ACTIVATION>)
+			  <FILECOPY .CH .OCH>
+			  <PRINC ,EOM .OCH>
+			  <AND <NOT ,MTP-DEBUG?> <NETS .OCH>>
+			  <NETRESP .ICH '(250)>>>
+	       <MTP-REPLY .RES 19 17 18>)>>
+
+"MTP-REPLY -- analyzes an MTP reply and returns an appropriate false
+if it is not a winner."
+
+<DEFINE MTP-REPLY (REPLY PERM TEMP RAND "AUX" (MS ,MSG-SPACE) S CD)
+	#DECL ((REPLY) ANY (S) STRING (PERM TEMP RAND CD) FIX
+	       (MS) SPACE)
+	<COND (.REPLY)
+	      (<AND <NOT <EMPTY? .REPLY>>
+		    <SET S <1 .REPLY>>
+		    <SET CD
+			 <PARSE <STRING <1 .S>
+					<2 .S>
+					<3 .S>>>>
+		    <G=? .CD 400>
+		    <L=? .CD 599>>
+	       <AFALSE <COND (<OR <G=? .CD 500> <MEMQ .CD ,USER-LOSERS>>
+			      .PERM)
+			     (ELSE .TEMP)>
+		       .S>)
+	      (ELSE <AFALSE .RAND <ACOPY .MS ,LAST-RESP>>)>>
+
+"PR -- print message to net channel and script"
+
+<DEFINE PR (CH "TUPLE" STR
+	    "AUX" (SOAK? <OR ,MTP-DEBUG? ,SOAK?>) (OUTCHAN .OUTCHAN))
+	#DECL ((CH OUTCHAN) CHANNEL (STR) <TUPLE [REST STRING]>)
+	<OR <0? <14 .OUTCHAN>> <CRLF>>
+	<OR .SOAK? <PRINC "     ">>
+	<MAPF <>
+	      <FUNCTION (S)
+			#DECL ((S) STRING)
+			<PRINC .S .CH>
+			<OR .SOAK? <PRINC .S>>>
+	      .STR>
+	<CRLF .CH>
+	<AND <NOT ,MTP-DEBUG?> <NETS .CH>>
+	<OR .SOAK? <CRLF>>>
+
+<DEFINE NETRESP (ICH R)
+	<COND (,MTP-DEBUG? <LISTEN WAITING-FOR .R>)
+	      (ELSE <WAITRESP .ICH .R>)>>
+
+<ENDPACKAGE>

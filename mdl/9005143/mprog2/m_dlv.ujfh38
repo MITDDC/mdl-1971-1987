@@ -1,0 +1,744 @@
+
+<PACKAGE "M.DLV">
+
+;"MESSAGE DELIVERY FUNCTIONS"
+
+<ENTRY DELIVERY
+       DLV-ERR
+       ONLINE-OUTPUT
+       NET-DELIVERY
+       READER-OUTPUT
+       READER-APPEND
+       LOGIN-MAIL
+       LOGIN-OUTPUT
+       LOGIN-APPEND
+       DLV-HISTORY>
+
+<GDECL (IHAN EHAN)
+       HANDLER
+       (FTMP FNAM FNAM1 FNAM2)
+       VECTOR
+       (CR CSM EOM)
+       STRING
+       (NET-INC)
+       LIST
+       (DF NET-FACTOR)
+       FLOAT
+       (NET-RETRIES)
+       FIX
+       (NET-RETRY-CODES)
+       <UVECTOR FIX>>
+
+<USE "LOCKS"
+     "CHAN"
+     "FIELDS"
+     "LSTUTI"
+     "M.SET"
+     "M.DAC"
+     "M.DOUT"
+     "NETFTP"
+     "LIBDAT"
+     "M.ACK"
+     "TIMFCN"
+     "PRTUTI"
+     "AP"
+     "M.ERR"
+     "USRUTI">
+
+<SETG CSM "COMMUNICATION-SYSTEM-MAINTAINER">
+
+<SETG CR <STRING <ASCII 13> <ASCII 10>>>
+
+<SETG NET-RETRY-CODES ![10 11 13 14 18!]    ;"CODES WHICH ARE NON-FATAL ERRORS">
+
+<SETG NET-INC ((0 0 0) (0 60 0))	     ;"INITIAL INCREMENT BETWEEN TRIES">
+
+<SETG NET-RETRIES 20			  ;"ALLOWED RETRIES BEFORE FATAL ERROR">
+
+<SETG NET-FACTOR 1.2000000				        ;"RETRY FACTOR">
+
+<SETG MAX-WAIT 120.0					    ;"MAXIMUM INTERVAL">
+
+<SETG EOM
+      <STRING <ASCII 13> <ASCII 10> "." <ASCII 13> <ASCII 10>>>
+
+\ 
+
+;"DELIVERY -- MAIN MESSAGE DELIVERY FUNCTION
+"
+
+<DEFINE DELIVERY (ADR "AUX" SPECS RES FN AFN DATA) 
+   #DECL ((ADR) STRING (VALUE) <OR FALSE ATOM> (DATA RES FN) ANY (SPECS) LIST
+	  (AFN) <OR APPLICABLE FALSE>)
+   <PROG ()
+	 <COND (<EMPTY? .ADR> <RETURN #FALSE (12)>)
+	       (<MEMBER !"@ .ADR> <RETURN <NET-DELIVERY .ADR>>)>
+	 <SET DATA <DRD .ADR <GETFIX "DELIVERY-SPECIFICATIONS">>>
+	 <COND (<AND .DATA <OK? <GETFIX "DELIVERY-SPECIFICATIONS"> .DATA>>
+		<SET SPECS .DATA>)
+	       (.DATA <RETURN #FALSE (2)>)
+	       (ELSE <SET SPECS ()>)>
+	 <DWT <TNOW> .ADR <GETFIX "WHEN-DELIVERED">>
+	 <REPEAT ()
+		 <COND (<EMPTY? .SPECS>
+			<COND-SIGNAL .ADR "DELIVERY">
+			<RETURN T>)
+		       (<NOT <DECL? <1 .SPECS> '<LIST ANY>>>
+			<DWT <> .ADR <GETFIX "WHEN-DELIVERED">>
+			<RETURN #FALSE (2)>)
+		       (<MEMQ <SET FN <1 <1 .SPECS>>>	     ;"ALREADY DID THIS"
+			      <DRDMSG .ADR <GETFIX "DELIVERY-COMPLETED">>>
+			<SET SPECS <REST .SPECS>>
+			<AGAIN>)
+		       (<SET AFN <AP? .FN>>
+			<SET RES <APPLY .AFN .ADR !<REST <1 .SPECS>>>>
+			<COND (<NOT .RES>
+			       <DWT <> .ADR <GETFIX "WHEN-DELIVERED">>
+			       <COND (<OR <EMPTY? .RES>
+					  <NOT <TYPE? <1 .RES> FIX>>>
+				      <SET RES <CHTYPE (1 .RES) FALSE>>)>
+			       <RETURN .RES>)
+			      (<TYPE? .FN ATOM>
+			       <DADDMSG .FN .ADR <GETFIX "DELIVERY-COMPLETED">>)>
+			<SET SPECS <REST .SPECS>>)
+		       (ELSE <RETURN <CHTYPE (2 .FN) FALSE>>)>>>>
+
+\ 
+
+;"INTERRUPT HANDLERS FOR NETWORK DELIVERY
+"
+
+<DEFINE IOCHND (REASON ECHAN) 
+	#DECL ((REASON) FALSE (NETOUT) ACTIVATION (ECHAN) CHANNEL)
+	<COND (<AND <NOT <MDBG?>> <ASSIGNED? NETOUT> <LEGAL? .NETOUT>>
+	       <SCROUT "IOC DURING NET DELIVERY: " .REASON>
+	       <DISMISS <CHTYPE (14 .REASON) FALSE> .NETOUT>)
+	      (ELSE T)>>
+
+<DEFINE ERRHND ("TUPLE" STUFF "ACT" ERRACT) 
+	#DECL ((STUFF) TUPLE (OUT-ACT ERRACT NETOUT) ACTIVATION
+	       (LERR\ !-INTERRUPTS) <SPECIAL FRAME>)
+	<COND (<AND <NOT <MDBG?>> <ASSIGNED? NETOUT> <LEGAL? .NETOUT>>
+	       <SCROUT "ERROR INSIDE NET DELIVERY AREA, ARGS -- " .STUFF>
+	       <SET LERR\ !-INTERRUPTS <CHTYPE .ERRACT FRAME>>
+	       <FRAMES 20>
+	       <FRATM>
+	       <BUFOUT .OUTCHAN>
+	       <DISMISS #FALSE (11) .NETOUT>)
+	      (ELSE T)>>
+
+\ 
+
+;"NET-DELIVERY -- NETWORK OUTPUT FOR MESSAGE
+"
+
+<DEFINE NET-DELIVERY (ADR
+		      "AUX" HST RCVR REPLY RES FORMAT FTP OCH DATA ICH TCH CH
+			    INC M S TMPFIL ICPCNT DA DF CD)
+   #DECL ((RCVR ADR TMPFIL) STRING (HST) FIX (ICH OCH TCH) CHANNEL
+	  (CH) <OR FALSE CHANNEL> (M) <OR FALSE VECTOR>
+	  (FORMAT FTP) <OR FALSE LIST> (REPLY) <OR FIX FALSE> (ICPCNT) FIX
+	  (DF) FLOAT (DA) LIST (DATA) ANY (S TMPFIL) STRING (INC) LIST (CD) FIX)
+   <SET RES
+    <PROG ()
+	  <SET HST <EXTRACT-HOST .ADR>>
+	  <SET RCVR <EXTRACT-RCVR .ADR>>
+	  <SET DATA <DRD .ADR <GETFIX "NET-DELIVERY-FORMAT">>>
+	  <COND (<NOT <OK? <GETFIX "NET-DELIVERY-FORMAT"> .DATA>>
+		 <RETURN #FALSE (17)>)>
+	  <SET FORMAT .DATA>
+	  <DWT <TNOW> .ADR <GETFIX "WHEN-DELIVERED">>	 ;"FOR OUTPUT FUNCTIONS"
+	  <SET TCH <TEMPFILE <DATUM "COMDMN-NET-TEMP">>>
+	  <COND (<NOT <SET RES <DO-OUTPUT .ADR .FORMAT .TCH>>>
+		 <RETURN #FALSE (17)>)>
+	  <TEMPNAME .TCH>
+	  <OR <SET CH <OPEN "READ" <SET TMPFIL <FILCHN .TCH>>>>
+	      <ERROR FILE-DISAPPEARED NET-DELIVERY>>
+	  <SET RES
+	       <PROG NETOUT ()
+		     #DECL ((NETOUT) <SPECIAL ACTIVATION>)
+		     <COND (<GASSIGNED? EHAN> <ON "ERROR" ,EHAN 4>)
+			   (ELSE
+			    <SETG EHAN
+				  <INTSET ERROR!-INTERRUPTS
+					  "ERROR"
+					  ,ERRHND
+					  4>>)>
+		     <COND (<GASSIGNED? IHAN> <ON "IOC" ,IHAN 4>)
+			   (ELSE
+			    <SETG IHAN
+				  <INTSET IOC!-INTERRUPTS "IOC" ,IOCHND 4>>)>
+		     <SET ICPCNT 3>
+		     <REPEAT ()	       ;"TRY A FEW TIMES AT 10 SECOND INTERVALS"
+			     <COND (<SET FTP <ICP .HST 3>> <RETURN>)
+				   (<NOT .FTP>
+				    <SET ICPCNT <- .ICPCNT 1>>
+				    <COND (<L? .ICPCNT 0> <RETURN>)
+					  (ELSE
+					   <SLEEP 5>
+					   <SCROUT "RETRYING ICP">)>)>>
+		     <COND (<NOT .FTP> <RETURN #FALSE (13)>)>
+		     <SCROUT "ICP SUCCESSFUL">
+		     <SLEEP 5>  ;"ALLOW FOR SETTLING??? -- GETS IOC IF WE DON'T"
+		     <SET OCH <2 .FTP>>
+		     <SET ICH <1 .FTP>>
+		     <COND (<SET M
+				 <MEMQ .HST <DATUM "COMDMN-LOGIN-PROCEDURES">>>
+			    <SET REPLY <APPLY <2 .M> .ICH .OCH .RCVR>>)
+			   (ELSE
+			    <PRINC "MAIL " .OCH>
+			    <PRINC .RCVR .OCH>
+			    <TERPRI .OCH>
+			    <SET REPLY <WAITRESP .ICH '(350)>>)>
+		     <COND (<AND <NOT .REPLY> <NOT <EMPTY? .REPLY>>>
+			    <COND (<AND <SET S <1 .REPLY>>
+					<SET CD
+					     <PARSE <STRING <1 .S>
+							    <2 .S>
+							    <3 .S>>>>
+					<G=? .CD 400>
+					<L=? .CD 599>>
+			      ;"REFUSED MAIL FOR SOME REASON -- CODE 400 0R 500"
+				   <RETURN <CHTYPE (19 <1 .REPLY>) FALSE>>)
+				  (ELSE <RETURN #FALSE (10)>)>)>
+		     <SCROUT "BEGINNING TRANSFER">
+		     <FILECOPY .CH .OCH>		        ;"TRANSFER FILE"
+		     <PRINC ,EOM .OCH>
+		     <COND (<NOT <WAITRESP .ICH '(256)>> #FALSE (18))
+			   (ELSE
+			    <SCROUT "TRANSFER COMPLETE AND ACKNOWLEDGED.">
+			    T)>>>
+	  <COND (.FTP <CLOSE <1 .FTP>> <CLOSE <2 .FTP>>)>
+	  <CLOSE .CH>
+	  <RENAME .TMPFIL>
+	  <COND (<NOT .RES>						 ;"LOST"
+		 <SCROUT "DELIVERY FAILURE, CODE: " !.RES>
+		 <DAPPMSG (<TNOW>) .ADR <GETFIX "DELIVERY-ATTEMPTS">>
+		 <DAPPMSG (.RES) .ADR <GETFIX "NET-DELIVERY-ERRORS">>
+		 <DWT <> .ADR <GETFIX "WHEN-DELIVERED">>)>
+ ;
+"IF WE HAVE TRIED TOO MANY TIMES, SIGNAL FAILURE,
+       ELSE, RESCHEDULE FOR LATER"
+	  <COND (<AND <NOT .RES> <MEMBER <1 .RES> ,NET-RETRY-CODES>>
+		     ;"SHOULD TRY LATER, UNLESS WE HAVE FAILED TOO MUCH ALREADY"
+		 <SET DA <DRDMSG .ADR <GETFIX "DELIVERY-ATTEMPTS">>>
+		 <COND (<LENGTH? .DA 2>
+			<SET INC ,NET-INC>
+			<SET DF <FLOAT <2 <2 .INC>>>>)	      ;"FIRST 2 RETRIES"
+		       (<LENGTH? .DA ,NET-RETRIES>	        ;"ALLOW N TRIES"
+			<SET DA <REST .DA <- <LENGTH .DA> 2>>>	   ;"GET LAST 2"
+			<SET DF <DTDIFF <2 .DA> <1 .DA>>>	    ;"LAST WAIT"
+			<SET DF <* .DF ,NET-FACTOR>>		 ;"FUDGE FACTOR"
+			<SET INC <LIST () (0 <FIX .DF>)>>)
+		       (ELSE
+			<SCROUT 
+"MESSAGE HAS FAILED TOO MANY TIMES -- FATAL ERROR">
+			<RETURN .RES>)>
+		 <SET DF <MIN .DF ,MAX-WAIT>>
+		 <SCROUT "DELIVERY FAILED, WILL TRY IN " .DF " MINUTES.">
+		 <PRCADD .ADR "DELIVERY" <DTADD <TNOW> .INC> 10 #FALSE ()>
+		 <RETURN T>)
+		(<NOT .RES>  ;"NOT OTHER HOST'S LOSSAGE -- FATAL ERROR PROBABLY"
+		 <RETURN .RES>)
+		(ELSE <SCROUT "DELIVERY SUCCESSFUL.">)>
+	  <COND-SIGNAL .ADR "DELIVERY">
+	  <RETURN T>>>
+   <OFF ,EHAN>
+   <OFF ,IHAN>
+   .RES>
+
+\ 
+
+;"READER OUTPUT FUNCTIONS"
+
+<SETG FNAM ["_MRDR_" "UPDATE" "DSK" ""]>
+
+<SETG FNAM1 ["_MRDR_" "UPDATX" "DSK" ""]>
+
+<SETG FNAM2 ["_UPDT_" "" "DSK" "LIBRDR"]>
+
+<DEFINE READER-OUTPUT (ADR
+		       "EXTRA" TT GVECT TEXT OSPECS NOTINRDR SPECS CH
+			       (FNAM ,FNAM) (FNAM1 ,FNAM1) (FNAM2 ,FNAM2))
+	#DECL ((ADR) STRING (GVECT) VECTOR (TEXT) STRING (OSPECS) ANY (TT) ANY
+	       (NOTINRDR) <OR WORD FALSE> (SPECS) LIST (CH) <OR CHANNEL FALSE>
+	       (FNAM FNAM1 FNAM2) VECTOR)
+	<PROG ()
+	      <SET OSPECS <DRD .ADR <GETFIX "READER-OUTPUT">>>
+	      <AND <NOT <TYPE? .OSPECS LIST>>		 ;"Bad format for specs"
+		   <RETURN #FALSE (4)>>
+	      <PUT .FNAM 4 .ADR>
+	      <PUT .FNAM1 4 .ADR>
+	      <PUT .FNAM2 2 .ADR>
+	      <SET SPECS <REST .OSPECS>>
+	      <SET NOTINRDR <HARD-LOCK <STRING "READER " .ADR>>>
+	      <AND .NOTINRDR <UNLOCK .NOTINRDR>>
+	      <SET GVECT <IVECTOR <+ <* <LENGTH .SPECS> 2> 4>>>
+	      <PUT .GVECT 1 "TEXT">
+	      <PUT .GVECT 3 "RID">
+	      <PUT .GVECT 4 <DRD .ADR <GETFIX "FROM">>>
+	      <REPEAT ((N 5) (RSPECS .SPECS) SPEC)      ;"Put summaries in file"
+		      #DECL ((N) FIX (RSPECS) LIST (SPEC) STRING)
+		      <AND <EMPTY? .RSPECS> <RETURN .GVECT>>
+		      <SET SPEC <1 .RSPECS>>
+		      <PUT .GVECT .N .SPEC>
+		      <PUT .GVECT <+ .N 1> <DRD .ADR .SPEC>>
+		      <SET RSPECS <REST .RSPECS>>
+		      <SET N <+ .N 2>>>
+	      <SET TEXT <DRD .ADR <GETFIX "TEXT">>>
+	      <PUT .GVECT
+		   2
+		   <COND (<AND <G? <LENGTH .TEXT> 150>
+			       <SET TT <TEXTUPD .ADR .TEXT>>>
+			  [.TT <LENGTH .TEXT>])
+			 (ELSE .TEXT)>>
+	      <COND (<SET CH <TEMPOPEN .FNAM>>
+		     <PRINT .GVECT .CH>
+		     <TEMPAPPEND .CH>
+		     <SET CH <OPEN "PRINT" !.FNAM2>>
+		     <CLOSE .CH>)
+		    (<OR <=? <1 .CH> "NON-EXISTENT DIRECTORY">
+			 <=? <1 .CH> "NON-EXISTENT USER NAME">>
+		     <RETURN T>)
+		    (ELSE <RETURN #FALSE (6)>)>
+	      T>>
+
+<DEFINE TEXTUPD (ADR TXT "EXTRA" C1 C2 S) 
+	#DECL ((C1 C2) <OR FALSE CHANNEL> (S) STRING)
+	<PROG ()
+	      <SET C1
+		   <OPEN "READ" <SET S <STRING .ADR ";_MRDR_ TXTUPD">>>>
+	      <OR <SET C2 <OPEN "PRINT" <STRING .ADR ";_TEMP_">>>
+		  <RETURN <>>>
+	      <AND .C1 <FILECOPY .C1 .C2> <CLOSE .C1>>
+	      <SET PT <17 .C2>>
+	      <PRINT .TXT .C2>
+	      <BUFOUT .C2>
+	      <RENAME .S>
+	      <RENAME .C2 .S>
+	      <CLOSE .C2>
+	      .PT>>
+
+<DEFINE READER-APPEND (ADR
+		       "EXTRA" TT GVECT TEXT OSPECS NOTINRDR SPECS CH
+			       (FNAM ,FNAM) (FNAM1 ,FNAM1) (FNAM2 ,FNAM2))
+	#DECL ((ADR) STRING (GVECT) VECTOR (TEXT) STRING (OSPECS) ANY (TT) ANY
+	       (NOTINRDR) <OR WORD FALSE> (SPECS) LIST (CH) <OR CHANNEL FALSE>
+	       (FNAM FNAM1 FNAM2) VECTOR)
+	<PROG ()
+	      <SET OSPECS <DRD .ADR <GETFIX "READER-OUTPUT">>>
+	      <AND <NOT <TYPE? .OSPECS LIST>>		 ;"Bad format for specs"
+		   <RETURN #FALSE (4)>>
+	      <PUT .FNAM 4 .ADR>
+	      <PUT .FNAM1 4 .ADR>
+	      <PUT .FNAM2 2 .ADR>
+	      <SET SPECS <REST .OSPECS>>
+	      <SET NOTINRDR <HARD-LOCK <STRING "READER " .ADR>>>
+	      <AND .NOTINRDR <UNLOCK .NOTINRDR>>
+	      <SET GVECT <IVECTOR <+ <* <LENGTH .SPECS> 2> 4>>>
+	      <PUT .GVECT 1 "TEXT">
+	      <PUT .GVECT 3 "RID">
+	      <PUT .GVECT 4 <DRD .ADR <GETFIX "FROM">>>
+	      <REPEAT ((N 5) (RSPECS .SPECS) SPEC)      ;"Put summaries in file"
+		      #DECL ((N) FIX (RSPECS) LIST (SPEC) STRING)
+		      <AND <EMPTY? .RSPECS> <RETURN .GVECT>>
+		      <SET SPEC <1 .RSPECS>>
+		      <PUT .GVECT .N .SPEC>
+		      <PUT .GVECT <+ .N 1> <DRD .ADR .SPEC>>
+		      <SET RSPECS <REST .RSPECS>>
+		      <SET N <+ .N 2>>>
+	      <SET TEXT <DRD .ADR <GETFIX "TEXT">>>
+	      <PUT .GVECT
+		   2
+		   <COND (<AND <G? <LENGTH .TEXT> 150>
+			       <SET TT <TEXTAPP .ADR .TEXT>>>
+			  [.TT <LENGTH .TEXT>])
+			 (ELSE .TEXT)>>
+	      <COND (<SET CH <TEMPOPEN-APPEND .FNAM>>
+		     <PRINT .GVECT .CH>
+		     <TEMPNAME .CH>
+		     <SET CH <OPEN "PRINT" !.FNAM2>>
+		     <CLOSE .CH>)
+		    (<OR <=? <1 .CH> "NON-EXISTENT DIRECTORY">
+			 <=? <1 .CH> "NON-EXISTENT USER NAME">>
+		     <RETURN T>)
+		    (ELSE <RETURN #FALSE (6)>)>
+	      T>>
+
+
+<DEFINE TEXTAPP (ADR TXT "EXTRA" CH S) 
+	#DECL ((CH) <OR FALSE CHANNEL> (S) STRING)
+	<COND (<SET CH <TEMPOPEN-APPEND <STRING .ADR ";_MRDR_ TXTUPD">>>
+	       <SET PT <17 .CH>>
+	       <PRINT .TXT .CH>
+	       <BUFOUT .CH>
+	       <TEMPNAME .CH>
+	       <* .PT 5>)>>
+
+\ 
+
+;"LOGIN-FILE OUTPUT"
+
+<SETG FTMP ["" "" "" ""]>
+
+;"FOR TEMP USE"
+
+<DEFINE LOGIN-MAIL (ADR "AUX" U CH DATA LST UK (FT ,FTMP) (HOW <>) LL) 
+   #DECL ((ADR) STRING (DATA) ANY (U) <LIST [REST <OR STRING VECTOR>]>
+	  (FMT) <OR STRING LIST> (FT) <VECTOR [4 STRING]> (LL) FIX
+	  (UK HOW) <OR STRING FALSE> (LST) LIST (CH) <OR FALSE CHANNEL>)
+   <PROG L-ACT ()
+	 <SET DATA <DRD .ADR <GETFIX "LOGIN-MAIL">>>
+	 <COND (<NOT <OK? <GETFIX "LOGIN-MAIL"> .DATA>>
+		<RETURN #FALSE (5)>)>
+	 <SET LST .DATA>
+	 <SET LL <LENGTH .LST>>
+	 <COND (<LENGTH? .LST 1> <RETURN T>)>
+	 <COND (<NOT <1 .LST>>					 ;"USE DEFAULTS"
+		<SET DATA <DRD .ADR <GETFIX "LOGIN-USERS">>>
+		<COND (<AND .DATA <OK? <GETFIX "LOGIN-USERS"> .DATA>>
+		       <SET U .DATA>)
+		      (.DATA <RETURN #FALSE (5)>)
+		      (<SET UK <KEYGET .ADR>> ;"NOTHING SUPPLIED"
+		       <SET U (.UK)>)
+		      (ELSE <RETURN #FALSE(5)>)>)
+	       (<TYPE? <1 .LST> LIST>			  ;"LIST OF USERS GIVEN"
+		<SET U <1 .LST>>)
+	       (ELSE				    ;"ONLY ONE GIVEN, AS STRING"
+		<SET U <LIST <1 .LST>>>)>
+	 <COND (<G=? .LL 2>
+		<COND (<NOT <2 .LST>>)
+		      (<AND <TYPE? <2 .LST> STRING>
+			    <MEMBER <2 .LST> '["INSERT" "APPEND"]>>
+		       <AND <=? <2 .LST> "INSERT"> <SET HOW "INSERT">>)
+		      (ELSE <RETURN #FALSE(5)>)>)>
+	 <COND (<G=? .LL 3> <SET FMT <3 .LST>>)>
+	 <COND (<==? .LL 4>
+		<SET DATA <DRD .ADR "RECEIVED-FROM-HOST">>
+		<COND (<N=? .DATA 70> <SET FMT <4 .LST>>)>)>
+	 <COND (<G? .LL 4> <RETURN #FALSE(5)>)>
+	 <COND (<TYPE? .FMT STRING>
+		<SET DATA <DATUM .FMT>>
+		<OR <TYPE? .DATA LIST> <RETURN #FALSE(5)>>
+		<SET FMT .DATA>)>
+	 <MAPF <>
+	       <FUNCTION (UU) 
+		       #DECL ((UU) <OR STRING VECTOR>)
+		       <COND (<SET CH
+				   <COND (<TYPE? .UU VECTOR> ;"FILE SPEC"
+					  <COND (.HOW <TEMPOPEN .UU>)
+						(ELSE <TEMPOPEN-APPEND .UU>)>)
+					 (<OR <MEMBER !": .UU> <MEMBER !"; .UU>>
+					  <COND (.HOW <TEMPOPEN .UU>)
+						(ELSE <TEMPOPEN-APPEND .UU>)>)
+					 (<AND <PUT .FT 1 .UU>
+					       <PUT .FT 2 "MAIL">
+					       <PUT .FT 3 "DSK">
+					       <PUT .FT 4 .UU>
+					       <COND (.HOW <TEMPOPEN .FT>)
+						     (ELSE <TEMPOPEN-APPEND .FT>)>>)
+					 (<AND <PUT .FT 3 "COM">
+					       <COND (.HOW <TEMPOPEN .FT>)
+						     (ELSE <TEMPOPEN-APPEND .FT>)>>)>>
+			      <SET DATA <DO-OUTPUT .ADR .FMT .CH>>
+			      <COND (.HOW
+				     <COND (.DATA <TEMPAPPEND .CH>)
+					   (ELSE
+					    <TEMPDELETE .CH>
+					    <RETURN #FALSE (5) .L-ACT>)>)
+				    (ELSE <TEMPNAME .CH>)>
+			      <COND (<NOT .DATA>
+				     <RETURN #FALSE (5) .L-ACT>)>)
+			     (ELSE <RETURN #FALSE (7) .L-ACT>)>>
+	       .U>
+	 <RETURN T>>>
+
+"OLD-STYLE-LOGIN-OUTPUT"
+
+<DEFINE LOGIN-OUTPUT (ADR "AUX" U CH DATA LST UK (FT ,FTMP)) 
+   #DECL ((ADR) STRING (DATA) ANY (U) <LIST [REST <OR STRING VECTOR>]>
+	  (FT) <VECTOR [4 STRING]>
+	  (UK) <OR STRING FALSE> (LST) LIST (CH) <OR FALSE CHANNEL>)
+   <PROG L-ACT ()
+	 <SET DATA <DRD .ADR <GETFIX "LOGIN-OUTPUT">>>
+	 <COND (<NOT <OK? <GETFIX "LOGIN-OUTPUT"> .DATA>>
+		<RETURN #FALSE (5)>)>
+	 <SET LST .DATA>
+	 <COND (<LENGTH? .LST 1> <RETURN T>)>
+	 <COND (<NOT <1 .LST>>					 ;"USE DEFAULTS"
+		<SET DATA <DRD .ADR <GETFIX "LOGIN-USERS">>>
+		<COND (<AND .DATA <OK? <GETFIX "LOGIN-USERS"> .DATA>>
+		       <SET U .DATA>)
+		      (.DATA <RETURN #FALSE (5)>)
+		      (<SET UK <KEYGET .ADR>> ;"NOTHING SUPPLIED"
+		       <SET U (.UK)>)
+		      (ELSE <RETURN #FALSE(5)>)>)
+	       (<TYPE? <1 .LST> LIST>			  ;"LIST OF USERS GIVEN"
+		<SET U <1 .LST>>)
+	       (ELSE				    ;"ONLY ONE GIVEN, AS STRING"
+		<SET U <LIST <1 .LST>>>)>
+	 <MAPF <>
+	       <FUNCTION (UU) 
+		       #DECL ((UU) <OR STRING VECTOR>)
+		       <COND (<SET CH
+				   <COND (<TYPE? .UU VECTOR> ;"FILE SPEC"
+					   <TEMPOPEN .UU>)
+					 (<OR <MEMBER !": .UU> <MEMBER !"; .UU>>
+					  <TEMPOPEN .UU>)
+					 (<AND <PUT .FT 1 .UU>
+					       <PUT .FT 2 "MAIL">
+					       <PUT .FT 3 "DSK">
+					       <PUT .FT 4 .UU>
+					       <TEMPOPEN .FT>>)
+					 (<AND <PUT .FT 3 "COM">
+					       <TEMPOPEN .FT>>)>>
+			      <SET DATA <DO-OUTPUT .ADR <REST .LST> .CH>>
+			      <COND (.DATA <TEMPAPPEND .CH>)
+				    (ELSE
+				     <TEMPDELETE .CH>
+				     <RETURN #FALSE (5) .L-ACT>)>)
+			     (ELSE <RETURN #FALSE (7) .L-ACT>)>>
+	       .U>
+	 <RETURN T>>>
+
+;"LOGIN-APPEND -- SAME AS LOGIN-OUTPUT, EXCEPT APPENDS TO FILE
+  INSTEAD OF INSERTING AT FRONT
+"
+
+<DEFINE LOGIN-APPEND (ADR "AUX" U CH DATA LST UK (FT ,FTMP)) 
+   #DECL ((ADR) STRING (DATA) ANY (U) <LIST [REST <OR STRING VECTOR>]>
+	  (FT) <VECTOR [4 STRING]>
+	  (UK) <OR STRING FALSE> (LST) LIST (CH) <OR FALSE CHANNEL>)
+   <PROG L-ACT ()
+	 <SET DATA <DRD .ADR <GETFIX "LOGIN-OUTPUT">>>
+	 <COND (<NOT <OK? <GETFIX "LOGIN-OUTPUT"> .DATA>>
+		<RETURN #FALSE (5)>)>
+	 <SET LST .DATA>
+	 <COND (<LENGTH? .LST 1> <RETURN T>)>
+	 <COND (<NOT <1 .LST>>					 ;"USE DEFAULTS"
+		<SET DATA <DRD .ADR <GETFIX "LOGIN-USERS">>>
+		<COND (<AND .DATA <OK? <GETFIX "LOGIN-USERS"> .DATA>>
+		       <SET U .DATA>)
+		      (.DATA <RETURN #FALSE (5)>)
+		      (<SET UK <KEYGET .ADR>> ;"NOTHING SUPPLIED"
+		       <SET U (.UK)>)
+		      (ELSE <RETURN #FALSE(5)>)>)
+	       (<TYPE? <1 .LST> LIST>			  ;"LIST OF USERS GIVEN"
+		<SET U <1 .LST>>)
+	       (ELSE				    ;"ONLY ONE GIVEN, AS STRING"
+		<SET U <LIST <1 .LST>>>)>
+	 <MAPF <>
+	       <FUNCTION (UU) 
+		       #DECL ((UU) <OR STRING VECTOR>)
+		       <COND (<SET CH
+				   <COND (<TYPE? .UU VECTOR> ;"FILE SPEC"
+					   <TEMPOPEN-APPEND .UU>)
+					 (<OR <MEMBER !": .UU> <MEMBER !"; .UU>>
+					  <TEMPOPEN-APPEND .UU>)
+					 (<AND <PUT .FT 1 .UU>
+					       <PUT .FT 2 "MAIL">
+					       <PUT .FT 3 "DSK">
+					       <PUT .FT 4 .UU>
+					       <TEMPOPEN-APPEND .FT>>)
+					 (<AND <PUT .FT 3 "COM">
+					       <TEMPOPEN-APPEND .FT>>)>>
+			      <SET DATA <DO-OUTPUT .ADR <REST .LST> .CH>>
+			      <TEMPNAME .CH>
+			      <COND (<NOT .DATA>
+				     <RETURN #FALSE (5) .L-ACT>)>)
+			     (ELSE <RETURN #FALSE (7) .L-ACT>)>>
+	       .U>
+	 <RETURN T>>>
+
+\ 
+
+;"ONLINE OUTPUT"
+
+<DEFINE ONLINE-OUTPUT (ADR "AUX" U CH DATA LST) 
+	#DECL ((ADR) STRING (DATA) ANY (LST) LIST
+	       (U) <LIST [REST <OR STRING VECTOR>]> (CH) <OR FALSE CHANNEL>)
+	<PROG O-ACT ()
+	      <SET DATA <DRD .ADR <GETFIX "ONLINE-OUTPUT">>>
+	      <COND (<NOT <OK? <GETFIX "ONLINE-OUTPUT"> .DATA>>
+		     <RETURN #FALSE (9)>)>
+	      <SET LST .DATA>
+	      <COND (<LENGTH? .LST 1> <RETURN T>)>
+	      <COND (<NOT <1 .LST>>				 ;"USE DEFAULTS"
+		     <SET DATA <DRD .ADR <GETFIX "ONLINE-USERS">>>
+		     <COND (<AND .DATA <OK? <GETFIX "ONLINE-USERS"> .DATA>>
+			    <SET U .DATA>)
+			   (.DATA <RETURN #FALSE (9)>)
+			   (ELSE <SET U (.ADR)>)>)
+		    (ELSE			    ;"'FILE' LOCATION SPECIFIED"
+		     <SET U
+			  <COND (<TYPE? <1 .LST> LIST> <1 .LST>)
+				(ELSE (<1 .LST>))>>)>
+	      <MAPF <>
+		    <FUNCTION (UU) 
+			    #DECL ((UU) <OR STRING VECTOR>)
+			    <COND (<SET CH
+					<COND (<TYPE? .UU VECTOR>
+					       <OPEN "PRINT" !.UU>)
+					      (<OR <MEMBER !": .UU>
+						   <MEMBER !"; .UU>>
+					       <OPEN "PRINT" .UU>)
+					      (ELSE
+					       <OPEN "PRINT"
+						     .UU
+						     "HACTRN"
+						     "CLI"
+						     .UU>)>>
+				   <SET DATA <DO-OUTPUT .ADR <REST .LST> .CH>>
+				   <CLOSE .CH>
+				   <OR .DATA <RETURN #FALSE (9) .O-ACT>>)>>
+		    .U>
+	      <RETURN T>>>
+
+\ 
+
+;"DELIVERY ERROR HANDLER"
+
+<DEFINE DLV-ERR (PRC ERR ADR "OPTIONAL" (NH? T) "AUX" TX TXS ECOD TO CC KY) 
+   #DECL ((NH?) <OR FALSE 'T> (ECOD) FIX (TX TXS CC TO KY) <LIST [REST STRING]>
+	  (VALUE) <LIST [4 <LIST [REST STRING]>]> (PRC ADR) STRING
+	  (ERR) <FALSE FIX>)
+   <SET TX <SET TXS ("")>>
+   <SET KY '("DELIVERY" "ERROR" "FAILURE")>
+   <SET CC ()>
+   <SET ECOD <1 .ERR>>
+   <SET TO <ERR-TO .ADR>>
+   <COND
+    (.NH?						      ;"TOP-LEVEL ENTRY"
+     <COND
+      (<MEMQ <1 .ERR> ,NET-RETRY-CODES>		    ;"SOFT ERROR HAS SOLIDIFIED"
+       <ADDBACK
+	TXS
+	("Delivery has been attempted repeatedly for"
+	 <S-ADDR .ADR>
+	 "and failed.  A summary of the attempts follows:"
+	 ,CR)>
+       <ADDBACK TXS <DLV-HISTORY .ADR>>
+       <SET ECOD 0>						        ;"FLAG")
+      (ELSE
+       <ADDBACK TXS
+		("Delivery to"
+		 <S-ADDR .ADR>
+		 "failed because")>)>)>
+   <COND
+    (<==? .ECOD 0> <ADDBACK TXS <DLV-HISTORY .ADR>>)
+    (<==? .ECOD 1>
+     <ADDBACK TXS
+	      ("a user-specified function"
+	       "returned a failure value of"
+	       <UNPARSE <2 .ERR>>)>
+     <SET CC (,CSM !.CC)>)
+    (<==? .ECOD 2>
+     <ADDBACK TXS
+	      ("the format obtained from the DELIVERY-SPECIFICATIONS field"
+	       "not in the correct format.")>
+     <COND (<LENGTH? .ERR 1>)
+	   (ELSE					       ;"LOSER REPORTED"
+	    <ADDBACK TXS
+		     ("The unusable specification was: " <UNPARSE <2 .ERR>>)>)>)
+    (<==? .ECOD 4>
+     <ADDBACK TXS
+	      ("the specifications of the format to use"
+	       "for reader-output were ill-formed.")>)
+    (<==? .ECOD 5>
+     <ADDBACK TXS
+	      ("the specifications of the format to use"
+	       "for login-output were ill-formed.")>)
+    (<==? .ECOD 6>
+     <ADDBACK TXS
+	      ("the reader-output file could not be opened.")>)
+    (<==? .ECOD 7>
+     <ADDBACK TXS
+	      ("the login-output file could not be opened.")>)
+    (<==? .ECOD 9>
+     <ADDBACK TXS
+	      ("the specifications of the format to use"
+	       "for online-output were ill-formed.")>)
+    (<==? .ECOD 10>
+     <ADDBACK TXS
+	      ("the foreign host refused the message."
+	       "I.E., the FTP connection was made, but no"
+	       "350 reply was received on attempting"
+	       "to transfer the mail.")>)
+    (<==? .ECOD 11>
+     <ADDBACK TXS
+	      ("a MUDDLE error occurred during the network"
+	       "transfer procedure.  This indicates a bug"
+	       "in the demon code, and has been reported.")>)
+    (<==? .ECOD 12>
+     <ADDBACK TXS
+	      ("it was applied to the author area of the message.")>)
+    (<==? .ECOD 13>
+     <ADDBACK TXS
+	      ("the ICP attempt was unsuccessful.")>)
+    (<==? .ECOD 14>
+     <ADDBACK TXS
+	      ("an I/O channel error occurred"
+	       "during the network transfer.  Generally"
+	       "this occurs when the foreign host or net crashes."
+	       "The reason given was: "
+	       <2 .ERR>)>)
+    (<==? .ECOD 17>
+     <ADDBACK TXS
+	      ("the specifications of the format to use"
+	       "for the message transfer were ill-formed.")>)
+    (<==? .ECOD 18>
+     <ADDBACK TXS
+	      ("the transfer was not acknowledged by the foreign"
+	       "site.  I.E., the message was transferred,"
+	       "but no 256 reply was received.")>)
+    (<==? .ECOD 19>
+     <ADDBACK
+      TXS
+      ("the foreign site refused the message."
+       !<COND (<NOT <LENGTH? .ERR 1>>
+	       ("The FTP error reply was:" <2 .ERR>))
+	      (ELSE
+	       ("The probable cause is that the specified user"
+		"does not have a mailbox at the site."))>)>)
+    (ELSE <ADDBACK TXS (!,UNEXPL <UNPARSE .ECOD>)>)>
+   (<REST .TX> .KY .TO .CC)>
+
+;"DLV-HISTORY -- forms a history of delivery attempts
+"
+
+<DEFINE DLV-HISTORY (ADR "AUX" DA DE TX TXS) 
+	#DECL ((ADR) STRING (DA DE) <OR FALSE LIST>
+	       (VALUE TXS TX) <LIST [REST STRING]>)
+	<PROG ()
+	      <SET DA <DRDMSG .ADR <GETFIX "DELIVERY-ATTEMPTS">>>
+	      <SET DE <DRDMSG .ADR <GETFIX "NET-DELIVERY-ERRORS">>>
+	      <COND (<OR <NOT .DA> <NOT .DE> <EMPTY? .DA> <EMPTY? .DE>>
+		     <RETURN ("No history available, sorry.")>)>
+	      <SET TX <SET TXS ("")>>
+	      <MAPF <>
+		    <FUNCTION (DT CD) 
+			    #DECL ((DT) LIST (CD) <FALSE FIX>)
+			    <ADDBACK TXS
+				     (,CR "	Attempt of " <S-TIME .DT> " -- ")>
+			    <ADDBACK TXS <1 <DLV-ERR "DELIVERY" .CD .ADR <>>>>>
+		    .DA
+		    .DE>
+	      <REST .TX>>>
+
+\ 
+
+<DEFINE INTSET (ATM NM FN "OPTIONAL" (PR 8) "AUX" HDR) 
+	#DECL ((ATM) ATOM (FN) APPLICABLE (HDR) <OR FALSE IHEADER> (NM) STRING
+	       (PR) FIX (VALUE) HANDLER)
+	<COND (<SET HDR <GET .ATM INTERRUPT>>	      ;"ALREADY ON, ADD HANDLER"
+	       <HANDLER .HDR .FN>)
+	      (ELSE <ON .NM .FN .PR>)>>
+
+<DEFMAC FILCHN ('CH) 
+	<FORM FILSTR
+	      <FORM RNAME1 .CH>
+	      <FORM RNAME2 .CH>
+	      <FORM RDEVICE .CH>
+	      <FORM RDIRECTORY .CH>>>
+
+<ENDPACKAGE>

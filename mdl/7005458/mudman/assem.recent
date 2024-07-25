@@ -1,0 +1,113 @@
+TAA 6/27/78
+
+The assembler exists, in essentially an identical form, as ASSEM on the
+tops-20.
+
+JSYS definitions are now preloaded, including the tops-20 jsys's.  For
+the sake of compatibility, there is a "JSYS" package, containing no
+atoms, loaded also.
+
+DSAVAC provides an interface to the SAVACS uuo of muddle, which may be
+useful for writing interruptable loops.  It takes a tuple, which
+specifies the storage type of the object in each ac:
+The atom TEMPLATE indicates that the AC contains a template pointer; it
+must be followed by a specification of an AC containing the type.
+Any other valid type may be specified by putting the type name in the
+appropriate slot.
+If the type of the pointer in the AC is contained in some other AC, the
+name of the AC containing the type code should be placed in the slot for
+the AC containing the pointer.
+0 indicates that the AC does not contain a pointer.
+Thus, suppose A contains a UVECTOR, and B contains the type of C.
+<DSAVAC 0 UVECTOR 0 B> will generate a suitable call to SAVACS.
+The general theory is that DSAVAC is half of an INTGO:  
+<SKIPGE INTFLG>
+ <DSAVAC ...>
+will, if an interrupt is pending, save the ac's such that they will be
+garbage-collected correctly, and handle the interrupt.  The ac's will be
+restored on return from the interrupt.
+
+IFOPSYS macro:
+This is designed to make the writing of system-dependent code more
+convenient.  It is called with a collection of lists or atoms, as
+follows:
+<IFOPSYS (ITS <*CALL WINNAGE> <*LOSE *1000*>)
+	 TENEX
+	 (TOPS-20 <SIN>)>
+If the atom ASSEMBLY-OPSYS!- is not GASSIGNED? (it is GUNASSIGNED at the
+beginning of every assembly), you will be asked which system the
+assembly is for.  If the answer is TENEX, then the above call will
+assemble to nothing.  Note that you need not include, after the first
+call to IFOPSYS, systems for which no code is being generated at a
+particular point; if there is code being generated only for ITS at some
+point, you can say
+<IFOPSYS (ITS <FOO><BAR>)>, and no code will be generated if
+ASSEMBLY-OPSYS is not ITS.
+Note that you may use any atoms you choose for system names.
+
+New ACs:
+The assembler now knows about ACs F, G, and H.  These may not interact
+correctly with SAVACS.
+
+	- - - CHANGES TO ASSEMBLER - - -
+
+The assembler has been modified so that when using
+FILE-ASSEMBLE items are read, evaled, and copied to the
+output file until a TITLE statement is encountered,
+whereupon assembly proceeds as previously.
+
+There is a new END statement of the form: <END>
+When this statement is encountered FILE-ASSEMBLE
+again goes into read, eval, copy mode.
+
+Note that it is not necessary to have <END> statements
+between various functions, a <TITLE -name-> statement
+generates an effective <END>
+
+
+	- - - CHANGES TO :ASSEM - - -
+
+:ASSEM now looks at the JCL line.
+
+
+If the line is of the form
+
+:ASSEM -
+
+where there is JCL and the first character is not !"" (double quote)
+then the program goes into asking for parameter mode (similar to COMBAT)
+
+
+If the line is of the form
+
+:ASSEM muddle-string optional-muddle-string optional-flags
+
+the program assembles the file indicated by the first string
+into the file indicated by the second string under the control
+of the various flags given.
+
+Flags:
+
+N or NBIN	-- causes output in quick form, this is the default
+B or BINARY 	-- causes output in slow form
+G or GLUE	-- causes assembler to output glue information
+S or SYMBOL	-- causes assembler to output symbol table
+Q or QUIET	-- causes assembler not to print progress through functions
+L or LIST	-- causes assembler to list to console
+
+A special feature of the NBIN and BINARY flags only is that they are
+searched for in the file names as well, so if the second name of the
+output file is BINARY, then the file will be printed in slow format.
+
+Examples:
+
+:ASSEM "FOO" B GLUE QUIET
+
+assembles FOO >, writes out FOO BINARY with GLUEing information
+and doesn't give progress reports
+
+:ASSEM "BAR <" "BLECH" S
+
+assembles BAR <, writes out BLECH NBIN with SYMBOLS
+
+

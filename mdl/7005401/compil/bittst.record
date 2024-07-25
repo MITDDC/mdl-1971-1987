@@ -1,0 +1,25 @@
+Compilation record for: DSK:COMPIL;BITTST UCR012
+Output file:  DSK:COMPIL;BITTST NBIN
+
+It is now Friday, 30 Jul 1982 14:09 EDT
+
+File loaded.
+Precompilation loaded.
+Functions ordered.
+COMPILING BIT-TEST-GEN
+===== Computed decl of variable:  FLS is:  <OR ATOM FALSE>
+===== Computed decl of variable:  IMMEDIATE is:  <OR ATOM FALSE>
+===== Computed decl of variable:  REG2 is:  DATUM
+===== Computed decl of variable:  ODIR is:  <OR ATOM FALSE>
+===== Not open compiled because type is:  <OR <PRIMTYPE LIST> <PRIMTYPE VECTOR>>
+ **** <NTH <2 .REG> 2> **** 
+Peephole  0% 352/350
+Job done in:  1:38 / 2:32
+ 
+
+Total time used is
+	1 min. 44 sec. CPU time,
+	50 sec. garbage collector CPU time,
+	2 min. 44 sec. real time.
+CPU utilization is 63.414634%.
+Number of garbage collects = 7

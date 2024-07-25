@@ -1,0 +1,36 @@
+	<TITLE HASHER>
+	<DECLARE (<OR <PRIMTYPE ATOM> <PRIMTYPE STRING>>)>
+	<DPUSH TP* (AB)>
+	<PUSHJ P* INHASH>
+	<JRST FINIS>
+
+<INTERNAL-ENTRY INHASH 1>
+	
+	<SUBM M* (P)>
+	<GETYP A* -1(TP)>
+	<CAIE A* TSTRING>
+	<JRST ATOME>
+	
+CHSTR	<HRRZ B* -1(TP)>	;"get count"
+	<MOVE A* (TP)>	;"get ptr to string"
+	<MOVE C* [3.1457]>
+	<JUMPE	B* FIN>
+CHLP	<ILDB D* A>	;"get next"
+	<TSC C* D>
+	<ROT C* (D)>
+	<SOJE B* FIN>
+	<JRST CHLP>
+
+ATOME	<MOVE A* (TP)>
+	<ADD A* [<3(3)>]>
+	<MOVE C* [3.1457]>
+ATLP	<TSC C* (A)>
+	<ROT C* 1>
+	<AOBJN A* ATLP>
+
+FIN	<MOVSI A* TWORD>
+	<MOVE B* C>
+	<SUB TP* [<2 (2)>]>
+	<JRST MPOPJ>
+
+

@@ -1,0 +1,376 @@
+<PACKAGE "R-FOLD">
+
+"This package contains the folder-related parts of the READER"
+
+<ENTRY ADD-TO-FOLDER		;"Reader Add command"
+       REMOVE-FROM-FOLDER	;"Reader Remove command"
+       CREATE-FOLDER		;"Reader Create command"
+       DESTROY-FOLDER		;"Reader Destroy command"
+       LIST-FOLDERS		;"Reader Folders command"
+       WHICH-FOLDERS		;"Reader Where command"
+       MESSAGE-FOLDERS		;"prints which folders a given message is in">
+
+<ENTRY READ-FOLDER		;"WHICH uses this"
+       READ-FOLDER-NAME		;"For functions which want to select a folder">
+
+<USE "R-DEFS" "R-UTIL" "R-IO" "R-WHICH">
+
+<USE "MADMAN" "M-DEFS" "SYMBOLS" "MAIL">
+
+<SETG FOLDER-INV <INVERSION "Folder" '[2 0]>>
+<GDECL (FOLDER-INV) INVERSION>
+
+\
+
+"Folder-related READER commands"
+
+"ADD-TO-FOLDER -- add messages to a folder"
+
+<DEFINE ADD-TO-FOLDER (N "AUX" F FB O B)
+	#DECL ((N F) <OR INVERSION FALSE> (FB) VECTOR (O) FIX (B) WORD) 
+	<COND (.N
+	       <COND (<NOT <SET F <READ-FOLDER-NAME "to folder ">>>)
+		     (ELSE
+		      <SET FB <I-KEY .F>>
+		      <SET O <+ 1 <1 .FB>>>
+		      <SET B <2 .FB>>
+		      <ITERATE (M .N)
+			       <ONBITS .M .B .O>
+			       <OFFBITS .M ,R-ACTION>>)>)>>
+
+"REMOVE-FROM-FOLDER -- flush messages from a folder"
+
+<DEFINE REMOVE-FROM-FOLDER (N "AUX" F FB O B)
+	#DECL ((N F) <OR INVERSION FALSE> (FB) VECTOR (O) FIX (B) WORD)
+	<COND (.N
+	       <COND (<NOT <SET F <READ-FOLDER-NAME "from folder ">>>)
+		     (ELSE
+		      <SET FB <I-KEY .F>>
+		      <SET O <+ 1 <1 .FB>>>
+		      <SET B <2 .FB>>
+		      <ITERATE (M .N) <OFFBITS .M .B .O>>)>)>>
+
+\
+
+"CREATE-FOLDER -- read name of new folder and create it"
+
+<DEFINE CREATE-FOLDER ("AUX" FN F (OUTCHAN .OUTCHAN))
+	#DECL ((FN) STRING (F) <OR FALSE INVERSION>
+	       (OUTCHAN) CHANNEL)
+	<COND (<NOT ,READER-ASYLUM>
+	       <CRLF>
+	       <PRINC "[Folders require a Reader-Asylum]">
+	       <>)
+	      (<EMPTY? <SET FN <GET-TEMP "folder named" <>>>>
+	       <>)
+	      (ELSE
+	       <COND (<SET F <CI-MEMBER .FN ,FOLDER-SYMBOLS>>
+		      <PRINC "Folder '">
+		      <PRINC .FN>
+		      <PRINC "' already exists.">)
+		     (ELSE
+		      <SET F <ADD-FOLDER-NAME .FN>>
+		      <PRINC "Folder '">
+		      <PRINC .FN>
+		      <PRINC "' created.">)>
+	       <CRLF>
+	       .F)>>
+
+"Case-independent MEMBER"
+
+<DEFINE CI-MEMBER (STR VSTR)
+	#DECL ((STR) STRING (VSTR) <VECTOR [REST STRING]>)
+	<MAPR <>
+	      <FUNCTION (VSTR)
+		   #DECL ((VSTR) <VECTOR [REST STRING]>)
+		   <COND (<CI=? .STR <1 .VSTR>>
+			  <MAPLEAVE .VSTR>)>>
+	      .VSTR>>
+
+"Like =?, but ignores case"
+
+<DEFINE CI=? SM (STR1 STR2)
+  #DECL ((STR1 STR2) STRING)
+  <COND (<==? <LENGTH .STR1> <LENGTH .STR2>>
+	 <MAPF <>
+	   <FUNCTION (C1 C2)
+	     #DECL ((C1 C2) CHARACTER)
+	     <COND (<CHAR=? .C1 .C2>)
+		   (<RETURN <> .SM>)>>
+	   .STR1 .STR2>
+	 T)>>
+
+"Case-independent character comparison"
+
+<DEFINE CHAR=? (C1 C2)
+  #DECL ((C1 C2) CHARACTER)
+  <COND (<N==? .C1 .C2>
+	 <COND (<AND <G=? <ASCII .C1> <ASCII !\a>>
+		     <L=? <ASCII .C1> <ASCII !\z>>>
+		<SET C1 <ASCII <- <ASCII .C1> 32>>>)>
+	 <COND (<AND <G=? <ASCII .C2> <ASCII !\a>>
+		     <L=? <ASCII .C2> <ASCII !\z>>>
+		 <SET C2 <ASCII <- <ASCII .C2> 32>>>)>
+	 <==? .C1 .C2>)
+	(T)>>
+
+"DESTROY-FOLDER -- destroy a folder"
+
+<DEFINE DESTROY-FOLDER ("AUX" I FN FB O B (OUTCHAN .OUTCHAN))
+	#DECL ((I) <OR FALSE INVERSION> (FN) STRING (OUTCHAN) CHANNEL
+	       (FB) VECTOR (O) FIX (B) WORD)
+	<COND (<SET I <READ-FOLDER-NAME "folder named ">>
+	       <SET FB <I-KEY .I>>
+	       <SET O <+ 1 <1 .FB>>>
+	       <SET B <2 .FB>>
+	       <ITERATE (M .I) <OFFBITS .M .B .O>>
+	       <SET FN <I-NAME .I>>
+	       <COND (<REMOVE-FOLDER-NAME .FN>
+		      <CRLF>
+		      <PRINC "Folder '">
+		      <PRINC .FN>
+		      <PRINC "' destroyed.">
+		      <CRLF>)>)>>
+
+\
+
+"LIST-FOLDERS -- give names of folders"
+
+<DEFINE LIST-FOLDERS ("AUX" (OUTCHAN .OUTCHAN) (MT ,MESSAGE-TABLE)
+		      (FT ,FOLDER-TABLE) FU)
+	#DECL ((FT) VECTOR (OUTCHAN) CHANNEL
+	       (FU) <VECTOR [REST FIX]> (MT) MTABLE)
+	<COND (,READER-ASYLUM
+	       <COND (<NOT <EMPTY? .FT>>
+		      <SET FU
+			   <MAPF ,VECTOR
+				 <FUNCTION (S)
+				      #DECL ((S) <OR STRING FIX>)
+				      <COND (<TYPE? .S STRING>
+					     <MAPRET 0>)
+					    (ELSE <MAPRET .S>)>>
+				 .FT>>
+		      <REPEAT ((UV <REST .MT <R-HEADER .MT>>)
+			       (L <R-TUPLE .MT>))
+			      #DECL ((UV) <UVECTOR [REST FIX]>
+				     (L) FIX)
+			      <COND (<OR <0? <1 .UV>> <EMPTY? .UV>>
+				     <RETURN>)>
+			      <REPEAT ((FU .FU))
+				      #DECL ((FU) <VECTOR [REST FIX]>)
+				      <COND (<EMPTY? .FU> <RETURN>)
+					    (<ON? .UV <2 .FU> 3>
+					     <PUT .FU 1 <+ <1 .FU> 1>>)>
+				      <SET FU <REST .FU 2>>>
+			      <SET UV <REST .UV .L>>>
+		      <REPEAT ()
+			      <COND (<EMPTY? .FT> <RETURN>)>
+			      <CRLF>
+			      <PRINC !\ >
+			      <PRINC <1 .FT>>
+			      <INDENT-TO 20>
+			      <PRINC !\ >
+			      <CPRINC <1 .FU>>
+			      <SET FT <REST .FT 2>>
+			      <SET FU <REST .FU 2>>>
+		      <CRLF>)
+		     (ELSE <CRLF> <PRINC "[No folders]">)>)
+	      (ELSE <CRLF> <PRINC "[Folders require a Reader-Asylum]">)>>
+
+\
+
+"WHICH-FOLDERS -- print names of folders messages are in"
+
+<DEFINE WHICH-FOLDERS ("AUX" N (FT ,FOLDER-TABLE) (OUTCHAN .OUTCHAN))
+	#DECL ((N) <OR INVERSION FALSE> (OUTCHAN) CHANNEL
+	       (FT) VECTOR)
+	<COND (<OR <NOT ,READER-ASYLUM> <EMPTY? .FT>>
+	       <CRLF>
+	       <PRINC "[No folders]">)
+	      (<AND <SET N <WHICH>> .FT>
+	       <ITERATE (M .N)
+			<CRLF>
+			<PNUM <MSG .M>>
+			<MESSAGE-FOLDERS .M>>)>>
+
+<DEFINE MESSAGE-FOLDERS (M "OPTIONAL" (OUTCHAN .OUTCHAN)
+			 "AUX" (FT ,FOLDER-TABLE) (OUTCHAN .OUTCHAN) (1ST? T))
+	#DECL ((M) <UVECTOR [REST FIX]> (FT) <VECTOR [REST STRING FIX]>
+	       (1ST?) <OR ATOM FALSE> (OUTCHAN) CHANNEL)
+	<REPEAT ()
+		<COND (<EMPTY? .FT> <RETURN>)
+		      (<ON? .M <2 .FT> 3>
+		       <COND (.1ST? <SET 1ST? <>> <PRINC " in ">)
+			     (ELSE <PRINC ", ">)>
+		       <PRINC <1 .FT>>)>
+		<SET FT <REST .FT 2>>>>
+
+\
+
+"READ-FOLDER-NAME -- read a folder name (must already exist)"
+
+<DEFINE READ-FOLDER-NAME (PRMPT "OPTIONAL" (COMPLAIN? <>)
+			  "AUX" FT SYM (OUTCHAN .OUTCHAN)
+			  (FI <VECTOR !,FOLDER-INV>) FN)
+	#DECL ((FT) <OR FALSE <VECTOR [REST STRING]>> (PRMPT FN) STRING
+	       (FI) INVERSION (OUTCHAN) CHANNEL (SYM) <OR FIX FALSE>
+	       (COMPLAIN?) <OR ATOM FALSE>)
+	<COND (<NOT ,READER-ASYLUM>
+	       <COND (.COMPLAIN?
+		      <CRLF>
+		      <PRINC "[Folders require a Reader-Asylum]">)>
+	       <>)
+	      (<NOT <EMPTY? <SET FT ,FOLDER-SYMBOLS>>>
+	       <COND (<SET SYM
+			   <SYMBOL <>
+				   .PRMPT
+				   ""
+				   "Type the name of the folder to use."
+				   .FT>>
+		      <PUT .FI ,I-NAME <SET FN <NTH .FT .SYM>>>
+		      <PUT .FI
+			   ,I-KEY
+			   <VECTOR 2
+				   <CHTYPE <2 <MEMBER .FN ,FOLDER-TABLE>>
+					   WORD>>>
+		      <PUT .FI ,I-TUPLE <>>)>)
+	      (ELSE <AND .COMPLAIN? <PRINC "[No folders]">> <>)>>
+
+"READ-FOLDER -- given offset in folder symbol table, set up an inversion
+for that folder."
+
+<DEFINE READ-FOLDER (N "AUX" (FT ,FOLDER-TABLE) (FI <VECTOR !,FOLDER-INV>))
+	#DECL ((N) FIX (FT) <VECTOR [REST STRING FIX]> (FI) VECTOR)
+	<SET N <* .N 2>>
+	<PUT .FI ,I-NAME <NTH .FT <- .N 1>>>
+	<PUT .FI ,I-KEY <VECTOR 2 <CHTYPE <NTH .FT .N> WORD>>>
+	<PUT .FI ,I-TUPLE <>>
+	.FI>
+
+\
+
+"ADD-FOLDER-NAME -- add a folder name to the table of same"
+
+<DEFINE ADD-FOLDER-NAME (FN "AUX" FT (NFT <>) (SS ,SCRATCH-SPACE) RT L)
+	#DECL ((FN) STRING (FT NFT) <OR FALSE VECTOR>
+	       (L) FIX (RT) <VECTOR [REST STRING FIX]> (SS) SPACE)
+	<COND (<SET FT <RDATA ,M-FOLDERS>>
+	       <SET RT .FT>
+	       <COND (<REPEAT (C)
+			      #DECL ((C) FIX)
+			      <COND (<EMPTY? .RT> <RETURN>)
+				    (<0? <SET C <STRALPH <1 .RT> .FN>>>
+				     <RETURN <>>)
+				    (<1? .C> <RETURN>)
+				    (ELSE <SET RT <REST .RT 2>>)>>
+		      <COND (<SET NFT <AIVECTOR .SS <+ 2 <LENGTH .FT>>>>
+			     <SET L <- <LENGTH .FT> <LENGTH .RT>>>
+			     <COND (<N==? .FT .RT>
+				    <SUBSTRUC .FT 0 .L .NFT>)>
+			     <PUT .NFT <SET L <+ .L 1>> <ASTRING .SS .FN>>
+			     <PUT .NFT <SET L <+ .L 1>> <FOLDER-BIT>>
+			     <COND (<NOT <EMPTY? .RT>>
+				    <SUBSTRUC .RT 0 <LENGTH .RT>
+					      <REST .NFT .L>>)>
+			     <ARELEASE .SS .FT>
+			     .NFT)
+			    (ELSE <ERROR>)>)>)
+	      (<SET NFT <AVECTOR .SS <ASTRING .SS .FN> <FOLDER-BIT>>>)
+	      (ELSE <ERROR>)>
+	<COND (.NFT
+	       <FTCHECK .NFT>
+	       <RWRITE ,M-FOLDERS .SS .NFT>
+	       <GET-FOLDER-TABLE .NFT>)>>
+
+"REMOVE-FOLDER-NAME -- remove a folder name from the table"
+
+<DEFINE REMOVE-FOLDER-NAME (FN "AUX" FT NFT (L 0) MFT (SS ,SCRATCH-SPACE))
+	#DECL ((FN) STRING (FT MFT) <OR FALSE VECTOR> (NFT) VECTOR
+	       (L) FIX (SS) SPACE)
+	<COND (<SET FT <RDATA ,M-FOLDERS>>
+	       <COND (<SET MFT <MEMBER .FN .FT>>
+		      <FOLDER-BIT <2 .MFT>>
+		      <SET NFT <AIVECTOR .SS <- <LENGTH .FT> 2>>>
+		      <ARELEASE .SS <1 .MFT>>
+		      <OR <==? .FT .MFT>
+			  <SUBSTRUC .FT 0
+				    <SET L <- <LENGTH .FT> <LENGTH .MFT>>>
+				    .NFT>>
+		      <OR <EMPTY? <SET MFT <REST .MFT 2>>>
+			  <SUBSTRUC .MFT 0 <LENGTH .MFT> <REST .NFT .L>>>
+		      <ARELEASE .SS .FT>
+		      <FTCHECK .NFT>
+		      <RWRITE ,M-FOLDERS .SS .NFT>
+		      <GET-FOLDER-TABLE .NFT>)>)>>
+
+<DEFINE FTCHECK (FT "AUX" (RF <R-FOLDERS ,MESSAGE-TABLE>))
+	#DECL ((FT) VECTOR (RF) FIX)
+	<MAPR <>
+	      <FUNCTION (F)
+		   #DECL ((F) VECTOR)
+		   <COND (<OR <MEMBER <1 .F> <REST .F>>
+			      <AND <TYPE? <1 .F> FIX>
+				   <0? <CHTYPE <ANDB <1 .F> .RF> FIX>>>>
+			  <ERROR "INCONSISTENT FOLDER TABLE"
+				 "PLEASE INFORM PDL"
+				 <CHTYPE .RF WORD>
+				 <1 .F>
+				 .FT>)>>
+	      .FT>
+	T>
+
+\
+
+"STRALPH -- like STRCOMP, but tolerant of case lossage"
+
+<DEFINE STRALPH (S1 S2 "AUX" C1 C2 (R 0)) 
+	#DECL ((S1 S2) STRING (C1 C2) CHARACTER (R) FIX)
+	<REPEAT ()
+		<COND (<EMPTY? .S1>
+		       <COND (<EMPTY? .S2> <RETURN .R>) (ELSE <RETURN -1>)>)
+		      (<EMPTY? .S2> <RETURN 1>)>
+		<COND (<==? <SET C1 <1 .S1>> <SET C2 <1 .S2>>>)
+		      (ELSE
+		       <COND (<AND <G=? <ASCII .C1> <ASCII !\a>>
+				   <L=? <ASCII .C1> <ASCII !\z>>>
+			      <SET C1 <ASCII <- <ASCII .C1> 32>>>
+			      <COND (<AND <0? .R> <==? .C1 .C2>> <SET R 1>)>)>
+		       <COND (<AND <G=? <ASCII .C2> <ASCII !\a>>
+				   <L=? <ASCII .C2> <ASCII !\z>>>
+			      <SET C2 <ASCII <- <ASCII .C2> 32>>>
+			      <COND (<AND <0? .R> <==? .C1 .C2>> <SET R -1>)>)>
+		       <COND (<==? .C1 .C2>)
+			     (<L? <ASCII .C1> <ASCII .C2>> <RETURN -1>)
+			     (ELSE <RETURN 1>)>)>
+		<SET S1 <REST .S1>>
+		<SET S2 <REST .S2>>>>
+
+"FOLDER-BIT -- allocates or deallocates a bit representing a folder"
+
+<DEFINE FOLDER-BIT ("OPTIONAL" FLUSH
+		    "AUX" (MT ,MESSAGE-TABLE) (FB <R-FOLDERS .MT>) (NN 0))
+	#DECL ((FLUSH) FIX (FB) FIX (NN) FIX (MT) MTABLE)
+	<COND (<ASSIGNED? FLUSH>
+	       <SETG UPDATE? T>
+	       <OFFBITS <REST .MT <- ,R-FOLDERS 1>> .FLUSH>)
+	      (ELSE
+	       <COND (<N==? .FB -1>
+		      <MAPF <>
+			    <FUNCTION ()
+				 <COND (<G=? .FB 0>
+					<SET FB
+					     <CHTYPE <ROT <ORB .FB
+						       *400000000000*>
+						  <- .NN>> FIX>>
+					<PUT .MT ,R-FOLDERS .FB>
+					<SETG UPDATE? T>
+					<MAPLEAVE
+					 <CHTYPE <LSH *400000000000*
+						      <- .NN>>
+						 FIX>>)
+				       (ELSE
+					<SET NN <+ .NN 1>>
+					<SET FB <CHTYPE <ROT .FB 1> FIX>>)>>>)
+		     (ELSE <ERROR TOO-MANY-FOLDERS>)>)>>
+
+<ENDPACKAGE>

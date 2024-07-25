@@ -1,0 +1,147 @@
+						 5/1/78 (MARC)
+I. MONITOR Package
+
+    The MONITOR package is designed to be a readily accessible user
+interface to the completely obscure system of MUDDLE read and write
+monitors.  
+    Since the package is ˝;πÙ√˝õ2‰A˝;êt—¸®6i≈˛XyyA˛~yÙÀ˝´s√ˇ:wgÒO*”ãÙ¶œù˘5'“E˜»;ÈŸ˝à9ıÕ¸⁄qÂA˛õ–lﬂ¸9iÈı√EII. What can be MONITORed?
+
+    There are three basic types of 'things' which can be monitored -
+VALUEs of ATOMs, elements of STRUCTUREDs (the type of this element
+is not important), and ASSOCIATIONs.
+
+    For ATOMs, the LVAL or the GVAL may be monitored.  If the LVAL
+is to be monitored, the ATOM must be ASSIGNED?.  For the GVAL, the
+ATOM must be GBOUND?.  If these conditions cannot be met, a monitor
+cannot be generated.  
+
+    For STRUCTUREDs, the monitor is on the Xth element, where X is
+specified when the monitor is created.  Remember, the monitor is on
+a slot of the STRUCTURED, not on the contents of that slot!
+
+    For ASSOCIATIONs, the monitor is on the assocation itself.
+
+III. Types of MONITORs
+
+    MUDDLE defines two types of monitors - read and write.  In 
+addition, the MONITOR package can allow read/write monitors.  A
+monitor is triggered as follows:
+
+    Read monitor:  For LVALs -- via LVAL 
+		   For GVALs -- via GVAL
+		   For STRUCTUREDs -- via NTH
+		   For ASSOCIATIONs -- via GET and GETPROP
+
+    Write monitor: For LVALs -- via SET or "AUX" bindings
+		   For GVALs -- via SETG
+		   For STRUCTUREDs -- via PUT SUBSTRUC
+		   For ASSOCIATIONs -- via PUT and PUTPROP
+
+    Note that PUTRESTs of LISTs which may alter the Nth element
+of a LIST, do not have to access the old Nth element of the LIST and
+may not cause a write monitor to occur.
+
+IV. Locatives, &c. (skip at your own risk!)
+
+    Internally, MUDDLE performs monitoring on LOCATIVEs to STRUCTUREDs.
+In fact, LVAL and GVAL are really pointers to an internal structure.
+This need not concern the user except in the case of LVALs of ATOMs.
+In this case, MUDDLE will monitor a LOCATIVE to THAT (i.e. T-H-A-T)
+binding of the ATOM.  When that binding becomes invalid, or in
+MUDDLEse, <NOT <LEGAL? <locative>>>, the monitor will vanish into
+the bit bucket.  Illegal monitors print as #MONITOR [ILLEGAL] (if you
+ever get a pointer to one).  Please remember that if you want to
+monitor the LVAL of an ATOM bound in a FUNCTION (or PROG, &c.), you
+must create a new MONITOR each time.  The way to win then, is to
+EDIT into the FUNCTION a call to MONITOR (see below) after the atom
+becomes ASSIGNED?.  Eventually, EDIT will have a command which does
+exactly that (in a more esthetically pleasing manner).
+
+V. Creating MONITORs
+
+    Creation of all MONITORs is done through a call to MONITOR, as
+follows:	
+
+<MONITOR <type> <object> <where> "OPTIONAL" <test> <todo1> <todo2> ..>
+
+    where <type>   one of "READ", "WRITE", or "RW"
+	  <object> either an ATOM or a STRUCTURED, or an ASSOCATION item
+	  <where>  either LVAL or GVAL (ATOM object) or a FIX,
+			(the element of STRUCTURED to monitor),
+		 	or an ASSOCATION indicator
+	  <test>   something which is EVALed to determine whether
+			the monitor is to be triggered
+		   This defaults to T
+		   The monitor package defines three variables which
+		   can be referenced in the test:
+		    OLDVAL = the old slot of the item monitored 
+		    NEWVAL = the new slot of the item monitored
+		    MONOBJ = the item monitored (ATOM or STRUCTURED)
+		   Here 'slot' means LVAL, GVAL, or element.
+		   Obviously, NEWVAL is not set for read monitors.
+	  <todo>   any number of things to be EVALed and PRINTed
+			when the monitor is triggered
+
+    Note that the last two arguments are identical to those used by
+the EDIT BREAKpointeR function (BK and BA commands).
+    
+VI. MONITOR Events
+
+    When a monitor is triggered, the following is printed (remember
+the <test> is evaluated before this), and then LISTEN is called.
+To continue, <ERRET T>.
+
+    Read:  **READ of <element/LVAL/GVAL/> of <ATOM/STRUCTURED>**
+	   Value: <LVAL OLDVAL>
+	   <todo1> = <EVAL <todo1>>
+	   <todo2> = <EVAL <todo2>> ...
+
+    Write: **WRITE of <element/LVAL/GVAL> of <ATOM/STRUCTURED>**
+	   Old value: <LVAL OLDVAL>
+	   New value: <LVAL NEWVAL>
+	   <todo1> = <EVAL <todo1>>
+	   <todo2> = <EVAL <todo2>>
+
+    A slightly different first line format is used for associations.
+
+VII. Killing MONITORs
+
+    Killing a MONITOR is accomplished by calling KILL-MONITOR as
+follows:
+
+<KILL-MONITOR <monitor>>   -or-
+<KILL-MONITOR <type> <object> <where>>
+
+    In the latter case, <type>, <object>, and <where> are as given
+in the original call to MONITOR.
+
+    To kill all MONITORs, use 
+
+<KILL-ALL-MONITORS>.
+
+VIII. Other Routines.
+
+<MONOBJ <monitor>> 
+    returns the object (ATOM/STRUCTURED) monitored
+
+<MONSPEC <monitor>>
+    returns the <where> of the MONITOR (LVAL/GVAL/a FIX)
+
+<CLEAN-MONITORS>
+    flushes invalid MONITORs from the MONITOR LIST
+    This is done internally and need not be called routinely.
+
+<GVAL MONITORS>
+    a LIST of all current MONITORs
+
+IX. What You Can't Do with Monitors
+
+    a. You can't monitor the LVAL of something bound but not
+	ASSIGNED?.
+        (e.g. <DEFINE FOO ("AUX" BAR) <MONITOR "READ" BAR LVAL> ...>
+	It is similarly obscure that this doesn't work.
+
+    b. You can't expect compiled code to cause monitors to be
+	triggered.
+
+    c. You can't even break even...  More as discovered....

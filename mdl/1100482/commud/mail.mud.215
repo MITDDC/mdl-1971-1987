@@ -1,0 +1,53 @@
+There have been two main areas of attack in the Advanced Message System
+and Planning System over the last six months.  First has been upgrading
+the Reader and Composer of the message system to have multi-media
+capabilities.  Second has been the implementation of an advanced spread
+sheet simulator for use by planners.
+
+The Reader and Composer can now deal with multi-media text as defined in
+RFC759, RFC767, etc.  Text elements of consisting of media other than
+normal text are logically inserted into the message by the user typing
+(for example) "Insert Fax <PDL>FOO.FAX".  Because we are still hampered
+by the lack of multi-media capability in our terminals (VT100s, for the
+most part), the media are not displayed.  Instead a token is placed in
+the text field which indicates the presence of non-text media.  This
+token may be edited as though it were part of the text the user typed.
+
+When a message is received in multi-media form, the analogous process
+is carried out to display it; the Reader gives the user as much
+information as it can (usually just the medium and the origin of the
+"unpresentable" medium).  The presentation is modular, so that when
+multi-media capable terminals appear, it will be possible to upgrade the
+presentation with little trouble.
+
+A spread sheet simulator has been written which builds on the ground
+cleared by VisiCalc.  The goal has been to produce a multi-sheet,
+multi-user, data-based planning aid.  Some of the capabilities which
+have been added include
+
+  - the ability to reference entries in different spread sheets
+    than the current one.
+
+  - a better command parser which determines heuristically whether a
+    string entry or an expression entry was intended.
+
+  - the ability for users to define their own operations.
+
+  - "area" operations (as opposed to "range" and "entry" operations).
+
+  - complete freedom of use of forward and circular references.
+
+  - variable column sizes on a per-column basis.
+
+  - named entries, ranges, etc.
+
+  - automatic loading of referenced spread sheets.
+
+  - form definition and form-filling commands.
+
+  - references ("A2('B1)" refers to the entry at the A2 position relative
+    to B1.  "A2(B1)" refers to the entry at that position relative to
+    the coordinate contained in B1).  This capability allows general
+    data-based queries to be implemented.
+
+  - string operations (finding matches, prefixes, and substrings).

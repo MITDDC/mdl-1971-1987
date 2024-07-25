@@ -1,0 +1,303 @@
+<PACKAGE "M-MM">
+
+<ENTRY READMAIL MM-DEBUG?>
+
+<USE "R-DEFS" "M-PRS" "M-DAC" "M-READ" "M-TIME" "PRTUTI"
+     "ITIME" "M-DEFS" "ASYLUM" "MADMAN">
+
+<SETG HSTR <ISTRING 22>>
+
+<GDECL (HSTR) STRING>
+
+<SETG SELECTION -1>	;"default is all"
+<GDECL (SELECTION) FIX>
+
+<DEFINE READMAIL (ADR "OPTIONAL" (SELECTION ,SELECTION) (FILE "MAIL.TXT")
+		  "AUX" (MMFILE <STRING "<" .ADR ">" .FILE>) 
+		        (C <OPEN "READ" .MMFILE>)
+			(RDRFILE <STRING "<" .ADR ">READER.ASYLUM">)
+			(RA <OPEN-DATA-FILE .RDRFILE>)
+		  TMP (LS ()) (NEW ()) (NLS (0)) (L .NLS) (NNEW (0)) (N .NNEW)
+		  (SS ,SCRATCH-SPACE) R) 
+	#DECL ((C) <OR CHANNEL FALSE> (SELECTION) FIX (M) <OR LIST FALSE>
+	       (RA) <OR ASYLUM FALSE> (LS) <OR FALSE LIST VECTOR>
+	       (NEW) <OR FALSE LIST UVECTOR> (NLS L NNEW N) LIST
+	       (R) <OR FALSE MANIAC> (SS) SPACE (FILE MMFILE RDRFILE) STRING)
+	<SCROUT "Copying MM file: " .MMFILE " to Asylum " .RDRFILE>
+	<COND (<AND .C .RA>
+	       <SETUP-ASYLUM .RA .SS>
+	       <COND (<SET TMP <DATA-AREAD .RA ,M-ASYLUM <ARESET .SS>>>
+		      <SET LS <LIST !.TMP>>)>
+	       <COND (<TYPE? <SET TMP <DATA-AREAD .RA ,M-NEW <ARESET .SS>>>
+			     UVECTOR>
+		      <SET NEW
+			   <MAPF ,LIST
+				 <FUNCTION (U)
+				      #DECL ((U) UVECTOR)
+				      <UVECTOR !.U>>
+				 .TMP>>)>
+	       <MAPF <>
+		     <FUNCTION ("AUX" U RES) 
+			  #DECL ((U) <OR FALSE <LIST FIX FIX>>)
+			  <SET RES <READMESSAGE .C .SELECTION .RA>>
+			  <COND (<TYPE? .RES UVECTOR>
+				 <SET U <MAIL-DELIVERY .RA>>
+				 <SCROUT <1 .U> ": ">
+				 <DDT-ADR <OR <DRD () "SENDER">
+					      <DRD () "FROM">>
+					  .OUTCHAN>
+				 <PRINC " => ">
+				 <DDT-ADRL <DRD () "ACTION-TO"> .OUTCHAN>
+				 <COND (.U
+					<SCROUT "  Delivered as " <2 .U>>)
+				       (ELSE
+					<SCROUT "  ***Failed: " .U>)>
+				 <PUTREST .L .U>
+				 <SET L <REST .L 2>>
+				 <PUTREST .N <SET N (.RES)>>
+				 <COND (<0? <1 .C>>
+					<MAPLEAVE>)>)
+				(<TYPE? .RES CHANNEL>
+				 <SCROUT
+				   "Skipping message: Selection test failed.">)
+				(<TYPE? .RES ATOM> <MAPLEAVE>)
+				(ELSE
+				 <SCROUT "***Parse failed: " .RES>
+				 <CLOSE .C>
+				 <MAPLEAVE>)>>>
+	       <SET LS <AVECTOR <ARESET .SS> !<ATTACH .LS <REST .NLS>>>>
+	       <COND (<SET R <DATA-APRINT .RA ,M-ASYLUM .SS .LS>>
+		      <SCROUT "Reader Asylum local table written.">)
+		     (ELSE <ERROR M-ASYLUM .R>)>
+	       <SET NEW <UVECTOR !<ATTACH .NEW <REST .NNEW>>>>
+	       <ARESET .SS>
+	       <SET NEW <ACOPY .SS .NEW>>
+	       <COND (<SET R <DATA-APRINT .RA ,M-NEW .SS .NEW>>
+		      <SCROUT "Reader Asylum new messages list written.">)
+		     (ELSE <ERROR M-NEW .R>)>
+	       <CLOSE-DATA-FILE .RA>
+	       <SCROUT "Copy completed.">)>>
+
+<DEFINE READMESSAGE (C "OPTIONAL" (SELECTION -1) (RA <>)
+		     "AUX" L MSGLEN MSGBITS (HSTR ,HSTR) MSG ID WHEN
+		     (SS ,SCRATCH-SPACE) FLDLST) 
+	#DECL ((L MSGLEN MSGBITS) <OR FIX FALSE> (HSTR) STRING (C) CHANNEL
+	       (RA) <OR FALSE ASYLUM> (FLDLST) LIST (SS) SPACE (MSG) STRING
+	       (SELECTION) FIX)
+	<PROG ()
+	      <ARESET .SS>
+	      <PUT ,MDB ,MVDATA <AVECTOR <ARESET ,MSG-SPACE>>>
+	      <SET HSTR <TOP .HSTR>>
+	      <COND (<SET L
+			  <READSTRING .HSTR
+				      .C
+				      ","
+				      '#FALSE ("Eof")>>
+		     <COND (<0? .L> <RETURN T>)
+			   (<N==? <READCHR .C> !\,>
+			    <RETURN #FALSE ("Bad receive date")>)>
+		     <COND (<L? .L <LENGTH .HSTR>>
+			    <SET HSTR 
+				 <REST .HSTR <- <LENGTH .HSTR> .L>>>
+			    <SUBSTRUC <TOP .HSTR> 0 .L .HSTR>)>)
+		    (ELSE <RETURN .L>)>
+	      <COND (<SET MSGLEN <READNUM .C>>)
+		    (ELSE <RETURN #FALSE ("Bad Message Length")>)>
+	      <COND (<SET MSGBITS <READWORD .C>>)
+		    (ELSE <RETURN #FALSE ("Bad Message Bits")>)>
+	      <COND (<OR <==? .SELECTION -1>
+			 <AND <0? .SELECTION> <0? .MSGBITS>>
+			 <NOT <0? <CHTYPE <ANDB .MSGBITS .SELECTION> FIX>>>>
+		     <COND (<N==? <READSTRING <SET MSG <AISTRING .SS .MSGLEN>>
+					      .C>
+				  .MSGLEN>
+			    <RETURN #FALSE ("Message Length Lied")>)>
+		     <SET FLDLST <MAIL-PARSE .MSG>>
+		     <ADDFLD "MSG-NO"
+			     <SET ID
+				  <COND (.RA <GENERATE-ID .RA>)
+					(ELSE 10000)>>
+			     .FLDLST>
+		     <ADDFLD "WHEN-RECEIVED"
+			     <SET WHEN
+				  <COND (<TYPE? <SET WHEN <MPDATE .HSTR !\->>
+						UVECTOR>
+					 <1 .WHEN>)
+					(ELSE <ITIME>)>>
+			     .FLDLST>
+		     <ADDFLD "BITS"
+			     <SET MSGBITS <READER-BITS .MSGBITS>>
+			     .FLDLST>
+		     <DWT <HOME?> () "RECEIVED-FROM-HOST">
+		     <COND (,MM-DEBUG?
+			    <CRLF>
+			    <REPEAT ((F .FLDLST) (TXT <>) (OUTCHAN .OUTCHAN))
+				    #DECL ((F) LIST (OUTCHAN) CHANNEL)
+				    <COND (<LENGTH? .F 1>
+					   <CRLF>
+					   <CRLF>
+					   <PRINC "======">
+					   <CRLF>
+					   <COND (.TXT
+						  <PRINTSTRING .MSG .OUTCHAN
+							       .TXT>)>
+					   <LISTEN>
+					   <RETURN>)
+					  (<MEMBER <1 .F> '["BODY" "MESSAGE"]>
+					   <AND <=? <1 .F> "MESSAGE">
+						<SET TXT <2 .F>>>)
+					  (ELSE
+					   <PRINT <1 .F>>
+					   <PRIN1 <2 .F>>)>
+				    <SET F <REST .F 2>>>)>
+		     <COND (<STORE-PARSE .FLDLST>
+			    <UVECTOR .ID
+				     .WHEN
+				     .MSGBITS>)>)
+		    (ELSE <ACCESS .C <+ <17 .C> .MSGLEN>>)>>>
+
+<SETG MM-DEBUG? <>>
+
+<DEFINE ATTACH (L1 L2)
+	#DECL ((L1 L2 VALUE) LIST)
+	<COND (<EMPTY? .L1> .L2)
+	      (<EMPTY? .L2> .L1)
+	      (ELSE
+	       <PUTREST <REST .L1 <- <LENGTH .L1> 1>> .L2>
+	       .L1)>>
+
+"GENERATE-ID -- function for allocating unique message ids."
+
+<DEFINE GENERATE-ID (RA "AUX" TT R)
+	#DECL ((VALUE TT) FIX (R) <OR FALSE MANIAC>)
+	<COND (<0? <SET TT <CHTYPE <DATA-READW .RA ,M-MM-IDS> FIX>>>
+	       <SET TT 10001>)>
+	<REPEAT ()
+		<COND (<SET R <DATA-PRINTW .RA ,M-MM-IDS <+ .TT 1>>>
+		       <PUT ,MDB ,MVMSG .TT>
+		       <RETURN .TT>)
+		      (ELSE <ERROR CANT-ALLOCATE-NEW-ID!-ERRORS .R>)>>>
+
+<DEFINE READWORD (CH "AUX" (NUM 0))
+	#DECL ((CH) CHANNEL (NUM) FIX (VALUE) <OR FIX FALSE>)
+	<MAPF <>
+	      <FUNCTION ("AUX" (C <READCHR .CH '<>>))
+		   #DECL ((C) <OR FALSE CHARACTER>)
+		   <COND (<==? .C <ASCII 13>>
+			  <READCHR .CH>
+			  <MAPLEAVE .NUM>)
+			 (<OR <==? .C !\,> <==? .C !\;>>
+			  <MAPLEAVE .NUM>)
+			 (<AND <G=? <ASCII .C> <ASCII !\0>>
+			       <L=? <ASCII .C> <ASCII !\9>>>
+			  <SET NUM
+			       <CHTYPE <ORB <- <ASCII .C> 48> <LSH .NUM 3>>
+				       FIX>>)
+			 (ELSE <MAPLEAVE <>>)>>>>
+
+<DEFINE READNUM (CH "AUX" (NUM 0))
+	#DECL ((CH) CHANNEL (NUM) FIX (VALUE) <OR FIX FALSE>)
+	<MAPF <>
+	      <FUNCTION ("AUX" (C <READCHR .CH '<>>))
+		   #DECL ((C) <OR FALSE CHARACTER>)
+		   <COND (<==? .C <ASCII 13>>
+			  <READCHR .CH>
+			  <MAPLEAVE .NUM>)
+			 (<OR <==? .C !\,> <==? .C !\;>>
+			  <MAPLEAVE .NUM>)
+			 (<AND <G=? <ASCII .C> <ASCII !\0>>
+			       <L=? <ASCII .C> <ASCII !\9>>>
+			  <SET NUM <+ <- <ASCII .C> 48> <* .NUM 10>>>)
+			 (ELSE <MAPLEAVE <>>)>>>>
+
+\
+
+"MAIL-DELIVERY -- deliver citation and message to user's asylum
+	takes: asylum to deliver to
+	       vector of locally-stored messages from that asylum
+	returns: uvector of id and local maniac stored under (or false)"
+
+<DEFINE MAIL-DELIVERY (RA "AUX" (MS ,MSG-SPACE) LC ID R RR)
+	#DECL ((RA) <OR FALSE ASYLUM> (MS SS) SPACE (RR R) <OR FALSE MANIAC>
+	       (LC) FIX)
+	<SET ID <DRDMSG () "MSG-NO">>
+	<COND (<NOT <SET R <DATA-OPEN "PRINT" .RA -1>>>
+	       <AFALSE 30 <ACOPY .MS .R>>)
+	      (<L? <SET LC <1 .R>> 10>
+	       <DATA-CLOSE .RA .R>
+	       <AFALSE 31
+		       <ASTRING .MS "ABOUT-TO-CLOBBER"> <1 .R>>)
+	      (<NOT <SET RR <DATA-IPRINT .RA .R .MS <MVDATA ,MDB>>>>
+	       <DATA-CLOSE .RA .R>
+	       <AFALSE 32 <ACOPY .MS .RR>>)
+	      (<NOT <SET R <DATA-CLOSE .RA .R>>>
+	       <AFALSE 33 <ACOPY .MS .R>>)
+	      (ELSE
+	       <LIST .ID .LC>)>>
+
+<DEFINE FIND-LOCAL (ID V)
+	#DECL ((ID) FIX (V) <VECTOR [REST FIX]>)
+	<REPEAT ()
+		<COND (<EMPTY? .V> <RETURN <>>)
+		      (<==? <1 .V> .ID> <RETURN <2 .V>>)
+		      (ELSE <SET V <REST .V 2>>)>>>
+
+\
+
+"MAIL.TXT FLAGS:"
+
+<MSETG M-SEEN <BIT 35>>	;"Message has been seen"
+<MSETG M-DELE <BIT 34>>	;"Message is deleted"
+<MSETG M-ATTN <BIT 33>>	;"Message wants attention (always-show)"
+<MSETG M-RPLY <BIT 32>>	;"Message has been replied to"
+<MSETG M-RSRV <BIT 31>>	;"Message flag reserved for expansion"
+<MSETG M-RSR1 <BIT 30>>	;"Message flag reserved for expansion"
+<MSETG M-KEYW *777777777700*> ;"Remaining flags are for keywords"
+
+"MM FLAGS:"
+
+<MSETG M-RECE <BIT 0>>	;"Message is recent (sign bit)"
+<MSETG M-FRME <BIT 1>>	;"Message is from me"
+<MSETG M-FRNM <BIT 2>>	;"Message is from someone else"
+
+<DEFMAC BIT? ('W 'B) <FORM NOT <FORM 0? <FORM CHTYPE <FORM ANDB .W .B> FIX>>>>
+
+<DEFINE READER-BITS (W "AUX" (R ,R-ASYLUM))
+	#DECL ((W R) <PRIMTYPE WORD>)
+	<SET R
+	     <COND (<BIT? .W ,M-DELE> <ORB .R ,R-DISCARDED>)
+		   (<BIT? .W ,M-ATTN> <ORB .R ,R-PENDING>)
+		   (<BIT? .W ,M-FRME> <ORB .R ,R-OUT-BOX>)
+		   (ELSE <ORB .R ,R-IN-BOX>)>>
+	<COND (<NOT <BIT? .W ,M-SEEN>>
+	       <SET R <ORB .R ,R-UNSUMMARIZED ,R-UNREAD>>)>
+	<COND (<BIT? .W ,M-RPLY> <SET R <ORB .R ,R-ANSWERED>>)>
+	<COND (<BIT? .W ,M-RECE> <SET R <ORB .R ,R-RECENT>>)>
+	<COND (<BIT? .W ,M-FRME> <SET R <ORB .R ,R-SENT>>)>
+	<CHTYPE .R FIX>>
+
+<DEFINE SETUP-ASYLUM (RA SS "AUX" LC R MT)
+	#DECL ((RA) ASYLUM (SS) SPACE (R) <OR FALSE MANIAC> (LC) FIX
+	       (MT) <OR FALSE UVECTOR>)
+	<COND (<NOT <SET R <DATA-OPEN "PRINT" .RA -1>>>
+	       <ERROR BAD-ASYLUM!-ERRORS .R>)
+	      (<L? <SET LC <1 .R>> 10>
+	       <DATA-CLOSE .RA .R>
+	       <SCROUT "Initializing New Reader Asylum">
+	       <DATA-RESERVE .RA 10>
+	       <DATA-APRINT .RA
+			    ,M-FOLDERS
+			    .SS
+			    <AVECTOR <ARESET .SS>>>
+	       <COND (<SET MT
+			   <AIUVECTOR <ARESET .SS>
+				      <+ 4 <* 3 500>>
+				      0>>
+		      <PUT .MT ,R-HEADER 4>
+		      <PUT .MT ,R-TUPLE 3>
+		      <PUT .MT ,R-FOLDERS 0>
+		      <PUT .MT ,R-USED <ITIME>>
+		      <DATA-APRINT .RA ,M-TABLE .SS .MT>)
+		     (ELSE <ERROR MESSAGE-TABLE?!-ERRORS .MT>)>)>>
+
+<ENDPACKAGE>

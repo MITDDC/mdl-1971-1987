@@ -1,0 +1,213 @@
+Caution:
+
+1. MACLISP is not the only brand of LISP (Interlisp, though hairier
+is supposed to have better debugging/environment features, though I
+don't know if anyone I have heard this from is also an "experienced
+MACLISP user". I have also heard that UCILISP is "cleaner" than
+MACLISP.)
+
+2. CLU is not the only strongly typed language around (from TAA's 
+comments it would seem that CLU has some stupidities that ought to
+be unique). If strongly-typed languages are mentioned (which sounds
+necessary if MUDDLE typing is going to be discussed beyond just a
+summary), it would probably be wise to take a broader view.
+
+3. Some thought should be put into partitioning the discussion of the 
+language. It seems to me that there are several independent areas here:
+	* Abstract, language-design features (types, dots, structures, etc.)
+	* Language implementation (GC, type words, etc.)
+	* Environment (Library, compiler, critic, EDIT, etc.)
+At some point, a decision will have to be made as to whether this is going
+to be a broad overview, or is going to follow a particular theme. It probably
+depends on the audience.
+
+
+Here are some of my thoughts and responses to other peoples comments:
+
+First, about specific language features:
+
+1. LVALs and GVALs -- It seems to me that MUDDLE's approach here
+is generally supperior to LISPs. It is a fact that programmers
+tend to want variables with two types of scope: some subset of
+the current function (as provided with function arguments, AUX,
+and PROG), or universal to the whole program (or at least "module"
+-- scope limitation is provided by the package system). These
+are more or less what MUDDLE offers.
+LISP programmers could use property lists to hold their global
+variables, but they don't -- they use "lvals" that happen to
+be bound at top level. This has several negative consequences
+in comparison to MUDDLE. Someone reading a MUDDLE program can
+tell when a GVAL is being used instantly, and knows that setting
+it is probably going to have universal side-effects, without
+looking around for the binding.
+The lack of GVALs in LISP makes the use of global scope no cheaper
+than any other special, and probably encourages the unnecessary use
+of dynamically scoped variables, which is confusing.
+Also, you can get screwed in LISP if someone you are calling uses
+one of your globals as a special, and then calls someone that wants
+to use that global.
+I don't have enough experience with the MACLISP environment to be
+able to say how much effect these things have on experienced programmers
+who are aware of the potential screws, or how much of an incentive to do
+the right thing considerations of what the compiler can and cannot do
+provide (impressively imbedded sentence).
+Also, I don't know whether the MACLISP compiler has manifest variables
+or not, but I suspect that GVALs make this a lot cleaner in MUDDLE.
+
+I also think that the interaction between the evaluation of forms
+and GVALs is a win, since it makes it possible to apply FUNCTIONs,
+SUBRs, OFFSETs, etc. transparently (particularly persuasive if you
+believe, as CLU does, that retrieving a value from a structure should
+be a function, no matter how it is implemented). Of course, LISP
+provides this very well with property lists (except that FIXes don't
+do NTH and arrays are applicable). I think that it is unfortunate
+that property lists allow several different applicable objects to
+exist simultaneously in the property list, but maybe someone with
+more LISP experience would disagree.
+On the other hand, it would be sort of nice to think of different
+structures as having common fields, perhaps in different places
+depending on the structure type. GVALs don't make this very practical
+at all, though I suppose this could be done efficiently with the
+appropriate macros. 
+
+Also, GVALs allow you to do the GLOC hack in RSUBRs, because you know
+the binding is unique. Presumably, the actual atom could be flushed
+sometimes, (this was done in DMS, wasn't it?).
+
+2. Dots and Commas
+I didn't see anyone mention this anywhere, though it certainly is
+unusual, and it is one of the more distinctive visual aspects of the
+language.
+Advantages: it seems sort of necessary for the LVAL/GVAL distinction.
+Also, this seems to be a part of a general philosophy in MUDDLE, which
+is to limit the number of constructs that are not self-evaluating. CLR
+mentioned this as "what you see is what you get".
+
+3. Parentheses and angle brackets
+I think the LIST/FORM distinction is important and useful.
+in LISP, lists are not used as both data structures and programs
+99.9% of the time. Thus, it is simply a nuisance to have the evaluator
+requiring you to say (LIST... or quote your passive data structure.
+You can still treat FORMS as data structures in MUDDLE if you want to
+(in macros, editors, compilers).
+
+4. Types
+Certainly, the MUDDLE type system is an incredible win when compared
+with LISP (at least until you consider implementation costs). I suspect
+that other lisps may have more in this area than either MACLISP or 
+LISPM lisp. I looked in the Interlisp manual, and discovered that they
+have "user defined types" in data-structure definitions, only.
+I'm not sure where MUDDLE's type system fits in with other, non-LISP
+languages. The major difference in point of view seems to be that
+the popular definition of a type these days is something like:
+"A set of values, and operations that can be performed on members of 
+this set." MUDDLE sort of takes the view that the restrictions of
+who can do what with which are given with the constraints on the
+function parameters.
+From the viewpoint with strongly typed languages, MUDDLE's type system
+probably has a lot of deficiencies. Any type can be CHTYPEd to any
+other type of the same primtype, without the consent of the type's
+author. Also, there are a number of predefined operations whose
+arguments are not restricted beyond a specification of their PRIMTYPE.
+(Particularly annoying is PUT. I can't count the number of times I have
+been screwed by this.)
+
+The notion of a PRIMTYPE seems to be fairly unique. One capability that
+I have wished for is the ability to have a ONEOF type, of sorts. Then
+I could have an abstract object (A set for example), and have alternative
+representations for different sizes of sets.
+The idea of having a printtype apparently exists in some form in
+SIMULA, I have heard.
+
+From the viewpoint of compilation, the flow analysis required in the
+MUDDLE compiler is amazingly hairy in comparison to strongly typed
+languages, because the constraints on types in MUDDLE have to be
+determined by general constraint propogation, while strongly typed
+languages require that a variable generally be of a single type
+(even with union types, when it comes time to use it, there has
+to be a case statement or something to guarrantee that it will be
+a single type).
+I think that the MUDDLE type system could be improved without too
+much effort by letting the programmer specify which types a newtype
+can be CHTYPEd into, and also which of the generic functions (like
+PUT) can be applied to it. This certainly doesn't sound much more
+difficult than TEMPLATEs.
+In response to TAAs complaint with strongly typed languages and
+<OR FOO FALSE>, although I am sure CLU completely blew it, if 
+MUDDLE had a cheaper or better interrupt/error handling system, it is
+at least conceivable that some functions that return this would actually
+want to generate an "exception" instead. For example, code might
+even be simpler if handlers were defined for the various types of
+failure in OPEN, code actually using it might even be simpler than
+currently. Of course, MEMQ is more of a problem, since the response
+to a false would generally be different in each use. It does irritate
+me that in:
+	<COND (<SET MUMBLE <MEMQ .FOO .BAR>> ...
+I have to declare MUMBLE to be <OR FOO FALSE>, since I don't really
+give a damn about the value of MUMBLE if the MEMQ fails.
+
+5. Uniform treatment of data structures
+Most MUDDLE data structures have NTH, PUT, REST, SUBSTRUC, MEMQ and MEMBER
+defined on them (not to mention PRINT!). This is a real feature from
+the standpoint of learning the language, remembering it and modifying
+code (I have frequently converted the representation of something from a
+LIST to a VECTOR or UVECTOR after I have gotten a preliminary version
+of a program working and want to make it more efficient, without
+changing the bulk of code at all).
+From a more abstract point of view, this turns out to be useful because
+it allows the programmer to make a decision about how the abstract
+structure should work, debug it, and bind the representational decision
+later. Strongly typed languages seem to have no sympathy for this point
+of view, although I read a paper on SETL saying that this is what they
+are trying to do.
+
+In contrast, MACLISP accesses elements of an array by applying it to
+an integer, and has stupid CAR, CDR, and CDADADADADADAR.
+TEMPLATEs provide the ability to do structure definitions in MUDDLE,
+as in "traditional" languages, only they are more flexible because
+the "field value" can be determined at run-time. I think that the
+ability to do "repeating" structures is not really unique because other
+languages let you define arrays that are directly included in the
+data structure (instead of references to the array).
+MACLISP doesn't have anything approaching this, but other LISPs might.
+
+6. Macros
+Does the MUDDLE macro facility defer significantly from MACLISPs?
+
+7. Multiprocessing
+Although we hate it, other people seem to be impressed when a language has
+it.
+
+8. ERROR, interrupts
+It might be worthwhile to mention cool but useless hacks like the auto-decler
+when discussing these (in addition to cool and useful hacks like automatic
+library loading).
+
+Environment:
+
+1. The compiler
+Many of the features of the compiler are motivated by the inefficiency
+of interpreted MUDDLE code. Notably: extensive optimization and incremental
+recompilation. CLR and BTB probably have a lot to say about the specifics
+of the compiler and the neat hacks that are executed therein, but I noticed
+that the incremental recompilation point was nowhere mentioned in the mail
+I have seen so far.
+
+2. GLUE, etc.
+There is this whole class of compilation-type things to make MUDDLE
+code run faster. Most LISPs probably don't have them because they don't
+have type words, FBINning, etc. Perhaps the most likely place for a
+discussion of these facilities would be while compensating for the
+nausea that the mention of type words seems to induce in most audiences.
+
+3. CRITIC
+Although non-LISPy languages frequently have this sort of thing, it
+would be almost impossible to have something like this in LISP because of
+the lack of types and DECLs (actually, you could have something like
+DECLs that a program could check, but such a thing would not be a part of
+the language, and would probably be as unlikely to materialize as a good
+package system in MACLISP).
+
+I guess I better stop in order to get this sent out at all.
+
+							-DLD  

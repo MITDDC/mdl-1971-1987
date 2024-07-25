@@ -1,0 +1,69 @@
+"SUBTITLE Offsets in Message Data Base vector [MDB]"
+
+<STRUCTURE MDBVEC (VECTOR)
+   MVMSG	FIX		;"message id in core or 0"
+   MVMOD	<OR FALSE ATOM>	;"T = message modified since read in"
+   MVDATA	<VECTOR [REST STRING VECTOR]> ;"message data"
+   MVQUEUE	<LIST [REST STRING]> ;"users for whom queue has changed"
+   MVCHAN	<OR FALSE ASYLUM> ;"asylum for message or false">
+
+"SUBTITLE Offsets in a Pending-queue Entry [PENDING-QUEUE]"
+
+<STRUCTURE PNQENTRY (LIST)
+   QMSG	FIX		;"message that has work scheduled"
+   QADR	STRING		;"addressee for whom work is scheduled"
+   QTIM	<OR FALSE FIX>	;"when scheduled (<> = asap)">
+
+"SUBTITLE Offsets in a Process' State List [PROCESSING-NEEDED]"
+
+<STRUCTURE PRCSTATE (LIST)
+   PNAM	STRING		;"name of process"
+   PTIM	<OR FALSE FIX>	;"when to run; -1 = never, <> = asap, fix = time"
+   PCNT	FIX		;"number of times to try"
+   PFLG	<OR FIX LIST FALSE> ;"??"
+   PINC	FIX		;"interval between runs">
+
+"SUBTITLE Offsets in Error-conditions elements [ERROR-CONDITIONS]"
+
+<STRUCTURE ERRCOND (LIST)
+   EPRC	STRING		;"process in error"
+   ETIM	<OR FALSE FIX>	;"when reported (false = not yet)"
+   EERR	FALSE		;"error code (fix) and optional info in a false">
+
+"SUBTITLE Offsets in Request Vector"
+
+<STRUCTURE RQVECTOR (VECTOR)
+   RQMSG	<OR FALSE FIX>
+   RQADR	STRING
+   RQERR	<OR STRING FALSE>>
+
+"SUBTITLE Offsets in Watch-Conditions List"
+
+<STRUCTURE WSPEC (LIST)
+ "REST"
+   WADR	STRING		;"addressee for whom to acknowledge"
+   WACK CSPEC		;"conditions (pairs of conditions and times)">
+
+"SUBTITLE Offsets in CONDITIONS Elements"
+
+<STRUCTURE CSPEC (LIST)
+ "REST"
+   CCND	STRING		;"condition name"
+   CTIM	<OR FIX FALSE>	;"time condition occurred">
+
+"SUBTITLE Offsets in ACKNOWLEDGE elements"
+
+<STRUCTURE ASPEC (LIST)
+   ACND	STRING		;"condition name"
+   ATIM	<OR FIX FALSE>	;"increment or time or false = run when signalled"
+   AFNC	ANY		;"process to handle condition">
+
+"SUBTITLE Offsets in PENDING-CONDITIONS elements"
+
+<STRUCTURE PSPEC (LIST)
+   PCND STRING		;"name of condition"
+   PADR	STRING		;"addressee for whom condition happened"
+   PVAL	<OR FALSE FIX>	;"condition failed/succeeded (<> or 0)"
+ "OPTIONAL"	;"for ACKNOWLEDGED-CONDITIONS list"
+   PACK FIX		;"when acknowledged">
+

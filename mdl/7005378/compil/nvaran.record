@@ -1,0 +1,601 @@
+Compilation record for: DSK:COMPIL;NVARAN 26
+Output file:  DSK:LIM;NVARAN NBIN
+
+It is now Sunday, 28 Jan 1979 04:21 EST
+
+File loaded.
+Functions ordered.
+COMPILING ARG?
+===== Not open compiled because type is:  STRUCTURED
+<1?  **** <NTH ,ARGTBL <4 .SYM>> **** >
+===== Arithmetic can't open compile because:  <1?  **** <NTH ,ARGTBL <4 .SYM>> *
+*** >
+ is of type:  <OR FIX FLOAT>
+ **** <1? <NTH ,ARGTBL <4 .SYM>>> **** 
+Peephole  0% 31/31
+Job done in:  8 / 17
+  COMPILING ACTIV?
+===== Variable:  NOACT not DECLed.
+Peephole  2% 38/37
+Job done in:  27 / 1:03
+ COMPILING INITV?
+Peephole  0% 27/27
+Job done in:  4 / 6
+ COMPILING NONARG
+Peephole  0% 27/27
+Job done in:  11 / 33
+    COMPILING TUPLE?
+===== Variable:  TUP-NOD not DECLed.
+===== Not open compiled because type is:  STRUCTURED
+<OR <==?  **** <NTH .TUP-NOD 4> ****  ITUPLE> <==? <NTH .TUP-NOD 4> TUPLE>>
+===== Not open compiled because type is:  STRUCTURED
+<OR <==? <NTH .TUP-NOD 4> ITUPLE> <==?  **** <NTH .TUP-NOD 4> ****  TUPLE>>
+Peephole  4% 41/39
+Job done in:  6 / 10
+COMPILING GOOD-TUPLE
+===== Variable:  WD not DECLed.
+===== Variable:  K not DECLed.
+===== Computed decl of variable:  WD is:  FIX
+===== Arithmetic can't open compile because:  <*  **** <4 <1 .K>> ****  2>
+ is of type:  <OR FIX FLOAT>
+ **** <* <4 <1 .K>> 2> **** 
+Peephole  11% 96/85
+Job done in:  45 / 1:26
+    COMPILING FLUSH-SYM
+Peephole  0% 31/31
+Job done in:  12 / 1:17
+    COMPILING VARMAP
+===== External variable being referenced:  PRE
+<OR  **** .PRE ****  .OFUZZ <SET IOFF <+ .IOFF 2>>>
+===== External variable being referenced:  IOFF
+<OR .PRE .OFUZZ <SET IOFF <+  **** .IOFF ****  2>>>
+===== External variable being SET:  IOFF
+<OR .PRE .OFUZZ  **** <SET IOFF <+ .IOFF 2>> **** >
+Peephole  0% 52/52
+Job done in:  9 / 35
+  COMPILING DOUNREG
+===== Variable:  FB not DECLed.
+===== Variable:  PB not DECLed.
+===== Variable:  HACK-INITS not DECLed.
+===== Variable:  PTR not DECLed.
+===== Variable:  MIN-CNT not DECLed.
+===== Variable:  SYM not DECLed.
+===== Variable:  BST not DECLed.
+*** NOTE	Special variable never used: INARG 
+===== Computed decl of variable:  REMPTR is:  <LIST [REST <SYMTAB <PRIMTYPE 
+VECTOR> ATOM <OR ATOM FALSE> FIX <OR ATOM FIX> <OR ATOM FALSE> LIST [2 ANY] FIX 
+<OR FALSE NODE> <OR ATOM FALSE> <OR DATUM FALSE LIST> [2 <OR ATOM FALSE>] LIST [
+2 ANY] <OR FIX FLOAT>>]>
+===== Computed decl of variable:  PTR is:  <LIST [REST <SYMTAB <PRIMTYPE VECTOR>
+ATOM <OR ATOM FALSE> FIX <OR ATOM FIX> <OR ATOM FALSE> LIST [2 ANY] FIX <OR 
+FALSE NODE> <OR ATOM FALSE> <OR DATUM FALSE LIST> [2 <OR ATOM FALSE>] LIST [2 
+ANY] <OR FIX FLOAT>>]>
+===== Computed decl of variable:  MIN-CNT is:  <OR FIX FLOAT>
+===== Computed decl of variable:  SYM is:  <SYMTAB <PRIMTYPE VECTOR> ATOM <OR 
+ATOM FALSE> FIX <OR ATOM FIX> <OR ATOM FALSE> LIST [2 ANY] FIX <OR FALSE NODE> <
+OR ATOM FALSE> <OR DATUM FALSE LIST> [2 <OR ATOM FALSE>] LIST [2 ANY] <OR FIX 
+FLOAT>>
+===== External reference to LVAL:  GMF
+<AND  **** <ASSIGNED? GMF> ****  .GMF <L=? .GMF>>
+===== External variable being referenced:  GMF
+<AND <ASSIGNED? GMF>  **** .GMF ****  <L=? .GMF>>
+===== External variable being referenced:  GMF
+<AND <ASSIGNED? GMF> .GMF <L=?  **** .GMF **** >>
+===== Arithmetic can't open compile because:  <AND <ASSIGNED? GMF> .GMF <L=?  **
+** .GMF **** >>
+ is of type:  ANY
+<AND <ASSIGNED? GMF> .GMF  **** <L=? .GMF> **** >
+===== Arithmetic can't open compile because:  <NOT <0?  **** <19 .SYM> **** >>
+ is of type:  <OR FIX FLOAT>
+<NOT  **** <0? <19 .SYM>> **** >
+===== External reference to LVAL:  GMF
+<AND  **** <ASSIGNED? GMF> ****  .GMF>
+===== External variable being referenced:  GMF
+<AND <ASSIGNED? GMF>  **** .GMF **** >
+===== External variable being referenced:  GMF
+<COND (<AND <ASSIGNED? GMF> .GMF>  **** .GMF **** ) (ELSE 5)>
+===== Arithmetic can't open compile because:  <L?  **** <19 .SYM> ****  .MIN-CNT
+>
+ is of type:  <OR FIX FLOAT>
+ **** <L? <19 .SYM> .MIN-CNT> **** 
+===== Not open compiled because type is:  <STRUCTURED ANY>
+<18 <SET SYM  **** <NTH .BST 1> **** >>
+===== External variable being SET: DC
+ **** <SET DC <1 <7 .SYM>>> **** 
+===== External variable being referenced:  DC
+<PUT .SYM 7 <LIST <TYPE-AND <18 .SYM>  **** .DC **** >>>
+===== External variable being referenced:  VERBOSE
+ **** .VERBOSE **** 
+===== External variable being referenced:  DC
+<NOT <SAME-DECL? <TYPE-AND  **** .DC ****  <18 .SYM>> .DC>>
+===== External variable being referenced:  DC
+<NOT <SAME-DECL? <TYPE-AND .DC <18 .SYM>>  **** .DC **** >>
+===== External variable being referenced:  FRMID
+<PUT .SYM 10  **** .FRMID **** >
+===== External variable being referenced:  BASEF
+<AND <1? <4 .SYM>> <NOT <3 .SYM>> <11 .SYM> <NOT <NTH  **** .BASEF ****  16>>>
+===== Not open compiled because type is:  ANY
+<AND <1? <4 .SYM>> <NOT <3 .SYM>> <11 .SYM> <NOT  **** <NTH .BASEF 16> **** >>
+===== External reference to LVAL:  GMF
+<AND  **** <ASSIGNED? GMF> ****  .GMF <==? <2 .SYM> DUMMY-MAPF>>
+===== External variable being referenced:  GMF
+<AND <ASSIGNED? GMF>  **** .GMF ****  <==? <2 .SYM> DUMMY-MAPF>>
+===== External variable being referenced:  NOACT
+ **** .NOACT **** 
+===== External variable being referenced:  IOFF
+<PUT .SYM 8 <+  **** .IOFF ****  .USOFF <COND (<3 .SYM> 2) (ELSE 0)>>>
+===== External variable being referenced:  USOFF
+<PUT .SYM 8 <+ .IOFF  **** .USOFF ****  <COND (<3 .SYM> 2) (ELSE 0)>>>
+===== External reference to LVAL:  PNOD
+<OR <NONARG .SYM>  **** <ASSIGNED? PNOD> **** >
+===== External variable being referenced:  BASEF
+<PUT .SYM 5 <NTH  **** .BASEF ****  17>>
+===== Not open compiled because type is:  ANY
+<PUT .SYM 5  **** <NTH .BASEF 17> **** >
+===== External variable being referenced:  USOFF
+<SET USOFF <+  **** .USOFF ****  <COND (<3 .SYM> 6) (ELSE 2)>>>
+===== External variable being SET:  USOFF
+ **** <SET USOFF <+ .USOFF <COND (<3 .SYM> 6) (ELSE 2)>>> **** 
+===== Not open compiled because type is:  STRUCTURED
+<IF <EMPTY? <SET BST  **** <REST <SET PB .BST> 1> **** >> <RETURN .FB>>
+===== Not open compiled because type is:  STRUCTURED
+<IF  **** <EMPTY? <SET BST <REST <SET PB .BST> 1>>> ****  <RETURN .FB>>
+Peephole  2% 547/534
+Job done in:  5:04 / 11:26
+  COMPILING DOREG
+===== Variable:  HACK-INITS not DECLed.
+===== Variable:  TUP not DECLed.
+===== Variable:  COOL not DECLed.
+===== Variable:  PTR not DECLed.
+===== Variable:  MIN-CNT not DECLed.
+===== Variable:  SYM not DECLed.
+===== Variable:  FB not DECLed.
+===== Variable:  PB not DECLed.
+===== Computed decl of variable:  TUP is:  <OR FALSE FIX FLOAT>
+===== Computed decl of variable:  COOL is:  <OR ATOM FALSE>
+*** NOTE	Special variable never used: INARG 
+===== Computed decl of variable:  REMPTR is:  <LIST [REST SYMTAB]>
+===== Computed decl of variable:  PTR is:  <LIST [REST SYMTAB]>
+===== Computed decl of variable:  MIN-CNT is:  <OR FIX FLOAT>
+===== Computed decl of variable:  SYM is:  SYMTAB
+===== Computed decl of variable:  FB is:  LIST
+===== Computed decl of variable:  PB is:  LIST
+===== External variable being referenced:  NOA
+<AND  **** .NOA ****  <NOT .ACC>>
+===== External variable being referenced:  ACC
+<AND .NOA <NOT  **** .ACC **** >>
+===== External reference to LVAL:  GMF
+<AND  **** <ASSIGNED? GMF> ****  .GMF <L=? .GMF>>
+===== External variable being referenced:  GMF
+<AND <ASSIGNED? GMF>  **** .GMF ****  <L=? .GMF>>
+===== External variable being referenced:  GMF
+<AND <ASSIGNED? GMF> .GMF <L=?  **** .GMF **** >>
+===== Arithmetic can't open compile because:  <AND <ASSIGNED? GMF> .GMF <L=?  **
+** .GMF **** >>
+ is of type:  ANY
+<AND <ASSIGNED? GMF> .GMF  **** <L=? .GMF> **** >
+===== External variable being referenced:  BASEF
+<==? 1 <1  **** .BASEF **** >>
+===== External variable being referenced:  BASEF
+(<==? 1 <1 .BASEF>> <SET RQRG <30  **** .BASEF **** >> <SET TRG <29 .BASEF>>)
+===== External variable being referenced:  BASEF
+(<==? 1 <1 .BASEF>> <SET RQRG <30 .BASEF>> <SET TRG <29  **** .BASEF **** >>)
+===== External reference to LVAL:  GMF
+<AND  **** <ASSIGNED? GMF> ****  .GMF <==? <2 .SYM> DUMMY-MAPF>>
+===== External variable being referenced:  GMF
+<AND <ASSIGNED? GMF>  **** .GMF ****  <==? <2 .SYM> DUMMY-MAPF>>
+===== Arithmetic can't open compile because:  <NOT <0?  **** <19 .SYM> **** >>
+ is of type:  <OR FIX FLOAT>
+<NOT  **** <0? <19 .SYM>> **** >
+===== External reference to LVAL:  GMF
+<AND  **** <ASSIGNED? GMF> ****  .GMF>
+===== External variable being referenced:  GMF
+<AND <ASSIGNED? GMF>  **** .GMF **** >
+===== External variable being referenced:  GMF
+<COND (<AND <ASSIGNED? GMF> .GMF>  **** .GMF **** ) (ELSE ,NUMACS)>
+===== Arithmetic can't open compile because:  <L?  **** <19 .SYM> ****  .MIN-CNT
+>
+ is of type:  <OR FIX FLOAT>
+ **** <L? <19 .SYM> .MIN-CNT> **** 
+===== External variable being SET: DC
+ **** <SET DC <1 <7 .SYM>>> **** 
+===== External variable being referenced:  DC
+<PUT .SYM 7 <LIST <TYPE-AND <18 .SYM>  **** .DC **** >>>
+===== External variable being referenced:  VERBOSE
+ **** .VERBOSE **** 
+===== External variable being referenced:  DC
+<NOT <SAME-DECL? <TYPE-AND  **** .DC ****  <18 .SYM>> .DC>>
+===== External variable being referenced:  DC
+<NOT <SAME-DECL? <TYPE-AND .DC <18 .SYM>>  **** .DC **** >>
+===== External variable being referenced:  BASEF
+<AND <1? <4 .SYM>> <NOT <3 .SYM>> <11 .SYM> <NOT <16  **** .BASEF **** >>>
+===== External variable being referenced:  USOFF
+<PUT .SYM 8 <+  **** .USOFF ****  .IOFF 2>>
+===== Arithmetic can't open compile because:  <PUT .SYM 8 <+  **** .USOFF ****  
+.IOFF 2>>
+ is of type:  ANY
+<PUT .SYM 8  **** <+ .USOFF .IOFF 2> **** >
+===== External variable being referenced:  IOFF
+<PUT .SYM 8 <+ .USOFF  **** .IOFF ****  2>>
+===== External reference to LVAL:  PNOD
+<AND <OR <NONARG .SYM>  **** <ASSIGNED? PNOD> **** > <PUT .SYM 5 <17 .BASEF>>>
+===== External variable being referenced:  BASEF
+<AND <OR <NONARG .SYM> <ASSIGNED? PNOD>> <PUT .SYM 5 <17  **** .BASEF **** >>>
+===== External variable being referenced:  USOFF
+<SET USOFF <+  **** .USOFF ****  6>>
+===== Arithmetic can't open compile because:  <SET USOFF <+  **** .USOFF ****  6
+>>
+ is of type:  ANY
+<SET USOFF  **** <+ .USOFF 6> **** >
+===== External variable being SET: USOFF
+ **** <SET USOFF <+ .USOFF 6>> **** 
+===== External variable being referenced:  IOFF
+<SET IOFF <+  **** .IOFF ****  .TUP 2>>
+===== External variable being SET:  IOFF
+ **** <SET IOFF <+ .IOFF .TUP 2>> **** 
+===== External variable being SET: PRE
+ **** <SET PRE T> **** 
+===== External variable being referenced:  FCN
+<NTH  **** .FCN ****  28>
+===== Not open compiled because type is:  ANY
+ **** <NTH .FCN 28> **** 
+===== External variable being referenced:  FCN
+<PUT  **** .FCN ****  28 <CHTYPE <LIST <NTH .FCN 28>> FALSE>>
+===== External variable being referenced:  FCN
+<PUT .FCN 28 <CHTYPE <LIST <NTH  **** .FCN ****  28>> FALSE>>
+===== Not open compiled because type is:  ANY
+<PUT .FCN 28 <CHTYPE <LIST  **** <NTH .FCN 28> **** > FALSE>>
+===== Not open compiled because type is: #FALSE ()
+ **** <PUT .FCN 28 <CHTYPE <LIST <NTH .FCN 28>> FALSE>> **** 
+===== External variable being referenced:  REVAR
+<AGAIN  **** .REVAR **** >
+===== External variable being referenced:  IOFF
+<SET IOFF <+  **** .IOFF ****  2>>
+===== External variable being SET:  IOFF
+ **** <SET IOFF <+ .IOFF 2>> **** 
+===== External variable being referenced:  IOFF
+<SET IOFF <-  **** .IOFF ****  2>>
+===== External variable being SET:  IOFF
+ **** <SET IOFF <- .IOFF 2>> **** 
+===== External variable being referenced:  PRE
+ **** .PRE **** 
+===== External variable being referenced:  USOFF
+(.PRE <OR <3 .SYM> <SET USOFF <+  **** .USOFF ****  2>>> <SET COD <- .COD>>)
+===== Arithmetic can't open compile because:  (.PRE <OR <3 .SYM> <SET USOFF <+  
+**** .USOFF ****  2>>> <SET COD <- .COD>>)
+ is of type:  ANY
+(.PRE <OR <3 .SYM> <SET USOFF  **** <+ .USOFF 2> **** >> <SET COD <- .COD>>)
+===== External variable being SET: USOFF
+(.PRE <OR <3 .SYM>  **** <SET USOFF <+ .USOFF 2>> **** > <SET COD <- .COD>>)
+===== External variable being referenced:  ACC
+<AND  **** .ACC ****  <NOT .LARG> <NONARG .SYM>>
+===== External variable being referenced:  LARG
+<AND .ACC <NOT  **** .LARG **** > <NONARG .SYM>>
+===== External variable being SET: LARG
+<COND (<AND .ACC <NOT .LARG> <NONARG .SYM>>  **** <SET LARG T> **** )>
+===== External variable being referenced:  NOA
+<AND <NOT  **** .NOA **** > <ARG? .SYM> <NOT <3 .SYM>> <6 .SYM>>
+===== External variable being referenced:  FRMID
+<PUT .SYM 10  **** .FRMID **** >
+===== External variable being referenced:  NOA
+<=?  **** .NOA ****  '(FUNNY-STACK)>
+===== External variable being referenced:  FCN
+(<=? .NOA '(FUNNY-STACK)> <- -2 <* <- <NTH  **** .FCN ****  29> <5 .SYM>> 2>>)
+===== Not open compiled because type is:  ANY
+(<=? .NOA '(FUNNY-STACK)> <- -2 <* <-  **** <NTH .FCN 29> ****  <5 .SYM>> 2>>)
+===== Arithmetic can't open compile because:  (<=? .NOA '(FUNNY-STACK)> <- -2 <*
+ <-  **** <NTH .FCN 29> ****  <5 .SYM>> 2>>)
+ is of type:  <OR FIX FLOAT>
+(<=? .NOA '(FUNNY-STACK)> <- -2 <*  **** <- <NTH .FCN 29> <5 .SYM>> ****  2>>)
+===== Arithmetic can't open compile because:  (<=? .NOA '(FUNNY-STACK)> <- -2 <*
+  **** <- <NTH .FCN 29> <5 .SYM>> ****  2>>)
+ is of type:  <OR FIX FLOAT>
+(<=? .NOA '(FUNNY-STACK)> <- -2  **** <* <- <NTH .FCN 29> <5 .SYM>> 2> **** >)
+===== Arithmetic can't open compile because:  (<=? .NOA '(FUNNY-STACK)> <- -2  *
+*** <* <- <NTH .FCN 29> <5 .SYM>> 2> **** >)
+ is of type:  <OR FIX FLOAT>
+(<=? .NOA '(FUNNY-STACK)>  **** <- -2 <* <- <NTH .FCN 29> <5 .SYM>> 2>> **** )
+===== Cond predicate always FALSE:   **** <AND <TUPLE? <9 .SYM>> <NOT .TUP>> ***
+* 
+ and non-reachable code in clause.
+ **** <COND (<AND <NOT .NOA> <ARG? .SYM> <NOT <3 .SYM>> <6 .SYM>> <PUT .SYM 8 
+ ...
+===== External variable being referenced:  FRMID
+<PUT .SYM 10  **** .FRMID **** >
+===== External variable being referenced:  IOFF
+<PUT .SYM 8 <+  **** .IOFF ****  <COND (<3 .SYM> 2) (ELSE 0)>>>
+===== External reference to LVAL:  PNOD
+<AND <OR <NONARG .SYM>  **** <ASSIGNED? PNOD> **** > <PUT .SYM 5 <17 .BASEF>>>
+===== External variable being referenced:  BASEF
+<AND <OR <NONARG .SYM> <ASSIGNED? PNOD>> <PUT .SYM 5 <17  **** .BASEF **** >>>
+===== External variable being referenced:  PRE
+<OR  **** .PRE ****  <SET IOFF <+ .IOFF <COND (<3 .SYM> 6) (ELSE 2)>>>>
+===== External variable being referenced:  IOFF
+<OR .PRE <SET IOFF <+  **** .IOFF ****  <COND (<3 .SYM> 6) (ELSE 2)>>>>
+===== External variable being SET:  IOFF
+<OR .PRE  **** <SET IOFF <+ .IOFF <COND (<3 .SYM> 6) (ELSE 2)>>> **** >
+===== External variable being referenced:  PRE
+ **** .PRE **** 
+*** NOTE	COND PREDICATE ALWAYS FALSE
+ **** <AND > **** 
+
+ 
+Peephole  3% 879/848
+Job done in:  9:22 / 20:04
+ COMPILING PROG-REP-VAR
+===== Variable:  PROG-REP not DECLed.
+===== Variable:  OG not DECLed.
+===== Variable:  OV not DECLed.
+===== Computed decl of variable:  PROG-REP is:  <OR ATOM FALSE>
+*** WARNING	VARIABLE NEVER USED: PROG-REP 
+*** NOTE	Special variable never used: BPRE 
+*** NOTE	Special variable never used: UNPRE 
+*** NOTE	Special variable never used: NNEW 
+*** NOTE	Special variable never used: REVAR 
+===== External variable being referenced:  SVIOFF
+ **** .SVIOFF **** 
+===== External variable being referenced:  USOFF
+ **** .USOFF **** 
+===== External variable being referenced:  IOFF
+ **** .IOFF **** 
+===== External variable being referenced:  NOACT
+<OR <ACTIV? .BST  **** .NOACT **** > <16 .PNOD>>
+===== External variable being referenced:  NOACT
+<AND  **** .NOACT ****  <PROG () <SET NOACT #FALSE ()> <AGAIN .REVAR>>>
+===== External variable being SET: NOACT
+<AND .NOACT <PROG ()  **** <SET NOACT #FALSE ()> ****  <AGAIN .REVAR>>>
+===== External variable being referenced:  REVAR
+<AND .NOACT <PROG () <SET NOACT #FALSE ()> <AGAIN  **** .REVAR **** >>>
+===== External variable being referenced:  PRE
+<NOT  **** .PRE **** >
+===== External variable being SET: PRE
+ **** <SET PRE T> **** 
+===== External reference to LVAL:  INARG
+<OR  **** <ASSIGNED? INARG> ****  .UNPRE>
+===== External variable being referenced:  UNPRE
+<OR <ASSIGNED? INARG>  **** .UNPRE **** >
+===== External variable being referenced:  BPRE
+<NOT  **** .BPRE **** >
+===== External variable being SET: BPRE
+ **** <SET BPRE T> **** 
+===== External variable being SET: UNPRE
+<NOT  **** <SET UNPRE #FALSE ()> **** >
+===== External variable being referenced:  REVAR
+<AGAIN  **** .REVAR **** >
+===== External variable being referenced:  PRE
+ **** .PRE **** 
+===== External variable being referenced:  NNEW
+ **** .NNEW **** 
+===== External variable being referenced:  BASEF
+<PUT  **** .BASEF ****  28 <LIST FUNNY-STACK>>
+===== Not open compiled because type is: #FALSE ()
+ **** <PUT .BASEF 28 <LIST FUNNY-STACK>> **** 
+===== External variable being referenced:  REVAR
+<AGAIN  **** .REVAR **** >
+===== External variable being referenced:  GFRMID
+ **** .GFRMID **** 
+===== External variable being referenced:  VERBOSE
+ **** .VERBOSE **** 
+===== External variable being referenced:  VERBOSE
+ **** .VERBOSE **** 
+===== External variable being SET: VERBOSE
+<COND (.VERBOSE <PUTREST  **** <SET VERBOSE .OV> ****  '()>)>
+===== External variable being SET: GFRMID
+ **** <SET GFRMID .OG> **** 
+===== External variable being referenced:  VERBOSE
+ **** .VERBOSE **** 
+===== External variable being referenced:  PRE
+<OR  **** .PRE ****  .FUZZ>
+===== External variable being referenced:  PRE
+<NOT  **** .PRE **** >
+===== External reference to LVAL:  INARG
+<OR  **** <ASSIGNED? INARG> ****  .UNPRE>
+===== External variable being referenced:  UNPRE
+<OR <ASSIGNED? INARG>  **** .UNPRE **** >
+===== External variable being referenced:  BPRE
+<NOT  **** .BPRE **** >
+===== External variable being SET: BPRE
+ **** <SET BPRE T> **** 
+===== External variable being SET: UNPRE
+<NOT  **** <SET UNPRE #FALSE ()> **** >
+===== External variable being referenced:  REVAR
+<AGAIN  **** .REVAR **** >
+===== External variable being SET: PRE
+ **** <SET PRE T> **** 
+===== External reference to LVAL:  INARG
+<OR  **** <ASSIGNED? INARG> ****  <SET IOFF .SVIOFF>>
+===== External reference to LVAL:  INARG
+<AND  **** <ASSIGNED? INARG> ****  <SET IOFF .SVIOFF>>
+===== External variable being referenced:  HSLOT
+<IF <G? .USOFF  **** .HSLOT **** > <SET HSLOT .USOFF>>
+===== Arithmetic can't open compile because:  <IF <G? .USOFF  **** .HSLOT **** >
+ <SET HSLOT .USOFF>>
+ is of type:  ANY
+<IF  **** <G? .USOFF .HSLOT> ****  <SET HSLOT .USOFF>>
+===== External variable being SET: HSLOT
+<IF <G? .USOFF .HSLOT>  **** <SET HSLOT .USOFF> **** >
+===== External variable being referenced:  UNPRE
+<AND .PRE  **** .UNPRE **** >
+===== External variable being SET: BPRE
+ **** <SET BPRE T> **** 
+===== External variable being SET: UNPRE
+ **** <SET UNPRE #FALSE ()> **** 
+===== External variable being referenced:  REVAR
+<AGAIN  **** .REVAR **** >
+===== External variable being referenced:  BPRE
+<NOT  **** .BPRE **** >
+===== External variable being SET: UNPRE
+(<NOT .BPRE>  **** <SET UNPRE T> **** )
+===== Internal FRAME generated.
+ **** <PROG ((BPRE #FALSE ()) (UNPRE #FALSE ()) (OG .GFRMID) (OV .VERBOSE) (
+NN ...
+Peephole  0% 549/547
+Job done in:  2:44 / 4:55
+   COMPILING VAR-ANA1
+===== Variable:  OFUZZ not DECLed.
+===== Variable:  FL not DECLed.
+===== Variable:  ACST not DECLed.
+===== Variable:  B not DECLed.
+===== Variable:  N not DECLed.
+===== Computed decl of variable:  FL is:  <OR ATOM FALSE>
+===== Computed decl of variable:  ACST is:  <PRIMTYPE LIST>
+===== Computed decl of variable:  B is:  LIST
+===== Computed decl of variable:  N is:  FIX
+===== External variable being referenced:  IOFF
+ **** .IOFF **** 
+===== External variable being SET: TEM
+<AND  **** <SET TEM <STRUCTYP <3 .N>>> ****  <N==? .TEM TEMPLATE>>
+===== External variable being referenced:  TEM
+<AND <SET TEM <STRUCTYP <3 .N>>> <N==?  **** .TEM ****  TEMPLATE>>
+===== Arithmetic can't open compile because:   **** .GMF **** 
+ is of type:  <OR FIX FLOAT>
+ **** <- .GMF <COND (<OR <==? .TEM STRING> <==? .TEM BYTES>> 2) (ELSE 1)>>
+ *** ...
+===== External variable being referenced:  TEM
+<OR <==?  **** .TEM ****  STRING> <==? .TEM BYTES>>
+===== External variable being referenced:  TEM
+<OR <==? .TEM STRING> <==?  **** .TEM ****  BYTES>>
+===== Not open compiled because type is:  STRUCTURED
+<==?  **** <NTH <1 <11 <2 .K>>> 2> ****  DUMMY-MAPF>
+===== Not open compiled because type is: #FALSE ()
+ **** <PUT <1 .B> 4 3> **** 
+===== Not open compiled because type is:  STRUCTURED
+<==?  **** <NTH <1 <11 <2 .K>>> 2> ****  DUMMY-MAPF>
+===== External variable being referenced:  PRE
+<NOT <OR .GMF .FUZZ  **** .PRE **** >>
+===== External variable being referenced:  IOFF
+(<==? <10 <1 .K>> 5> <SET IOFF <+  **** .IOFF ****  4>>)
+===== External variable being SET:  IOFF
+(<==? <10 <1 .K>> 5>  **** <SET IOFF <+ .IOFF 4>> **** )
+===== External variable being referenced:  IOFF
+(ELSE <SET IOFF <+  **** .IOFF ****  2>>)
+===== External variable being SET:  IOFF
+(ELSE  **** <SET IOFF <+ .IOFF 2>> **** )
+===== Not open compiled because type is:  STRUCTURED
+<AND <==? 52 .COD> <==?  **** <NTH <GET-TMP <10 .N>> 4> ****  STACK>>
+===== External variable being referenced:  IND
+<SET ACST <28 <SET RN <GET <4 .N>  **** .IND **** >>>>
+===== External reference to LVAL:  GROUP-NAME
+<OR  **** <ASSIGNED? GROUP-NAME> ****  <==? .FCN .RN>>
+===== External variable being referenced:  FCN
+<OR <ASSIGNED? GROUP-NAME> <==?  **** .FCN ****  .RN>>
+===== External variable being referenced:  PRE
+<IF-NOT <VAR-ANA .N> .OFUZZ  **** .PRE ****  <SET IOFF <+ .IOFF 2>>>
+===== External variable being referenced:  IOFF
+<IF-NOT <VAR-ANA .N> .OFUZZ .PRE <SET IOFF <+  **** .IOFF ****  2>>>
+===== External variable being SET:  IOFF
+<IF-NOT <VAR-ANA .N> .OFUZZ .PRE  **** <SET IOFF <+ .IOFF 2>> **** >
+===== External variable being referenced:  PRE
+ **** .PRE **** 
+===== External variable being referenced:  IOFF
+<SET IOFF <+  **** .IOFF ****  <COND (<==? <10 .N> ,ISTRING> 2) (ELSE 4)>>>
+===== External variable being SET:  IOFF
+ **** <SET IOFF <+ .IOFF <COND (<==? <10 .N> ,ISTRING> 2) (ELSE 4)>>> **** 
+===== External variable being referenced:  PRE
+<OR  **** .PRE ****  .OFUZZ <SET IOFF <+ .IOFF 10>>>
+===== External variable being referenced:  IOFF
+<OR .PRE .OFUZZ <SET IOFF <+  **** .IOFF ****  10>>>
+===== External variable being SET:  IOFF
+<OR .PRE .OFUZZ  **** <SET IOFF <+ .IOFF 10>> **** >
+===== External variable being SET:  IOFF
+ **** <SET IOFF .SIOFF> **** 
+Peephole  0% 713/708
+Job done in:  3:47 / 8:18
+ COMPILING VAR-ANA
+===== External variable being referenced:  FUZZ
+<AND  **** .FUZZ ****  <28 .FCN> .NNEW <NOT <=? <28 .FCN> '(FUNNY-STACK)>>>
+===== External variable being referenced:  FCN
+<AND .FUZZ <28  **** .FCN **** > .NNEW <NOT <=? <28 .FCN> '(FUNNY-STACK)>>>
+===== External variable being referenced:  NNEW
+<AND .FUZZ <28 .FCN>  **** .NNEW ****  <NOT <=? <28 .FCN> '(FUNNY-STACK)>>>
+===== External variable being referenced:  FCN
+<AND .FUZZ <28 .FCN> .NNEW <NOT <=? <28  **** .FCN **** > '(FUNNY-STACK)>>>
+===== External variable being referenced:  FCN
+<G=? <29  **** .FCN **** >>
+===== External variable being referenced:  FCN
+(<G=? <29 .FCN>> <PUT  **** .FCN ****  28 '(FUNNY-STACK)>)
+===== External variable being referenced:  FCN
+<PUT  **** .FCN ****  28 <CHTYPE <LIST <28 .FCN>> FALSE>>
+===== External variable being referenced:  FCN
+<PUT .FCN 28 <CHTYPE <LIST <28  **** .FCN **** >> FALSE>>
+===== External variable being referenced:  REVAR
+<AGAIN  **** .REVAR **** >
+===== External variable being referenced:  FUZZ
+<VAR-ANA1 .N  **** .FUZZ **** >
+===== External variable being SET: FUZZ
+<COND (<VAR-ANA1 .N .FUZZ>  **** <SET FUZZ T> **** )>
+Peephole  0% 94/94
+Job done in:  24 / 59
+ COMPILING FUNC-VAR
+===== Variable:  TA not DECLed.
+*** NOTE	Special variable never used: FRMID 
+===== Computed decl of variable:  TA is:  FIX
+*** NOTE	Special variable never used: FUZZ 
+===== External variable being referenced:  GFRMID
+<SET GFRMID <+  **** .GFRMID ****  1>>
+===== Arithmetic can't open compile because:  <SET GFRMID <+  **** .GFRMID **** 
+ 1>>
+ is of type:  ANY
+<SET GFRMID  **** <+ .GFRMID 1> **** >
+===== External variable being SET: GFRMID
+ **** <SET GFRMID <+ .GFRMID 1>> **** 
+===== External variable being referenced:  NOACT
+<OR <ACTIV? .BST  **** .NOACT **** > <16 .BASEF>>
+===== External variable being referenced:  NOA
+<=?  **** .NOA ****  '(STACK)>
+===== External variable being referenced:  NOACT
+<AND  **** .NOACT ****  <16 .BASEF>>
+===== External variable being SET: NOACT
+(<AND .NOACT <16 .BASEF>>  **** <SET NOACT #FALSE ()> ****  <AGAIN .REVAR>)
+===== External variable being referenced:  REVAR
+(<AND .NOACT <16 .BASEF>> <SET NOACT #FALSE ()> <AGAIN  **** .REVAR **** >)
+===== External variable being referenced:  FCN
+<==?  **** .FCN ****  .BASEF>
+===== External variable being referenced:  NOA
+ **** .NOA **** 
+===== External variable being referenced:  NNEW
+ **** .NNEW **** 
+===== External variable being referenced:  FCN
+<PUT .BASEF 28 <CHTYPE <LIST <NTH  **** .FCN ****  28>> FALSE>>
+===== Not open compiled because type is:  ANY
+<PUT .BASEF 28 <CHTYPE <LIST  **** <NTH .FCN 28> **** > FALSE>>
+===== External variable being referenced:  REVAR
+<AGAIN  **** .REVAR **** >
+===== External variable being referenced:  BPRE
+<SET PRE <OR .PRE  **** .BPRE **** >>
+===== External variable being referenced:  ACC
+<AND  **** .ACC ****  <NOT .LARG> <SET LARG T>>
+===== External variable being referenced:  LARG
+<AND .ACC <NOT  **** .LARG **** > <SET LARG T>>
+===== External variable being SET: LARG
+<AND .ACC <NOT .LARG>  **** <SET LARG T> **** >
+Peephole  0% 275/275
+Job done in:  1:09 / 2:06
+COMPILING VARS
+===== Variable:  OV not DECLed.
+*** NOTE	Special variable never used: BPRE 
+*** NOTE	Special variable never used: UNPRE 
+*** NOTE	Special variable never used: NOACT 
+*** NOTE	Special variable never used: NNEW 
+*** NOTE	Special variable never used: REVAR 
+===== External variable being referenced:  VERBOSE
+ **** .VERBOSE **** 
+===== External variable being referenced:  VERBOSE
+ **** .VERBOSE **** 
+===== External variable being SET: VERBOSE
+<COND (.VERBOSE <PUTREST  **** <SET VERBOSE .OV> ****  '()>)>
+===== External variable being referenced:  VERBOSE
+<AND  **** .VERBOSE ****  <NOT .NOA>>
+===== Frame being generated.
+ **** <FUNCTION (FCN "AUX" GFRMID NOA ACC LARG (BPRE #FALSE ()) (UNPRE #FALSE 
+ ...
+Peephole  0% 157/156
+Job done in:  21 / 43
+ 
+
+Total time used is
+	25 min. 41 sec. CPU time,
+	12 min. 19 sec. garbage collector CPU time,
+	55 min. 59 sec. real time.
+CPU utilization is 45.876749%.
+Number of garbage collects = 82

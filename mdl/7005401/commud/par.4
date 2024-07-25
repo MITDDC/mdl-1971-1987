@@ -1,0 +1,89 @@
+
+<USE-TOTAL "M-PRS" "HOSTS" "ITIME">
+
+<SETG ITS [<HOST "DM"> <HOST "AI"> <HOST "ML"> <HOST "MC">]>
+
+<SETG MISSED? <>>
+
+<SETG DC "
+
+">
+
+<DEFINE PAR ("OPTIONAL" (FILE <>) (N <- <HIGH-MESSAGE-ID> 1>) "AUX" TXT (F <>)
+	     (OUTCHAN .OUTCHAN)) 
+	<COND (.FILE <SET OUTCHAN <OPEN "PRINT" .FILE>>)>
+	<UNWIND
+	<REPEAT ()
+		<COND (<AND <MREAD .N>
+			    <NOT <EMPTY? <3 ,MDB>>>
+			    <APPLY ,SELECT>
+			    <SET TXT <DRD "" "TEXT">>>
+		       <DO-PARSE .TXT .N .FILE>)>
+		<SET N <- .N 1>>>
+	<AND .FILE <CLOSE .OUTCHAN>>>>
+
+<DEFINE DO-PARSE ("OPTIONAL" TXT (N <1 ,MDB>) (FILE <>)
+		  "AUX" F RTXT L) 
+	<COND (<OR <ASSIGNED? TXT> <SET TXT <DRD "" "TEXT">>>
+	       <OR .FILE <PRINC "C">>
+	       <PRINC "
+================================">
+	       <PRINT .N>
+	       <COND (<SET RTXT <MEMBER ,DC .TXT>>
+		      <SET L <- <LENGTH .TXT> <LENGTH .RTXT>>>)
+		     (ELSE <SET L <LENGTH .TXT>>)>
+	       <CRLF>
+	       <PRINTSTRING .TXT .OUTCHAN .L>
+	       <PRINC "
+--------------------------------">
+	       <SET L <MAIL-PARSE <ACOPY ,SCRATCH-SPACE .TXT>>>
+	       <REPEAT ((TXT <>) (HS <>))
+		       <COND (<EMPTY? .L>
+			      <COND (<AND .TXT .HS>
+				     <PRINT "MESSAGE">
+				     <CRLF>
+				     <PRINC !\">
+				     <SET TXT  <REST .TXT .HS>>
+				     <PRINTSTRING .TXT .OUTCHAN <MIN 200 <LENGTH .TXT>>>
+				     <PRINC "&...">)>
+			       <RETURN>)>
+		       <COND (<=? <1 .L> "TEXT"> <SET TXT <2 .L>>)
+			     (<=? <1 .L> "MESSAGE"> <SET HS <2 .L>>)
+			     (<=? <1 .L> "WHEN-ORIGINATED">
+			      <PRINT <1 .L>>
+			      <PRIN1 <LTIME <2 .L>>>)
+			     (ELSE
+			      <PRINT <1 .L>>
+			      <PRIN1 <2 .L>>)>
+		       <SET L <REST .L 2>>>
+	       <OR .FILE <PRINC "E">>
+	       <SET F <>>
+	       <ARESET ,SCRATCH-SPACE>
+	       <OR .FILE <MORE>>)
+	      (,MISSED?
+	       <OR .F <PRINC "
+================================">>
+	       <SET F T>
+	       <PRINT .N>
+	       <PRINC "***** ">
+	       <PRINC <DRD "" "FROM">>)>
+	.N>
+
+<DEFINE NON-ITS ("AUX" (TXT <DRD "" "TEXT">)) 
+	<AND <N==? <DRD "" "RECEIVED-FROM-HOST"> ,HOSTNUMBER>
+	     <NOT <INQUIRE-MSG-HEADER? .TXT <>>>
+	     <NOT <BRIEF-HEADER? .TXT>>>>
+
+<SETG SELECT ,NON-ITS>
+
+<DEFINE LOSERS ("AUX" (TXT <DRD "" "TEXT">) F)
+	<AND <N==? <DRD "" "RECEIVED-FROM-HOST"> ,HOSTNUMBER>
+	     <NOT <INQUIRE-MSG-HEADER? .TXT <>>>
+	     <OR <N==? <DRD "" "RECEIVED-FROM-HOST"> ,HOSTNUMBER>
+		 <NOT <SET F <DRD "" "FROM">>>
+		 <MEMBER "UNKNOWN" .F>
+		 <NOT <DRD "" "WHEN-ORIGINATED">>>>>
+
+<DEFINE CLEAR () <PRINC "C">>
+
+<DEFINE MORE () <PRINC "A--More--M">>

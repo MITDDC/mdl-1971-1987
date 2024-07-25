@@ -1,0 +1,18 @@
+Compilation record for: DSK:MPROG2;DATSAV UDL007
+Output file:  DSK:LIBRM2;DATSAV KWC001
+
+It is now THURSDAY, 30 JUN 1977 20:04 EDT
+
+File loaded.
+Precompilation loaded.
+No DEFINEd functions in this file.
+Functions ordered.
+RESTORE-DATA not REdone.
+
+
+Total time used is
+	8 sec. CPU time,
+	5 sec. garbage collector CPU time,
+	1 min. 11 sec. real time.
+CPU utilization is 11.267605%.
+Number of garbage collects = 1

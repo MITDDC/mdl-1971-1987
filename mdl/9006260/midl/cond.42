@@ -1,0 +1,103 @@
+<DEFINE COMPILE:COND (MOBJ RETVAR REF NXT ACT-LIST DEF-ACT MAP-LIST
+		      SYMBOLS NLEVEL "AUX" CLAUSE-LIST (REACHABLE T))
+	#DECL((MOBJ) FORM (RETVAR) <OR VARIABLE FALSE> (REF NXT) FORWRD
+	      (ACT-LIST DEF-ACT MAP-LIST) LIST
+	      (SYMBOLS) <LIST [REST SYMBOL-TABLE]>
+	      (CLAUSE-LIST) <LIST [REST LIST]> (REACHABLE) <OR 'T FALSE>)
+	<SET NO-RETVAL <AND <TYPE? .RETVAR VARIABLE>
+			    <0? <CHTYPE .RETVAR FIX>>>>
+	<COND (<LENGTH? .MOBJ 1>
+	       ;"MOBJ = <COND>"
+	       <COND (<NOT .RETVAR> <>)
+		     (.NO-RETVAL #VARIABLE 0)
+		     (ELSE <MCODIFY <FORM MSET RETVAR <>>>)>)
+	      (ELSE
+	       ;"generate consistent return variable."
+	       <COND (<NOT .RETVAR>
+		      <SET RETVAR <GENSYM>>)>
+	       ;"compile the cond clauses"
+	       <SET CLAUSE-LIST <REST .MOBJ>>
+	       <MAPR <>
+		     <FUNCTION
+		      (RCLAUSE-LIST "AUX" (CLS <1 .RCLAUSE-LIST>)
+		       (LAST <==? <LENGTH .RCLAUSE-LIST> 1>) NEXT-CLAUSE CVAR)
+		      #DECL ((RCLAUSE-LIST) <LIST [REST LIST]> (CLS) LIST
+				      (LAST) <OR FALSE 'T> (NEXT-CLAUSE) FORWRD
+				      (CVAR) ANY)
+		      <COND (<NOT <TYPE? .CLS LIST>>
+			     <REPORT-ERROR ILLEGAL-COND-CLAUSE COMPILE:COND>)
+			    (<EMPTY? .CLS>
+			     <REPORT-ERROR EMPTY-COND-CLAUSE COMPILE:COND>)
+			    (ELSE
+			     ;"compile code for COND clauses."
+			     <COND (<OR .LAST <LENGTH? .CLS 1>>
+				    ;"compile code for predicate"
+				    <MCODE-DISPATCH <1 .CLS> .RETVAR
+						    .REF <SET REF <GENREF>>
+						    .ACT-LIST .DEF-ACT
+						    .MAP-LIST .SYMBOLS
+						    .NLEVEL>
+				    <COND (<NOT .LAST>
+					   <MCODIFY <SET MFORM <FORM GO .NXT>>
+						    .REF <SET REF <GENREF>>>
+					   ;"prepare for backpatching."
+					   <FORWRD-REF <REST .MFORM>>)>)
+				   (ELSE
+				    ;"value of pred won't be returned."
+				    <SET CVAL
+					 <MCODE-DISPATCH <1 .CLS> <>
+							 .REF <SET REF <GENREF>>
+							 .ACT-LIST .DEF-ACT .MAP-LIST
+							 .SYMBOLS .NLEVEL>>
+				    ;"if result of predicate is true, go to"
+				    ;"code for the rest of the clause"
+				    ;"**CHECK FOR CONSTANT .CVAL HERE.**"
+				    <MCODIFY <SET MFORM
+						  <FORM IF .CVAL
+						   <SET THIS-CLAUSE <GENREF>>
+						   <COND (.LAST .NXT)
+							 (ELSE
+							  <SET NEXT-CLAUSE
+							       <GENREF>>)>>>
+					     .REF .NEXT-CLAUSE>
+				    ;"prepare for backpatching."
+				    <MAPR <> ,FORWRD-REF <REST .MFORM 2>>
+				    <SET REF .THIS-CLAUSE>)>
+			     ;"code for rest of clause"
+			     <TRANSLATE-CLAUSE <REST .CLS> .RETVAR
+					       .REF <SET REF <GENREF>>
+					       .ACT-LIST .DEF-ACT
+					       .MAP-LIST .SYMBOLS
+					       .NLEVEL>
+			     ;"then return to end of cond." 
+			     <COND (<NOT .LAST>
+				    <MCODIFY <SET MFORM <FORM GO .NXT>>
+					     .REF <SET REF <GENREF>>>
+				    ;"prepare for backpatching."
+				    <FORWRD-REF <REST .MFORM>>)>
+			     ;"set up for compiling next clause"      
+			     <COND (<NOT .LAST>
+				    <SET REF .NEXT-CLAUSE>)>)>>
+		     .CLAUSE-LIST>
+	       .RETVAR)>>
+
+<DEFINE COMPILE:AND (MOBJ RETVAR REF NXT ACT-LIST DEF-ACT MAP-LIST SYMBOLS NLEVEL)
+	<COND (<LENGTH? .MOBJ 1> T)
+	      (ELSE
+	       <MAPR <>
+		     <FUNCTION (ARGS "AUX" (ARG <1 .ARGS>))
+		      #DECL ((ARGS) LIST (ARG) ANY)
+		      <MCODE-DISPATCH
+		       .ARG
+		       .RETVAR
+		       .REF  <COND (<LENGTH? .ARGS 1> .NXT)
+				   (ELSE <SET REF <GENREF>>)>
+		       .ACT-LIST .DEF-ACT .MAP-LIST
+		       .SYMBOLS .NLEVEL>
+		      <MCODIFY <FORM IF .RETVAR .REF .NXT>
+		       .REF
+		       .NXT>>
+		     <REST .MOBJ>>)>>
+
+
+	      

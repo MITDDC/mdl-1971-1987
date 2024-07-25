@@ -1,0 +1,18 @@
+<USE "GLUE" "PDUMP">
+
+<SETG L-SEARCH-PATH (["READER"] ["COMMUD"] !,L-SEARCH-PATH)>
+
+<DEFINE GL (X)
+	<AND <SET GRP <GROUP-LOAD <STRING .X ".NBIN">>>
+	     <GROUP-GLUE .GRP <> .OUTCHAN .X>
+	     .GRP>>
+
+<DEFINE G (X "OPTIONAL" (S <>))
+	<AND .S <SNAME .S>>
+	<AND <GL .X> <GROUP-DUMP <STRING .X ".GBIN">>>>
+
+<DEFINE P (X "OPTIONAL" (S <>) "AUX" A)
+	<AND .S <SNAME .S>>
+	<AND <SET A <GL .X>> <PDUMP .A>>>
+
+<DEFINE NM (S) <3 <CHANNEL "READ" .S>>>

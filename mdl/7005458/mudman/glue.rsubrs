@@ -1,0 +1,52 @@
+HOW TO HAND-CRAFT GLUED RSUBRS
+
+	Given the useless handcrafted RSUBR:
+
+--------------------------------------------------------
+;"<DEFINE USELESS (X "OPTIONAL" (Y 69)) <* .X .Y>>"
+
+<TITLE USELESS>
+	<DECLARE ("VALUE" FIX FIX "OPTIONAL" FIX)>
+	<MOVEI	C* 69>		; "DEFAULT ARG2"
+	<HLRZ	A* AB>
+	<CAIE	A* -1>		; "ONE ARG?"
+	<MOVE	C* 3(AB)>	; "NO, USE SUPPLIED ONE"
+	<MOVE	B* 1(AB)>
+	<IMUL	B* C>
+	<MOVSI	A* <TYPE-CODE FIX>>
+	<JRST	FINIS>
+--------------------------------------------------------
+
+it can be transformed into a glueable, useless handcrafted RSUBR
+that looks like:
+
+--------------------------------------------------------
+<TITLE USELESS>
+	<DECLARE ("VALUE" FIX FIX "OPTIONAL" FIX)>
+	<DPUSH	TP* (AB)>
+	<AOBJN	AB* HERE 1>
+	<AOBJP	AB* ONEARG>	; "JUMP IF ONLY ONE ARG"
+	<DPUSH	TP* (AB)>	; "ELSE PUSH ARG2"
+	<PUSHJ	P* IUSELESS2>	; "2 ARG ENTRY"
+	<JRST	FINIS>
+
+ONEARG	<PUSHJ	P* IUSELESS1>	; "1 ARG ENTRY"
+	<JRST	FINIS>
+
+<INTERNAL-ENTRY IUSELESS1 1>
+	<SUBM	M* (P)>
+	<PUSH	TP* <TYPE-CODE FIX>>	; "FAKE SECOND ARG"
+	<PUSH	TP* [<69>]>
+	<JRST	UL2>		; "AND ENTER TWO ARG ENTRY"
+
+<INTERNAL-ENTRY IUSELESS2 2>
+	<SUBM	M* (P)>
+UL2	<MOVE	B* -2(TP)>	; "GET ARG1"
+	<IMUL	B* (TP)>
+	<MOVSI	A* <TYPE-CODE FIX>>
+	<SUB	TP* [<4 (4)>]>	; "FLUSH ARGS"
+	<JRST	MPOPJ>
+----------------------------------------------------------
+
+	Disgusting, isn't it?
+

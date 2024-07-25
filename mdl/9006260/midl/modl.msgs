@@ -1,0 +1,131 @@
+ [13]    F #128997: 11/10 17:25	BKD => clr, btb, pdl, marc, taa, msb, swg, jmb, 
+				sec  Re: Micro-Muddle (or Son-of-Muddle)
+ [35]    F #129271: 11/14 10:15	REEVE@CCA => bkd@DMS
+				Re: Micro-Muddle (or Son-of-Muddle)
+ [38]    F #129275: 11/14 13:11	MSB => BKD  Re: MICRO MUDDLE
+
+[Message #13 (128997)]
+
+BKD@MIT-DMS 11/10/79 17:25:22 Re: Micro-Muddle (or Son-of-Muddle)
+To: clr@MIT-DMS, btb@MIT-DMS, pdl@MIT-DMS, marc@MIT-DMS, taa@MIT-DMS, 
+msb@MIT-DMS, swg@MIT-DMS, jmb@MIT-DMS, sec@MIT-DMS
+Suppose some poor demented, brain-damaged individual (say, for example, me)
+was considering producing a "version" of MUDDLE on micro-computers.
+And say it would be a transportable implementation for the current crop
+of 16 bit micros (e.g. Z8000, 68000, 8086, 9900) with a moderate though
+not huge amount of main memory (e.g. 64/128/256 K "BYTES"). Then,
+question: What features of current Muddle should be provided (i.e. what
+data types, what control structures, what Subrs, what general capabilities
+(e.g. multi-processing), what I/O operations, etc). What are the
+really essential features of Muddle. What makes Muddle "MUDDLE".
+What features might be removed. Note that one wants to be particularly
+selective in including features since this eats up valuable memory.
+Also since this would require a complete re-design and implementation,
+what modifications of current Muddle features or their implementations
+might be desirable.  My own inclination here is to sacrifice upward
+compatibility from the existing Muddle whenever a noticably cleaner
+language or better implementation can be acheived.  We might even consider
+certain selected, particularly important extensions to Muddle.
+Finally, what thoughts do you have on how this might best be
+accomplished, e.g. should it be more compilation-oriented or
+interpreter-oriented, how could transportability best be acheived.
+
+I am seeing more and more commercial interest out there for what
+might be termed "complex systems" and the tools NECESSARY for their
+construction. So vote soon, vote often for your favorite (or least 
+favorite) Muddle feature.
+					/Bruce
+
+
+[Message #35 (129271)]
+
+Date: 14 NOV 1979 1015-EST
+From: REEVE at CCA (Chris Reeve)
+Subject: Re: Micro-Muddle (or Son-of-Muddle)
+To:   bkd at DMS
+cc:   btb at DMS, msb at DMS, pdl at DMS, taa at DMS,
+cc:   marc at DMS, sec at DMS, swg at DMS, jmb at DMS
+
+In response to the message sent  10 Nov 1979 1725-EST from BKD@MIT-DMS 
+
+Bruce,
+	Just a few initial thoughts on the subject of a transportable
+muddle for a micro.  First let me make a pass at features that make
+muddle "MUDDLE":
+
+	1)  Argument list flexibility.
+	2)  "What goes in comes out".  Every data structure has a reversible
+	structure to text transformation.
+	3)  MAPF/MAPR/REPEAT and maybe ILIST etc.
+	4)  TYPES and NEWTYPES...I realize that this costs a lot but I think it
+	is worth it.
+	5)  Most of the structure subrs and arith subrs should be included.
+
+I'm sure there are others.  Now for features to flush:
+
+	1)  Multi-processing and environments.
+	2)  Associations.  Possibly a prop list on atoms.
+	3)  OBLISTs as they are now implemented.  A completely new design
+	would be desireable here.  The capability available is good but a
+	more efficient implementation should be doable.
+	4)  Defer pointers.  They complicate things and are grossly
+	implementation dependent.
+	5)  I/O should be redone from scratch.
+	6)  Possibly segements should go....They are nice but make for much
+	hair.
+	7)  Possibly some of the structures should go...LIST,VECTOR,UVECTOR,
+	STRING,BYTES,TEMPLATE,TUPLE.  Hard decision.
+
+Once again there must be others.
+
+Other ideas.  Zoned gc space might help in a system with disk so that larger
+programs could exist and parts of gc space could move in and out.  Much of the
+internals of current MUDDLE is very adhocly coded.  I think a lot of space
+could be saved if more things were table-driven and less straight line code
+etc.  In a system with a disk, swappable "FBINs" would be useful but....
+
+One overall approach would be to build a very tight minimal core of an
+iterpreter (with almost no subrs) and then have the subrs as "compiled code".
+This the approach that was once considered for making a basic exportable
+MUDDLE.  The hack would be to have a compiler to produce code for the different
+machines on which the thing was to run.  One major problem is providing a
+compiler that could fit on a micro...
+
+The ideal situation would be to have an interpreter and some ability to produce
+compiled code as well.  Consider the possibility of providing a dial-up
+combat resource where users could send programs and receive compiled code
+back...  Oh well, I'm rambling.  Let me know what becomes of this demented
+idea.  Is it an official APPLE hack or is it just a BKD hack?
+
+Good luck,
+Chris
+-------
+
+
+
+
+[Message #38 (129275)]
+
+MSB@MIT-DMS 11/14/79 13:11:50 Re: MICRO MUDDLE
+To: BKD@MIT-DMS
+CC To: clr@MIT-DMS, btb@MIT-DMS, pdl@MIT-DMS, swg@MIT-DMS, 
+marc@MIT-DMS, taa@MIT-DMS, jmb@MIT-DMS, sec@MIT-DMS
+Bruce,
+   I have an old document I wrote in March of 78 about the son-of-MDL idea.
+It was intended for internal use, so is a little rough about the edges.  You
+may find some interesting ideas in it, however.  Look at "MSB;MODL MEMO".
+I have also completed an implementation of psueod-MDL in COBOL (6000 lines)
+as part of one of my consulting assignments.  What I produced was a language
+with 55 operators, MDL syntax, STRINGs, NUMERICs, and 1 and 2-dimensional
+ARRAYs.  Report Generation operators, too.  It was designed for a particular
+application, i.e., financial modeling and forecasting (hence the report
+generation operators).  In the process, I came up with a couple of unique
+control structure operators.  It is a good example of a minimal implementation
+of MDL, designed for a particular set of applications and for use by
+non-hackers.  It was surprisingly easy to implement, and has been i
+near-daily use for months without any bugs showing up.  I have a reference
+manual that I wrote as part of the project.  You are welcome to look at it,
+the next time you're in the area.
+					Mike
+
+

@@ -1,0 +1,185 @@
+<PACKAGE "R-DEFS">
+
+<ENTRY READER-SPACES USER>
+
+<ENTRY M-TABLE M-FOLDERS M-ASYLUM M-FIXES M-TAILOR>
+
+<ENTRY UPDATE?>
+
+<ENTRY R-USED R-HEADER R-TUPLE R-FOLDERS
+       R-IN-BOX R-OUT-BOX R-PENDING R-DISCARDED
+       R-UNSUMMARIZED R-UNREAD R-RECENT R-NEW
+       R-SENT R-ASYLUM R-ACTION R-ANSWERED R-FORWARDED
+       R-USER R-SEARCH R-REMIND>
+
+<ENTRY I-NAME I-TUPLE I-KEY>
+
+<ENTRY T-LOCAL-FORMAT T-NET-FORMAT T-EDITOR T-TAILOR T-STARTUP>
+
+<ENTRY T-CLEAR T-UPDATE T-RENUMBER T-SUMMARIZE T-SCAN>
+
+<ENTRY READER-ASYLUM READER-SPACE READER-TAILOR
+       MESSAGE-TABLE FIX-TABLE LOCAL-MESSAGES
+       FOLDER-TABLE FOLDER-SYMBOLS>
+
+<ENTRY MTABLE INVERSION BIT>
+
+<ENTRY ON? ONBITS OFFBITS MSG>
+
+<USE "MADMAN" "ASYLUM">
+
+\
+
+<SETG UPDATE? <>>			;"message table needs updating?"
+<SETG READER-ASYLUM <>>			;"reader asylum"
+<SETG READER-SPACE <>>			;"for message table, etc."
+<SETG READER-TAILOR <>>
+<SETG FIX-TABLE <>>			;"workspace messages"
+<SETG LOCAL-MESSAGES <>>		;"stored in user's asylum"
+<SETG FOLDER-TABLE '[]>			;"folders and their bits"
+<SETG FOLDER-SYMBOLS '[]>		;"symbol table for folders"
+
+<GDECL (USER) STRING
+       (READER-ASYLUM) <OR FALSE ASYLUM>
+       (READER-SPACE) <OR FALSE SPACE>
+       (READER-TAILOR) <OR FALSE VECTOR>
+       (MESSAGE-TABLE) MTABLE
+       (FIX-TABLE) <OR FALSE <VECTOR [REST <OR FIX FALSE>]>>
+       (LOCAL-MESSAGES) <OR FALSE <VECTOR [REST FIX]>>
+       (FOLDER-TABLE) <VECTOR [REST STRING FIX]>
+       (FOLDER-SYMBOLS) <VECTOR [REST STRING]>>
+
+"maniacs -- ten are reserved"
+
+<SETG M-TABLE 1>			;"maniac of message table"
+<SETG M-FOLDERS 2>			;"names of folders"
+<SETG M-ASYLUM 3>			;"newly added to asylum"
+<SETG M-FIXES 4>			;"fix table"
+<SETG M-TAILOR 5>			;"tailoring goodies"
+
+<MANIFEST M-TABLE M-FOLDERS M-ASYLUM M-FIXES M-TAILOR>
+
+\
+
+"SUBTITLE Message Table"
+
+<PUT MTABLE DECL '<UVECTOR [REST FIX]>>
+<GDECL (MESSAGE-TABLE) MTABLE>
+
+<DEFMAC BIT ('N)
+	<COND (<==? .N 0> #WORD *400000000000*)
+	      (<==? .N 1> #WORD *200000000000*)
+	      (ELSE
+	       <FORM CHTYPE
+		     <FORM / *200000000000* <FORM * !<ILIST <- .N 1> '2>>>
+		     WORD>)>>
+
+"offsets in message table"
+
+<SETG R-USED 1>		;"itime of last update of table"
+<SETG R-HEADER 2>	;"size of header"
+<SETG R-TUPLE 3>	;"size of message tuples"
+<SETG R-FOLDERS 4>	;"folder bits"
+
+<MANIFEST R-USED R-HEADER R-TUPLE R-FOLDERS>
+
+"All
+  File
+  Workspace
+   In-box
+   Out-box
+   Pending
+  Discarded"
+
+<SETG R-IN-BOX <BIT 0>>	;"in-box"
+<SETG R-OUT-BOX <BIT 1>> ;"out-box"
+<SETG R-PENDING <BIT 2>> ;"pending"
+<SETG R-DISCARDED <BIT 3>> ;"discarded"
+
+<SETG R-UNSUMMARIZED <BIT 4>> ;"not summarized"
+<SETG R-UNREAD <BIT 5>>	;"never read"
+<SETG R-RECENT <BIT 6>>	;"since last session"
+<SETG R-NEW <BIT 7>>	;"during session"
+<SETG R-SENT <BIT 8>>	;"user originated"
+<SETG R-ASYLUM <BIT 9>>	;"in asylum"
+<SETG R-ACTION <BIT 10>> ;"action-completed"
+<SETG R-ANSWERED <BIT 11>> ;"answered"
+<SETG R-FORWARDED <BIT 12>> ;"forwarded"
+<SETG R-USER <BIT 13>>	;"user typed these in"
+<SETG R-SEARCH <BIT 14>> ;"result of a search"
+<SETG R-REMIND <BIT 15>> ;"reminder"
+
+<MANIFEST R-IN-BOX R-OUT-BOX R-PENDING R-DISCARDED
+	  R-UNSUMMARIZED R-UNREAD R-RECENT R-NEW
+	  R-SENT R-ASYLUM R-ACTION R-ANSWERED R-FORWARDED
+	  R-USER R-SEARCH R-REMIND>
+
+"SUBTITLE INVERSION"
+
+"INVERSION -- make an empty inversion with a given name" 
+
+<DEFINE INVERSION (NAM KEY)
+	#DECL ((NAM) STRING (KEY) ANY (VALUE) INVERSION)
+	<VECTOR .NAM <> .KEY>>
+
+<PUT INVERSION
+     DECL
+     '<VECTOR STRING ANY ANY>>
+
+<SETG I-NAME 1>
+<SETG I-TUPLE 2>
+<SETG I-KEY 3>
+
+<MANIFEST I-NAME I-TUPLE I-KEY>
+
+<SETG T-LOCAL-FORMAT 1>	;"local message format"
+<SETG T-NET-FORMAT 2>	;"net message format"
+<SETG T-EDITOR 3>	;"editor to use"
+<SETG T-TAILOR 4>	;"what to do in general"
+   <SETG T-CLEAR <BIT 35>>	;"1=clear screen before message"
+   <SETG T-UPDATE <BIT 34>>	;"1=update after each command"
+   <SETG T-RENUMBER <BIT 33>>	;"1=renumber after expunge"
+<SETG T-STARTUP 5>	;"what to do on startup"
+   <SETG T-SCAN <BIT 35>>	;"1=scan recently received"
+   <SETG T-SUMMARIZE <BIT 34>>	;"1=summarize recently received"
+
+<MANIFEST T-LOCAL-FORMAT T-NET-FORMAT T-EDITOR T-TAILOR T-STARTUP>
+
+<MANIFEST T-CLEAR T-UPDATE T-RENUMBER T-SUMMARIZE T-SCAN>
+
+\
+
+"SUBTITLE Initialize READER spaces"
+
+<DEFINE READER-SPACES ()
+	<COND (<AND ,READER-SPACE <TYPE? ,READER-SPACE SPACE>>
+	       <ARESTORE ,READER-SPACE>)
+	      (ELSE <SETG READER-SPACE <AFIND 2>>)>>
+
+\
+
+<DEFMAC ON? ('U 'B "OPTIONAL" ('O 1))
+	<FORM PROG ((U .U) (B .B) (O .O))
+	      #DECL ((U) <UVECTOR [REST FIX]> (B) <PRIMTYPE WORD>
+		     (O) FIX)
+	      '<NOT <0? <CHTYPE <ANDB <NTH .U .O> .B> FIX>>>>>
+
+<DEFMAC ONBITS ('U 'B "OPTIONAL" ('O 1))
+	<FORM PROG ((U .U) (B .B) (O .O) '(OLD <NTH .U .O>) NEW)
+	      #DECL ((U) <UVECTOR [REST FIX]> (O OLD NEW) FIX
+		     (B) <PRIMTYPE WORD>)
+	      '<PUT .U .O <SET NEW <CHTYPE <ORB .OLD .B> FIX>>>
+	      '<COND (<N==? .OLD .NEW> <SETG UPDATE? T>)>>>
+
+<DEFMAC OFFBITS ('U 'B "OPTIONAL" ('O 1))
+	<FORM PROG ((U .U) (B .B) (O .O) '(OLD <NTH .U .O>) NEW)
+	      #DECL ((U) <UVECTOR [REST FIX]> (O OLD NEW) FIX
+		     (B) <PRIMTYPE WORD>)
+	      '<PUT .U .O
+		    <SET NEW <CHTYPE <ANDB .OLD <XORB .B -1>> FIX>>>
+	      '<COND (<N==? .OLD .NEW> <SETG UPDATE? T>)>>>
+
+<DEFMAC MSG ('UV)
+	<FORM CHTYPE <FORM GETBITS <FORM 1 .UV> '<BITS 18>> FIX>>
+
+<ENDPACKAGE>

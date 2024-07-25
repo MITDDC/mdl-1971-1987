@@ -1,0 +1,221 @@
+'<PCODE "2M-DMN">
+
+<PACKAGE "M-DMN"> 
+
+"MAIN DEMON FUNCTIONS/LOOPS/ETC." 
+
+<ENTRY SAVE-COMSYS MAKE-RUN WORK READ-DATUMS ADD-BATCH-TASK BCKDO FDO NXTRUN 
+MORE-WORK? BSTOP BSTART CRASH-FIXUP CONTINUE SCRIPT SCRIPT-OFF 
+DEBUG-RUNNING-DEMON?> 
+
+<USE "M-PRCD" "M-PDO" "M-ERR" "OPSYS" "NOW" "ITIME" "M-TIME" "LOGIN" "FIELDS" 
+"M-READ" "M-DAC" "M-DLV" "M-BASE" "M-INP" "RQFILE" "M-MSG" "M-DATA" "PRTUTI" 
+"GC" "M-DEFS" "M-DB" "HOSTS" "M-HNG" "USRUTI" "MADMAN" "ASYLUM" "OPEN-APPEND" 
+"FINT" "LHOST"> 
+
+<OPSYS (ITS <USE "M-CONV" "STDMST">)> 
+
+<GDECL (SCRCHN) <OR CHANNEL FALSE> (DEBUG-RUNNING-DEMON? RUN1? STOP?) <OR ATOM 
+FALSE> (EH IH SH GH BH) HANDLER (CR HDR) STRING (GC-TIME CPUSTART) FLOAT (
+GC-COUNT) FIX (BATCH-TASKS) <LIST ATOM [REST ANY]>> 
+
+<PROG () <SETG GC-COUNT 0> <SETG GC-TIME 0.0000000> <SETG DEBUG-RUNNING-DEMON? <
+>> <SETG RUN1? T> <SETG STOP? <>> <SETG SCRCHN <>> <SETG CR <STRING <ASCII 13> <
+ASCII 10>>> <SETG HDR <STRING ,CR <ASCII 12> ,CR <ISTRING 60 !\*> <ASCII 13> <
+ASCII 10> <ASCII 13> <ASCII 10>>> <SETG BATCH-TASKS (T)>> 
+
+\ 
+
+"SAVE-COMSYS -- creates save file which will run daemon if restored
+  when not under tty, else sets up for debugging." 
+
+<SETG SAVE-COMSYS  %<RSUBR!- '[ %<PCODE!- "2M-DMN" 0> SAVE-COMSYS #DECL ("VALUE"
+<OR ATOM FALSE STRING> "OPTIONAL" <OR FALSE FIX>) LTIME OPEN-APPEND INT-INFO 
+PPRINT DWT ERR-REPORT DRD PRC-PRINT PRCSKD PRCRUN PRCGET DRDMSG 
+FLUSH-NET-MESSAGE NXTPNQ RQRCVR TIMPNQ SENDMSG RQDELE MSGPNQ RQ-DO PFL DCLOSE 
+NET-CLOSE CHECK-DATA-BASE UPDMSG NOW DATED-DATUM FRATM FR& QTIME RQEXIST? SCROUT
+ HOME? INIT ITIME WATCH DIVERT HOST LOCAL-HOST DATUM INIT-SPACES OUTCHAN 
+"Creating " %<RGLOC VER T> "COMSYS-SAVE-FILE" ".SAVE" ", Version " "" "SAVED" 
+"DONE" %<RGLOC HOSTNUMBER T> "COMSYS-DAEMON" GH "GC" %<RGLOC WATCH-GC T> T %<
+RGLOC DEMON-DEBUG? T> "READ" "COMSYS-UPDATE-FILE" %<RGLOC CPUSTART T> %<RGLOC 
+STARTTIME T> "COMMUD" "Restored " ", Host " CRLF "REALT" "COMSYS-STOP-FILE" %<
+RGLOC STOP? T> "COMSYS-RUN-INTERVAL" %<RGLOC PENDING T> %<RGLOC NEW-WORK T> ,
+NEW-WORK %<RGLOC BATCH-TASKS T> "Batching: " BH "ERROR" %<RGLOC BATCH-ERR T> 
+"Batch: " BATCH-ACT (ACTIVATION) %<RGLOC BH T> LERR\ !-INTERRUPTS (FRAME) 
+">>>> Error in Batch Task, Args -- " " <<<<" #FALSE ("STOPPED") #FALSE (
+"NO WORK") "COMSYS-VOLATILE-DATA" "Loaded datum: " " from " %<RGLOC DEMON? T> %<
+RGLOC GC-TIME T> %<RGLOC GC-COUNT T> %<RGLOC SCRCHN T> (CHANNEL) %<RGLOC CHNLOC 
+T> %<RGLOC HDR T> %<RGLOC RUN1? T> "Beginning" "Continuing" 
+" Demon Run, Version: " ", " EH %<RGLOC WATCH-ERR T> 
+"Aborting Run, Stop Flag Set." %<RGLOC EH T> ">>>> Can't Open Data Base: " 
+"Cpu-time Used: " " secs." " (plus " " secs. GC time in " " GCs)" " GC)" MOBY 
+"!!! Moby message arrived, reloading... !!!" NONE SUCCESS TRY-LATER %<TYPE-W 
+SPACE VECTOR> %<RGLOC SCRATCH-SPACE T> "COMSYS-MAINTAINER" %<INTERNAL-RSUBR 
+ALIST 262143> "ERROR IN FILE INPUT" "FILE: " %<RGLOC CR T> "REASON: " "MSG #: " 
+"--none--" "ADDRESSEE: " %<INTERNAL-RSUBR ASTRING 262143> "COMMUNICATION-DAEMON"
+ #FALSE ("QUEUE NON-EMPTY") " Input Files Recovered" 
+"Setting Flag to Stop Background Scan." 
+"Setting Flag to Resume Background Scan." %<RGLOC BLOAT-UVECTOR T> %<RGLOC 
+QUEUE-SPACE T> %<RGLOC SHOW-PROCESS T> %<RGLOC MDB T> " for Author: " " at " 
+" for Author" " for " %<INTERNAL-RSUBR ARELEASE 3> 
+"...Total garbage generated: " " words..." "Daemon being turned off." 
+"Queue processing scheduled in " "Will awake for new mail and every " 
+" minutes." "!!!! Eval Inquiry from " " " " !!!!" PARSE "!!!! Ends !!!!" 
+">>>> Parity Error or Irrecoverable Disk Error: " 
+"**** System Revived, Resuming Scan ****" "**** System-going-down in " 
+" minutes, Setting Stop Flag " " ****" 
+">>>> Top Level Error Interrupt, Args -- " %<RGLOC DEBUG-RUNNING-DEMON? T> 
+":DIED" CHNLOC "READY" "COMSYS-SCRIPT-FILE" CANT-OPEN-SCRIPT-FILE SCRIPT 
+"**** Closing Script, "]>> 
+<AND <ASSIGNED? GLUE> .GLUE <PUT ,SAVE-COMSYS PGLUE ![715827882 -22906492246 
+-22907191296 0 0 0 0 0 0 0 0!]>> 
+
+
+\ 
+
+"MAKE-RUN -- main drive for daemon" 
+
+<SETG MAKE-RUN %<RSUBR-ENTRY '[SAVE-COMSYS MAKE-RUN #DECL ("VALUE" ATOM)] 221>> 
+
+"WAIT-FOR-WORK -- sleep until goodies appear" 
+
+<SETG WAIT-FOR-WORK %<RSUBR-ENTRY '[SAVE-COMSYS WAIT-FOR-WORK #DECL ("VALUE" 
+ATOM FIX ANY)] 311>> 
+
+<SETG ADD-BATCH-TASK %<RSUBR-ENTRY '[SAVE-COMSYS ADD-BATCH-TASK #DECL ("VALUE" <
+OR FALSE <LIST [REST ANY]>> ANY)] 345>> 
+
+<SETG DO-BATCH-TASKS %<RSUBR-ENTRY '[SAVE-COMSYS DO-BATCH-TASKS #DECL ("VALUE" 
+LIST)] 395>> 
+
+<SETG BATCH-ERR %<RSUBR-ENTRY '[SAVE-COMSYS BATCH-ERR #DECL ("VALUE" ANY FRAME 
+"TUPLE" TUPLE)] 476>> 
+
+"MORE-WORK? -- returns t if new input files have arrived or had something
+ready on pending-queue when last went to sleep." 
+
+<SETG MORE-WORK? %<RSUBR-ENTRY '[SAVE-COMSYS MORE-WORK? #DECL ("VALUE" <OR ATOM 
+!<FALSE STRING!>>)] 539>> 
+
+"READ-DATUMS -- read volatile datums if they are new" 
+
+<SETG READ-DATUMS %<RSUBR-ENTRY '[SAVE-COMSYS READ-DATUMS #DECL ("VALUE" ATOM 
+"OPTIONAL" <OR ATOM FALSE>)] 556>> 
+
+\ 
+
+"WORK -- make a run, return when no more to do with time til next run
+   or false if lossage
+   rescheduling of daemon handled internally" 
+
+<SETG WORK %<RSUBR-ENTRY '[SAVE-COMSYS WORK #DECL ("VALUE" <OR FALSE FIX>)] 625>
+> 
+
+<SETG WTIME %<RSUBR-ENTRY '[SAVE-COMSYS WTIME #DECL ("VALUE" ATOM FLOAT)] 826>> 
+
+\ 
+
+"FDO -- file processor -- reads a file, clears queue, repeats
+  until all files gone" 
+
+<SETG FDO %<RSUBR-ENTRY '[SAVE-COMSYS FDO #DECL ("VALUE" ATOM)] 897>> 
+
+\ 
+
+"NXTRUN -- returns time until next run, or false if asap" 
+
+<SETG NXTRUN %<RSUBR-ENTRY '[SAVE-COMSYS NXTRUN #DECL ("VALUE" <OR !<FALSE 
+STRING!> FIX>)] 1104>> 
+
+"CRASH-FIXUP -- cleans up files left if previous run crashed" 
+
+<SETG CRASH-FIXUP %<RSUBR-ENTRY '[SAVE-COMSYS CRASH-FIXUP #DECL ("VALUE" <OR 
+ATOM FALSE>)] 1163>> 
+
+"BSTOP -- function which sets flag to stop background
+  processing prematurely, such as when system is about to go down" 
+
+<SETG BSTOP %<RSUBR-ENTRY '[SAVE-COMSYS BSTOP #DECL ("VALUE" <OR ATOM FALSE>)] 
+1185>> 
+
+<SETG BSTART %<RSUBR-ENTRY '[SAVE-COMSYS BSTART #DECL ("VALUE" <OR ATOM FALSE>)]
+1200>> 
+
+\ 
+
+"BCKDO -- main loop of processor
+
+ -- runs until no processes left on queue
+ -- does not load fresh queue on entry
+
+ -- if in bck loop for more than 25 msgs/users, does compaction
+    as needed to avoid filling up directories
+
+ -- returns t if all ok and queue empty now" 
+
+<SETG BLOAT-UVECTOR <IUVECTOR 27 0>> 
+
+<GDECL (BLOAT-UVECTOR) <UVECTOR [REST FIX]>> 
+
+<SETG BCKDO %<RSUBR-ENTRY '[SAVE-COMSYS BCKDO #DECL ("VALUE" ATOM)] 1215>> 
+
+\ 
+
+"REPORT-ERRORS -- error reporting function -- looks at current
+  message, and reports any pending error conditions" 
+
+<SETG REPORT-ERRORS %<RSUBR-ENTRY '[SAVE-COMSYS REPORT-ERRORS #DECL ("VALUE" ANY
+ADDRESS)] 1467>> 
+
+\ 
+
+"SCHEDULE -- used to reschedule daemon for future run
+ -- takes fix, number of minutes to next run, 0= never (wait for demsig)" 
+
+<SETG SCHEDULE %<RSUBR-ENTRY '[SAVE-COMSYS SCHEDULE #DECL ("VALUE" FALSE FIX)] 
+1555>> 
+
+"ILO -- ipc interrupt handler -- does it but prints evidence, too" 
+
+<SETG ILO %<RSUBR-ENTRY '[SAVE-COMSYS ILO #DECL ("VALUE" ANY STRING FIX STRING 
+STRING "OPTIONAL" STRING STRING)] 1597>> 
+
+<SETG PLO %<RSUBR-ENTRY '[SAVE-COMSYS PLO #DECL ("VALUE" ANY <PRIMTYPE LIST>)] 
+1657>> 
+
+"WATCH-PARITY -- die if parity error (real or irrec.)" 
+
+<SETG WATCH-PARITY %<RSUBR-ENTRY '[SAVE-COMSYS WATCH-PARITY #DECL ("VALUE" FALSE
+WORD)] 1750>> 
+
+"WATCH-GC -- keep track of gc time and count" 
+
+<SETG WATCH-GC %<RSUBR-ENTRY '[SAVE-COMSYS WATCH-GC #DECL ("VALUE" FLOAT FLOAT 
+ANY ANY)] 1770>> 
+
+"WATCH-SYSDOWN -- go away if system going down in less than five minutes" 
+
+<SETG WATCH-SYSDOWN %<RSUBR-ENTRY '[SAVE-COMSYS WATCH-SYSDOWN #DECL ("VALUE" ANY
+"TUPLE" <TUPLE FIX>)] 1803>> 
+
+"WATCH-ERR -- top-level error monitor" 
+
+<SETG WATCH-ERR %<RSUBR-ENTRY '[SAVE-COMSYS WATCH-ERR #DECL ("VALUE" FALSE FRAME
+"TUPLE" TUPLE)] 1851>> 
+
+\ 
+
+<SETG CONTINUE %<RSUBR-ENTRY '[SAVE-COMSYS CONTINUE #DECL ("VALUE" STRING 
+"OPTIONAL" <OR CHANNEL FALSE>)] 1917>> 
+
+<SETG SCRIPT %<RSUBR-ENTRY '[SAVE-COMSYS SCRIPT #DECL ("VALUE" <OR ATOM FALSE>)]
+1976>> 
+
+<SETG SCRIPT-OFF %<RSUBR-ENTRY '[SAVE-COMSYS SCRIPT-OFF #DECL ("VALUE" <OR 
+CHANNEL FALSE>)] 2075>> 
+
+"D6 -- returns 6 character date string" 
+
+<SETG D6 %<RSUBR-ENTRY '[SAVE-COMSYS D6 #DECL ("VALUE" STRING)] 2105>> 
+
+<ENDPACKAGE> 

@@ -1,0 +1,191 @@
+<DEFINE COMPILE:FUNCTION C:F (MOBJ "AUX" REF RETVAR
+			      (ACT-LIST ()) (DEF-ACT ()) (MAP-LIST ())
+			      (NLEVEL 1) STARTLIST (DECLLIST ()) MSAVE
+			      FUNCEND (SYMBOLS ()) (HEWITT <>)
+			      (ACT-NAME <>) (BINDINGS 0)
+			      ARGLIST SYM DFL D-A)
+	#DECL ((MOBJ MSAVE) <PRIMTYPE LIST> (REF FUNCEND) FORWRD
+	       (RETVAR) VARIABLE (SYM) <OR ATOM VARIABLE>
+	       (ACT-NAME HEWITT) <OR ATOM VARIABLE FALSE> 
+	       (ACT-LIST DEF-ACT D-A MAP-LIST) LIST (NLEVEL) FIX
+	       (STARTLIST DECLLIST ARGLIST) LIST (BINDINGS) FIX
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]>
+	       (DFL) LIST) 
+	;"initialize an MFUNCTION"
+	<NEW-MFUNCTION>
+	<SET RETVAR <RETVAR ,MFUNCTION>>
+	<SET REF <GENREF>><SET FUNCEND <GENREF>>
+	<COND (<TYPE? .MOBJ FORM>
+	       ;"it's  <FUNCTION...>, turn it into #FUNCTION"
+	       <SET MOBJ <EVAL .MOBJ>>)>
+	<COND (<EMPTY? .MOBJ>
+	       <REPORT-ERROR NO-ARG-LIST-TO-FUNCTION COMPILE:FUNCTION>)>
+	<SET MSAVE .MOBJ>
+	;"push a new SYMBOL-TABLE"
+	<SET SYMBOLS (<MAKE-SYMBOL-TABLE> !.SYMBOLS)>
+	;"look for HEWITT ATOM"
+	<COND (<TYPE? <1 .MOBJ> ATOM>
+	       ;"HEWITT ATOM."
+	       <SET HEWITT <1 .MOBJ>>	       
+	       <SET MOBJ <REST .MOBJ>>)>
+	;"look for argument list."
+	<COND (<NOT <TYPE? <1 .MOBJ> LIST>>
+	       <REPORT-ERROR NO-ARGUMENT-LIST-TO-FUNCTION
+			     COMPILE:FUNCTION>)
+	      (ELSE <SET ARGLIST <1 .MOBJ>>
+		    <SET MOBJ <REST .MOBJ>>)>
+	;"check for decl"
+	<COND (<AND <G=? <LENGTH .MOBJ> 1>
+		    <TYPE? <1 .MOBJ> DECL>>
+	       <SET DCL <1 .MOBJ>>
+	       <SET MOBJ <REST .MOBJ>>)
+	      ;"function has no decl"
+	      (ELSE <SET DCL #DECL ()>)>
+	;"frob the HEWITT ATOM now."
+	<COND (.HEWITT
+	       ;"HEWITT should be ATOM in here."
+	       <SET HEWITT
+		    <NEW-BINDING .HEWITT .DCL>>)>
+	;"start frobbing argument-list"
+	;"*BIND CAN OCCUR HERE*"
+	<COND (<=? <1 .ARGLIST> "CALL">
+	       ;"CAN'T COMPILE"
+	       <RETURN .MSAVE .C:F>)>
+	;"set up for first bblock"
+	<SET STARTLIST <FORWRD-REF (.REF)>>
+	<PUT ,MFUNCTION ,START .STARTLIST>
+	;"look for 'normal' arguments"
+	<REPEAT ()
+	 <COND (<EMPTY? .ARGLIST> <RETURN>)
+	       (<TYPE? <1 .ARGLIST> ATOM>
+		<SET SYM <NEW-BINDING <1 .ARGLIST>
+				      <FIND-DECL <1 .ARGLIST> .DCL>>>
+		;"add to DECL for the MFUNCTION" 
+		<SET DECLLIST <TAILCONS .DECLLIST (.SYM)>>
+		<SET ARGLIST <REST .ARGLIST>>)
+	       (<AND <TYPE? <1 .ARGLIST> FORM>
+		     <==? <LENGTH <1 .ARGLIST>> 2>
+		     <==? <1 <1 .ARGLIST>> QUOTE>
+		     <TYPE? <2 <1 .ARGLIST>> ATOM>>
+		;"new symbol table entry"
+		<SET SYM <NEW-BINDING <2 <1 .ARGLIST>>
+				      <FIND-DECL <2 <1 .ARGLIST>> .DCL>>>
+		;"append to DECL for MFUNCTION."
+		<SET DECLLIST <TAILCONS .DECLLIST (<FORM QUOTE .SYM>)>>
+		<SET ARGLIST <REST .ARGLIST>>)
+	       (ELSE <RETURN> ;"NORMAL ARGS FINISHED")>>
+	;"optionals"
+	<COND (<EMPTY? .ARGLIST>)
+	      (<OR <=? <1 .ARGLIST> "OPTIONAL">
+		   <=? <1 .ARGLIST> "OPT">>
+	       <SET ARGLIST <REST .ARGLIST>>
+	       ;"add to DECL for MFUNCTION."
+	       <SET DECLLIST <TAILCONS .DECLLIST ("OPTIONAL")>>
+	       ;"loop through all optional args."
+	       <REPEAT ()
+	        <COND (<EMPTY? .ARGLIST><RETURN>)
+		      (<TYPE? <1 .ARGLIST> ATOM>
+		       ;"new entry in symbol table."
+		       <SET SYM <NEW-BINDING <1 .ARGLIST>
+					     <FIND-DECL <1 .ARGLIST> .DCL>>>
+		       ;"add to MFUNCTION DECL."
+		       <SET DECLLIST <TAILCONS .DECLLIST (.SYM)>>
+		       <SET STARTLIST <TAILCONS .STARTLIST <FORWRD-REF (.REF)>>>
+		       ;"*CODE FOR #UNBOUND?"
+		       <SET ARGLIST <REST .ARGLIST>>)
+		      (<TYPE? <1 .ARGLIST> LIST>
+		       ;"new entry in symbol-table"
+		       <COND (<NOT <TYPE? <1 <1 .ARGLIST>> ATOM>>
+			      <REPORT-ERROR MEANINGLESS-OPTIONAL-ARG
+					    COMPILE:FUNCTION>)
+			      (ELSE
+			       <SET SYM <NEW-BINDING
+					 <1 .ARGLIST>
+					 <FIND-DECL <1 <1 .ARGLIST>> .DCL>>>
+			       <SET DECLLIST <TAILCONS .DECLLIST (.SYM)>>
+			       <MCODIFY <FORM GO <SET NXTOP <GENREF>>>
+					.REF <SET REF .NXTOP>>
+			       <SET STARTLIST
+				    <TAILCONS .STARTLIST <FORWRD-REF (.REF)>>>
+			       <SET ARGLIST <REST .ARGLIST>>)>)
+		      (ELSE <RETURN>)>>)>  
+	"ARGS xor TUPLE"
+	<COND (<EMPTY? .ARGLIST>)
+	      (<=? <1 .ARGLIST> "ARGS">
+	       ;"DUH?")
+	      (<=? <1 .ARGLIST> "TUPLE">
+	       <SET ARGLIST <REST .ARGLIST>>
+	       ;"add to MFUNCTION DECL"
+	       <SET DECLLIST <TAILCONS .DECLLIST ("TUPLE")>>
+	       ;"new entry in symbol table"
+	       <COND (<NOT <TYPE? <1 .ARGLIST> ATOM>>
+		      <REPORT-ERROR MEANINGLESS-TUPLE-SPECIFICATION
+				    COMPILE:FUNCTION>)
+		     (ELSE
+		      <SET SYM <NEW-BINDING <1 .ARGLIST>
+					    <FIND-DECL <1 .ARGLIST> .DCL>>>
+		      ;"add to DECL for MFUNCTION."
+		      <SET DECLLIST <TAILCONS .DECLLIST (.SYM)>>
+		      <SET ARGLIST <REST .ARGLIST>>)>)>
+	;"check for aux variables."
+	<COND (<EMPTY? .ARGLIST>)
+	      (<OR <=? <1 .ARGLIST> "AUX">
+		   <=? <1 .ARGLIST> "EXTRA">>
+	       <SET ARGLIST <REST .ARGLIST>>
+	       <REPEAT ()
+	        <COND (<EMPTY? .ARGLIST><RETURN>)
+		      (<TYPE? <1 .ARGLIST> ATOM>
+		       ;"new symbol table entry."
+		       <NEW-BINDING <1 .ARGLIST>
+				    <FIND-DECL <1 .ARGLIST> .DCL>>
+		       <SET ARGLIST <REST .ARGLIST>>)
+		      (<TYPE? <1 .ARGLIST> LIST>
+		       ;"*CHECK FOR LEGAL 2-LIST"
+		       
+		       ;"set to value"
+		       <NEW-BINDING <1 .ARGLIST>
+				    <FIND-DECL <1 <1 .ARGLIST>> .DCL>>
+		       <SET ARGLIST <REST .ARGLIST>>)
+		      (ELSE <RETURN>)>>)>
+	;"check NAME, ACT."
+	<COND (<EMPTY? .ARGLIST>)
+	      (<OR <=? <1 .ARGLIST> "ACT"><=? <2 .ARGLIST> "NAME">>
+	       <SET ARGLIST <REST .ARGLIST>>
+	       ;"enter in symbol-table"
+	       <SET ACT-NAME
+		    <NEW-BINDING <1 .ARGLIST>
+				 <FIND-DECL <1 .ARGLIST> .DCL>>>)>
+	;"arglist should be exausted"
+	<COND (<NOT <EMPTY? .ARGLIST>>
+	       <REPORT-ERROR MEANINGLESS-ARG-LIST-IN-FUNCTION
+			     COMPILE:FUNCTION>)>
+	;"record arglist for mfunction."
+	<PUT ,MFUNCTION ,ARGLIST .DECLLIST>
+	;"create activation if necessary."
+	<COND (<OR .HEWITT .ACT-NAME>
+	       <COND (.HEWITT
+		      <MCODIFY <FORM MSET .HEWITT '<MAKE-ACTIVATION>>
+			       .REF <SET REF <GENREF>>>
+		      <COND (.ACT-NAME
+			     <MCODIFY <FORM MSET .HEWITT .ACT-NAME>
+				      .REF <SET REF <GENREF>>>)>)
+		     (ELSE
+		      <MCODIFY <FORM MSET .ACT-NAME '<MAKE-ACTIVATION>>
+			       .REF <SET REF <GENREF>>>)>	       
+	       <SET ACT-LIST
+		    (<BIND ((L ()))
+			   <COND (.HEWITT
+				  <SET L (.HEWITT !.L)>)>
+			   <COND (.ACT-NAME
+				  <SET L (.ACT-NAME !.L)>)>
+			   .L>
+		     <LAST-MCODE ,MFUNCTION>
+		     .REF .FUNCEND .RETVAR .BINDINGS
+		     .NLEVEL !.ACT-LIST)>)> 
+	;"compile body of function."
+	<TRANSLATE-CLAUSE
+	 .MOBJ .RETVAR
+	 .REF .FUNCEND
+	 .ACT-LIST () .MAP-LIST
+	 .SYMBOLS .NLEVEL>
+	<MCODIFY '<END-FUNCTION> .FUNCEND #FORWRD 0>>

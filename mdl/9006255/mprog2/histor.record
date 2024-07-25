@@ -1,0 +1,126 @@
+Compilation record for: DSK:MPROG2;HISTOR USG062
+Output file:  DSK:MPROG2;HISTOR NBIN
+
+It is now Tuesday, 20 Oct 1981 14:49 EDT
+
+File loaded.
+Precompilation loaded.
+Functions ordered.
+COMPILING CHECK-SPAN!-IHISTORY!-HISTORY!-PACKAGE
+===== External variable being referenced:  SPAN!-IHISTORY!-HISTORY!-PACKAGE
+ **** .SPAN!-IHISTORY!-HISTORY!-PACKAGE **** 
+===== Arithmetic can't open compile because:   **** .SPAN!-IHISTORY!-HISTORY!-PA
+CKAGE **** 
+ is of type:  ANY
+ **** <G? .SPAN!-IHISTORY!-HISTORY!-PACKAGE <1 ,
+CSDATA-HEADER!-IHISTORY!-HISTO ...
+===== External variable being referenced:  OUTCH!-IHISTORY!-HISTORY!-PACKAGE
+ **** .OUTCH!-IHISTORY!-HISTORY!-PACKAGE **** 
+===== External variable being SET: SPAN!-IHISTORY!-HISTORY!-PACKAGE
+ **** <SET SPAN!-IHISTORY!-HISTORY!-PACKAGE <1 ,
+CSDATA-HEADER!-IHISTORY!-HISTO ...
+===== External variable being referenced:  SPAN!-IHISTORY!-HISTORY!-PACKAGE
+<L?  **** .SPAN!-IHISTORY!-HISTORY!-PACKAGE ****  1>
+===== Arithmetic can't open compile because:  <L?  **** .SPAN!-IHISTORY!-HISTORY
+!-PACKAGE ****  1>
+ is of type:  ANY
+ **** <L? .SPAN!-IHISTORY!-HISTORY!-PACKAGE 1> **** 
+===== External variable being referenced:  OUTCH!-IHISTORY!-HISTORY!-PACKAGE
+ **** .OUTCH!-IHISTORY!-HISTORY!-PACKAGE **** 
+===== External variable being SET: SPAN!-IHISTORY!-HISTORY!-PACKAGE
+ **** <SET SPAN!-IHISTORY!-HISTORY!-PACKAGE 96> **** 
+Peephole  0% 59/59
+Job done in:  18 / 53
+    COMPILING DISPLAY-HEADER!-IHISTORY!-HISTORY!-PACKAGE
+===== External variable being referenced:  OUTCH!-IHISTORY!-HISTORY!-PACKAGE
+ **** .OUTCH!-IHISTORY!-HISTORY!-PACKAGE **** 
+===== External variable being referenced:  SPAN!-IHISTORY!-HISTORY!-PACKAGE
+ **** .SPAN!-IHISTORY!-HISTORY!-PACKAGE **** 
+===== External variable being referenced:  HOST!-HOSTS!-PACKAGE
+<SLASH-HOST  **** .HOST!-HOSTS!-PACKAGE **** >
+===== External variable being referenced:  HOST!-HOSTS!-PACKAGE
+<HOST  **** .HOST!-HOSTS!-PACKAGE **** >
+Peephole  0% 55/55
+Job done in:  13 / 40
+   COMPILING DISPLAY-HSTY-DATA!-IHISTORY!-HISTORY!-PACKAGE
+===== External variable being SET: CSTATE!-IHISTORY!-HISTORY!-PACKAGE
+ **** <SET CSTATE!-IHISTORY!-HISTORY!-PACKAGE <2 ,
+CSDATA-HEADER!-IHISTORY!-HIS ...
+===== External variable being referenced:  OUTCH!-IHISTORY!-HISTORY!-PACKAGE
+ **** .OUTCH!-IHISTORY!-HISTORY!-PACKAGE **** 
+===== External variable being referenced:  SPAN!-IHISTORY!-HISTORY!-PACKAGE
+<* 4  **** .SPAN!-IHISTORY!-HISTORY!-PACKAGE **** >
+===== Arithmetic can't open compile because:  <* 4  **** .SPAN!-IHISTORY!-HISTOR
+Y!-PACKAGE **** >
+ is of type:  ANY
+ **** <* 4 .SPAN!-IHISTORY!-HISTORY!-PACKAGE> **** 
+===== External variable being referenced:  CSTATE!-IHISTORY!-HISTORY!-PACKAGE
+<-  **** .CSTATE!-IHISTORY!-HISTORY!-PACKAGE ****  1>
+===== Arithmetic can't open compile because:  <-  **** .CSTATE!-IHISTORY!-HISTOR
+Y!-PACKAGE ****  1>
+ is of type:  ANY
+ **** <- .CSTATE!-IHISTORY!-HISTORY!-PACKAGE 1> **** 
+===== External variable being SET: CSTATE!-IHISTORY!-HISTORY!-PACKAGE
+ **** <SET CSTATE!-IHISTORY!-HISTORY!-PACKAGE <- .
+CSTATE!-IHISTORY!-HISTORY!-P ...
+===== Arithmetic can't open compile because:   **** <SET CSTATE!-IHISTORY!-HISTO
+RY!-PACKAGE <- .
+CSTATE!-IHISTORY!-HISTORY!-P ...
+ is of type:  <OR FIX FLOAT>
+ **** <0? <SET CSTATE!-IHISTORY!-HISTORY!-PACKAGE <- .
+CSTATE!-IHISTORY!-HISTOR ...
+===== External variable being SET: CSTATE!-IHISTORY!-HISTORY!-PACKAGE
+ **** <SET CSTATE!-IHISTORY!-HISTORY!-PACKAGE 96> **** 
+===== External variable being referenced:  OUTCH!-IHISTORY!-HISTORY!-PACKAGE
+ **** .OUTCH!-IHISTORY!-HISTORY!-PACKAGE **** 
+===== External variable being referenced:  OUTCH!-IHISTORY!-HISTORY!-PACKAGE
+ **** .OUTCH!-IHISTORY!-HISTORY!-PACKAGE **** 
+===== External variable being referenced:  CSTATE!-IHISTORY!-HISTORY!-PACKAGE
+ **** .CSTATE!-IHISTORY!-HISTORY!-PACKAGE **** 
+===== Not open compiled because type is:  <UVECTOR [REST FIX]>
+ **** <NTH ,96FIX!-IHISTORY!-HISTORY!-PACKAGE .
+CSTATE!-IHISTORY!-HISTORY!-PACK ...
+===== External variable being referenced:  OUTCH!-IHISTORY!-HISTORY!-PACKAGE
+ **** .OUTCH!-IHISTORY!-HISTORY!-PACKAGE **** 
+===== External variable being referenced:  CSTATE!-IHISTORY!-HISTORY!-PACKAGE
+ **** .CSTATE!-IHISTORY!-HISTORY!-PACKAGE **** 
+===== Not open compiled because type is:  <UVECTOR [REST FIX]>
+ **** <NTH ,96FIX!-IHISTORY!-HISTORY!-PACKAGE .
+CSTATE!-IHISTORY!-HISTORY!-PACK ...
+===== External variable being referenced:  OUTCH!-IHISTORY!-HISTORY!-PACKAGE
+ **** .OUTCH!-IHISTORY!-HISTORY!-PACKAGE **** 
+===== External variable being referenced:  OUTCH!-IHISTORY!-HISTORY!-PACKAGE
+<TERPRI  **** .OUTCH!-IHISTORY!-HISTORY!-PACKAGE **** >
+Peephole  0% 465/465
+Job done in:  1:10 / 3:17
+  COMPILING DISPLAY-LONG-HSTY-DATA!-IHISTORY!-HISTORY!-PACKAGE
+===== Computed decl of variable:  S!-IHISTORY!-HISTORY!-PACKAGE is:  STRING
+===== Computed decl of variable:  E!-IHISTORY!-HISTORY!-PACKAGE is:  FIX
+===== External variable being referenced:  OUTCH!-IHISTORY!-HISTORY!-PACKAGE
+ **** .OUTCH!-IHISTORY!-HISTORY!-PACKAGE **** 
+===== External variable being referenced:  HOST!-HOSTS!-PACKAGE
+<SLASH-HOST  **** .HOST!-HOSTS!-PACKAGE **** >
+===== External variable being referenced:  HOST!-HOSTS!-PACKAGE
+<HOST  **** .HOST!-HOSTS!-PACKAGE **** >
+===== External variable being referenced:  OUTCH!-IHISTORY!-HISTORY!-PACKAGE
+ **** .OUTCH!-IHISTORY!-HISTORY!-PACKAGE **** 
+===== External variable being referenced:  OUTCH!-IHISTORY!-HISTORY!-PACKAGE
+ **** .OUTCH!-IHISTORY!-HISTORY!-PACKAGE **** 
+Peephole  0% 248/248
+Job done in:  33 / 1:19
+  COMPILING TS!-IHISTORY!-HISTORY!-PACKAGE
+===== Computed decl of variable:  OUTCHAN is:  CHANNEL
+===== External variable being referenced:  OUTCHAN
+ **** .OUTCHAN **** 
+===== Not open compiled because type is:  STRUCTURED
+ **** <NTH .A!-IHISTORY!-HISTORY!-PACKAGE 2> **** 
+Peephole  0% 361/361
+Job done in:  1:25 / 3:14
+   
+
+Total time used is
+	4 min. 29 sec. CPU time,
+	1 min. 51 sec. garbage collector CPU time,
+	11 min. 4 sec. real time.
+CPU utilization is 40.512048%.
+Number of garbage collects = 15

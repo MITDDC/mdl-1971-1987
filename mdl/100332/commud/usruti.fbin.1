@@ -1,0 +1,132 @@
+'<PCODE "USRUTI">
+
+<PACKAGE "USRUTI"> 
+
+"utilities for use with user specifications, addressees, etc." 
+
+<ENTRY UNIQUIFY EXTRACT-HOST EXTRACT-RCVR BEDRIDDEN? KEYGET HSNAME FILE-DIR 
+GOOD-BAD NUMBER? ATSIGN? FILE? STRUC? SIXBIT? ALLOW-TOURISTS> 
+
+<USE "M-DATA" "VCTSRC" "HOSTS" "LSRTNS" "M-DEFS" "MADMAN" "M-DIR" "NSTR"> 
+
+<USE "OPSYS"> 
+
+<SETG ALLOW-TOURISTS <>> 
+
+<GDECL (ALLOW-TOURISTS) <OR ATOM FALSE>> 
+
+\ 
+
+"HSNAME -- quick and dirty until a better one comes along." 
+
+<SETG HSTABLE <>> 
+
+<SETG JUNKUV <IUVECTOR 10 0>> 
+
+<GDECL (HSTABLE) <OR FALSE VECTOR> (JUNKUV) <UVECTOR [10 FIX]>> 
+
+<SETG HSNAME  %<RSUBR!- '[ %<PCODE!- "USRUTI" 0> HSNAME #DECL ("VALUE" STRING 
+STRING) LAST-NAME VCTSRC LC-UC DIR? DATUM HOST HOME? LSR-EXTRACT LSR-ENTRY 
+"NO-HSNAME-TABLE-ON-TOPS-20" "" " 	" T "DEAD-HOSTS" %<RGLOC RCVR-STRING T> 
+%<RGLOC MSG-SPACE T> %<TYPE-W SPACE VECTOR> "COMSYS-KEY-DATA" #FALSE (
+"Empty Addressee Name") #FALSE ("Empty Addressee in Forwarding Address") #FALSE 
+("Invalid Host Address") %<RGLOC BADHOST T> %<RGLOC ALLOW-TOURISTS T> #FALSE (
+"Invalid Local Addressee") "UNKNOWN" #FALSE ("Addressee was UNKNOWN") 
+%<INTERNAL-RSUBR ASTRING 262143> %<INTERNAL-RSUBR ACOPY 2> "BUG-" "FEATURE-" %<
+RGLOC NOBOX T> "Ambiguous Last Name" "Ambiguous Local Name" %<INTERNAL-RSUBR 
+ALIST 262143> %<INTERNAL-RSUBR ACONS 3> ":; []{}"]>> 
+<AND <ASSIGNED? GLUE> .GLUE <PUT ,HSNAME PGLUE ![715825152 0 0!]>> 
+
+
+\ 
+
+<SETG FILE-DIR %<RSUBR-ENTRY '[HSNAME FILE-DIR #DECL ("VALUE" <OR FALSE STRING 
+VECTOR> ANY)] 22>> 
+
+"EXTRACT-HOST -- given string usr@host, returns fix, host number, or
+ string, if host unknown in tables.  for simple usr type key, returns
+ ,HOSTNUMBER" 
+
+<SETG EXTRACT-HOST %<RSUBR-ENTRY '[HSNAME EXTRACT-HOST #DECL ("VALUE" <OR FIX 
+STRING> STRING "OPTIONAL" FIX)] 144>> 
+
+<SETG ATSIGN? %<RSUBR-ENTRY '[HSNAME ATSIGN? #DECL ("VALUE" <OR FALSE STRING> 
+STRING)] 238>> 
+
+<SETG NUMBER? %<RSUBR-ENTRY '[HSNAME NUMBER? #DECL ("VALUE" <OR FALSE FIX> 
+STRING)] 299>> 
+
+"BEDRIDDEN? -- determine if a host is really dead as a doornail but expected
+back up someday - this is for wonderful chomping XX, which dies for several
+days every so often." 
+
+<SETG BEDRIDDEN? %<RSUBR-ENTRY '[HSNAME BEDRIDDEN? #DECL ("VALUE" <OR ATOM FALSE
+> FIX)] 338>> 
+
+"EXTRACT-RCVR -- given usr key, returns user string (i.e. all but @host)" 
+
+<SETG RCVR-STRING <REST <ISTRING 30 !\ > 30>> 
+
+<GDECL (RCVR-STRING) STRING> 
+
+<SETG EXTRACT-RCVR %<RSUBR-ENTRY '[HSNAME EXTRACT-RCVR #DECL ("VALUE" STRING 
+STRING)] 367>> 
+
+\ 
+
+"KEYGET -- mailbox validator
+ -- returns string, mailbox name if acceptable.
+    for net addressees, returns same string iff user part
+    is non-empty, and host is known in tables
+    for local addressees, returns terminal mailbox name
+    from mailbox data base
+ -- if name not in data base, checks if directory exists
+ -- returns false if unacceptable" 
+
+<SETG KEYGET %<RSUBR-ENTRY '[HSNAME KEYGET #DECL ("VALUE" <OR FALSE STRING> 
+STRING "OPTIONAL" <OR ATOM FALSE> <OR ATOM FALSE>)] 418>> 
+
+<SETG BADHOST #FALSE ("Invalid Host in Forwarding Address")> 
+
+<SETG NOBOX #FALSE ("No Mailbox for that name")> 
+
+<GDECL (BADHOST NOBOX) <FALSE STRING>> 
+
+<SETG SIXBIT? %<RSUBR-ENTRY '[HSNAME SIXBIT? #DECL ("VALUE" <OR FALSE STRING> 
+STRING)] 874>> 
+
+\ 
+
+"GOOD-BAD -- function to split a list of addressees into acceptable
+  and unacceptable ones
+ -- returns list of two lists, winners and losers
+    winners list will be all strings, which are guaranteed to be
+     acceptable to keyget, for local addressees, all lower case
+     chars are converted.  winners list is uniquified to remove
+     duplicate occurrences
+    losers list will be all other bad items
+" 
+
+<SETG GOOD-BAD %<RSUBR-ENTRY '[HSNAME GOOD-BAD #DECL ("VALUE" <OR FALSE LIST> 
+LIST)] 919>> 
+
+\ 
+
+"UNIQUIFY -- given list of strings and atoms, returns same
+  list with duplicates removed." 
+
+<SETG UNIQUIFY %<RSUBR-ENTRY '[HSNAME UNIQUIFY #DECL ("VALUE" <LIST [REST <OR 
+STRING ATOM>]> <LIST [REST <OR STRING ATOM>]>)] 1062>> 
+
+"FILE? -- given string, returns string of file spec if a file addressee" 
+
+<SETG FILE? %<RSUBR-ENTRY '[HSNAME FILE? #DECL ("VALUE" <OR FALSE STRING> STRING
+)] 1147>> 
+
+"STRUC? -- tests for structured addressee -- if possible structured local addressee,
+  returns it" 
+
+<SETG STRUC? %<RSUBR-ENTRY '[HSNAME STRUC? #DECL ("VALUE" <OR FALSE STRING> 
+STRING)] 1250>> 
+
+<ENDPACKAGE> 

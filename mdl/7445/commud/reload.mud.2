@@ -1,0 +1,18 @@
+<DEFINE RELOAD ("AUX" (REDEFINE T))
+	<MAPF <>
+	      <FUNCTION (B)
+		   <MAPF <>
+			 <FUNCTION (A)
+			      <COND (<FILE-EXISTS?
+				      <SET S
+					   <STRING "<COMMUD>"
+						   <SPNAME .A>
+						   ".FBIN">>>
+				     <PRINC "Reloading ">
+				     <PRINC .S>
+				     <PRINC ": ">
+				     <PRINC <FLOAD .S>>
+				     <CRLF>)>>
+			 .B>>
+	      <GET PACKAGE OBLIST>>>
+

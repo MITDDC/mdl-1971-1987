@@ -1,0 +1,334 @@
+ [59] *r   #130510: 11/30 11:59	PDL => MUDDLE-PAPER
+				Re: Thoughts on a Muddle Paper
+ [60] *r   #130517: 11/30 13:23	REEVE@CCA => PDL@MIT-DMS
+				Re: Thoughts on a Muddle Paper
+ [61]   t  #130523: 11/30 15:42	KWC@MIT-ML => PDL@MIT-DMS
+				Re: Thoughts on a Muddle Paper
+ [62]   t  #130531: 11/30 18:49	TAA => muddle-paper  Re: More thoughts
+ [66]  r   #130595: 12/01 15:42	BKD => muddle-paper  "Although I certainly c..."
+
+[Message #59 (130510)]
+
+PDL@MIT-DMS 11/30/79 11:59:17 Re: Thoughts on a Muddle Paper
+To: MUDDLE-PAPER@MIT-DMS
+CC To: KWC@MIT-DMS
+     In an effort to get people thinking about what a paper (papers?)
+about Muddle should include, here are my ideas, not necessarily
+complete, on the subject.  Any comments are solicited.
+
+     The following are some ideas on what is "novel," "amazing,"
+"winning," or merely "strange" about Muddle, and hence would be good
+topics to include in a paper about Muddle.
+
+A. The Language.
+
+1. Types.  This is self-evident, I think.  No other Lispy language has a
+reasonable type system.  I would also include DECLs here, and probably
+templates.  Types also impact on everything else, so they are probably
+the first thing to talk about.  The distinction between LISTs and FORMs
+is of interest (many Lispers sort of turn iridescent orange when it is
+discussed -- Ed Gilbert, for one).
+
+2. GC.  The inferior-GC hack and the ability to choose mark-sweep or
+full-copy gc are unique, I think.  Also the full-copy version makes
+possible things like GC-DUMP and GC-READ, which are somewhat
+interesting.  The Muddle garbage collector is also tunable with BLOAT
+and BLOAT-STAT hackery.  GC and PRE-AGC interrupts are interesting too.
+
+3. Functions.  Muddle function calling syntax is winning and tasteful. 
+The Lispm hackers paid us the ultimate compliment of stealing it almost
+unchanged.
+
+4. Interrupts.  Disgusting as they are, they are more winning than the
+competition.  ERROR as an interrupt is fairly sexy (dymagic loading, for
+example).
+
+5. I/O.  General purpose I/O.  Not much more to be said here; best LISP
+I/O there is, with possible exception of the I/O on the Lispm.
+
+6. Debugging stack.  A real stack, not a fake, and a reasonable scheme
+for debugging using it.  E.g., RETRY, FRM, <EDIT n>, <LVAL X <FRM n>>,
+etc.
+
+7. MAP functions.  So inordinately more tasteful than the Lisp versions.
+
+8. FBINs.  Pure sharable code, core-image larger than a breadbox, etc.
+etc.
+
+9. OBLISTs.  Not perfect, but they make the Package hack possible, and
+are interesting as a "simple" extension to OBARRAYs.  ATOMs pointing to
+their OBLISTs surprises some Lispers (they don't in Lispm).
+
+10. LVAL/GVAL dichotomy.  "Funny binding"; not quite shallow, not quite
+deep.
+
+B. The Environment.
+
+1. The Compiler.  Probably the best "Lisp" compiler around.  Some tests
+have shown it as fast as Footran.
+
+2. Debugging Environment.  EDIT, DEBUGR, CRITIC, etc. etc. etc.
+
+3. Speed and accuracy.  GLUE, PDUMP, and so on.
+
+4. Package system.  We do it right!  (Well, better, anyway.)  The Lispm
+package system is not as reasonable.
+
+5. Library system.  The famous CLU library is still on the drawing
+board.  Ours has been around for years and has all the same (or
+better...) features.  Lisp's librarys are a joke.
+
+6. MADMAN/ASYLUM.  Facility for non-GC data.
+----
+
+
+
+[Message #60 (130517)]
+
+Date: 30 NOV 1979 1323-EST
+From: REEVE at CCA (Chris Reeve)
+Subject: Re: Thoughts on a Muddle Paper
+To:   PDL at MIT-DMS
+cc:   MUDDLE-PAPER at DMS
+
+In response to your message sent  30 Nov 1979 1159-EST
+
+I might add a few other features of MUDDLE that are unique:
+
+1.	"What you see is what you get".  MUDDLE's types read and print in
+a reasonable uniform manner.  LISP does this but with only a few types it's
+not interesting.  In addition READ-TABLE and PRINTTYPE may be used to change
+the defaults.
+
+2.	SEGMENTs are a neat concempt especially in calling functions/subrs.
+
+3.	Lack of any fixed space allocations/growable stack.
+
+4.	UNWIND, AGAIN, RETURN.  Probably the sexiest ways of doing non-local
+returning and cleaning up on the way.
+
+Off the top of my head, these are the ones that come to mind.  If I think
+of more, I will send them along.
+
+-clr
+-------
+
+
+
+
+[Message #61 (130523)]
+
+Forwarded to: MUDDLE-PAPER@MIT-DMS by PDL@MIT-DMS 12/01/79 12:36:23
+KWC@MIT-ML 11/30/79 15:42:37 Re: Thoughts on a Muddle Paper
+To: PDL at MIT-DMS
+Sure, I'll throw out my two cents.  
+
+
+         The following are some ideas on what is "novel," "amazing,"
+    "winning," or merely "strange" about Muddle, and hence would be good
+    topics to include in a paper about Muddle.
+
+First, I would be really careful not to over-sell because many of the
+better ideas have been lifted by other languages.  "different",
+"unusual", ... would probably be safer.  You do want the Lispers to
+get past the first page.
+
+    A. The Language.
+
+    1. Types.  This is self-evident, I think.  No other Lispy language has a
+    reasonable type system.  I would also include DECLs here, and probably
+    templates.  Types also impact on everything else, so they are probably
+    the first thing to talk about.  The distinction between LISTs and FORMs
+    is of interest (many Lispers sort of turn iridescent orange when it is
+    discussed -- Ed Gilbert, for one).
+
+The biggest win with MUDDLE types, I think, is the PRINTYPE hack.  You can
+use one of several hunk packages to basically reinvent MUDDLE types in LISP.
+It works pretty well except that there are certain system functions which will
+know how a type is internally represented.  One of these functions is PRINT.
+Now, you can bind PRIN1 to something else and it will work, sort of.  But
+my experience has been that someone (like something in the ERROR handler)
+will ignor your binding of PRIN1.  When the ERROR handler tries to print
+a circular structure, you are in a heap of trouble.  
+
+    2. GC.  The inferior-GC hack and the ability to choose mark-sweep or
+    full-copy gc are unique, I think.  Also the full-copy version makes
+    possible things like GC-DUMP and GC-READ, which are somewhat
+    interesting.  The Muddle garbage collector is also tunable with BLOAT
+    and BLOAT-STAT hackery.  GC and PRE-AGC interrupts are interesting too.
+
+Actually, this is not so clear.  The advantage of the LISP system is that 
+GC-ing can be controlled a lot easier.  The advantage of the MUDDLE approach
+is that the user doesn't have to think about GC issues.  In general, this
+is a major distinction between the two languages: MUDDLE makes it very easy
+for basically ignorant users to do a lot whereas MACLISP makes it very easy
+for VERY skilled users to do much closer to the right thing.  MUDDLE believes
+there are some things a user ought not do; MACLISP lets you hang yourself any
+way you like.  However, that extra rope does come in handy at times.
+
+    3. Functions.  Muddle function calling syntax is winning and tasteful. 
+    The Lispm hackers paid us the ultimate compliment of stealing it almost
+    unchanged.
+
+Probably so.  But there are a number of people who think that everything
+should expand into Lambda expr.  (Sussman)
+
+    4. Interrupts.  Disgusting as they are, they are more winning than the
+    competition.  ERROR as an interrupt is fairly sexy (dymagic loading, for
+    example).
+
+The lisp ERROR handler is about as bad as they come (especially in the complr)
+
+    5. I/O.  General purpose I/O.  Not much more to be said here; best LISP
+    I/O there is, with possible exception of the I/O on the Lispm.
+
+Muddle does have the problem that READ is very expensive which radically tends
+to change the way you do things.  (like editing ...)
+
+    6. Debugging stack.  A real stack, not a fake, and a reasonable scheme
+    for debugging using it.  E.g., RETRY, FRM, <EDIT n>, <LVAL X <FRM n>>,
+    etc.
+
+This is  true.  One thing to be said for the other side is that the 
+interpreter is fast and also that APPLY is fast.  Also you might look at
+the DEBUG package.  It gives you the same sort of aids although they
+could be hacked up better.  I think that LISP could do it right,
+I almost got DICK to implement the few missing features into DEBUG.
+One big difference is that ERRORS are not defaultly stacked up.  If
+you get one error and they you get a second, there will be no information
+on the stack regarding the second.  THis is very unfortunate.  It need
+not be the case, DEBUG does stack errors, but most people do not run
+in that mode.
+
+    7. MAP functions.  So inordinately more tasteful than the Lisp versions.
+
+See PSZ's FOR package.  I think it is even better than MAPF.  The built
+in MUDDLE functions are better than the built in LISP ones, but no one
+uses a bare lisp anyways.
+
+    8. FBINs.  Pure sharable code, core-image larger than a breadbox, etc.
+    etc.
+
+Very true.  The biggest win about FBINS is that they can be paged out.
+
+    9. OBLISTs.  Not perfect, but they make the Package hack possible, and
+    are interesting as a "simple" extension to OBARRAYs.  ATOMs pointing to
+    their OBLISTs surprises some Lispers (they don't in Lispm).
+
+    10. LVAL/GVAL dichotomy.  "Funny binding"; not quite shallow, not quite
+    deep.
+
+But then MUDDLE doesn't have PLISTS which correspond to a generalized GVAL.
+
+    B. The Environment.
+
+    1. The Compiler.  Probably the best "Lisp" compiler around.  Some tests
+    have shown it as fast as Footran.
+
+Yes.  The LISP complr has about the world's worst user interface.  It is
+very eary to find someone flaming about a JONL screw.  However, there
+is something to be said for a quick and dirty compiler.  I don't like
+having to wait hours to get a small file compiled.
+
+    2. Debugging Environment.  EDIT, DEBUGR, CRITIC, etc. etc. etc.
+
+Yes, but a EMACS editor is also very nice.
+
+    3. Speed and accuracy.  GLUE, PDUMP, and so on.
+
+    4. Package system.  We do it right!  (Well, better, anyway.)  The Lispm
+    package system is not as reasonable.
+
+Yes, but I haven't seen a good package system yet.  I got screwed by
+the MUDDLE one, then i got it from the LISPM one, and now I'm getting
+it from the lack of a MACLISP one.  (THE OBARRAYs in MACLISP allow
+you to theoretically have one, but no one really does, except for
+the COMPLR, which is another story ...
+
+    5. Library system.  The famous CLU library is still on the drawing
+    board.  Ours has been around for years and has all the same (or
+    better...) features.  Lisp's librarys are a joke.
+
+Yes, you have to really know the MACLISP system to find anything.
+However, I think that has more to do with certain powers that be than
+with design.
+
+    6. MADMAN/ASYLUM.  Facility for non-GC data.
+    ----
+
+I don't know much about this.  I would gather that it is a very hot issue
+because the user can really do himself in.  Also, the MACLISP CLU and CLO
+device give you a similar thing, but much less efficiently.
+
+I hope this has been of some help.
+
+			Ken
+
+
+
+
+[Message #62 (130531)]
+
+TAA@MIT-DMS 11/30/79 18:49:49 Re: More thoughts
+To: muddle-paper@MIT-DMS
+Some of this is inspired by my thoughts on a "CLU Considered Harmful"
+paper, which was itself inspired by unfavorable comparisons of clu with
+muddle.
+1.  Muddle's notion of types is, in my experience, quite unusual.  Where
+muddle talks about <OR FOO FALSE>, which is not a type at all, other people
+talk about a `union type' that's one or the other.  If you're deliriously
+lucky, <PUT BAR DECL '<OR FOO FALSE>> will act like a union type named
+BAR (i.e., it doesn't quite print right); in CLU, one is never lucky.
+
+2.  The ability to read and print arbitrary objects is amazingly important.
+You haven't lived until you've looked at the CLU stack, with its
+[oneof <2:69105>], meaning that the tag is the second one in the oneof.
+
+3. PDL just mentioned tasteful macros.  Many languages don't have
+anything, and those that do usually don't have anything useful.
+
+4.  The garbage-collection hacks in muddle are uncommon, but not unique;
+clu has gc-dump and friends, without a full-copy GC.
+
+Sigh.  More later.
+
+
+[Message #66 (130595)]
+
+BKD@MIT-DMS 12/01/79 15:42:04
+To: muddle-paper@MIT-DMS
+Although I certainly claim we should boast about all of Muddle's
+winning features, I would also encourage strongly a section on
+"what's wrong with Muddle" or "what we would do differently".
+This would cover not only the lack of certain useful capabilities
+(e.g. MADMAN/ASYLMN?!) and the inappropriateness of existing
+features (e.g. EVAL monitors?!) but also the internal implementation
+techniques (e.g. the Oblist implementation).  For another example,
+consider the frequently mentioned slow speed for read and print.
+This is because of several bad decisions. First, Muddle defines
+a legal pname of an Atom to be almost anything that is not a
+Fix, Float, etc. Therefore, with an atom of Pname like "-123E69Q"
+the Reader must wade all the way back to the "Q" before it knows
+if it has a number or an Atom. Second, the implementation of Oblists
+using a separate hash table for each Oblist significantly slows
+down reading an Atom since a hash search must be performed on
+each element of the PATH (and the ROOT is usually at the end).
+Printing an atom is slowed down by 1) not knowing if the pname
+contains characters that have to be "slashified" and 2) not
+knowing how much trailer has to be printed for uniqueness.
+And remember that the printer must determine all this info
+before it can even start outputing characters in order to
+see if a crlf must be done to keep the atom from crossing
+the right margin. And of course the determination of an atom's
+minimal trailer requires one to many hash searches in our
+clumsy Oblist structures.
+    In fact, I would claim that the Muddle implementation
+deserves a separate paper in and of its self. Many of the
+advantages or disadvantages of current muddle features is
+directly due to the various non-obvious internal implementation
+decisions. Consider for example the non-use of Muddle processes,
+associations, and internal channels. Some internal implementation
+details such as the Muddle Init code are quite interesting
+and are never seen by the external user.
+
+

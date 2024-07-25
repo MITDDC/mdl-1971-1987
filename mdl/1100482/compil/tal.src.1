@@ -1,0 +1,178 @@
+	<PSEUDO <SETG FRM2!-TMP 0>>
+	<PSEUDO <SETG FRM3!-TMP 0>>
+	<PSEUDO <SETG FRM4!-TMP 0>>
+	<PSEUDO <SETG FRM1!-TMP 2>>
+	<TITLE CONNECT-ARC!-IGRAPH-BUILDER!-GRAPH-BUILDER!-PACKAGE #FALSE ()>
+	<DECLARE ("VALUE" <OR FALSE GRAPH-NODE!-GRAPH-DEFS!-PACKAGE> 
+GRAPH-NODE!-GRAPH-DEFS!-PACKAGE)>
+	<`PUSH  `TP*  `(AB) >
+	<`PUSH  `TP*  `(AB)  1>
+	<`PUSHJ  `P*  CONNECT-ARC0!-TMP>
+	<`JRST  |FINIS >
+	<INTERNAL-ENTRY CONNECT-ARC0!-TMP 1>
+	<`SUBM  `M*  `(P) >
+	<`PUSH  `TP*  [0]>
+	<`PUSH  `TP*  [0]>
+	<`PUSH  `TP*  <TYPE-WORD FALSE>>
+	<`PUSH  `TP*  [0]>
+	<`PUSH  `TP*  <TYPE-WORD FALSE>>
+	<`PUSH  `TP*  [0]>
+	<INTGO>
+	<`MOVE  `B*  `(TP)  -6>
+	<`MOVE  `D*  (`B ) 6>
+	<`MOVE  `F*  (`B ) 7>
+	<`JUMPE  `F*  MAP8!-TMP>
+MAP10!-TMP							;17
+	<`MOVE  `TVP*  (`F ) 1>
+	<`SKIPGE  |INTFLG >
+	<`LSAVA*  [<(#WORD *000000001500*) #WORD *000000000004*> <(#WORD 
+*000000150000*) #WORD *000000000000*>]>
+	<`MOVEM  `B*  `(TP)  -6>
+	<`MOVE  `C*  (`TVP ) 1>
+	<`CAME  `C*  <MQUOTE 'ARC-JOIN!-GRAPH-DEFS!-PACKAGE>>
+	<`JRST  PHRASE29!-TMP>
+	<`MOVE  `E*  <TYPE-WORD GRAPH-ARC!-GRAPH-DEFS!-PACKAGE>>
+	<`MOVE  `A*  (`TVP ) 6>
+	<`MOVE  `SP*  (`TVP ) 7>
+	<GETYP `O*  `A >
+	<`CAMN  `SP*  `B >
+	<`CAIE  `O*  <TYPE-CODE GRAPH-NODE!-GRAPH-DEFS!-PACKAGE>>
+	<`JRST  PHRASE22!-TMP>
+	<`MOVE  `A*  (`TVP ) 8>
+	<`MOVE  `SP*  (`TVP ) 9>
+PHRASE22!-TMP							;33
+	<`MOVEM  `A*  `(TP)  -3>
+	<`MOVEM  `SP*  `(TP)  -2>
+	<`MOVEM  `E*  `(TP)  -1>
+	<`MOVEM  `TVP*  `(TP) >
+	<`SKIPGE  (`SP ) 21>
+	<`JRST  PHRASE27!-TMP>
+	<`MOVE  `A*  (`SP ) 23>
+	<`CAIN  `A*  3>
+	<`JRST  PHRASE27!-TMP>
+	<`MOVE  `SP*  `(TP)  -2>
+	<`MOVE  `A*  (`SP ) 9>
+	<`ADD  `A*  [<(2) 2>]>
+	<`JUMPGE  `A*  |CERR2 >
+	<`MOVE  `B*  (`A )>
+	<`MOVE  `C*  (`A ) 1>
+	<GETYP `O*  `B >
+	<`CAIN  `C* >
+	<`CAIE  `O*  <TYPE-CODE FALSE>>
+	<`JRST  PHRASE27!-TMP>
+	<`JRST  MAP8!-TMP>
+PHRASE27!-TMP							;53
+	<`MOVE  `B*  <TYPE-WORD FALSE>>
+	<`MOVEI  `C* >
+	<`MOVEM  `B*  `(TP)  -1>
+	<`MOVEM  `C*  `(TP) >
+PHRASE29!-TMP							;57
+	<`MOVE  `B*  `(TP)  -6>
+	<`HRRZ  `F*  (`F )>
+	<`JUMPN  `F*  MAP10!-TMP>
+MAP8!-TMP							;60
+	<`MOVE  `B*  `(TP)  -1>
+	<`MOVE  `D*  `(TP) >
+	<GETYP `O*  `B >
+	<`CAIN  `D* >
+	<`CAIE  `O*  <TYPE-CODE FALSE>>
+	<`JRST  MAPEX36!-TMP>
+	<`PUSH  `TP*  <TYPE-WORD FALSE>>
+	<`PUSH  `TP*  [0]>
+	<`MOVE  `B*  <MQUOTE 'REF-TYPES!-GRAPH-BUILDER!-PACKAGE>>
+	<`PUSHJ  `P*  |CILVAL >
+	<`PUSH  `TP*  `A >
+	<`PUSH  `TP*  `B >
+	<`PUSH  `P*  [-1]>
+MAP34!-TMP							;73
+	<`MOVE  `A*  `(TP)  -1>
+	<`MOVE  `B*  `(TP) >
+	<`PUSHJ  `P*  |TYPSEG >
+	<`SKIPL  `(P) >
+	<`XCT  |INCR1  `(C) >
+	<`XCT  |TESTR  `(C) >
+	<`JRST  MAP33!-TMP>
+	<`XCT  |TYPG  `(C) >
+	<`XCT  |VALG  `(C) >
+	<`JSP  `E*  |CHKAB >
+	<`MOVE  `O*  |DSTORE >
+	<`MOVEM  `O*  `(TP)  -1>
+	<`MOVEM  `D*  `(TP) >
+	<`SETZM  |DSTORE >
+	<`SKIPGE  |INTFLG >
+	<`SAVAC*  [<(#WORD *000000000100*) #WORD *000000000000*>]>
+	<GETYP `O*  `A >
+	<`CAMN  `B*  `(TP)  -10>
+	<`CAIE  `O*  <TYPE-CODE GRAPH-NODE!-GRAPH-DEFS!-PACKAGE>>
+	<`SKIPA >
+	<`JRST  PHRASE41!-TMP>
+	<`SKIPGE  (`B ) 21>
+	<`JRST  PHRASE41!-TMP>
+	<`MOVE  `D*  (`B ) 23>
+	<`CAIN  `D*  3>
+	<`JRST  PHRASE41!-TMP>
+	<`MOVE  `F*  (`B ) 9>
+	<`ADD  `F*  [<(2) 2>]>
+	<`JUMPGE  `F*  |CERR2 >
+	<`MOVE  `TVP*  (`F )>
+	<`MOVE  `C*  (`F ) 1>
+	<GETYP `O*  `TVP >
+	<`CAIN  `C* >
+	<`CAIE  `O*  <TYPE-CODE FALSE>>
+	<`JRST  PHRASE41!-TMP>
+	<`SUB  `TP*  [<(4) 4>]>
+	<`SUB  `P*  [<1 (1)>]>
+	<`MOVEM  `A*  `(TP)  -7>
+	<`MOVEM  `B*  `(TP)  -6>
+	<`JRST  MAPEX36!-TMP>
+PHRASE41!-TMP							;113
+	<`SETZM  `(P) >
+	<`JRST  MAP34!-TMP>
+MAP33!-TMP							;115
+	<`SETZM  |DSTORE >
+	<`SUB  `TP*  [<(4) 4>]>
+	<`SUB  `P*  [<1 (1)>]>
+MAPEX36!-TMP							;118
+	<`MOVE  `C*  `(TP)  -6>
+	<`MOVE  `E*  (`C ) 6>
+	<`MOVE  `TVP*  (`C ) 7>
+	<`MOVE  `A*  <TYPE-WORD FALSE>>
+	<`MOVEI  `B* >
+	<`JUMPE  `TVP*  MAP43!-TMP>
+MAP45!-TMP							;124
+	<`MOVE  `D*  (`TVP ) 1>
+	<`SKIPGE  |INTFLG >
+	<`LSAVA*  [<(#WORD *000000000015*) #WORD *000000150000*> <(#WORD 
+*000000050000*) #WORD *000000000000*>]>
+	<`MOVEM  `E*  `(TP)  -5>
+	<`MOVEM  `TVP*  `(TP)  -4>
+	<`MOVE  `F*  (`D ) 6>
+	<`MOVE  `SP*  (`D ) 7>
+	<GETYP `O*  `F >
+	<`CAIN  `SP* >
+	<`CAIE  `O*  <TYPE-CODE FALSE>>
+	<`SKIPA >
+	<`JRST  TAG56!-TMP>
+	<`MOVE  `A*  <TYPE-WORD FALSE>>
+	<`MOVEI  `B* >
+	<`JRST  PHRASE55!-TMP>
+TAG56!-TMP							;139
+	<`MOVE  `O*  `(TP)  -3>
+	<`MOVEM  `O*  (`D ) 6>
+	<`MOVE  `O*  `(TP)  -2>
+	<`MOVEM  `O*  (`D ) 7>
+	<`PUSH  `TP*  `(TP)  -3>
+	<`PUSH  `TP*  `(TP)  -3>
+	<`PUSH  `TP*  <TYPE-WORD GRAPH-ARC!-GRAPH-DEFS!-PACKAGE>>
+	<`PUSH  `TP*  `D >
+	<MCALL 2 ADD-AN-ARC!-IGRAPH-BUILDER!-GRAPH-BUILDER!-PACKAGE>
+PHRASE55!-TMP							;148
+	<`MOVE  `E*  `(TP)  -5>
+	<`MOVE  `TVP*  `(TP)  -4>
+	<`HRRZ  `TVP*  (`TVP )>
+	<`JUMPN  `TVP*  MAP45!-TMP>
+MAP43!-TMP							;152
+	<`SUB  `TP*  [<(8) 8>]>
+	<`JRST  |MPOPJ >
+
+   

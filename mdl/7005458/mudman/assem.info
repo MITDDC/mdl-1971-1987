@@ -1,0 +1,154 @@
+There is a new, hopefully faster assembler.
+
+The only incompatibility between it and the old assembler
+is in the way that user-written macros indicate that they
+are returning not one but several instructions.
+This is explained below in the section on macros.
+
+The functions ASSEMBLE and ASSEMBLE1 are upward compatible.
+Their arguments are:
+
+1) A list of instructions
+	or
+   A channel to a file containing one or more lists of
+   instructions (ASSEMBLE only).
+
+2) An oblist in which to insert labels etc.
+	or
+   A list of oblists.
+   default:  .OBLIST
+
+3) A channel on which to print messages as to title, sub-entries
+   and constants
+	or
+   A false, indicating this information is not desired.
+   default:  .MESSAGE-CHANNEL
+   (Initially MESSAGE-CHANNEL!-CODING is what .OUTCHAN was when loaded.)
+
+4) A channel on which to print a listing of the instructions assembled
+	or
+   A non-false non-channel, indicating that if arg 3 is a channel then
+   the information should contain the address of each label
+	or
+   A false, indicating don't produce a listing and don't bother with
+   label addresses.
+   default:  .LINE-CHANNEL (Initially LINE-CHANNEL!-CODING is #FALSE().)
+
+5) A false, indicating not to produce a symbol table of all the labels
+   which can be given to DDT via RFREEZE in MUDDLE;RDB
+	or
+   A non-false, which indicates that such a symbol table should be produced.
+   default:  .MAKE-SYM-TABLE (Initially MAKE-SYM-TABLE!-CODING is #FALSE().)
+
+
+There is a new top-level function, FILE-ASSEMBLE, with arguments:
+
+1) A string naming the input file.
+
+2) A string naming the output file.
+   default:  the file gotten when NM2 is bound to "BINARY" or "NBIN"
+   (depending on the value of argument 3) and argument 1 is passed to OPEN.
+
+3) T, indicating that fast loading output format is desired
+	or
+   #FALSE(), indicating normal slow loading format output.
+   default: .QUICK-FORMAT (Initially QUICK-FORMAT is #FALSE().)
+
+Arguments 4 through 7 map into arguments 2 through 5 of ASSEMBLE.
+
+Note that if argument 7 is true then the file produced will have some
+special forms for reloading the symbol table.
+This symbol table can be passed to DDT and at the same time the
+RSUBR frozen by:
+	1) <FLOAD "MUDDLE;RDB">
+	2) <RFREEZE atom-name-of-rsubr>
+
+MUDDLE;RDB contains two functions:
+	<RFREEZE atom-name-of-rsubr>
+	which freezes an rsubr and valrets its name and symbols if any;
+
+	<RBREAK atom-name-of-rsubr>
+	which freezes the rsubr if it is not already frozen and then valrets
+	a string causing DDT to put a break point at the first instruction.
+
+If there is no symbol table, RFREEZE merely freezes the rsubr and passes
+up symbols for the rsubr name and any sub-entries.
+
+In all cases the symbol returned is made up of the legal squoze characters
+(letters digits !"$ !"% !".) of the name up to six characters.
+For example the atom FOO-*BLECH becomes the symbol FOOBLE.
+
+
+New assemble time macros:
+
+<SIXBIT "STRING">
+
+<SQUOZE "STRING" optional-primtype-word>
+	makes squoze of legal characters of string and sticks low
+	order 4 bits of optional word in high 4 bits of value.
+
+<PQUOTE goodie>
+	is identical to <<MQUOTE goodie> -1>
+	i.e. it points to the type-word, not the value-word.
+	This is a more consistent way to look at things.
+
+<IQUOTE goodie optional-atom>
+	is like PQUOTE except that this will get a new slot each time
+	called.  The optional argument if given defines the atom to be
+	a symbol referring to that slot.  This is the only way to refer
+	to that slot again.
+
+<ARG integer>
+	is like <(AB) <* 2 <- .integer 1>>>.
+
+<STACK atom-1 atom-2 atom-3 etc.>
+	makes atom-1 a symbol for <(TB) 0>
+	      atom-2 a symbol for <(TB) 2>
+	      atom-3 a symbol for <(TB) 4>
+	etc.
+
+<BYTE boundary bite-size location>
+	Example: <BYTE 1 35 (C) 1> is like <(*013500*) (C) 1>.
+
+<DPUSH ac args>
+
+<DPOP ac args>
+
+<DMOVE ac args>
+
+<DMOVEM ac args>
+
+<UNDEF? atom>
+	is not a macro but rather a function to use in your own macro.
+	It evaluates to true only if the atom has previously in the code
+	been used as a symbol, but has not been defined.
+
+<IF-NEEDED atom instructions . . .>
+	is a macro defined using the UNDEF? function.
+	If <UNDEF? atom> evaluates to true, then all the instructions
+	are inserted at the current location, else they are not.
+	Note that somewhere in the instructions hopefully the atom is
+	defined, either as a label or by a <SYMDEF atom primtype-word>.
+
+<*INSERT "file-spec">
+	takes a file and reads instructions from it and
+	inserts the instructions read at the current place.
+
+
+
+MACRO WRITING AND INCOMPATIBILITY
+
+	Whenever an element or subelement of an instruction is a form
+and the first element of the form is GASSIGNED? and it is a FUNCTION,
+RSUBR, SUBR, or FSUBR, the form is evaluated and that which is returned
+is re-evaluated as if it were in place of the form.  For compatibility
+between "top-level" macros, which generate whole instructions, and macros
+which generate parts of an instruction, top-level macros may wish to return
+several instructions.  To indicate that what is returned is several
+instructions, it is necessary to return an object of type SPLICE
+(primtype LIST).  The elements of the SPLICE are treated as individual
+instructions.  An empty SPLICE may be returned from a macro which is
+part of an instruction, and the effect is as if a 0 were returned.
+This is the only SPLICE which may be returned from a macro which is
+a part of an instruction.
+

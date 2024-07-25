@@ -1,0 +1,264 @@
+<RPACKAGE "GRLOAD">
+
+<ENTRY GROUP-LOAD GROUP-DUMP EXPFLOAD EXPSPLICE TENEX?>
+
+<USE "EDIT">
+
+<OR <GASSIGNED? TENEX?>
+    <SETG TENEX? <G? ,MUDDLE 100>>>
+
+<COND (<AND <GASSIGNED? TENEX?> ,TENEX?>
+       <SETG TNM1 "ETMP">)
+      (<SETG TNM1 "_ETMP_">)>
+
+<SETG TNM2 ">">
+
+<SETG SCBUF <ISTRING 500>>
+
+<DEFINE GROUP-LOAD (STR
+		    "OPTIONAL" NAM
+		    "AUX" (INCHAN <OPEN "READ" .STR>) FSP (ITMS (1)) GOODIE
+			  (CUR-POS .ITMS) SPOS THIS-ONE RESLT (OBL .OBLIST) MRK
+			  TMP FNY-CHN NEW-ATOM (KEEP-FIXUPS T) (REDEFINE T)
+			  (EXPFLOAD <AND <ASSIGNED? EXPFLOAD> .EXPFLOAD>)
+			  (EXPSPLICE <AND <ASSIGNED? EXPSPLICE> .EXPSPLICE>))
+   #DECL ((STR) STRING (NAM) ATOM (FSP ITMS CUR-POS MRK) LIST
+	  (FNY-CHN) CHANNEL (NEW-ATOM) ATOM (SPOS) FIX
+	  (THIS-ONE) FORM (KEEP-FIXUPS REDEFINE) <SPECIAL ANY>
+	  (EXPFLOAD EXPSPLICE) <SPECIAL <OR ATOM FALSE>>)
+   <UNWIND
+    <PROG ()
+      <COND (<NOT .INCHAN> <RETURN .INCHAN>)>
+      <COND (<NOT <ASSIGNED? NAM>>
+	     <SET NAM
+		  <PARSE <MAPF ,STRING
+			       <FUNCTION (C) 
+					 #DECL ((C) CHARACTER)
+					 <MAPRET !\\\ .C>
+					 0>
+			       <7 .INCHAN>>>>)>
+				      ;"To hack ugly file names. (TT, 75/10/07)"
+      <PUT .NAM
+	   CHANNEL
+	   <SET FSP
+		<LIST <7 .INCHAN> <8 .INCHAN> <9 .INCHAN> <10 .INCHAN>>>>
+      <PUTPROP .NAM BLOCK .OBLIST>
+      <PUTPROP .NAM MAGIC-RSUBR>
+      <REPEAT ()
+	<SET SPOS <17 .INCHAN>>
+	<SET GOODIE <READ .INCHAN '<RETURN>>>
+	<COND (<AND <TYPE? .GOODIE FORM>
+		    <NOT <EMPTY? .GOODIE>>
+		    <==? <1 .GOODIE> FLOAD>
+		    <ASSIGNED? EXPFLOAD>
+		    .EXPFLOAD>
+	       <SET NEW-ATOM <ATOM "FOO">>
+	       <SET FNY-CHN <EVAL <FORM CHANNEL "READ" !<REST .GOODIE>>>>
+	       <SET TMP
+		    <GROUP-LOAD <COND (,TENEX?
+				       <STRING <9 .FNY-CHN>
+					       ":<"
+					       <10 .FNY-CHN>
+					       !\>
+					       <7 .FNY-CHN>
+					       !\.
+					       <8 .FNY-CHN>>)
+				      (ELSE
+				       <STRING <9 .FNY-CHN>
+					       !\:
+					       <10 .FNY-CHN>
+					       !\;
+					       <7 .FNY-CHN>
+					       !\ 
+					       <8 .FNY-CHN>>)>
+				.NEW-ATOM>>
+	       <OR .TMP <ERROR GROUP-LOAD .TMP>>
+	       <AND <GETPROP .NEW-ATOM MAGIC-RSUBR>
+		    <PUTPROP .NAM MAGIC-RSUBR T>>
+	       <PUTREST .CUR-POS ..NEW-ATOM>
+	       <SET CUR-POS <REST .CUR-POS <- <LENGTH .CUR-POS> 1>>>)
+	      (T
+	       <SET RESLT <EVAL .GOODIE>>
+	       <AND <TYPE? .RESLT SPLICE>
+		    <ASSIGNED? EXPSPLICE>
+		    .EXPSPLICE
+		    <SET CUR-POS <REST <PUTREST .CUR-POS .RESLT>
+				       <- <LENGTH .CUR-POS> 1>>>
+		    <AGAIN>>
+	       <SET CUR-POS <REST <PUTREST .CUR-POS <LIST .GOODIE>>>>
+	       <AND <SET TMP <GET .INCHAN COMMENT>>
+		    <PUT .CUR-POS COMMENT .TMP>>
+	       <COND (<NOT <==? .OBL .OBLIST>>
+		      <SET OBL .OBLIST>
+		      <PUTPROP .CUR-POS BLOCK .OBL>)>
+	       <COND (<AND <TYPE? .GOODIE FORM>
+			   <SET THIS-ONE .GOODIE>
+			   <G? <LENGTH .THIS-ONE> 3>
+			   <OR <==? <1 .THIS-ONE> DEFINE>
+			       <==? <1 .THIS-ONE> DEFMAC>>>
+		      <COND (<NOT <==? <2 .THIS-ONE> .RESLT>>
+			     <PUTPROP <2 .THIS-ONE> VALUE .RESLT>)>
+		      <SET MRK <LIST .SPOS <- <17 .INCHAN> .SPOS> .NAM>>
+		      <PUTPROP <GLOC .RESLT> DEFINE .MRK>)
+		     (<AND <TYPE? .RESLT RSUBR-ENTRY RSUBR MACRO>
+			   <TYPE? .GOODIE FORM>
+			   <SET THIS-ONE .GOODIE>
+			   <==? <LENGTH .THIS-ONE> 3>
+			   <==? <1 .THIS-ONE> SETG>
+			   <COND (<TYPE? .RESLT MACRO>
+				  <AND <TYPE? <SET TMP <3 .THIS-ONE>> FORM>
+				       <==? <LENGTH .TMP> 2>
+				       <==? <1 .TMP> QUOTE>>)
+				 (<==? <2 .RESLT> <2 .THIS-ONE>>)>>
+		      <PUT .THIS-ONE 3 .RESLT>)>
+	       <COND (<AND <TYPE? .RESLT RSUBR>
+			   <TYPE? <GET .RESLT RSUBR> UVECTOR>>
+		      <PUTPROP .NAM MAGIC-RSUBR T>)>)>>
+      <SET .NAM <REST .ITMS>>
+      <CLOSE .INCHAN>
+      .NAM>
+    <AND <ASSIGNED? INCHAN>
+	 <TYPE? .INCHAN CHANNEL>
+	 <CLOSE .INCHAN>>>>
+
+<DEFINE SCOPY (INPUT OUT AMT "AUX" (SCBUF ,SCBUF)) 
+	#DECL ((AMT) FIX (SCBUF) STRING)
+	<REPEAT ()
+		<COND (<L=? .AMT 0> <RETURN>)
+		      (<L? .AMT 500>
+		       <SET SCBUF <REST .SCBUF <- 500 .AMT>>>
+		       <READSTRING .SCBUF .INPUT .AMT>
+		       <PRINTSTRING .SCBUF .OUT .AMT>
+		       <SET AMT 0>)
+		      (T
+		       <READSTRING .SCBUF .INPUT>
+		       <PRINTSTRING .SCBUF .OUT>
+		       <SET AMT <- .AMT 500>>)>>>
+
+<DEFINE GROUP-DUMP (STR
+		    "OPTIONAL" NM (PRINTER ,PPRINT) (BKILLER T)
+		    "AUX" (CHNL <CHANNEL "READ" .STR>)
+			  (NAM <COND (<ASSIGNED? NM> .NM) (<PARSE <7 .CHNL>>)>)
+			  OUTCHAN BKS POS
+			  (OBL <COND (<EMPTY? .OBLIST> FULL-OBL) (BLOCK)>)
+			  (OOBLIST .OBLIST) OBLIST INCHAN (QUICKPRINT <>)
+			  (GROUP-INDICATOR DEFINE) FUNC TEMP GOODS THIS-FORM
+			  (SKIP-COM <>))
+   #DECL ((STR) STRING (POS) <PRIMTYPE LIST> (OBLIST QUICKPRINT) <SPECIAL ANY>
+	  (NM NAM OBL GROUP-INDICATOR) ATOM (GOODS) LIST (THIS-FORM) FORM
+	  (CHNL) CHANNEL (BKS) <OR FALSE LIST>)
+   <UNWIND
+    <PROG ()
+      <COND (<NOT <ASSIGNED? .NAM>>
+	     <RETURN '#FALSE ("OBJECT NOT GROUP NAME")>)>
+      <COND (<NOT <SET OUTCHAN
+		       <OPEN <COND (<OR <==? .PRINTER ,PRINT>
+					<AND <GETPROP .NAM MAGIC-RSUBR>
+					     <SET PRINTER ,PRINT>>>
+				    "PRINTB")
+				   ("PRINT")>
+			     ,TNM1
+			     <COND (<G? ,MUDDLE 100> "MUD")
+				   (,TNM2)>
+			     <9 .CHNL>
+			     <10 .CHNL>>>>
+	     <RETURN .OUTCHAN>)>
+      <SET OBLIST <GET .NAM .OBL '.OOBLIST>>
+      <PUT .OUTCHAN 13 79>
+      <COND (<NOT <GETPROP .NAM CHANNEL>>
+	     <SET GROUP-INDICATOR NO-FILE>)
+	    (<NOT <SET INCHAN
+		       <OPEN "READ" <FILSTR !<GETPROP .NAM CHANNEL>>>>>
+	     <SET GROUP-INDICATOR NO-FILE>)>
+      <SET GOODS ..NAM>
+      <REPEAT ()
+	<COND (<EMPTY? .GOODS> <RETURN>)>
+	<COND
+	 (<AND <TYPE? <1 .GOODS> FORM>
+	       <SET THIS-FORM <1 .GOODS>>
+	       <G? <LENGTH .THIS-FORM> 1>
+	       <OR <==? DEFINE <1 .THIS-FORM>>
+		   <==? DEFMAC <1 .THIS-FORM>>>
+	       <TYPE? <SET FUNC <GETPROP <2 .THIS-FORM> VALUE '<2 .THIS-FORM>>>
+		      ATOM>>
+	  <COND (<AND .BKILLER				    ;"Breakpoint killer"
+		      <SET BKS
+			   <GETPROP <AND <GASSIGNED? .FUNC> <GLOC .FUNC>>
+				    BREAKS!-IEDIT>>>
+		 <PUTPROP <GLOC .FUNC> BREAKS!-IEDIT>
+		 <REPEAT (HOLDANY)
+			 <COND (<EMPTY? .BKS> <RETURN>)>
+			 <COND (<TYPE? <SET HOLDANY <IN <1 .BKS>>> BREAK>
+				<SETLOC <1 .BKS> <2 .HOLDANY>>)>
+			 <SET BKS <REST .BKS>>>)>
+	  <SET POS
+	       <GETPROP <AND <GASSIGNED? .FUNC> <GLOC .FUNC>>
+			.GROUP-INDICATOR>>
+	  <COND (<AND .POS
+		      <==? <3 .POS> .NAM>
+		      <GASSIGNED? .FUNC>
+		      <==? <COND (<==? <1 .THIS-FORM> DEFMAC> <1 ,.FUNC>)
+				 (ELSE ,.FUNC)>
+			   <CHTYPE <REST .THIS-FORM 2> FUNCTION>>>
+		 <SET SKIP-COM T>
+		 <COND (<NOT <==? <1 .POS> <17 .INCHAN>>>
+			<ACCESS .INCHAN <1 .POS>>)>
+		 <TERPRI .OUTCHAN>
+		 <SCOPY .INCHAN .OUTCHAN <- <2 .POS> 2>>
+		 <COND (<NOT <==? <NEXTCHR .INCHAN> <ASCII 13>>>
+			<SCOPY .INCHAN .OUTCHAN 2>)>)
+		(ELSE
+		 <COND (<NOT <GASSIGNED? .FUNC>> T)
+		       (ELSE
+			<COND (<TYPE? ,.FUNC FUNCTION>
+			       <PUTREST <REST .THIS-FORM> ,.FUNC>
+							  ;"BKD's COMMENT saver"
+			       <PUTPROP <GLOC .FUNC> .GROUP-INDICATOR>)
+			      (<AND <TYPE? ,.FUNC MACRO>
+				    <NOT <EMPTY? ,.FUNC>>
+				    <TYPE? <1 ,.FUNC> FUNCTION>>
+			       <PUTREST <REST .THIS-FORM> <1 ,.FUNC>>
+							  ;"BKD's COMMENT saver"
+			       <PUTPROP <GLOC .FUNC> .GROUP-INDICATOR>)
+			      (T
+			       <SET THIS-FORM
+				    <FORM SETG
+					  <2 .THIS-FORM>
+					  <FORM QUOTE ,.FUNC>>>)>
+			<APPLY .PRINTER .THIS-FORM .OUTCHAN>
+			<COND (<NOT <==? .PRINTER ,PPRINT>>
+			       <TERPRI .OUTCHAN>)>)>)>)
+	 (T
+	  <COND (<MONAD? <1 .GOODS>>
+		 <PRINT <1 .GOODS> .OUTCHAN>
+		 <TERPRI .OUTCHAN>)
+		(T
+		 <APPLY .PRINTER <1 .GOODS> .OUTCHAN>
+		 <COND (<NOT <==? .PRINTER ,PPRINT>> <TERPRI .OUTCHAN>)>)>)>
+	<COND (<AND <NOT .SKIP-COM>
+		    <==? .PRINTER ,PPRINT>
+		    <SET TEMP <GETPROP .GOODS COMMENT>>>
+	       <TERPRI .OUTCHAN>
+	       <PRINC !\; .OUTCHAN>
+	       <PRIN1 .TEMP .OUTCHAN>
+	       <TERPRI .OUTCHAN>)>
+	<SET SKIP-COM <>>
+	<SET OBLIST <GETPROP .GOODS .OBL '.OBLIST>>
+	<SET GOODS <REST .GOODS>>>
+      <COND (<AND <ASSIGNED? INCHAN> .INCHAN> <CLOSE .INCHAN>)>
+      <COND (,TENEX? <CLOSE .OUTCHAN>
+	     <RENAME <STRING "<" <10 .OUTCHAN> ">" <7 .OUTCHAN> "." <8 .OUTCHAN>>
+		     TO .STR>)
+	    (ELSE <RENAME .OUTCHAN .STR>
+	     <CLOSE .OUTCHAN>)>
+      .NAM>
+    <PROG ()
+	  <AND <ASSIGNED? INCHAN>
+	       <TYPE? .INCHAN CHANNEL>
+	       <CLOSE .INCHAN>>
+	  <AND <ASSIGNED? OUTCHAN>
+	       <TYPE? .OUTCHAN CHANNEL>
+	       <CLOSE .OUTCHAN>>>>>
+
+<ENDPACKAGE>
+

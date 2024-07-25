@@ -1,0 +1,141 @@
+<PACKAGE "M-RDR">
+
+<ENTRY READER-MAIL READER-DELIVERY READER-CITATION>
+
+<USE "M-DEFS" "FIELDS" "USRUTI" "M-TEMP" "M-READ" "R-DEFS" "MADMAN" "ASYLUM">
+
+<SETG COMSYS-READER-ASYLUM <>>
+
+"READER-MAIL -- deliver citation to file READER.TXT on user's directory"
+
+<DEFINE READER-MAIL (ADR "AUX" CH (MS ,MSG-SPACE) U UU ID)
+	#DECL ((ADR) ADDRESS (U UU) <OR FALSE ADDRESS> (CH) <OR CHANNEL FALSE>
+	       (ID) FIX (MS) SPACE)
+	<COND (<SET U <DRDMSG () <GETFIX "AUTHOR">>>
+	       <SET UU <KEYGET <COND (<EMPTY? .ADR> .U) (ELSE .ADR)>>>
+	       <COND (<SET CH <MAIL-OPEN <ANAME .UU> "READER">>
+		      <SET ID <DRDMSG () "MSG-NO">>
+		      <PRINC "![" .CH>
+		      <PRIN1 .ID .CH>
+		      <PRIN1 <TIME-SENT> .CH>
+		      <PRINC !\  .CH>
+		      <PRIN1 <READER-FLAGS .ADR> .CH>
+		      <PRINC "]" .CH>
+		      <CRLF .CH>
+		      <TEMPRENAME .CH>
+		      T)
+		     (ELSE <AFALSE 7 <ASTRING .MS <UNPARSE .CH>>>)>)
+	      (ELSE <AFALSE 8 <ASTRING .MS "Author">>)>>
+
+<DEFINE TIME-SENT ("AUX" (W <DRDMSG () "WHEN-ORIGINATED">))
+	#DECL ((W) <OR FALSE FIX UVECTOR>)
+	<COND (<TYPE? .W FIX> .W)
+	      (<TYPE? .W UVECTOR> <1 .W>)
+	      (ELSE <ITIME>)>>
+
+<DEFINE READER-FLAGS (ADR "AUX" (M <ORB ,R-UNREAD ,R-UNSUMMARIZED ,R-RECENT>))
+	#DECL ((ADR) ADDRESS (M) WORD)
+	<COND (<DRDA () "REMIND">
+	       <SET M <ORB .M ,R-REMIND>>
+	       <SET M <ORB .M ,R-OUT-BOX>>)
+	      (<EMPTY? .ADR>
+	       <SET M <ORB .M ,R-SENT>>
+	       <SET M <ORB .M ,R-OUT-BOX>>)
+	      (ELSE <SET M <ORB .M ,R-IN-BOX>>)>
+	<CHTYPE .M FIX>>
+
+"READER-CITATION -- deliver citation to user's asylum"
+
+<DEFINE READER-CITATION (ADR "AUX" RA (SS ,SCRATCH-SPACE) (MS ,MSG-SPACE)
+			 U UU MSG R (N <>) (NN <>))
+	#DECL ((ADR) ADDRESS (RA) <OR FALSE ASYLUM> (SS MS) SPACE
+	       (R) <OR FALSE MANIAC> (N NN) <OR FALSE UVECTOR>
+	       (MSG) UVECTOR (UU) <OR FALSE ADDRESS>)
+	<COND (<AND <SET U <DRDMSG () <GETFIX "AUTHOR">>>
+		    <SET UU <KEYGET <COND (<EMPTY? .ADR> .U) (ELSE .ADR)>>>>
+	       <SET RA
+		    <OPEN-DATA-FILE <STRING "<" <ANAME .UU> ">READER.ASYLUM">
+				    ,COMSYS-READER-ASYLUM>>
+	       <SETG COMSYS-READER-ASYLUM .RA>
+	       <SET MSG
+		    <AUVECTOR .SS
+			      <DRDMSG () "MSG-NO">
+			      <TIME-SENT>
+			      <READER-FLAGS .ADR>>>
+	       <SET N <DATA-AREAD .RA ,M-NEW <ARESET .SS>>>
+	       <COND (.N
+		      <SET NN
+			   <AUVECTOR .SS !.N .MSG>>
+		      <ARELEASE .SS .N>)
+		     (ELSE
+		      <SET NN <AUVECTOR .SS .MSG>>)>
+	       <COND (<SET R <DATA-APRINT .RA ,M-NEW .SS .NN>>
+		      <FLUSH-DATA-FILE .RA>
+		      T)
+		     (ELSE <AFALSE 36 <ACOPY .MS .R>>)>)
+	      (ELSE <AFALSE 35>)>>
+
+"READER-DELIVERY -- deliver citation and message to user's asylum"
+
+<DEFINE READER-DELIVERY (ADR "AUX" RA (MS ,MSG-SPACE) (SS ,SCRATCH-SPACE)
+			 LC U UU ID R RR (V <>) (VV <>) (N <>) (NN <>)
+			 (M -1) TMP MSG)
+	#DECL ((ADR) ADDRESS (RA) <OR FALSE ASYLUM> (MS SS) SPACE
+	       (RR R) <OR FALSE MANIAC> (U UU) <OR FALSE ADDRESS> (M LC) FIX
+	       (TMP) <OR FALSE FIX> (V VV) <OR FALSE VECTOR>
+	       (N NN) <OR FALSE UVECTOR> (MSG) UVECTOR)
+	<COND (<AND <SET U <DRDMSG () <GETFIX "AUTHOR">>>
+		    <SET UU <KEYGET <COND (<EMPTY? .ADR> .U) (ELSE .ADR)>>>>
+	       <SET RA
+		    <OPEN-DATA-FILE <STRING "<" <ANAME .UU> ">READER.ASYLUM">
+				    ,COMSYS-READER-ASYLUM>>
+	       <SETG COMSYS-READER-ASYLUM .RA>
+	       <SET ID <DRDMSG () "MSG-NO">>
+	       <COND (<AND <SET V <DATA-AREAD .RA ,M-ASYLUM <ARESET .SS>>>
+			   <SET TMP <FIND-LOCAL .ID .V>>>
+		      <SET M .TMP>)>
+	       <COND (<NOT <SET R <DATA-OPEN "PRINT" .RA .M>>>
+		      <AFALSE 30 <ACOPY .MS .R>>)
+		     (<L? <SET LC <1 .R>> 10>
+		      <DATA-CLOSE .RA .R>
+		      <AFALSE 31
+			      <ASTRING .MS "ABOUT-TO-CLOBBER"> <1 .R>>)
+		     (<NOT <SET RR <DATA-IPRINT .RA .R .MS <MVDATA ,MDB>>>>
+		      <DATA-CLOSE .RA .R>
+		      <AFALSE 32 <ACOPY .MS .RR>>)
+		     (<NOT <SET R <DATA-CLOSE .RA .R>>>
+		      <AFALSE 33 <ACOPY .MS .R>>)
+		     (ELSE
+		      <COND (.V
+			     <SET VV <AVECTOR .SS !.V .ID .LC>>
+			     <ARELEASE .SS .V>)
+			    (ELSE
+			     <SET VV <AVECTOR .SS .ID .LC>>)>
+		      <COND (<SET R <DATA-APRINT .RA ,M-ASYLUM .SS .VV>>
+			     <SET N <DATA-AREAD .RA ,M-NEW <ARESET .SS>>>
+			     <SET MSG
+				  <AUVECTOR .SS
+					    <DRDMSG () "MSG-NO">
+					    <TIME-SENT>
+					    <READER-FLAGS .ADR>>>
+			     <COND (.N
+				    <SET NN <AUVECTOR .SS !.N .MSG>>
+				    <ARELEASE .SS .N>)
+				   (ELSE
+				    <SET NN <AUVECTOR .SS .MSG>>)>
+			     <COND (<SET R
+					 <DATA-APRINT .RA ,M-NEW .SS .NN>>
+				    <FLUSH-DATA-FILE .RA>
+				    T)
+				   (ELSE <AFALSE 36 <ACOPY .MS .R>>)>)
+			    (ELSE <AFALSE 34 <ACOPY .MS .R>>)>)>)
+	      (ELSE <AFALSE 35>)>>
+
+<DEFINE FIND-LOCAL (ID V)
+	#DECL ((ID) FIX (V) <VECTOR [REST FIX]>)
+	<REPEAT ()
+		<COND (<EMPTY? .V> <RETURN <>>)
+		      (<==? <1 .V> .ID> <RETURN <2 .V>>)
+		      (ELSE <SET V <REST .V 2>>)>>>
+
+<ENDPACKAGE>

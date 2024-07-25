@@ -1,0 +1,730 @@
+"(c) Copyright 1978 Massachusetts Institute of Technology.  All Rights Reserved."
+
+<PACKAGE "MADMAN">
+
+<ENTRY SPACE
+       PBLOCK
+       CURSPACE
+       ALLOC-TABLE
+       AERRFALSE
+       AERRFIX
+       ARESERVE
+       ARESTORE
+       ADD-ALLOC
+       APGFIND
+       APGGIVE
+       AFIND
+       ARESET
+       AGIVE
+       ALENGTH
+       APLENGTH
+       BOUNDS-CHECK
+       ALEGAL?
+       AGC
+       ACOPY
+       APRINT
+       AREAD
+       ACONS
+       ARELEASE
+       ALSTRING
+       ASTRING
+       ALISTRING
+       AISTRING
+       ALBYTES
+       ABYTES
+       ALIBYTES
+       AIBYTES
+       ALLIST
+       ALIST
+       ALILIST
+       AILIST
+       ALVECTOR
+       AVECTOR
+       ALIVECTOR
+       AIVECTOR
+       ALUVECTOR
+       AUVECTOR
+       ALIUVECTOR
+       AIUVECTOR
+       APUT
+       APUTC
+       PAGE-GIVE-TABLE
+       MADMAN-PAGE-FIND
+       MADMAN-PAGE-GIVE
+       ABITS
+       ASPEC-BITS
+       ABIT-NOGROW
+       ABIT-NOFIXUP
+       ABIT-VCHAIN
+       ABIT-RELERR
+       ASHARE-VECTOR>
+
+<USE-DEFER "ASYLUM" "DDM">
+
+<FLOAD "MADMAN;MGC NBIN">
+<FLOAD "MADMAN;MSTRUC NBIN">
+<FLOAD "MADMAN;MRANDM NBIN">
+<FLOAD "MADMAN;MPFIND NBIN">
+<FLOAD "MADMAN;MFIXUP NBIN">
+<FLOAD "MADMAN;GFPAGE NBIN">
+
+<SETG ARVL 60>
+
+<SETG AREAD-VECTOR <IVECTOR ,ARVL #WORD *000000000000*>>
+
+<NEWTYPE PBLOCK VECTOR '<VECTOR FIX WORD WORD>>
+
+<NEWTYPE SPACE
+	 VECTOR
+	 '<VECTOR <LIST [REST PBLOCK]> WORD WORD WORD LIST VECTOR FIX FIX>>
+
+<SETG FREE-VECTOR-CHAIN 4>
+
+<SETG FREE-LIST 5>
+
+<SETG ASHARE-VECTOR 6>
+
+<SETG ASHARE-LOCK 7>
+
+<SETG ASPEC-BITS 8>
+"AGROW INTERRUPT IF ATTEMPT TO GROW SPACE"
+<SETG ABIT-NOGROW *400000000000*>
+"ERROR IF ATTEMPT TO RELEASE SOMETHING OUTSIDE SPACE"
+<SETG ABIT-RELERR *200000000000*>
+"AFIXUP INTERRUPT IF ATTEMPT TO FIXUP SPACE"
+<SETG ABIT-NOFIXUP *100000000000*>
+"USE VECTOR CHAIN FIRST"
+<SETG ABIT-VCHAIN *40000000000*>
+
+<MANIFEST FREE-VECTOR-CHAIN FREE-LIST ASHARE-VECTOR ASHARE-LOCK ASPEC-BITS ABIT-NOGROW
+	  ABIT-NOFIXUP ABIT-RELERR ABIT-VCHAIN>
+
+<SETG SPARE-SPACE
+      <CHTYPE [()
+	       #WORD *000000000000*
+	       #WORD *000000000000*
+	       #WORD *000000000000*
+	       ()
+	       []
+	       -1
+	       0]
+	      SPACE>>
+
+<SETG SPARE-LIST '(T)>
+
+<SETG SPARE-PBLOCKS '()>
+
+<SETG ALLOC-TABLE <IUVECTOR 8 #WORD *000000000000*>>
+
+<SETG AUV1 <IUVECTOR 1 #WORD *000000000000*>>
+
+<SETG AUV2 <IUVECTOR 2 #WORD *000000000000*>>
+
+<SETG AUV3 <IUVECTOR 3 #WORD *000000000000*>>
+
+<SETG AUV4 <IUVECTOR 4 #WORD *000000000000*>>
+
+<SETG AUV6 <IUVECTOR 6 #WORD *000000000000*>>
+
+<SETG AERRFIX <>>
+
+<GDECL (SPARE-PBLOCKS) LIST (AUV1 AUV2 AUV3 AUV4 AUV6) UVECTOR
+       (SCRATCH-PAGE) SPACE (AREAD-VECTOR) VECTOR>
+
+<DEFINE SPACETYPE (SP "AUX" (OUTCHAN .OUTCHAN)) 
+	#DECL ((SP) SPACE)
+	<PRINC "
+        PGS        HIGH WORD             LAST WORD">
+	<MAPF <> ,PRINT <1 .SP>>
+	<PRINC "
+CURRENT LOCATION = ">
+	<PRIN1 <2 .SP>>
+	<PRINC "
+LOWEST LOCATION  = ">
+	<PRIN1 <3 .SP>>
+	<PRINC "
+FVC LOCATION     = ">
+	<PRIN1 <4 .SP>>
+	<PRINC "
+FREE LIST LENGTH = ">
+	<PRIN1 <LENGTH <5 .SP>>>
+	<COND (<NOT <0? <ASPEC-BITS .SP>>>
+	       <PRINC "
+SPEC = ">
+	       <PRIN1 <CHTYPE <ASPEC-BITS .SP> WORD>>)>>
+
+<AND <APPLICABLE? ,SPACETYPE> <PRINTTYPE SPACE ,SPACETYPE>>
+
+<DEFINE ABITS (SP "OPTIONAL" (BITS <>))
+    #DECL ((SP) SPACE (BITS) <OR FIX FALSE>)
+    <COND (.BITS <PUT .SP ,ASPEC-BITS .BITS>)
+	  (<ASPEC-BITS .SP>)>>
+
+<DEFINE ARESERVE (PGS "OPTIONAL" (ATABLE ,ALLOC-TABLE) (SHARE <>) "AUX" FOO) 
+	#DECL ((PGS) FIX (FOO) <OR FIX FALSE> (ATABLE) <UVECTOR [REST WORD]>
+	       (SHARE) <OR 'T FALSE>)
+	<COND (<SET FOO <APGFIND -1 .PGS .ATABLE>>
+	       <+ .FOO .PGS -1>)
+	      (<SET FOO <MADMAN-PAGE-FIND .PGS>>
+	       <PGFIXUP .FOO .PGS .SHARE>
+	       <APGGIVE <+ .FOO .PGS -1> .PGS .ATABLE>)
+	      (#FALSE ("PAGE-FIND-FAILED"))>>
+
+<DEFINE PGFIXUP (LPAGE NUM
+		 "OPTIONAL" (SHARE <>) (IDX 0)
+		 "AUX" (WD <CHTYPE .LPAGE WORD>))
+	#DECL ((IDX NUM LPAGE) FIX (WD) WORD (SHARE) <OR 'T FALSE>)
+	<COND (<G? ,MUDDLE 100>
+	       <REPEAT ((N .NUM) (L .LPAGE))
+		       <AND <0? .N> <RETURN>>
+		       <GET-FRESH-PAGE .L>
+		       <SET L <+ .L 1>>
+		       <SET N <- .N 1>>>)
+	      (<CORE-BLOCK <COND (.SHARE 53248) (36864)>
+			   -1
+			   <CHTYPE <PUTBITS .WD
+					    <BITS 18 18>
+					    <CHTYPE <- .NUM> WORD>>
+				   FIX>
+			   <COND (<N==? .IDX 0>
+				  <CHTYPE <ORB <CHTYPE .IDX WORD> 131072> FIX>)
+				 (-5)>
+			   <COND (<N==? .IDX 0> .LPAGE) (0)>>)
+	      (<ERROR CANT-GET-PAGES!-ERRORS>)>
+	<AND <0? .IDX> <PAGE-CLEAR .LPAGE .NUM>>>
+
+<DEFINE ARESTORE (SP "OPTIONAL" (SHARE <>)) 
+   #DECL ((SP) SPACE (SHARE) <OR ATOM FALSE>)
+   <MAPF <>
+    <FUNCTION (PB) 
+	    #DECL ((PB) PBLOCK)
+	    <CORE-BLOCK
+	     <COND (.SHARE *150000*) (36864)>
+	     -1
+	     <CHTYPE <PUTBITS <PUTBITS #WORD *000000000000*
+				       <BITS 18 18>
+				       <- <1 .PB>>>
+			      <BITS 18 0>
+			      <- <+ 1 </ <CHTYPE <2 .PB> FIX> 1024>> <1 .PB>>>
+		     FIX>
+	     -5
+	     0>>
+    <1 .SP>>>
+
+<DEFINE AFIND (NUM
+	       "OPTIONAL" (SP <>) (BITS 0)
+	       "AUX" LPAGE (ATABLE ,ALLOC-TABLE))
+	#DECL ((NUM) FIX (LPAGE) <OR FALSE FIX> (SP) <OR FALSE SPACE> (BITS) FIX)
+	<COND (<NOT .SP> <SET SP <CHTYPE [()
+				    #WORD *000000000000*
+				    #WORD *000000000000*
+				    #WORD *000000000000*
+				    ()
+				    []
+				    -1
+				    .BITS]
+				   SPACE>>)
+	      (<PUT .SP ,ASPEC-BITS .BITS>)>
+	<PROG ()
+	      <COND (<SET LPAGE <APGFIND -1 .NUM .ATABLE>>
+		     <PAGE-FIXUP .NUM .LPAGE .SP>)
+		    (<AND <ARESERVE .NUM> <AGAIN>>)
+		    (#FALSE ("APGFIND-FAILED"))>>>
+
+<DEFINE AGIVE (SP "AUX" (ATABLE ,ALLOC-TABLE)) 
+	#DECL ((SP) SPACE (ATABLE) <UVECTOR [REST WORD]>)
+	<MAPF <>
+	      <FUNCTION (X) 
+		      <APGGIVE </ <- <CHTYPE <2 .X> FIX> 1023> 1024>
+			       <1 .X>
+			       .ATABLE>>
+	      <1 .SP>>
+	<SETG SPARE-PBLOCKS (!<1 .SP> !,SPARE-PBLOCKS)>
+	<PUT .SP 1 '()>
+	<PUT .SP 2 #WORD *000000000000*>
+	<PUT .SP 3 #WORD *000000000000*>
+	<PUT .SP 4 #WORD *000000000000*>
+	<PUT .SP 5 '()>>
+
+<DEFINE ARESET (SP
+		"OPTIONAL" (FLUSH T) (CLEAR T)
+		"AUX" LBLOCK (ATABLE ,ALLOC-TABLE))
+	#DECL ((SP) SPACE (LBLOCK) PBLOCK (CLEAR FLUSH) <OR FALSE 'T>
+	       (ATABLE) UVECTOR)
+	<MAPR <>
+	      <FUNCTION (X "AUX" (Y <1 .X>)) 
+		      #DECL ((X) <LIST [REST PBLOCK]> (Y) PBLOCK)
+		      <AND .CLEAR
+			   <PAGE-CLEAR <- </ <+ 1 <CHTYPE <2 .Y> FIX>> 1024>
+					  <1 .Y>>
+				       <1 .Y>>>
+		      <PUT .Y 3 #WORD *777777777777*>
+		      <AND .FLUSH
+			   <N==? <LENGTH .X> 1>
+			   <APGGIVE </ <- <CHTYPE <2 .Y> FIX> 1023> 1024>
+				    <1 .Y>
+				    .ATABLE>>>
+	      <1 .SP>>
+	<AND .FLUSH
+	     <SETG SPARE-PBLOCKS
+	      (!<SUBSTRUC <1 .SP> 0 <- <LENGTH <1 .SP>> 1>>
+	       !,SPARE-PBLOCKS)>>
+	<SET LBLOCK <NTH <1 .SP> <LENGTH <1 .SP>>>>
+	<PUT .LBLOCK 3 #WORD *000000000000*>
+	<PUT .SP 2 <2 .LBLOCK>>
+	<AND .FLUSH
+	     <PUT .SP 1 <REST <1 .SP> <- <LENGTH <1 .SP>> 1>>>>
+	<PUT .SP
+	     3
+	     <CHTYPE <- <+ <CHTYPE <2 .LBLOCK> FIX> 1> <* 1024 <1 .LBLOCK>>>
+		     WORD>>
+	<PUT .SP 4 #WORD *000000000000*>
+	<PUT .SP 5 '()>>
+
+<DEFINE PAGE-FIXUP (NUM LPAGE SP "OPTIONAL" (SHARE <>))
+	#DECL ((NUM LPAGE) FIX (SP) SPACE (SHARE) <OR 'T FALSE>)
+	<REPEAT ((N .NUM) (L .LPAGE) A)
+		#DECL ((N L) FIX (A) WORD)
+		<COND
+		 (<0? .N>
+		  <PUT .SP
+		       1
+		       (<GET-PBLOCK .NUM
+				    <SET A
+					 <CHTYPE <+ 1023 <* <- .L 1> 1024>>
+						 WORD>>
+				    #WORD *000000000000*>)>
+		  <PUT .SP 2 .A>
+		  <RETURN <PUT .SP 3 <CHTYPE <* .LPAGE 1024> WORD>>>)
+		 (<COND (.SHARE)
+			(<G? ,MUDDLE 100> <GET-FRESH-PAGE .L>)
+			(<CORE-BLOCK 36864 -1 .L -5 0>)>
+		  <OR .SHARE <PAGE-CLEAR .L 1>>
+		  <SET L <+ .L 1>>
+		  <SET N <- .N 1>>)>>>
+
+<DEFINE GET-PBLOCK (PGS TOPWRD LSTWRD "AUX" PB) 
+	#DECL ((PGS) FIX (TOPWRD LSTWRD) WORD (SP) <LIST [REST PBLOCK]>
+	       (PB) PBLOCK)
+	<COND (<EMPTY? ,SPARE-PBLOCKS>
+	       <CHTYPE [.PGS .TOPWRD .LSTWRD] PBLOCK>)
+	      (<SET PB <1 ,SPARE-PBLOCKS>>
+	       <SETG SPARE-PBLOCKS <REST ,SPARE-PBLOCKS>>
+	       <PUT .PB 1 .PGS>
+	       <PUT .PB 2 .TOPWRD>
+	       <PUT .PB 3 .LSTWRD>)>>
+
+<DEFINE ADD-ALLOC (SP WORDS
+		   "OPTIONAL" (PGFND <>)
+		   "AUX" CURBLOCK A LPAGE (NSP <>) (ATABLE ,ALLOC-TABLE)
+			 (SS ,SPARE-SPACE) (SL ,SPARE-LIST) PB)
+   #DECL ((SP) SPACE (NSP) <OR SPACE FALSE> (WORDS A) FIX
+	  (SL) LIST (PGFND LPAGE) <OR FIX FALSE> (ATABLE) <UVECTOR [REST WORD]>
+	  (CURBLOCK) PBLOCK (SS) SPACE (PB) <OR FALSE PBLOCK>)
+   <SET A </ .WORDS 1024>>
+   <COND (<0? <MOD .WORDS 1024>>) (<SET A <+ .A 1>>)>
+   <SET CURBLOCK
+	<MAPF <>
+	      <FUNCTION (X) 
+		      <COND (<==? <3 .X> #WORD *000000000000*> <MAPLEAVE .X>)>>
+	      <1 .SP>>>
+   <COND
+    (<AND
+      .PGFND
+      <PROG ()
+	    <COND
+	     (<SET PGFND <APGFIND .PGFND .A ,ALLOC-TABLE>>
+	      <SET NSP
+		   <PUT .SS
+			1
+			<PUT .SL
+			     1
+			     <GET-PBLOCK .A
+					 <CHTYPE <+ 1023 <* .PGFND 1024>> WORD>
+					 #WORD *000000000000*>>>>
+	      <PUT .SS 2 <2 <1 <1 .SS>>>>
+	      <PUT .SS 3 <CHTYPE <* 1024 <- .PGFND .A -1>> WORD>>)>
+	    <>>>)
+    (<AND <NOT .PGFND> <G=? <PFREE .SP .CURBLOCK> .WORDS>> .SP)
+    (<AND
+      <NOT .PGFND>
+      <MAPF <>
+       <FUNCTION (X) 
+	  #DECL ((X) PBLOCK)
+	  <COND
+	   (<G=? <PFREE .SP .X> .WORDS>
+	    <COND (<==? <3 .X> #WORD *000000000000*>)
+		  (T
+		   <PUT .CURBLOCK 3 <2 .SP>>
+		   <PUT .SP
+			2
+			<COND (<==? <3 .X> #WORD *777777777777*> <2 .X>)
+			      (<3 .X>)>>
+		   <PUT .X 3 #WORD *000000000000*>
+		   <MAPLEAVE <PUT .SP
+				  3
+				  <CHTYPE <- <CHTYPE <2 .X> FIX>
+					     <* 1024 <1 .X>>
+					     -1>
+					  WORD>>>)>)>>
+       <1 .SP>>>)
+    (<OR .NSP
+	 <PROG ()
+	       <COND (<SET LPAGE <APGFIND -1 .A .ATABLE>>)
+		     (<ARESERVE .A .ATABLE> <AGAIN>)
+		     (#FALSE ("ARESERVE FAILED"))>>>
+     <COND (<NOT <0? <CHTYPE <ANDB <ASPEC-BITS .SP> ,ABIT-NOGROW> FIX>>>
+	    <INTERRUPT "AGROW" .SP .WORDS>)>
+     <COND (<OR .NSP <SET NSP <PAGE-FIXUP .A .LPAGE .SS>>>
+	    <COND (<SET PB <BORDER? <1 <1 .NSP>> <1 .SP>>>
+		   <PUT .PB 1 <+ .A <1 .PB>>>
+		   <PUT .CURBLOCK 3 <2 .SP>>
+		   <COND (<==? <3 .PB> #WORD *777777777777*>
+			  <PUT .SP 2 <2 .PB>>)
+			 (<N==? <3 .PB> #WORD *000000000000*>
+			  <PUT .SP 2 <3 .PB>>)>
+		   <PUT .PB 3 #WORD *000000000000*>)
+		  (<PUT .CURBLOCK 3 <2 .SP>>
+		   <PUT .SP 2 <2 .NSP>>
+		   <PUT .SP 1 <CONS <1 <1 .NSP>> <1 .SP>>>)>
+	    <PUT .SP 3 <3 .NSP>>)>)>>
+
+<DEFINE BORDER? (PB PBLIST) 
+	#DECL ((PB) PBLOCK (PBLIST) <LIST [REST PBLOCK]>)
+	<MAPF <>
+	      <FUNCTION (PFROB) 
+		      #DECL ((PFROB) PBLOCK)
+		      <COND (<0? <- <CHTYPE <2 .PFROB> FIX>
+				    <* 1024 <1 .PFROB>>
+				    <CHTYPE <2 .PB> FIX>>>
+			     <MAPLEAVE .PFROB>)>>
+	      .PBLIST>>
+
+<DEFINE UPAGES (SP) 
+	#DECL ((SP) SPACE)
+	<CHTYPE <MAPF ,+
+		      <FUNCTION (X) 
+			      #DECL ((X) PBLOCK)
+			      <COND (<AFREE .SP .X> 0) (<1 .X>)>>
+		      <1 .SP>>
+		WORD>>
+
+<DEFINE AFREE (SP PB) 
+	#DECL ((SP) SPACE (PB) PBLOCK)
+	<OR <==? <3 .PB> #WORD *777777777777*>
+	    <==? <3 .PB> <2 .PB>>
+	    <AND <==? <3 .PB> #WORD *000000000000*>
+		 <==? <2 .PB> <2 .SP>>>>>
+
+<DEFINE APLENGTH (SP "AUX" (WD <UPAGES .SP>)) 
+	#DECL ((SP) SPACE (WD) WORD)
+	<PUTBITS .WD
+		 <BITS 18 18>
+		 <CHTYPE <MAPF ,MAX ,NTH <1 .SP>> WORD>>>
+
+<DEFINE ALENGTH (SP "OPTIONAL" (H1 4) (H2 2) "AUX" (WD #WORD *000000000000*)) 
+	#DECL ((SP) SPACE (H1 H2) FIX (WD) WORD)
+	<SET WD <PUTBITS .WD <BITS 18 18> <UPAGES .SP>>>
+	<PUTBITS .WD
+		 <BITS 18 0>
+		 <+ .H1
+		    <MAPF ,+
+			  <FUNCTION (X) #DECL ((X) PBLOCK) <PLENGTH .SP .X .H2>>
+			  <1 .SP>>>>>
+
+<DEFINE PLENGTH (SP PB HL) 
+	#DECL ((SP) SPACE (PB) PBLOCK (HL) FIX)
+	<COND (<AFREE .SP .PB> 0)
+	      (<+ .HL
+		  <- <CHTYPE <2 .PB> FIX>
+		     <CHTYPE <COND (<==? <3 .PB> #WORD *000000000000*> <2 .SP>)
+				   (<3 .PB>)>
+			     FIX>>>)>>
+
+<DEFINE PFREE (SP PB) 
+	#DECL ((SP) SPACE (PB) PBLOCK)
+	<- <* <1 .PB> 1024> <PLENGTH .SP .PB 1>>>
+
+<DEFINE AREAD (SP DC "OPTIONAL" (DADR 0) (SPEED 3) (CHAIN T)
+	       "AUX" (UV6 ,AUV6) (1ST T) (UVX ,AUV2) (UV3 ,AUV3) OBJ UV2 
+		     (NTRANS
+		      <PROG ()
+			    <COND (<TYPE? .DC ASYLUM>
+				   <DATREAD .DC 6 .DADR .UV6>)
+				  (<TYPE? .DC DDMCHAN>
+				   <GET-DATA .DC .DADR .UV6 6>)
+				  (<READA .DC .UV6 6>)>
+			    <CHTYPE <GETBITS <1 .UV6> <BITS 9 18>> FIX>>)
+		     (NWORDS <CHTYPE <GETBITS <1 .UV6> <BITS 18 0>> FIX>)
+		     (LOSEULEN <* <CHTYPE <GETBITS <1 .UV6> <BITS 9 27>> FIX> 3>)
+		     (ARVL ,ARVL)
+		     (LOSEUVC
+		      <COND (<L=? .LOSEULEN .ARVL>
+			     <REST <CLEAR-VEC ,AREAD-VECTOR>
+				   <- .ARVL .LOSEULEN>>)
+			    (T
+			     <SETG ARVL <SET ARVL <+ .LOSEULEN 15>>>
+			     <REST <SETG AREAD-VECTOR <IVECTOR .ARVL #WORD 0>> 15>)>)
+		     (TOPLOSEUVC .LOSEUVC))
+   #DECL ((SP) SPACE (DC) <OR CHANNEL ASYLUM DDMCHAN>
+	  (ARVL LOSEULEN NTRANS NWORDS DADR LEN SPEED) FIX
+	  (UV3 UV2 UV6 UVX) <UVECTOR [REST WORD]> (CHAIN 1ST) <OR 'T FALSE>
+	  (TOPLOSEUVC LOSEUVC) <VECTOR [REST WORD]> (OBJ) ANY)
+   <SUBSTRUC .UV6 1 2 .UVX>
+   <COND (<==? .SPEED 1> <ADD-ALLOC .SP .NWORDS>)
+	 (<==? .SPEED 2>
+	  <ADD-ALLOC .SP
+		     .NWORDS
+		     </ <- <CHTYPE <GETBITS <5 .UV6> <BITS 18 0>> FIX> 1023>
+			1024>>)>
+   <SET DADR <+ .DADR 6>>
+   <COND
+    (<REPEAT (LOWADR NUM SPBOT (TRANS .NTRANS) WORDS LCHN VCHN)
+       #DECL ((NUM SPBOT TRANS WORDS LCHN VCHN) FIX (LOWADR) <PRIMTYPE WORD>)
+       <COND
+	(<0? .TRANS>
+	 <SET LCHN <CHTYPE <GETBITS <4 .UV6> <BITS 18 18>> FIX>>
+	 <SET VCHN <CHTYPE <GETBITS <4 .UV6> <BITS 18 0>> FIX>>
+	 <COND
+	  (<L=? .NTRANS 1>
+	   <SET OBJ <LFIXUP <1 .UVX> <2 .UVX> <1 .UV3> <2 .UV3> <3 .UV3>>>
+	   <AND .CHAIN
+		<NOT <0? .VCHN>>
+		<PUT .SP 4 <CHTYPE <+ .VCHN <CHTYPE <3 .UV3> FIX>> WORD>>>
+	   <AND .CHAIN
+		<NOT <0? .LCHN>>
+		<PUT .SP
+		     5
+		     <GET-LIST <CHTYPE <+ .LCHN <CHTYPE <3 .UV3> FIX>> WORD>>>>
+	   <AND <N==? <CHTYPE <3 .UV3> FIX> 0>
+		<NOT <0? <CHTYPE <ANDB <ASPEC-BITS .SP> ,ABIT-NOFIXUP> FIX>>>
+		<INTERRUPT "AFIXUP" .SP .OBJ .UV3>>
+	   <RETURN .OBJ>)
+	  (<SET OBJ <LHFIXUP <1 .UVX> <2 .UVX> .TOPLOSEUVC>>
+	   <COND (.CHAIN
+		  <PUT .SP
+		       4
+		       <COND (<0? .VCHN> <CHTYPE .VCHN WORD>)
+			     (<LHPFIX <CHTYPE .VCHN WORD> .TOPLOSEUVC>)>>
+		  <PUT .SP
+		       5
+		       <COND (<0? .LCHN> '())
+			     (<GET-LIST <LHPFIX <CHTYPE .LCHN WORD>
+						.TOPLOSEUVC>>)>>)>
+	   <RETURN .OBJ>)>)
+	(T
+	 <COND (.1ST <SET UV2 <REST .UV6 4>> <SET 1ST <>>)
+	       (<COND (<TYPE? .DC ASYLUM> 
+		       <DATREAD .DC 2 .DADR .UV2>)
+		      (<TYPE? .DC DDMCHAN>
+		       <GET-DATA .DC .DADR .UV2 2>)
+		      (<READA .DC .UV2 2>)>
+		<SET DADR <+ .DADR 2>>)>
+	 <SET NUM <CHTYPE <GETBITS <1 .UV2> <BITS 18 18>> FIX>>
+	 <SET WORDS <CHTYPE <2 .UV2> FIX>>
+	 <AND <==? .SPEED 3>
+	      <ADD-ALLOC .SP
+			 .WORDS
+			 </ <- <CHTYPE <GETBITS <1 .UV2> <BITS 18 0>> FIX> 1023>
+			    1024>>>
+	 <SET SPBOT <CHTYPE <2 .SP> FIX>>
+	 <SET LOWADR <CHTYPE <- .SPBOT .WORDS> BITS>>
+	 <COND (<TYPE? .DC ASYLUM>
+	        <DATREAD .DC <CHTYPE <2 .UV2> FIX> .DADR .LOWADR>)
+	       (<TYPE? .DC DDMCHAN>
+		<GET-DATA .DC .DADR .LOWADR <CHTYPE <2 .UV2> FIX>>)
+	       (<READA .DC .LOWADR <CHTYPE <2 .UV2> FIX>>)>
+	 <SET DADR <+ .DADR <CHTYPE <2 .UV2> FIX>>>
+	 <PUT .SP 2 <CHTYPE .LOWADR WORD>>
+	 <COND (<1? .NTRANS>
+		<PUT .UV3 2 <CHTYPE .SPBOT WORD>>
+		<PUT .UV3
+		     3
+		     <CHTYPE <- .SPBOT
+				<CHTYPE <GETBITS <1 .UV2> <BITS 18 0>> FIX>>
+			     WORD>>
+		<PUT .UV3 1 <CHTYPE .LOWADR WORD>>)
+	       (<REPEAT ((NUM .NUM)
+			 (PG <CHTYPE <GETBITS <1 .UV2> <BITS 18 0>> FIX>))
+			#DECL ((NUM PG) FIX)
+			<COND (<0? .NUM> <RETURN>)
+			      (<PUT .LOSEUVC 1 <CHTYPE .LOWADR WORD>>
+			       <PUT .LOSEUVC 2 <CHTYPE .SPBOT WORD>>
+			       <PUT .LOSEUVC 3 <CHTYPE .PG WORD>>
+			       <SET LOSEUVC <REST .LOSEUVC 3>>
+			       <SET SPBOT <- .SPBOT 1024>>
+			       <SET PG <- .PG 1024>>
+			       <SET NUM <- .NUM 1>>)>>)>
+	 <SET TRANS <- .TRANS 1>>)>>)
+    (T
+     #FALSE ("SPACE NOT LARGE ENOUGH FOR READ?"))>>
+
+<DEFINE APRINT (SP OBJ DC "OPTIONAL" (DADR 0) (FIXUP <>)
+		"AUX" (WD <ALENGTH .SP 0 0>) (UV2 ,AUV2) (1ST T)
+		      (UV4 ,AUV4) BL BOTLOC PLEN
+		      (UVCLEN <* <LENGTH <1 .SP>> 3>)
+		      (ARVL ,ARVL)
+		      (UVC
+		       <COND (<L=? .UVCLEN .ARVL>
+			      <REST <CLEAR-VEC ,AREAD-VECTOR>
+				    <- .ARVL .UVCLEN>>)
+			     (T
+			      <SETG ARVL <SET ARVL <+ .UVCLEN 15>>>
+			      <REST <SETG AREAD-VECTOR <IVECTOR .ARVL #WORD 0>> 15>)>)
+		      (TOPUVC .UVC))
+   #DECL ((SP) SPACE (ARVL UCVLEN BL PLEN BOTLOC DADR LEN) FIX (WD) WORD
+	  (UV1 UV2 UV4) <UVECTOR [REST WORD]> (OBJ) ANY (FIXUP 1ST) <OR 'T FALSE>
+	  (DC) <OR CHANNEL ASYLUM DDMCHAN> (UVC TOPUVC) VECTOR)
+   <COND
+    (<AND .FIXUP <NOT <1? <LENGTH <1 .SP>>>>>
+     <SET BL
+	  <SET BOTLOC
+	       <- <CHTYPE <2 <NTH <1 .SP> <LENGTH <1 .SP>>>> FIX>
+		  <CHTYPE <GETBITS <ALENGTH .SP 0 0> <BITS 18 0>> FIX>>>>
+     <MAPF <>
+	   <FUNCTION (X) 
+		   <COND (<AFREE .SP .X>)
+			 (T
+			  <PUT .UVC 2 <2 .X>>
+			  <PUT .UVC
+			       1
+			       <COND (<==? <3 .X> #WORD *000000000000*> <2 .SP>)
+				     (<3 .X>)>>
+			  <PUT .UVC
+			       3
+			       <CHTYPE <- .BL <CHTYPE <1 .UVC> FIX>> WORD>>
+			  <SET UVC <REST .UVC 3>>
+			  <SET BL <+ .BL <PLENGTH .SP .X 0>>>)>>
+	   <1 .SP>>
+     <LPFIXUP T <AOBJECT .OBJ <REST ,AUV4>> .TOPUVC>)>
+   <SET WD <PUTBITS .WD <BITS 9 27> <APLENGTH .SP>>>
+   <PUT .UV4
+	1
+	<PUTBITS .WD
+		 <BITS 9 18>
+		 <COND (.FIXUP #WORD *000000000001*)
+		       (<CHTYPE <MAPF ,+
+				      <FUNCTION (X) 
+					      <COND (<AFREE .SP .X> 0) (1)>>
+				      <1 .SP>>
+				WORD>)>>>
+   <PUT .UV4
+	4
+	<PUTBITS <4 .SP> <BITS 18 18> <2 <AOBJECT <5 .SP> .UV2>>>>
+   <COND (.FIXUP 
+	  <COND (<TYPE? .DC ASYLUM> 
+		 <DATWRITE .DC 4 .DADR <TOP .UV4>>)
+		(<TYPE? .DC DDMCHAN>
+		 <PUT-DATA .DC .DADR <TOP .UV4> 4>)
+		(<PRINTA .DC <TOP .UV4> 4>)>)
+	 (<COND (<TYPE? .DC ASYLUM>
+		 <DATWRITE .DC 4 .DADR <TOP <AOBJECT .OBJ <REST .UV4>>>>)
+		(<TYPE? .DC DDMCHAN>
+		 <PUT-DATA .DC .DADR <TOP <AOBJECT .OBJ <REST .UV4>>> 4>)
+		(<PRINTA .DC <TOP <AOBJECT .OBJ <REST .UV4>>> 4>)>)>
+   <SET DADR <+ .DADR 4>>
+   <MAPF <>
+    <FUNCTION (X "AUX" Y) 
+       <PROG ()
+	 <AND <AFREE .SP .X> <RETURN>>
+	 <PUT
+	  .UV2
+	  2
+	  <CHTYPE
+	   <SET PLEN
+		<- <CHTYPE <2 .X> FIX>
+		   <CHTYPE <SET Y
+				<COND (<==? <3 .X> #WORD *000000000000*>
+				       <2 .SP>)
+				      (<3 .X>)>>
+			   FIX>>>
+	   WORD>>
+	 <COND (.FIXUP
+		<PUT .UV2
+		     1
+		     <PUTBITS <CHTYPE <2 <NTH <1 .SP> <LENGTH <1 .SP>>>> WORD>
+			      <BITS 18 18>
+			      <APLENGTH .SP>>>
+		<PUT .UV2
+		     2
+		     <PUTBITS #WORD *000000000000*
+			      <BITS 18 0>
+			      <ALENGTH .SP 0 0>>>
+		<AND .1ST
+		     <COND (<TYPE? .DC ASYLUM>
+			    <DATWRITE .DC 2 .DADR .UV2>)
+			   (<TYPE? .DC DDMCHAN>
+			    <PUT-DATA .DC .DADR .UV2 2>)
+			   (<PRINTA .DC .UV2 2>)>
+		     <SET DADR <+ .DADR 2>>>
+		<SET 1ST <>>)
+	       (T
+		<PUT .UV2
+		     1
+		     <PUTBITS <2 .X> <BITS 18 18> <CHTYPE <1 .X> WORD>>>
+		<COND (<TYPE? .DC ASYLUM>
+		       <DATWRITE .DC 2 .DADR .UV2>)
+		      (<TYPE? .DC DDMCHAN>
+		       <PUT-DATA .DC .DADR .UV2 2>)
+		      (<PRINTA .DC .UV2 2>)>
+		<SET DADR <+ .DADR 2>>)>
+	 <COND (<TYPE? .DC ASYLUM>
+		<DATWRITE .DC .PLEN .DADR .Y>)
+	       (<TYPE? .DC DDMCHAN>
+		<PUT-DATA .DC .DADR .Y .PLEN>)
+	       (<PRINTA .DC .Y .PLEN>)>
+	 <SET DADR <+ .DADR .PLEN>>>>
+    <1 .SP>>
+   <AND .FIXUP <ARESET .SP <>>>
+   .DC>
+
+<DEFINE BOUNDS-CHECK (SP
+		      "AUX" (UVC
+			     <REST ,AREAD-VECTOR <- ,ARVL <* <LENGTH <1 .SP>> 3>>>)
+		      (TOPUVC .UVC))
+	#DECL ((OBJ) ANY (SP) SPACE (TOPUVC UVC) VECTOR)
+	<MAPF <>
+	      <FUNCTION (X) 
+		      <COND (<AFREE .SP .X>)
+			    (<PUT .UVC
+				  1
+				  <COND (<==? <3 .X> #WORD *000000000000*>
+					 <2 .SP>)
+					(<3 .X>)>>
+			     <PUT .UVC 2 <2 .X>>
+			     <PUT .UVC 3 #WORD *000000000000*>
+			     <SET UVC <REST .UVC 3>>)>>
+	      <1 .SP>>
+	<OR <==? <1 .TOPUVC> #WORD *000000000000*>
+	    <PROG AERRFALSE () #DECL ((AERRFALSE) <SPECIAL ACTIVATION>)
+		  <LPFIXUP T <PUT ,AUV2 2 <2 .SP>> .TOPUVC>>>>
+
+<DEFINE ALEGAL? (SP OBJ
+		 "AUX" (BAR	   ;"SECOND WORD OF TYPE-VALUE PAIR, RIGHT HALF"
+			<CHTYPE <GETBITS <2 <AOBJECT .OBJ ,AUV2>> <BITS 18 0>>
+				FIX>))
+   #DECL ((OBJ) ANY (SP) SPACE (BAR) FIX)
+   <COND
+    (<==? <PRIMTYPE .OBJ> WORD> T)
+    (<AND <==? <PRIMTYPE .OBJ> LIST> <EMPTY? .OBJ>> T)
+    (T
+     <COND (<MEMQ <PRIMTYPE .OBJ> '[STRING BYTES]> <SET BAR <+ .BAR 1>>
+						   ;"BPTR MAY POINT 1 TOO FAR")>
+     <MAPF <>
+      <FUNCTION (X) 
+	      <AND <G=? .BAR
+			<CHTYPE <COND (<==? <3 .X> #WORD *777777777777*> <MIN>)
+				      (<==? <3 .X> #WORD *000000000000*>
+				       <2 .SP>)
+				      (<3 .X>)>
+				FIX>>
+		   <L=? .BAR <CHTYPE <2 .X> FIX>>
+		   <MAPLEAVE T>>>
+      <1 .SP>>)>>
+
+<DEFINE APUTC (SP OBJ LOC FROB) 
+	#DECL ((SP) SPACE (OBJ) STRUCTURED (LOC) FIX (FROB) ANY)
+	<COND (<ALEGAL? .SP .FROB> <APUT .SP .OBJ .LOC .FROB>)
+	      (<APUT .SP .OBJ .LOC <ACOPY .SP .FROB>>)>>
+
+<ENDPACKAGE>

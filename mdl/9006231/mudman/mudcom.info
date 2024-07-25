@@ -1,0 +1,72 @@
+MUDCOM --
+
+	MUDCOM is a MUDDLE source file comparison program which allows
+the user to detect functions, etc. which have been changed between two
+version.  MUDCOM is not interactive; all instructions must be passed
+on the JCL line.  
+	
+	MUDCOM understands the following MUDDLE structures at top level:
+	      FUNCTIONs    -  <DEFINE FOO .....>
+	      MACROs	   -  <DEFMAC BAR .....>
+	      GVALs	   -  <SETG MUMBLE ....>
+	      LVALs	   -  <SET MUMBLE .....>
+	      MANIFEST
+	      PACKAGE
+	      ENTRY
+	      ENDPACKAG
+	      MSETG	   -  <MSETG FOO 1> = <SETG FOO 1> <MANIFEST FOO>
+
+	The JCL to MUDCOM in the simplest case is <filename1>,<filename2>.
+MUDCOM will compare the two files and print out information concerning
+those structures it undestands which have been removed, changed, or
+inserted.
+	
+	MUDCOM has a number of switches which can be set.  They are
+given as /X, where X is the name of the switch.  Currently the following
+switches are useful:
+
+	T	- print totals at the end of the comparison
+	C 	- check the file given for syntax (only one file name)
+	M	- check the files for changed MACROs and MANIFESTs
+		  In this mode, MUDCOM will make a second pass through
+		  the first file given in the JCL, looking for all
+		  occurances of calls to changed MACROs and MANIFESTs.
+		  MUDCOM will consider functions making such calls as
+		  having been 'changed' and will tell which MACRO or
+		  MANIFEST caused the 'change'.
+		
+	The following other JCL is understood my MUDCOM:
+
+	(<atom1> <atom2> <atom3>)
+	          appearing before the file names in the JCL will cause
+		  MUDCOM to thing that functions calling those atoms
+		  have been changed and will print them as such.
+
+	"filename"
+		  appearing anywhere in the JCL causes JCL to be read
+		  from that file until EOF is reached.
+
+	{filename filename filename}
+		  is used to specify files to search in calls to MUDFND
+		  (see below)
+
+	Links to MUDCOM
+
+	1. MUDCHK	-- :MUDCHK filename <cr>
+	   	  checks a file for MUDDLE syntax errors.  This is
+		  the same as :MUDCOM /C filename <cr>
+
+	2. MUDLST	-- :MUDLST filename <cr>
+		  lists all FUNCTIONs and GVALs found in the file.
+		  This is the same as :MUDCOM /L filename <cr>
+
+	3. MUDFND	-- :MUDFND <atom> <atom> ... {file file} <cr>
+		  searches {files} for FUNCTIONs/GVALs called <atom>s.
+		  Can be used for finding a function in a haystack.
+		  This is the same as :MUDCOM (<atom> <atom>) {file file}.
+		  Since this can be tedious, it is easier to use the
+		  "filename" convention and have a disk file containing
+		  the files to be searched (surrounded by {}s).
+		  Thus, :MUDFND FOO BAR BLETCH "MARC;ZORK FILES" <cr>
+		    will look for the typical function names in the
+		    files specified by MARC;ZORK FILES.

@@ -1,0 +1,299 @@
+<PACKAGE "M-READ">
+
+<ENTRY SOPEN DOPEN DCLOSE LOSING-DATA INIT-SPACES>
+
+<ENTRY MDB MRD MSG-LOC MSG-GET COMSYS-ASYLUM-MAP>
+
+<ENTRY DRD DRDA DUSERS DRDMSG GETDAT DUSERS GET-TAILOR READ-WRITE?>
+
+<USE "M-DEFS"
+     "M-TIME"
+     "MADMAN"
+     "ASYLUM"
+     "M-DATA"
+     "FIELDS"
+     "M-TAI"
+     "USRUTI">
+
+<SETG LOSING-DATA <>>
+<SETG READ-WRITE? <>>	;"print goodies when r/w msg or pnq"
+
+<GDECL (MDB) MDBVEC (LOSING-DATA) ANY (READ-WRITE?) <OR ATOM FALSE>>
+
+<OR <GASSIGNED? MDB> <SETG MDB <VECTOR 0 <> [] () <>>>>
+
+"message data base -- for current message:
+	  1/ message number
+	  2/ t ==> data has been modified
+	  3/ actual data, vector, [adr data adr data ...]
+	  4/ list, users who have had process scheduling done -- look at these
+	     when updating daemon queue
+	  5/ false or asylum to data base"
+
+\ 
+
+<DEFINE SOPEN ("AUX" (SA ,SYSTEM-ASYLUM))
+	#DECL ((SA) <OR FALSE ASYLUM>)
+	<COND (<DOPEN? .SA>)
+	      (.SA <RESET-DATA-FILE .SA>)
+	      (<SETG SYSTEM-ASYLUM
+		     <OPEN-DATA-FILE <DATUM "COMSYS-SYSTEM-ASYLUM"> <> 2 1>>)
+	      (<ERROR CANT-OPEN-SYSTEM-ASYLUM!-ERRORS>)>>
+
+<DEFINE DOPEN ("OPTIONAL" (S <DATUM "COMSYS-MSG-ASYLUM">) (ARC? <>)
+	       "AUX" (MDB ,MDB) A C) 
+	#DECL ((VALUE) <OR FIX FALSE> (S) STRING (MDB) MDBVEC
+	       (ARC?) <OR ATOM FALSE> (C) <OR ATOM <FALSE STRING>>
+	       (A) <OR ASYLUM FALSE>)
+	<COND (<AND <DOPEN?> <=? .S ,COMSYS-OPEN-MSG-ASYLUM>> 0)
+	      (<AND <NOT .ARC?>
+		    <=? .S ,COMSYS-OPEN-MSG-ASYLUM>
+		    <SET A <MVCHAN .MDB>>
+		    <0? <1 <1 .A>>>>
+	       <AND <RESET-DATA-FILE .A> 0>)
+	      (<PROG ((OLDIES? <>))
+		     #DECL ((OLDIES?) <OR ATOM FALSE>)
+		     <COND (<SET C <FILE-EXISTS? .S>>
+			    <DCLOSE>
+			    <PUT .MDB
+				 ,MVCHAN
+				 <OPEN-DATA-FILE .S <MVCHAN .MDB>>>
+			    <COND (<MVCHAN .MDB>
+				   <SETG COMSYS-OPEN-MSG-ASYLUM .S>
+				   0)
+				  (ELSE
+				   <SETG COMSYS-OPEN-MSG-ASYLUM <>>)>)
+			   (<AND <NOT .OLDIES?>
+				 <=? <1 .C> "FILE NOT FOUND">>
+			    <SET S <DATUM "COMSYS-LONGTERM">>
+			    <SET OLDIES? T>
+			    <AGAIN>)>>)>>
+
+"DCLOSE -- function to deactivate data base, flushing any
+  current message"
+
+<DEFINE DCLOSE ("OPTIONAL" (BOTH? <>) "AUX" (MDB ,MDB)) 
+	#DECL ((MDB) MDBVEC (BOTH?) <OR ATOM FALSE>)
+	<COND (<AND .BOTH? ,SYSTEM-ASYLUM> <CLOSE-DATA-FILE ,SYSTEM-ASYLUM>)>
+	<COND (<MVCHAN .MDB>
+	       <COND (<MVMOD .MDB>
+		      <ERROR MESSAGE-NOT-WRITTEN!-ERRORS DCLOSE <MVMSG .MDB>>)>
+	       <CLOSE-DATA-FILE <MVCHAN .MDB>>)>>
+
+"DOPEN? -- is an asylum open?"
+
+<DEFINE DOPEN? ("OPTIONAL" (A <MVCHAN ,MDB>))
+	#DECL ((A) <OR ASYLUM FALSE>)
+	<AND .A <NOT <0? <1 <1 .A>>>>>>
+
+\
+
+"INIT-SPACES -- here to build initial spaces"
+
+<DEFINE INIT-SPACES ()
+	<COND (<AND ,MSG-SPACE <TYPE? ,MSG-SPACE SPACE>>
+	       <ARESTORE ,MSG-SPACE>)
+	      (ELSE <SETG MSG-SPACE <AFIND 5 <> ,ABIT-RELERR>>)>
+	<COND (<AND ,SCRATCH-SPACE <TYPE? ,SCRATCH-SPACE SPACE>>
+	       <ARESTORE ,SCRATCH-SPACE>)
+	      (ELSE <SETG SCRATCH-SPACE <AFIND 5 <> ,ABIT-RELERR>>)>
+	<COND (<AND ,QUEUE-SPACE <TYPE? ,QUEUE-SPACE SPACE>>
+	       <ARESTORE ,QUEUE-SPACE>)
+	      (ELSE <SETG QUEUE-SPACE <AFIND 1 <> ,ABIT-RELERR>>)>
+	T>
+
+\ 
+
+"GETDAT -- finds data area for a specific addressee of the current msg
+ returns false, or the specified data area vector"
+
+<DEFINE GETDAT (S "AUX" (MDB ,MDB) DV OS VSS NS)
+	#DECL ((NS) <OR STRING FALSE> (S) STRING (VD) <OR VECTOR FALSE>
+	       (MDB) MDBVEC (VSS) <OR <VECTOR STRING VECTOR> FALSE> (OS) STRING
+	       (DV) VECTOR (VALUE) <OR FALSE VECTOR>)
+	<SET DV
+	     <COND (<0? <MVMSG .MDB>> <ERROR NO-MESSAGE-OPEN!-ERRORS>)
+		   (ELSE <MVDATA .MDB>)>>
+	<COND (<SET VSS <MEMBER .S .DV>> <2 .VSS>)
+	      (<AND <SET NS <KEYGET <SET OS .S>>>
+		    <N=? .OS .NS>
+		    <SET VSS <MEMBER .NS .DV>>>
+	       <2 .VSS>)>>
+
+\
+
+"FUNCTIONS ASSOCIATED WITH VARIOUS STORAGE LOCATIONS OF MESSAGES"
+
+<DEFINE MRD (M "OPTIONAL" (NEW? <>) "AUX" (MDB ,MDB) MSG) 
+	#DECL ((M) FIX (MDB) MDBVEC (MSG) <OR VECTOR FALSE>
+	       (NEW?) <OR ATOM FALSE>)
+	<COND (<==? <MVMSG .MDB> .M> .M)
+	      (ELSE
+	       <COND (<SET MSG <MSG-GET .M .NEW?>>
+		      <PUT .MDB ,MVDATA .MSG>
+		      <PUT .MDB ,MVMSG .M>
+		      .M)
+		     (ELSE
+		      <PUT .MDB ,MVDATA <AVECTOR ,MSG-SPACE>>
+		      <PUT .MDB ,MVMSG .M>
+		      .MSG)>)>>
+
+<DEFINE MSG-GET (MSGNO "OPTIONAL" (NEW? <>) "AUX" S D) 
+	#DECL ((MSGNO) FIX (S) <OR STRING FALSE> (VALUE) <OR FALSE VECTOR>
+	       (NEW?) <OR ATOM FALSE> (D) ANY)
+	<COND (<AND <SET S <MSG-LOC .MSGNO>> <DOPEN .S>>
+	       <SET D <DATA-AREAD <MVCHAN ,MDB> .MSGNO ,MSG-SPACE>>
+	       <COND (.D
+		      <AND ,READ-WRITE? <SCROUT "Read: " .MSGNO>>
+		      <COND (<AND <TYPE? .D VECTOR>
+				  <DECL? .D '<VECTOR [REST STRING VECTOR]>>>
+			     <SETG LOSING-DATA <>>
+			     .D)
+			    (ELSE
+			     <SETG LOSING-DATA .D>
+			     #FALSE ("BAD MESSAGE DATA -- ,LOSING-DATA"))>)
+		     (.NEW? <AVECTOR ,MSG-SPACE>)
+		     (ELSE .D)>)>>
+
+"MAP BETWEEN MESSAGE NUMBER AND ASYLUM CONTAINING IT"
+
+<SETG COMSYS-ASYLUM-MAP <>>
+<GDECL (COMSYS-ASYLUM-MAP) <OR FALSE <VECTOR [REST FIX STRING]>>>
+
+<DEFINE MSG-LOC ("OPTIONAL" MSGNO "AUX" (MAP ,COMSYS-ASYLUM-MAP)) 
+	#DECL ((MSGNO) FIX (MAP) <OR FALSE <VECTOR [REST FIX STRING]>>
+	       (VALUE) <OR STRING FALSE>)
+	<COND (<NOT .MAP>
+	       <COND (<SET MAP
+			   <DATA-AREAD ,SYSTEM-ASYLUM ,COMSYS-MSG-MAP ,SCRATCH-SPACE>>
+		      <AND ,READ-WRITE? <SCROUT "Read Msg Map">>
+		      <SET MAP
+			   <MAPF ,VECTOR
+				 <FUNCTION (X)
+					   #DECL ((X) <OR FIX STRING>)
+					   <COND (<TYPE? .X FIX> <MAPRET .X>)
+						 (ELSE <MAPRET <STRING .X>>)>>
+				 .MAP>>
+		      <SETG COMSYS-ASYLUM-MAP .MAP>)
+		     (<ERROR MAP-DISAPPEARED!-ERRORS MSG-LOC .MAP>)>)>
+	<COND (<AND .MAP <ASSIGNED? MSGNO>>
+	       <REPEAT ()
+		       <COND (<LENGTH? .MAP 1>
+			      <RETURN <DATUM "COMSYS-LONGTERM">>)
+			     (<L=? <1 .MAP> .MSGNO> <RETURN <2 .MAP>>)
+			     (ELSE <SET MAP <REST .MAP 2>>)>>)>>
+
+\ 
+
+"DRD -- read a specified field.  also implements search rules for
+  finding default values from tailor data bases as well as other
+  areas of the message, for split fields, for example."
+
+<DEFINE DRD (ADR ITM "OPTIONAL" (TAILOR? T) (COPY? <>)
+	     "AUX" ADRK DAT SDAT TAI L SITM (MS ,MSG-SPACE))
+	#DECL ((SITM ITM) <OR FIX STRING> (ADR) STRING (L) <OR LIST FALSE>
+	       (SDAT) <OR FALSE <LIST [REST LIST]>> (DAT) ANY
+	       (MS) SPACE (COPY? TAILOR?) <OR ATOM FALSE>
+	       (TAI ADRK) <OR FALSE STRING>)
+	<COND (<NOT <TYPE? .ITM FIX>> <SET ITM <GETFIX .ITM>>)>
+	<PROG ()
+	      <COND (<SET DAT <DRDMSG .ADR .ITM>> <RETURN .DAT>)>
+	      <COND (<EMPTY? .ADR>
+		     <AND <F==? .ITM <GETFIX "FROM">> <RETURN <>>>)
+		    (<SET DAT <DRDMSG "" .ITM>>
+		     <COND (<AND <SET L <DRDFLT "LINK-TO-ADDRESSEE-AREA">>
+				 <MEMF .ITM .L>>
+			    <RETURN .DAT>)>
+		     <COND (<AND <SET L <DRDFLT "COPY-TO-ADDRESSEE-AREA">>
+				 <MEMF .ITM .L>
+				 <SET SDAT .DAT>>
+			    <SET ADRK <DRDMSG .ADR <GETFIX "ADDRESSED-TO">>>
+			    <COND (<AND .ADRK <N=? .ADR .ADRK>>)
+				  (ELSE <SET ADRK <>>)>
+			    <REPEAT (F)
+				    #DECL ((F) <LIST <LIST [REST STRING]> ANY>)
+				    <COND (<EMPTY? .SDAT>
+					   <SET DAT <>>
+					   <RETURN>)>
+				    <SET F <1 .SDAT>>
+				    <COND (<MEMBER .ADR <1 .F>>
+					   <SET DAT <2 .F>>
+					   <RETURN>)
+					  (<AND .ADRK 
+					        <MEMBER .ADRK <1 .F>>>
+					   <SET DAT <2 .F>>
+					   <RETURN>)
+					  (ELSE <SET SDAT <REST .SDAT>>)>>
+			    <COND (.DAT <RETURN .DAT>)>)>
+		     <COND (<AND <SET L <DRDMSG "" <GETFIX "MISCELLANEOUS">>>
+				 <MEMF .ITM .L>>
+			    <RETURN .DAT>)>)>
+	      <COND (<TYPE? .ITM FIX> <>)
+		    (<AND .TAILOR?
+			  <TYPE? <SET SITM <GETSTRING .ITM>> STRING>
+			  <SET TAI <GET-TAILOR .ADR>>
+			  <SET DAT <DRDT .TAI .SITM>>>
+		     <COND (.COPY? <ACOPY .MS .DAT>)
+			   (ELSE .DAT)>)
+		    (<AND .TAILOR? <SET DAT <DRDFLT .ITM>>>
+		     <COND (.COPY? <ACOPY .MS .DAT>)
+			   (ELSE .DAT)>)>>>
+
+"DRDA -- read only from message itself, don't fall into tailor or system
+default."
+
+<DEFINE DRDA (ADR ITM)
+	#DECL ((ADR) STRING (ITM) <OR FIX STRING>)
+	<DRD .ADR .ITM <>>>
+
+\ 
+
+"DRDMSG -- read a field from an area of the actual message data"
+
+<DEFINE DRDMSG (ADR ITM "AUX" (MDB ,MDB) VD V) 
+	#DECL ((MDB) VECTOR (ADR) STRING (ITM) <OR FIX STRING>
+	       (V) <OR FALSE VECTOR> (VD) <OR FALSE <VECTOR [2 VECTOR]>>
+	       (VALUE) ANY)
+	<PROG ()
+	      <COND (<0? <MVMSG .MDB>> <RETURN <ERROR NO-MESSAGE-OPEN!-ERRORS>>)>
+	      <COND (<NOT <TYPE? .ITM FIX>> <SET ITM <GETFIX .ITM>>)>
+	      <OR <SET VD <GETDAT .ADR>> <RETURN <>>>
+	      <COND (<AND <TYPE? .ITM FIX> <L=? .ITM <LENGTH <1 .VD>>>>
+		     <RETURN <NTH <1 .VD> .ITM>>)>
+	      <COND (<TYPE? .ITM FIX> <RETURN <>>)
+		    (<SET V <MEMBER <GETSTRING .ITM> <2 .VD>>>
+		     <2 .V>)>>>
+
+\ 
+
+"GET-TAILOR -- return a string, name of tailor data area to be used
+  for current message, or false, if none"
+
+<DEFINE GET-TAILOR (ADR "AUX" GUY NGUY) 
+	#DECL ((ADR) STRING (VALUE GUY NGUY) <OR FALSE STRING>)
+	<COND (<SET GUY <DRDMSG .ADR "TAILOR">> .GUY)
+	      (<EMPTY? .ADR> <DRDMSG "" <GETFIX "FROM">>)
+	      (ELSE
+	       <COND (<SET GUY <DRDT .ADR "TAILOR">> .GUY)
+		     (ELSE
+		      <SET GUY <KEYGET .ADR>>
+		      <COND (<OR <NOT .GUY> <=? .GUY .ADR>>
+			     .GUY)
+			    (ELSE
+			     <SET NGUY <DRDT .GUY "TAILOR">>
+			     <COND (<NOT .NGUY> .GUY)
+				   (ELSE .NGUY)>)>)>)>>
+
+"DUSERS -- return list of user areas for this message"
+
+<DEFINE DUSERS ("AUX" L (LL ()) (MDB ,MDB) (MS ,MSG-SPACE)) 
+	#DECL ((DAT) <OR FALSE VECTOR> (VALUE) <OR FALSE LIST> (MDB) MDBVEC
+	       (MS) SPACE (L) VECTOR (LL) LIST)
+	<COND (<0? <MVMSG .MDB>> <ERROR NO-MSG-OPEN!-ERRORS>)
+	      (<SET L <MVDATA .MDB>>
+	       <REPEAT ()
+		       <COND (<EMPTY? .L> <RETURN .LL>)>
+		       <SET LL <ACONS .MS <1 .L> .LL>>
+		       <SET L <REST .L 2>>>)>>
+
+<ENDPACKAGE>

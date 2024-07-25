@@ -1,0 +1,78 @@
+<PACKAGE "LOGIN">
+
+<ENTRY LOGIN>
+
+	<TITLE	LOGIN>
+	<DECLARE ("VALUE" ANY STRING "OPTIONAL" STRING)>
+	<PUSH	TP* (AB)>
+	<PUSH	TP* 1(AB)>
+	<CAML	AB* [<(-3) 0>]>
+	<JRST	ONEARG>
+	<PUSH	TP* (AB)>
+	<PUSH	TP* 3(AB)>
+	<PUSHJ	P* LOG2>
+	<JRST	FINIS>
+
+ONEARG	<PUSHJ	P* LOG1>
+	<JRST	FINIS>
+
+	<INTERNAL-ENTRY LOG1 1>
+	<SUBM	M* (P)>
+	<PUSH	TP* <TYPE-WORD FALSE>>
+	<PUSH	TP* [0]>
+	<JRST	FOO>
+
+	<INTERNAL-ENTRY LOG2 2>
+	<SUBM	M* (P)>
+FOO	<SETZB	E* D>
+;"convert user name to user #"
+   	<HRRZ	A* -3(TP)>
+	<IDIVI	A* 5>
+	<JUMPN	B* OKSTR>
+	<MOVE	G* A>
+	<ADD	G* -2(TP)>
+	<MOVE	E* 1(G)>		; "save old dope word"
+	<MOVSI	C* *774000*>
+	<ANDCAM	C* 1(G)>		; "temporarily mung it"
+OKSTR	<MOVE	B* -3(TP)>
+	<MOVSI	A* *1*>			; "allow exact match only"
+	<RCUSR>
+	 <ERJMP	LOSE1>			; "lost"
+	<SKIPE	E>			; "restore dope words"
+	 <MOVEM	E* 1(G)>
+	<MOVE	E* C>			; "save user #"
+;"do password"
+     	<SKIPN	(TP)>			; "skip if password given"
+	 <JRST	OKSTR1>
+     	<HRRZ	A* -1(TP)>
+	<IDIVI	A* 5>
+	<JUMPN	B* OKSTR1>
+	<MOVE	H* A>
+	<ADD	H* (TP)>
+	<MOVE	D* 1(H)>		; "save old dope word"
+	<MOVSI	C* *774000*>
+	<ANDCAM	C* 1(H)>		; "temporarily mung it"
+OKSTR1	<MOVE	A* E>			; "snarf user #"
+	<MOVE	B* -2(TP)>		; "password"
+	<MOVEI	C* 0>			; "account"
+	<LOGIN>
+	 <JRST	LOSE>
+	<MOVEI	C* 1>
+BAR	<SKIPE	D>
+	 <MOVEM	D* 1(H)>
+	<MOVE	A* -3(TP)>
+	<MOVE	B* -2(TP)>
+	<JUMPN	C* WIN>			; " Returns string dir name if won"
+	<MOVEI	B* 0>
+	<MOVSI	A* <TYPE-CODE FALSE>>
+WIN	<SUB	TP* [<4(4)>]>
+	<JRST	MPOPJ>
+
+LOSE1	<SKIPE	E>
+	 <MOVEM	E* 1(G)>
+LOSE	<MOVEI C* 0>
+	<JRST BAR>
+
+<END>
+
+<ENDPACKAGE>

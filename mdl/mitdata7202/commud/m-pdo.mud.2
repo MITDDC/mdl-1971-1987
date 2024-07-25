@@ -1,0 +1,122 @@
+
+<PACKAGE "M-PDO">
+
+"FUNCTIONS TO APPLY PROCESSES TO MESSAGES"
+
+<ENTRY PRCRUN PRCSKD PRC-PRINT SHOW-PROCESS>
+
+<USE "M-DEFS"
+     "PRTUTI"
+     "FIELDS"
+     "M-PRCD"
+     "ITIME"
+     "M-READ"
+     "M-DAC"
+     "MADMAN"
+     "M-TIME"
+     "FINT">
+
+<SETG SHOW-PROCESS <>>
+
+<GDECL (SHOW-PROCESS) <OR ATOM FALSE>>
+
+"PRCRUN -- given process element and user (strings) apply it to process,
+  return t or error code in a false"
+
+<DEFINE PRCRUN (P ADR
+		"AUX" (TS <TIME>) (PRC <PNAM .P>) TL TLL R AFN
+		(MS ,MSG-SPACE)) 
+	#DECL ((ADR) ADDRESS (PRC) STRING (P) PRCSTATE (TS) FLOAT (MS) SPACE
+	       (TL) <LIST [REST STRING FLOAT]>
+	       (TLL) <OR FALSE <LIST [REST STRING FLOAT]>>
+	       (AFN) <OR ATOM FALSE> (R) ANY (VALUE) <OR 'T <FALSE FIX>>)
+	<COND (<SET AFN <GET-ELEM .PRC ,PRCFCN>>	 ;"ANY HANDLER FOR THE PROCESS?"
+	       <WATCH EH "ERROR" ,WATCH-PROCESS 4>
+	       <SET R
+		    <PROG PA ()
+			  #DECL ((PA) <SPECIAL ACTIVATION>)
+			  <APPLY ,.AFN .ADR>>>
+	       <OFF ,EH>
+	       <SET TS <- <TIME> .TS>>			 ;"DURATION OF PROCESS"
+	       <SET TL <OR <DRD .ADR <GETFIX "CPU-TIME">> ()>>
+	       <COND (<SET TLL <MEMBER .PRC .TL>>)
+		     (ELSE <SET TLL <SET TL <ARLIST .MS .TL .PRC 0.0000000>>>)>
+	       <PUT .TLL 2 <+ <2 .TLL> .TS>>		     ;"ACCUMULATE TIME"
+	       <DWT .TL .ADR <GETFIX "CPU-TIME">>
+	       <COND (.R)
+		     (<DECL? .R '<FALSE FIX>> .R)
+		     (ELSE <AFALSE -3 .R>)>)
+	      (ELSE <AFALSE 0>)>>
+
+\ 
+
+"WATCH-PROCESS -- error monitor for process running"
+
+<DEFINE WATCH-PROCESS ("TUPLE" STUFF "ACT" ERRACT) 
+	#DECL ((OUTCHAN) CHANNEL (LERR\ !-INTERRUPTS) <SPECIAL FRAME>
+	       (STUFF) TUPLE (ERRACT PA) ACTIVATION)
+	<COND (<AND <ASSIGNED? PA> <LEGAL? .PA>>
+	       <SET LERR\ !-INTERRUPTS <CHTYPE .ERRACT FRAME>>
+	       <INT-INFO "ERROR">
+	       <FR& 20>
+	       <CRLF>
+	       <FRATM>
+	       <BUFOUT .OUTCHAN>
+	       <DISMISS <AFALSE -1 <ASTRING ,MSG-SPACE <UNPARSE .STUFF>>>
+			.PA>)
+	      (ELSE T)>>
+
+\ 
+
+"PRCSKD -- used to reschedule a process, given process
+  element, addressee, and result value."
+
+<DEFINE PRCSKD (P ADR RES "AUX" (PRC <PNAM .P>) NT (MS ,MSG-SPACE)) 
+	#DECL ((P) PRCSTATE (NT) FIX (ADR) ADDRESS (PRC) STRING (RES) ANY (MS) SPACE)
+	<COND (.RES					   ;"PROCESS SUCCEEDED"
+	       <DAPP <ALIST .MS <ALIST .MS .PRC <ITIME>>>
+		     .ADR
+		     <GETFIX "PROCESSING-COMPLETED">>)
+	      (ELSE				 ;"PROCESS FAILED, RESCHEDULE?"
+	       <COND (<FATAL? .PRC .RES>
+		      <DAPP <ALIST .MS <ALIST .MS .PRC <> .RES>>
+			    .ADR
+			    <GETFIX "ERROR-CONDITIONS">>
+		      <PRCADD .ADR .PRC -1>)
+		     (ELSE			             ;"NON-FATAL ERROR"
+		      <SET NT <+ <PINC .P> <ITIME>>>       ;"NEXT TRY (IF ANY)"
+		      <COND (<L? <PCNT .P> 1>         ;"TOO MANY SOFT FAILURES"
+			     <DAPP <ALIST .MS
+					  <ALIST .MS
+						 .PRC
+						 <>
+						 <AFALSE -2 .RES>>>
+				   .ADR
+				   <GETFIX "ERROR-CONDITIONS">>)
+			    (ELSE	              ;"NOT FIRST TIME FAILURE"
+			     <PRCADD .ADR .PRC .NT <- <PCNT .P> 1>>)>)>)>>
+
+\
+
+<DEFINE PRC-PRINT (P RES TIM GAR "AUX" (OUTCHAN .OUTCHAN) (PI ,SHOW-PROCESS))
+	#DECL ((P) LIST (RES) ANY (TIM) FLOAT (GAR) FIX (OUTCHAN) CHANNEL
+	       (PI) <OR ATOM FALSE>)
+	<COND (<NOT .RES>
+	       <SCROUT ">>>> " <PNAM .P> " Failed <<<< ">
+	       <COND (.PI
+		      <PRINC ": ">
+		      <PFL .TIM>
+		      <COND (<NOT <0? .GAR>>
+			     <PRINC ", Garbage: ">
+			     <PRINC .GAR>)>)>)
+	      (.PI
+	       <SCROUT "  " <PNAM .P> ": ">
+	       <PFL .TIM>
+	       <COND (<NOT <0? .GAR>>
+		      <PRINC ", Garbage: ">
+		      <PRINC .GAR>)>)
+	      (ELSE
+	       <PRINC " /">
+	       <PRINTSTRING <PNAM .P> .OUTCHAN 2>)>>
+
+<ENDPACKAGE>

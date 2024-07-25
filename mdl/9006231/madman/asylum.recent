@@ -1,0 +1,65 @@
+Two new groups of utility routines have been written in conjunction
+with ASYLUMs.
+
+1. Updated listing routines
+
+	<FLOAD "MADMAN;ALIST NBIN">  (on the 20, <MARC>ALIST.NBIN)
+
+   The routines are:
+
+	<LISTM <asylum>> lists MFD and directory information
+
+	<LISTA <asylum>> lists the allocator
+
+	<LISTB <asylum> <verbose> <salvage> <verbose salvage> <minsalv>>
+	    with only the first required checks the entire data area
+	    of an ASYLUM looking for lost words and internal errors.
+
+	    The verbose flag, if T, will cause information to be printed
+	    about every 'file' in the world.  This information is very
+	    verbose.
+
+	    The salvage flag, if T, will cause parts of the ASYLUM which
+	    for some reason are 'lost' to be put into the allocator.
+
+	    The verbose salvage flag, if T, will report, in addition,
+	    the number of lost words in the ASYLUM.
+
+	    Minsalv is the minimum sized 'lost' block that will be
+	    picked up during a LISTB and added to the allocator table.
+	    When one is picked up, LISTB will print LARGE FREE BLOCK,
+	    as mentioned below.
+
+	There are a number of errors that LISTB can give which are:
+
+	    SHARED BLOCK -- The two mentioned blocks share completely
+
+	    BLOCKS OVERLAP -- The two mentioned blocks share some words
+
+	    MUNGED LOSSAGE -- Lord knows
+
+	Some other information may appear also including:
+
+	    ADJACENT FREE BLOCK -- meaning that a 'lost' block is
+	    contiguous with someone in the allocator and will be added
+	    to that entry.
+
+	    LARGE FREE BLOCK -- meaning that a 'large' 'lost' block
+	    has been added to the allocator table.
+
+	Any other 'lost' block will appear in the totals as TOTAL LOST
+        WORDS (if the verbose salvage flag is T).
+
+2. ASYLUM GC'ing -- Copying GC'er
+
+	<FLOAD "MADMAN;AGC NBIN">
+
+   The routine is:
+
+	<DATA-GC <from-asylum> <to-asylum> <space>>
+	    This will read each 'file' from the asylum into the
+	    space and copy it into the new asylum.  String id's
+	    will also be copied and the high id of the asylum
+	    will be spared.
+
+

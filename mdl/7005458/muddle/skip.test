@@ -1,0 +1,62 @@
+; "This file contains Testing routine for comparing the speed of
+   SKIP with READ. The main variables are:
+     FILE =  the file to test.
+     TIMET = # of objects in the file to skip.
+     TIMES = # of times the task is to be performed."
+   
+<BLOAT 40000>
+
+<USE-TOTAL "SKIP">
+<PROG ((SNM "MUDDLE")) <USE "TIMEIT">>
+
+<SETG FILE "TT;VE">
+<SETG TIMES 10>
+<SETG TIMET 11>>
+
+<DEFINE TESTC ("OPTIONAL" (F ,FILE))
+  <SET C <OPEN "READ" .F>>
+   <REPEAT ((t ,TIMET))
+      <COND (<0? <SET t <- .t 1>>> <RETURN>)>>
+  <CLOSE .C>>
+
+<DEFINE TESTS ("OPTIONAL" (F ,FILE))
+   <SET C <OPEN "READ" .F>>
+   <REPEAT ((t ,TIMET))
+      <SKIP .C>
+      <COND (<0? <SET t <- .t 1>>> <RETURN>)>>
+   <CLOSE .C>>
+
+<DEFINE TESTR ("OPTIONAL" (F ,FILE))
+   <SET C <OPEN "READ" .F>>
+   <REPEAT ((t ,TIMET))
+      <READ .C>
+      <COND (<0? <SET t <- .t 1>>> <RETURN>)>>
+   <CLOSE .C>>
+
+<DEFINE TEST ("AUX" A B C (GCMON <GC-MON %<>>))
+   <CRLF>
+   <GC>
+   <SET A </ <TIMEIT ,TIMES '<TESTC>> ,TIMES>>
+   <CRLF>
+   <PRINC "Average time for control test = ">
+   <PRIN1 .A>
+   <GC>
+   <SET B </ <TIMEIT ,TIMES '<TESTS>> ,TIMES>>
+   <CRLF>
+   <PRINC "Average time for SKIP test = ">
+   <PRIN1 .B>
+   <GC>
+   <SET C </ <TIMEIT ,TIMES '<TESTR>> ,TIMES>>
+   <CRLF>
+   <PRINC "Average time for READ test = ">
+   <PRIN1 .C>
+   <CRLF>
+   <PRINC "Average time saved for using SKIP = ">
+   <PRIN1 <- .C .B>>
+   <CRLF>
+   <PRINC "Average %time saved for using SKIP (READ=1) = ">
+   <PRIN1 </ <- .C .B> <- .C .A> 0.01>>
+   <PRINC "%">
+   <GC-MON .GCMON>
+   <CRLF>>
+

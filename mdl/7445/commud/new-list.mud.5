@@ -1,0 +1,35 @@
+<USE "FILINF">
+
+<DEFINE NEW-LIST ("OPTIONAL" (NM1 "NBIN") (NM2 "FBIN") "AUX" POB PL)
+	<SET POB <GET PACKAGE OBLIST>>
+	<SET PL
+	     <MAPF ,LIST
+		   <FUNCTION (L)
+			<SET L
+			     <MAPF ,LIST
+				   <FUNCTION (A)
+					<SET S <SPNAME .A>>
+					<COND (<SET C1
+						    <OPEN "READ"
+							  <STRING .S !\. .NM1>>>
+					       <SET C2
+						    <OPEN "READ"
+							  <STRING .S !\. .NM2>>>
+					       <COND (.C2
+						      <COND (<G? <CREATION-DATE .C1>
+								 <CREATION-DATE .C2>>
+							     <CLOSE .C1>
+							     <CLOSE .C2>
+							     <MAPRET .S>)
+							    (ELSE
+							     <CLOSE .C1>
+							     <CLOSE .C2>
+							     <MAPRET>)>)
+						     (ELSE
+						      <CLOSE .C1>
+						      <MAPRET .S>)>)
+					      (ELSE <MAPRET>)>>
+				   .L>>
+			<MAPRET !.L>>
+		   .POB>>>
+

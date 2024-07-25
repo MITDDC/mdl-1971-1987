@@ -1,0 +1,36 @@
+Compilation record for: DSK:MUDDLE;SUBRFY UBTB73
+Output file:  DSK:MUDDLE;SUBRFY NBIN
+
+It is now WEDNESDAY, 14 DEC 1977 20:57 EST
+
+File loaded.
+Precompilation loaded.
+Functions ordered.
+MUDDLE COMPILER
+COMPILING SUBRFY!-SUBRFY!-PACKAGE
+*** NOTE	Special variable never used: WARNINGS 
+*** NOTE	Special variable never used: BAD-EXIT 
+*** WARNING	VARIABLE NEVER USED: RENTS 
+*** WARNING	VARIABLE NEVER USED: NAME 
+*** WARNING	VARIABLE NEVER USED: IENTS 
+*** WARNING	TYPE? ALWAYS TRUE 
+ **** <TYPE? .RSBR!-ISUBRFY!-SUBRFY!-PACKAGE RSUBR-ENTRY> **** 
+
+ 
+*** NOTE	NON REACHABLE COND CLAUSE(S)
+ **** (<ERROR "SUBRFY ERROR">) **** 
+
+ 
+Compilation done in 5 minutes and 15 seconds cpu time, 
+25 minutes and 48 seconds  real time. 
+Peephole optimization reduced code by 1%.     1668 -> 1644
+Starting assembler
+Job done in:  7 minutes and 23 seconds cpu time, 40 minutes and 10 seconds real time.
+ 
+
+Total time used is
+	8 min. 22 sec. CPU time,
+	3 min. 50 sec. garbage collector CPU time,
+	42 min. 26 sec. real time.
+CPU utilization is 19.717203%.
+Number of garbage collects = 23

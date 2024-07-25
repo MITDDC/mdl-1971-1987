@@ -1,0 +1,195 @@
+<PACKAGE "DMAIL">
+
+<ENTRY DO-MAIL DO-FORWARD DO-REMIND DO-REPLIED LST-DO>
+
+<USE "CHAN" "DDEFS" "MADMAN" "ASYLUM" "ITIME">
+
+<USE "M-DEFS" "M-READ" "M-DAC" "M-DATA" "M-TIME" "USRUTI" "M-ACK">
+
+"DO-MAIL -- what to do when a mail service request is input."
+
+<DEFINE DO-MAIL (D)
+	#DECL ((D) DISPATCH)
+	<COND (<MAIL-DISP? .D>
+	       <LST-DO <DDATA .D>>)>>
+
+"DO-FORWARD -- what to do when a 'forwarding' request is input."
+
+<DEFINE DO-FORWARD (D)
+	#DECL ((D) DISPATCH)
+	<COND (<MAIL-DISP? .D>
+	       <LST-DO <DDATA .D>>)>>
+
+"DO-REMIND -- what to do when a reminder request is input."
+
+<DEFINE DO-REMIND (D)
+	#DECL ((D) DISPATCH)
+	<COND (<MAIL-DISP? .D>
+	       <LST-DO <DDATA .D>>)>>
+
+"DO-REPLIED -- what to do when a 'replied-to-message' request is input."
+
+<DEFINE DO-REPLIED (D)
+	#DECL ((D) DISPATCH)
+	<COND (<MAIL-DISP? .D>
+	       <LST-DO <DDATA .D>>)>>
+
+\
+
+<DEFINE MAIL-DISP? (D "AUX" D1 D2 X)
+	#DECL ((D) DISPATCH (D1 X) ANY (D2) <OR <LIST STRING FIX> FALSE>)
+	<COND (<TYPE? <SET D1 <DDATA .D>> LIST>
+	       <COND (<0? <MOD <LENGTH .D1> 2>>
+		      <COND (<AND <SET D2 <MEMBER "MSG-NO" .D1>>
+				  <G? <LENGTH .D2> 1>
+				  <N==? .D2 .D1>>
+			     <SET X <1 .D1>>
+			     <PUT .D1 1 <1 .D2>>
+			     <PUT .D2 1 .X>
+			     <SET X <2 .D1>>
+			     <PUT .D1 2 <2 .D2>>
+			     <PUT .D2 2 .X>)>
+		      <CHTYPE .D DISPATCH>)
+		     (ELSE #FALSE ("Unpaired Data"))>)
+	      (ELSE #FALSE ("Bad Message Data"))>>
+
+\
+
+"LST-DO -- given a list of commands (instead of file) do them...
+
+-- optional parameter vector gives current state of message, addressee,
+error-to settings.  if message is given, it is assumed to be locked
+already.
+
+-- returns terminal parameter vector if winner, else false containing
+reason string, and parameter vector
+"
+
+<DEFINE LST-DO (DATA "OPTIONAL" P
+		"AUX" ADR RES CUR ARG TIM CMD FLD (MS ,MSG-SPACE)) 
+   #DECL ((DATA) LIST (CUR ARG) ANY (CMD) <OR FALSE STRING>
+	  (RES) <OR 'T FALSE>
+	  (VALUE) <OR VECTOR <FALSE STRING VECTOR>> (FLD) <OR FIX STRING>
+	  (TIM) <OR FALSE FIX LIST> (ADR) STRING (MS) SPACE (P) RQVECTOR)
+   <WATCH IHAN "ERROR" ,LST-DO-ERR 4>
+   <COND (<NOT <ASSIGNED? P>>
+	  <AND ,READ-WRITE? <SCROUT "Resetting Msg space">>
+	  <ARESET .MS>
+	  <SET P ,RQLST>
+	  <PUT .P ,RQMSG <>>
+	  <PUT .P ,RQADR <SET ADR "">>
+	  <PUT .P ,RQERR <>>)
+	 (ELSE <SET ADR <RQADR .P>>)>
+   <SET RES
+	<REPEAT LST-DO-ACT ()
+		#DECL ((LST-DO-ACT) <SPECIAL ACTIVATION>)
+		<COND (<EMPTY? .DATA> <RETURN T>)
+		      (<LENGTH? .DATA 1> <RETURN #FALSE ("Improper length")>)>
+		<SET CUR <1 .DATA>>
+		<SET ARG <ACOPY .MS <2 .DATA>>>
+		<SET DATA <REST .DATA 2>>
+		<SET CMD <>>
+		<COND (<TYPE? .CUR STRING>	       ;"SHORT-CUT FOR 'STORE'"
+		       <COND (<=? .CUR "MSG-NO">
+			      <COND (<TYPE? .ARG FIX>
+				     <PROG (R)
+					   #DECL ((R) <OR FIX FALSE>)
+					   <COND (<SET R <MREAD .ARG>>)
+						 (ELSE
+						  <COND
+						    (<EMPTY? .R>
+						     <SET R #FALSE ("Unable to read message.")>)
+						    (<TYPE? <1 .R> FIX>
+						     <SET R
+							  <CHTYPE
+							    (<NTH
+							       ,DATA-ERRORS
+							       <1 .R>>)
+							    FALSE>>)
+						    (ELSE
+						     <SET R #FALSE ("Message read failed.")>)>
+						  <RETURN .R .LST-DO-ACT>)>>
+				     <PUT .P ,RQMSG .ARG>)
+				    (ELSE <RETURN #FALSE ("Message number non-fix.")>)>)
+			     (<=? .CUR "ADDRESSEE">
+			      <COND (<TYPE? .ARG STRING>
+				     <COND (<KEYGET .ARG>
+					    <PUT .P ,RQADR <SET ADR .ARG>>)
+					   (ELSE
+					    <RETURN #FALSE ("No such addressee known.")>)>)
+				    (ELSE
+				     <RETURN #FALSE ("Addressee non-string.")>)>)
+			     (<=? .CUR "ERROR-TO">
+			      <COND (<TYPE? .ARG STRING>
+				     <COND (<KEYGET .ARG>
+					    <PUT .P ,RQERR .ARG>)
+					   (ELSE
+					    <RETURN #FALSE ("No such error-to known.")>)>)
+				    (ELSE
+				     <RETURN #FALSE ("Error-to non-string.")>)>)
+			     (<=? .CUR "SCHEDULE">
+			      <COND (<OR <NOT <TYPE? .ARG LIST>> <EMPTY? .ARG>>
+				     <RETURN #FALSE ("Improper Schedule Format")>)>
+			      <COND (<LENGTH? .ARG 1>
+				     <PRCADD .ADR <1 .ARG> <> 10 <>>)
+				    (ELSE
+				     <COND (<TYPE? <SET TIM <2 .ARG>> LIST>
+					    <PUT .ARG
+						 2
+						 <BTIME !<1 .TIM> !<2 .TIM>>>)>
+				     <COND (<LENGTH? .ARG 2>
+					    <PRCADD .ADR
+						    <1 .ARG>
+						    <2 .ARG>
+						    10
+						    <>>)
+					   (ELSE <PRCADD .ADR !.ARG>)>)>)
+			     (<=? .CUR "EMERGENCY">
+			      <COND (<OR <NOT <TYPE? .ARG LIST>>
+					 <N==? <LENGTH? .ARG 1> 1>>
+				     <RETURN #FALSE ("Improper Emergency Format")>)
+				    (ELSE
+				     <EMERGENCY .ADR <1 .ARG>>)>)
+			     (<=? .CUR "SIGNAL"> <COND-SIGNAL .ADR .ARG>)
+			     (ELSE <SET CMD "STORE"> <SET FLD .CUR>)>)
+		      (<TYPE? .CUR LIST>		      ;"FULLY SPECIFIED"
+		       <SET FLD <1 .CUR>> <SET CMD <2 .CUR>>)
+		      (ELSE <RETURN #FALSE ("Improper Command Format")>)>
+		<COND (.CMD					   ;"DO COMMAND"
+		       <COND (<NOT <RQMSG .P>>		       ;"MAKE A MESSAGE"
+			      <PUT .P ,RQMSG <NEWMESSAGE>>)>
+		       <COND (<=? .CMD "STORE"> <DWT .ARG .ADR .FLD>)
+			     (<=? .CMD "APPEND"> <DAPP .ARG .ADR .FLD>)
+			     (<=? .CMD "DELETE"> <DWT <> .ADR .FLD>)
+			     (<=? .CMD "REMOVE"> <DRMV .ARG .ADR .FLD>)
+			     (<=? .CMD "ADD"> <DADD .ARG .ADR .FLD>)
+			     (ELSE
+			      <RETURN #FALSE ("Unrecognized command")>)>)>>>
+   <OFF ,IHAN>
+   <COND (.RES .P)
+	 (ELSE
+	  <SCROUT ">>> Impossible request: " <1 .RES> " <<<">
+	  <CHTYPE (<1 .RES> .P) FALSE>)>>
+
+\
+
+<SETG RQLST <VECTOR <> "" <>>>
+
+<GDECL (RQLST) RQVECTOR>
+
+<DEFINE LST-DO-ERR ("TUPLE" STUFF "AUX" IACT "ACT" ERRACT) 
+	#DECL ((STUFF) TUPLE (LST-DO-ACT IACT ERRACT) ACTIVATION
+	       (LERR\ !-INTERRUPTS) <SPECIAL FRAME>)
+	<COND (<AND <ASSIGNED? LST-DO-ACT> <LEGAL? <SET IACT .LST-DO-ACT>>>
+	       <SCROUT ">>>> Error During Initial Request Processing, Args: "
+		       .STUFF
+		       " <<<<">
+	       <SET LERR\ !-INTERRUPTS <CHTYPE .ERRACT FRAME>>
+	       <FRAMES 20>
+	       <FRATM>
+	       <BUFOUT .OUTCHAN>
+	       <DISMISS #FALSE ("Error during initial request processing.")
+			.IACT>)
+	      (ELSE T)>>
+
+<ENDPACKAGE>

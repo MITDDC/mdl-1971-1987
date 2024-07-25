@@ -1,0 +1,49 @@
+'<PCODE "1M-INP">
+
+<PACKAGE "M-INP"> 
+
+<ENTRY RQ-DO RDPAIRS SUCCESS TRY-LATER NONE MOBY> 
+
+<GDECL (RDHAN) HANDLER> 
+
+<USE "CHAN" "DDEFS" "DPERFORM" "MADMAN" "ASYLUM" "ACHOMP" "ITIME"> 
+
+<USE "M-DEFS" "M-READ" "M-DAC" "M-DATA" "M-TIME" "RQFILE" "USRUTI" "M-ACK"> 
+
+"RQ-DO -- processes next request file for daemon
+
+-- returns atom success if file was winner, and may have added stuff for
+queue. in this case, a message will be still locked, and the file will
+be in a 'save' file, to be deleted when the daemon finishes clearing the
+queue.
+
+-- if file encountered temporary failure, it will be renamed and may be
+tried later.  in this case, the return arg is atom TRY-LATER.
+
+-- atom none returned if no request files exist
+
+-- else, renames file to loser, returns false(loser-name reason
+parameter-vect) where loser-name and reason are strings, parameter-vect
+is vector of 3 elements, or false if none was obtained yet
+" 
+
+<SETG RQ-DO  %<RSUBR!- '[ %<PCODE!- "1M-INP" 0> RQ-DO #DECL ("VALUE" <OR ATOM 
+FALSE>) ACHOMP WATCH SCROUT FILCHN RQLOSE DMPMSG RQTEMP PERFORM DATUM RQNEXT 
+UPDMSG NONE "M" TO "COMSYS-MOBY-FILE" MOBY SUCCESS "FALSE IN FIELD" %<RGLOC 
+SCRATCH-SPACE T> %<TYPE-W SPACE VECTOR> %<INTERNAL-RSUBR ARESET 1> CURSPACE (
+SPACE) %<RGLOC READ-WRITE? T> "Resetting Scratch space" RDHAN "ERROR" %<RGLOC 
+RDHAND T> RD-ACT (ACTIVATION) %<RGLOC CURSPACE T> %<TYPE-W ACHANNEL VECTOR> %<
+TYPE-W DISPATCH VECTOR> #FALSE ("Bad Dispatch") %<RGLOC RDHAN T> #FALSE (
+"ERROR IN READING")]>> 
+<AND <ASSIGNED? GLUE> .GLUE <PUT ,RQ-DO PGLUE ![715827712 0 0!]>> 
+
+
+\ 
+
+<SETG RDPAIRS %<RSUBR-ENTRY '[RQ-DO RDPAIRS #DECL ("VALUE" <OR DISPATCH FALSE> 
+ACHANNEL)] 133>> 
+
+<SETG RDHAND %<RSUBR-ENTRY '[RQ-DO RDHAND #DECL ("VALUE" ANY "TUPLE" TUPLE)] 230
+>> 
+
+<ENDPACKAGE> 

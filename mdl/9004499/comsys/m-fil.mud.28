@@ -1,0 +1,189 @@
+
+<PACKAGE "M-FIL">
+
+<ENTRY FILE-OUTPUT FIL-ERR>
+
+<USE "M-DEFS" "M-PRCD" "M-READ" "M-DAC" "M-DOUT" "M-TEMP" "M-DATA"
+     "M-TIME" "FIELDS" "M-ERR" "MADMAN" "CHAN" "M-DLV">
+
+"FILE OUTPUT PROCESS"
+
+<DEMON-PROCESS
+  "FILE-OUTPUT"
+  FILE-OUTPUT
+  FIL-ERR
+  [,FATAL	;1
+   ,FATAL	;2
+   <>		;3
+   0		;4]>
+
+\
+
+"FILE-OUTPUT -- output to a file"
+
+<DEFINE FILE-OUTPUT (ADR
+		     "AUX" SPEC FILE DOSPECS ELE TYP O CH DATA F FRMFLD LOSFLD
+			   (FATAL ()) (RETRY ()) (MS ,MSG-SPACE))
+	#DECL ((ADR) STRING (DOSPECS) <OR LIST FALSE> (MS) SPACE
+	       (ELE SPEC FATAL RETRY) LIST (FILE) <OR STRING VECTOR>
+	       (DATA) ANY (F FRMFLD LOSFLD) <OR FIX STRING> (TYP) STRING
+	       (O) <OR FALSE ATOM> (CH) <OR CHANNEL FALSE>)
+	<PROG ()
+	      <COND (<EMPTY? .ADR>
+		     <SET F <GETFIX "AUTHOR-FILE-OUTPUT">>
+		     <SET FRMFLD <GETFIX "AUTHOR-FILE-FORMAT">>
+		     <SET LOSFLD <GETFIX "AUTHOR-FILE-FAILURES">>)
+		    (ELSE
+		     <SET F <GETFIX "RECEIVER-FILE-OUTPUT">>
+		     <SET FRMFLD <GETFIX "RECEIVER-FILE-FORMAT">>
+		     <SET LOSFLD <GETFIX "RECEIVER-FILE-FAILURES">>)>
+	      <SET DATA <DRD .ADR .F>>
+	      <COND (<NOT .DATA> <RETURN T>)
+		    (<OK? .F .DATA> <SET SPEC .DATA>)
+		    (ELSE		        ;"DATA IN BAD FORM, FATAL ERROR"
+		     <RETURN <AFALSE 1>>)>
+	      <REPEAT ()
+		      <COND (<EMPTY? .SPEC> <RETURN T>)>
+		      <SET ELE <1 .SPEC>>
+		      <SET FILE <1 .ELE>>
+		      <SET TYP <2 .ELE>>
+		      <SET DOSPECS <REST .ELE 2>>
+					  ;"FORMAT (IF ANY) TO OVERRIDE DEFAULT"
+		      <COND (<AND <==? <LENGTH .DOSPECS> 1>
+				  <TYPE? <1 .DOSPECS> STRING>
+					   ;"LIBRARY NAME OF A FORMAT SUPPLIED">
+			     <COND (<AND <SET DATA <FDATUM <1 .DOSPECS>>>
+					 <OK? .FRMFLD .DATA>>
+				    <SET DOSPECS .DATA>)
+				   (ELSE			        ;"LOSER"
+				    <SET DOSPECS <>>)>)
+			    (<AND <EMPTY? .DOSPECS>
+					     ;"NO FORMAT THERE, TRY THE DEFAULT"
+				  <SET DATA <DRD .ADR .FRMFLD>>>
+			     <COND (<TYPE? .DATA STRING>
+						        ;"POINTS TO DATA FORMAT"
+				    <SET DATA <FDATUM .DATA>>)>
+			     <COND (<AND .DATA <OK? .FRMFLD .DATA>>
+				    <SET DOSPECS .DATA>)
+				   (ELSE <SET DOSPECS <>>)>)>
+		      <COND (<NOT .DOSPECS>
+			     <SET FATAL <ACONS .MS
+					      <ALIST .MS
+						     <ACOPY .MS .ELE>
+						     <ACOPY .MS .DATA>>
+					      .FATAL>>
+			     <SET SPEC <REST .SPEC>>
+			     <AGAIN>)>
+		      <COND (<=? .TYP "PRINT"> <SET CH <TEMPOPEN .FILE>>)
+			    (<=? .TYP "INSERT"> <SET CH <TEMPOPEN .FILE>>)
+			    (<=? .TYP "INSERT-NEW"> <SET CH <TEMPOPEN .FILE>>)
+			    (<=? .TYP "APPEND">
+			     <SET CH <TEMPOPEN-APPEND .FILE>>)
+			    (<=? .TYP "APPEND-NEW">
+			     <SET CH <TEMPOPEN-APPEND-NEW .FILE>>)>
+		      <COND (.CH
+			     <SCROUT "File: " .FILE>
+			     <COND (<SET O <DO-OUTPUT .ADR .DOSPECS .CH>>)
+				   (ELSE
+				    <SET FATAL
+					 <ACONS .MS
+						<ALIST .MS
+						       <ACOPY .MS .ELE>
+						       .O>
+						.FATAL>>)>
+			     <COND (<OR <=? .TYP "INSERT">
+					<AND 
+					 <=? .TYP "INSERT-NEW">
+					 <N=? <NAME2 .CH> ">">
+					 <N=? <NAME1 .CH> ">">>>
+				     <TEMPAPPEND .CH>)
+				   (ELSE <TEMPRENAME .CH>)>)
+			    (<AND <G? <LENGTH .CH> 0>
+				  <OR <=? <1 .CH> "FILE LOCKED">
+				      <=? <1 .CH> "DEVICE FULL">
+				      <=? <1 .CH> "DIRECTORY FULL">
+				      <=? <1 .CH> "DEVICE NOT AVAILABLE">
+				      <=? <1 .CH> "DEVICE NOT READY">>>
+			     <SCROUT "File: " <2 .CH> " losing because " <1 .CH> " <<<">
+			     <SET RETRY 				     ;"WILL RETRY THESE"
+				  <ACONS .MS
+					 <ACOPY .MS .ELE>
+					 .RETRY>>)
+			    (ELSE
+			     <SCROUT ">>>> File: " <2 .CH> " fataled because " <1 .CH> " <<<">
+			     <SET FATAL
+				  <ACONS .MS
+					 <ALIST .MS
+						<ACOPY .MS .ELE>
+						<ACOPY .MS .CH>>
+					 .FATAL>>)>
+		      <SET SPEC <REST .SPEC>>>
+	      <COND (<NOT <EMPTY? .FATAL>> <DAPPMSG .FATAL .ADR .LOSFLD>)>
+	      <COND (<EMPTY? .RETRY>
+		     <DWT <> .ADR .F>
+		     <COND (<EMPTY? <DRDMSG .ADR .LOSFLD>> <RETURN T>)
+			   (ELSE <RETURN <AFALSE 2> ;"indicate fatal error">)>)
+		    (ELSE     ;"retry possible ones, report total losers later"
+		     <DWT .RETRY .ADR .F>
+		     <RETURN <AFALSE 4>>)>>>
+
+\ 
+
+"FIL-ERR error analyzer"
+
+<DEFINE FIL-ERR (PRC ERR ADR "AUX" (ECOD <1 .ERR>) L (SS ,SCRATCH-SPACE)) 
+   #DECL ((ECOD) FIX (VALUE L) <OR FALSE LIST> (PRC ADR) STRING
+	  (ERR) <FALSE FIX> (SS) SPACE)
+   <SET L <ALIST .SS <ASTRING .SS
+"     The FILE-OUTPUT process failed because ">>>
+   <COND (<==? .ECOD 1>
+	  <ADDBACK .L <ALIST .SS <ASTRING .SS
+		   "the "
+		   <COND (<EMPTY? .ADR> "AUTHOR-FILE-OUTPUT")
+			 (ELSE "RECEIVER-FILE-OUTPUT")>
+		    "
+data was in improper format.">>>)
+	 (<==? .ECOD 2>
+	  <ADDBACK .L <ALIST .SS <ASTRING .SS
+		   			     "one or more of the
+specifications given for output was unusable:
+
+">>>
+	  <PROG ((F <DRD .ADR
+			 <COND (<EMPTY? .ADR> "AUTHOR-FILE-FAILURES")
+			       (ELSE "RECEIVER-FILE-FAILURES")>>))
+		  #DECL ((F) <OR LIST FALSE>)
+		  <COND (<NOT .F>
+			 <ADDBACK .L <ALIST .SS <ASTRING .SS "---???---">>>)
+			(ELSE
+			 <REPEAT (E)
+			     #DECL ((E) <LIST LIST FALSE>)
+			     <COND (<EMPTY? .F> <RETURN>)
+				   (ELSE <SET E <1 .F>>)>
+			     <ADDBACK .L
+				      <ALIST .SS
+					     <ASTRING .SS <UNPARSE <1 .E>>>
+					     <ASTRING .SS "
+	failed because:
+">>>
+			     <ADDBACK .L
+				      <COND (<AND <NOT <EMPTY? <2 .E>>>
+						  <TYPE? <1 <2 .E>> FIX>>
+					     <DLV-ERR "DELIVERY" <2 .E> .ADR <>>)
+					    (ELSE
+					     <ALIST .SS
+						    <ASTRING .SS <UNPARSE <2 .E>>>>)>>
+			     <ADDBACK .L
+				      <ALIST .SS <ASTRING .SS "
+-----
+">>>
+			     
+			     <SET F <REST .F>>>)>>)
+	 (<==? .ECOD 4>
+	  <ADDBACK .L <ALIST .SS <ASTRING .SS
+		   			     "one or more files could
+not be opened.">>>)
+	 (ELSE <SET L <>>)>
+   .L>
+
+<ENDPACKAGE>

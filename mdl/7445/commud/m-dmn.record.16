@@ -1,0 +1,16 @@
+Compilation record for: PS:<COMMUD>M-DMN.MUD.16;P777752;APT
+Output file:  DSK:<COMMUD>M-DMN.NBIN.16
+File loaded.
+Precompilation loaded.
+Functions ordered.
+COMPILING BCKDO!-M-DMN!-PACKAGE
+Peephole  1% 256/251
+Job done in:  45 / 2:13
+
+
+Total time used is
+	1 min. 42 sec. CPU time,
+	56 sec. garbage collector CPU time,
+	4 min. 39 sec. real time.
+CPU utilization is 36.559139%.
+Number of garbage collects = 17

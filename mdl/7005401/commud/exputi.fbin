@@ -1,0 +1,75 @@
+'<PCODE "EXPUTI">
+
+<PACKAGE "EXPUTI"> 
+
+"EXPANSION UTILITIES -- functions to expand addressees lists
+  using data bases, for COMSYS and friends" 
+
+<ENTRY LA-EXP P-EXP L-EXP S-EXP GETDB UC?> 
+
+<USE "M-DEFS" "M-DATA" "VCTSRC" "USRUTI" "MADMAN"> 
+
+"LA-EXP -- given a list of addressees (strings/atoms) and
+  a data base specification, does expansion, returning new
+  list.  the data base spec is a list of stage specifiers.
+  at each stage, the previous output is processed to create
+  the new output.  if the stage specifier is a list
+  it is a set of data bases to use in a parallel expansion.
+  otherwise it must be a single data base (vector)
+
+  -- returns new list of addressees, or false if data base
+     specification was in bad form" 
+
+<SETG LA-EXP  %<RSUBR!- '[ %<PCODE!- "EXPUTI" 0> LA-EXP #DECL ("VALUE" <OR LIST 
+!<FALSE STRING!>> LIST LIST) FDATUM DATUM VCTSRC EXTRACT-RCVR HOME? EXTRACT-HOST
+ UNIQUIFY ALLIST #FALSE ("BAD DATA BASE SPEC") CURSPACE %<RGLOC SCRATCH-SPACE T>
+ %<TYPE-W SPACE VECTOR> (SPACE) RECURSION-DEPTH-EXCESSIVE S-EXP 
+%<INTERNAL-RSUBR ASTRING 262143> BAD-EXPANSION-FILE %<INTERNAL-RSUBR ALIST 
+262143> "COMSYS-DEFAULT-EXPANSION-DATA" "Data-Base-Not-a-Vector?" 
+"Data-Base-Not-Found?" T]>> 
+<AND <ASSIGNED? GLUE> .GLUE <PUT ,LA-EXP PGLUE ![715833343 -4194304!]>> 
+
+
+"P-EXP -- carry out a parallel expansion of the input
+  list through data bases supplied
+ -- returns new list, of unique expansions" 
+
+<SETG P-EXP %<RSUBR-ENTRY '[LA-EXP P-EXP #DECL ("VALUE" <LIST [REST <OR STRING 
+ATOM>]> LIST LIST)] 58>> 
+
+"L-EXP -- expand a list of addressees using a single data base
+ -- monitors depth of recursion to avoid infintie looping, using
+    special variable depth" 
+
+<SETG L-EXP %<RSUBR-ENTRY '[LA-EXP L-EXP #DECL ("VALUE" <LIST [REST <OR ATOM 
+STRING>]> <LIST [REST <OR STRING ATOM VECTOR>]> VECTOR)] 114>> 
+
+"S-EXP -- expand a string using a supplied data base
+ -- increments depth counter for infinite recursion check
+ -- returns list of atoms and strings with no duplicates" 
+
+<SETG S-EXP %<RSUBR-ENTRY '[LA-EXP S-EXP #DECL ("VALUE" <LIST [REST <OR STRING 
+ATOM>]> STRING <VECTOR [REST STRING <OR VECTOR LIST>]> "OPTIONAL" FIX)] 186>> 
+
+"GETDB -- given a data base specification, returns a similar structure
+  with the actual data bases instead of their names
+ -- specification is a list, containing strings or other lists,
+	string elements at all levels are replaced with their corresponding
+	data bases.
+ -- checks on each to make sure data base is syntactically correct,
+	i.e. a <vector [rest string <list [rest <or string atom>]>]>
+ -- if any data base has to be loaded into core, it will not be saved
+	as any gval (e.g. user data bases).  data bases preexisting
+	in core will remain immediately accessible (e.g. the
+	default data base, which may be preloaded)" 
+
+<SETG GETDB %<RSUBR-ENTRY '[LA-EXP GETDB #DECL ("VALUE" <OR FALSE LIST> LIST)] 
+420>> 
+
+"UC? -- given string, returns new string of all upper-case, only
+  if original had lower case somewhere" 
+
+<SETG UC? %<RSUBR-ENTRY '[LA-EXP UC? #DECL ("VALUE" <OR FALSE STRING> STRING)] 
+534>> 
+
+<ENDPACKAGE> 

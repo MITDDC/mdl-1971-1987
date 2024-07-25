@@ -1,0 +1,114 @@
+
+<PACKAGE "M-MPR">
+
+"message printing utilities"
+
+<ENTRY MSGP MPR MPP DFIX DSTR>
+
+<USE "FIELDS" "USRUTI" "M-READ" "M-DEFS" "MADMAN">
+
+<DEFINE MSGP (MSG "TUPLE" ADRT "AUX" (ADRL <LIST .ADRT>) (LIMIT 50)
+	      (OUTCHAN .OUTCHAN)) 
+	#DECL ((MSG LIMIT) FIX (ADRT) TUPLE (ADRL) LIST (OUTCHAN) CHANNEL)
+	<PROG ()
+	      <COND (<AND <NOT <EMPTY? .ADRL>>
+			  <TYPE? <1 .ADRL> FIX>>
+		     <SET LIMIT <1 .ADRL>>
+		     <SET ADRL <REST .ADRL>>)>
+	      <COND (<EMPTY? .ADRL> <SET ADRL <DUSERS>>)>
+	      <REPEAT ()
+		      <COND (<EMPTY? .ADRL> <RETURN T>)>
+		      <MPR <1 .ADRL> .LIMIT>
+		      <CRLF>
+		      <CRLF>
+		      <SET ADRL <REST .ADRL>>>>>
+
+<DEFINE MPP ("OPTIONAL" (ADR ""))
+	<MPR .ADR 0>>
+
+<DEFINE MPR ("OPTIONAL" (ADR "") (LIMIT 50)
+	     "AUX" FIXL STRL L ITEMS DAT ADRK (SS ,SCRATCH-SPACE)
+	     (OUTCHAN .OUTCHAN)) 
+   #DECL ((FIXL STRL) <OR FALSE LIST> (L) LIST (ITEMS) <VECTOR [REST STRING]>
+	  (LIMIT) FIX (ADR) STRING (ADRK) <OR FALSE STRING> (OUTCHAN) CHANNEL
+	  (SS) SPACE)
+   <PROG ()
+     <ARESET .SS>
+     <SET ADRK <COND (<EMPTY? .ADR> .ADR) (ELSE <KEYGET .ADR>)>>
+     <COND (<NOT .ADRK>
+	    <PRINC "INVALID HOST ID -- ">
+	    <PRINC .ADR>
+	    <CRLF>
+	    <RETURN <>>)>
+     <SET ADR .ADRK>
+     <SET FIXL <DFIX .ADR>>
+     <SET STRL <DSTR .ADR>>
+     <SET L <OR .FIXL ()>>
+     <REPEAT ()
+	     <COND (<EMPTY? .L> <RETURN>)>
+	     <PUT .L 1
+		  <GETSTRING <1 .L>>>
+	     <SET L <REST .L>>>
+     <SET ITEMS <AVECTOR .SS !.FIXL !.STRL>>
+     <SORT <> .ITEMS 1 0>
+     <COND (<EMPTY? .ITEMS>
+	    <PRINC "NO DATA STORED">
+	    <CRLF>
+	    <RETURN T>)>
+     <CRLF>
+     <PRINC "DATA STORED FOR MESSAGE #">
+     <PRINC <MVMSG ,MDB>>
+     <COND (<EMPTY? .ADR> <PRINC ", AUTHOR AREA">)
+	   (ELSE <PRINC ", ADDRESSEE "> <PRINC .ADR> <PRINC " AREA">)>
+     <CRLF>
+     <REPEAT ()
+	     <COND (<EMPTY? .ITEMS> <RETURN>)>
+	     <OR <0? <14 .OUTCHAN>> <CRLF>>
+	     <PRINC <1 .ITEMS>>
+	     <PRINC ":  ">
+	     <SET DAT <DRDMSG .ADR <1 .ITEMS>>>
+	     <COND (<0? .LIMIT>
+		    <COND (<=? <1 .ITEMS> "TEXT">
+			   <PRINC <LENGTH .DAT>>
+			   <PRINC " characters.">)
+			  (ELSE <COLPP .DAT>)>)
+		   (<FLATSIZE .DAT .LIMIT> <PRIN1 .DAT>)
+		   (ELSE
+		    <COND (<TYPE? .DAT STRING>
+			   <COND (<G? .LIMIT 5>
+				  <PRINTSTRING .DAT .OUTCHAN <- .LIMIT 5>>)>
+			   <PRINC " ..&..">)
+			  (ELSE <&1 .DAT>)>)>
+	     <SET ITEMS <REST .ITEMS>>>
+     <ARESET .SS>
+     <RETURN <CRLF>>>>
+
+<DEFINE DSTR (ADR "AUX" V L DAT (SS ,SCRATCH-SPACE)) 
+	#DECL ((ADR) STRING (VALUE) <OR LIST FALSE> (SS) SPACE
+	       (DAT) <OR FALSE <VECTOR VECTOR VECTOR>> (V) VECTOR (L) LIST)
+	<SET DAT <GETDAT .ADR>>
+	<COND (<AND .DAT <NOT <EMPTY? <2 .DAT>>>>
+	       <SET V <2 .DAT>>
+	       <SET L ()>
+	       <REPEAT ()
+		       <COND (<EMPTY? .V> <RETURN .L>)>
+		       <SET L <ACONS .SS <1 .V> .L>>
+		       <SET V <REST .V 2>>>)>>
+
+<DEFINE DFIX (ADR "AUX" DAT L V I (SS ,SCRATCH-SPACE)) 
+	#DECL ((I) FIX (ADR) STRING (DAT) <OR FALSE <VECTOR VECTOR VECTOR>>
+	       (VALUE) <OR LIST FALSE> (L) LIST (V) VECTOR (SS) SPACE)
+	<SET DAT <GETDAT .ADR>>
+	<COND (.DAT
+	       <SET L ()>
+	       <SET V <1 .DAT>>
+	       <SET I 1>
+	       <REPEAT ()
+		       <COND (<EMPTY? .V> <RETURN .L>)>
+		       <COND (<TYPE? <GETSTRING .I> FIX>)
+			     (<OR <1 .V> <NOT <EMPTY? <1 .V>>>>
+			      <SET L <ACONS .SS .I .L>>)>
+		       <SET V <REST .V>>
+		       <SET I <+ .I 1>>>)>>
+
+<ENDPACKAGE>

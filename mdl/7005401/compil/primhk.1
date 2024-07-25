@@ -1,0 +1,49 @@
+        <TITLE PRIM-CODE>
+        <DECLARE ("VALUE" FIX <PRIMTYPE WORD>)>
+        <PUSH   TP* (AB)>
+        <PUSH   TP* 1 (AB)> 
+        <PUSHJ  P* IPTYPE-C>
+        <JRST   FINIS>
+
+        <INTERNAL-ENTRY IPTYPE-C 1>
+        <SUBM   M* (P)>
+        <MOVE   A* (TP)>
+        <ASH    A* 1>
+        <ADD    A* TYPVEC (TVP) 1>
+        <LDB    B* [<(*1100*) (A)>]>
+        <MOVSI  A* <TYPE-CODE FIX>>
+	<SUB	TP* [<2 (2)>]>
+        <JRST   MPOPJ>
+
+
+
+	<TITLE	CONVERT-SAT>
+	<DECLARE ("VALUE" ANY FIX)>
+	<DPUSH	TP* (AB)>
+	<PUSHJ	P* ICONV>
+	<JRST	FINIS>
+
+
+	<INTERNAL-ENTRY ICONV 1>
+	<SUBM	M* (P)>
+	<MOVE	A* TYPVEC 1 (TVP)>
+LOOP	<HRRZ	B* (A)>
+	<ANDI	B* *377*>
+	<CAMN	B* (TP)>
+	<JRST	LOPDON>
+LOOP1	<ADD	A* [<2 (2)>]>
+	<JUMPL	A* LOOP>
+	<MOVSI	A* <TYPE-CODE FALSE>>
+	<MOVEI	B* 0>
+	<SUB	TP* [<2 (2)>]>
+	<JRST	MPOPJ>
+LOPDON	<MOVE	B* 1(A)>
+	<CAMN	B* <MQUOTE TEMPLATE>>
+	<JRST	LOOP1>
+	<MOVSI	A* <TYPE-CODE ATOM>>
+	<SUB	TP* [<2 (2)>]>
+	<JRST	MPOPJ>
+
+
+
+

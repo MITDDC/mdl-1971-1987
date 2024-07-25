@@ -1,0 +1,153 @@
+
+<PACKAGE "M-TAI">
+
+<ENTRY TAIU
+       TAID
+       TAIC
+       TAINUM
+       TAICTR
+       DRDT
+       DRDFLT
+       READ-TAILOR
+       FORGET-TAI>
+
+<USE "M-DATA"
+     "M-TIME"
+     "M-DIR"
+     "VCTSRC"
+     "PRTUTI"
+     "USRUTI"
+     "FIELDS"
+     "M-DEFS"
+     "MADMAN"
+     "HOSTS"
+     "CHAN">
+
+<PROG ()
+      <SETG TAINUM 10>		      ;"MAX # TAILOR DATA BASES TO KEEP AROUND"
+      <SETG TAICTR 1>				   ;"COUNTER FOR LRU ALGORITHM"
+      <SETG TAIU <IVECTOR ,TAINUM "">>				  ;"USER NAMES"
+      <SETG TAIC <IUVECTOR ,TAINUM 1>>			      ;"LAST TIME USED"
+      <SETG TAID <IVECTOR ,TAINUM '[]>>>	       ;"WILL HOLD TAILOR DB'S"
+
+<GDECL (VERR)
+       HANDLER
+       (TAINUM TAICTR)
+       FIX
+       (TAIU)
+       <VECTOR [REST STRING]>
+       (TAIC)
+       <UVECTOR [REST FIX]>
+       (TAID)
+       <VECTOR [REST VECTOR]>>
+
+"DRDT -- read a 'field' from a tailor data base"
+
+<DEFINE DRDT (USR ITM "AUX" V IV DV TU BSTI BSTV I IDX KK) 
+	#DECL ((TU) <OR VECTOR FALSE> (DV) ANY (USR) ADDRESS
+	       (ITM) <OR FIX STRING> (BSTI BSTV I) FIX (V) VECTOR
+	       (IV) <OR FALSE VECTOR> (IDX) FIX (KK) <OR ADDRESS FALSE>)
+	<SET ITM <GETSTRING .ITM>>
+	<PROG ()
+	      <COND (<NOT <TYPE? .ITM STRING>>
+		     <RETURN <>>)
+		    (<=? .USR "DEFAULT"> <RETURN <DRDFLT .ITM>>
+							   ;"USER IS 'DEFAULT'")
+		    (<SET TU
+			  <MEMBER <ANAME .USR> ,TAIU>>		 ;"DATA AROUND?"
+		     <SET V <NTH ,TAID <SET I <- ,TAINUM <LENGTH .TU> -1>>>>
+		     <PUT ,TAIC .I <SETG TAICTR <+ ,TAICTR 1>>>)
+		    (ELSE
+		     <SET DV <READ-TAILOR .USR>>
+		     <SET BSTI 1>
+		     <SET BSTV <1 ,TAIC>>
+		     <SET IDX 2>
+		     <MAPF <>
+			   <FUNCTION (II) 
+				#DECL ((II) FIX)
+				<COND (<L? .II .BSTV>
+				       <SET BSTV .II>
+				       <SET BSTI .IDX>)>
+				<SET IDX <+ .IDX 1>>>
+			   <REST ,TAIC>>
+		     <COND (<AND <OR ,DEMON? ,DEMON-DEBUG?>
+				 <NOT <EMPTY? <NTH ,TAIU .BSTI>>>>
+			    <SCROUT "Flushing Tailor Data for "
+				    <NTH ,TAIU .BSTI>
+				    CRLF>)>
+		     <PUT ,TAIU .BSTI <STRING <ANAME .USR>>>
+		     <PUT ,TAIC .BSTI <SETG TAICTR <+ ,TAICTR 1>>>
+		     <PUT ,TAID .BSTI .DV>
+		     <SET V .DV>)>
+	      <COND (<SET IV <VCTSRC .V .ITM>> <2 .IV>)
+		    (ELSE	     ;"not found, see if name is a link"
+		     <COND (<AND <SET KK <KEYGET .USR>> <N=? .KK .USR>>
+			    <DRDT .KK .ITM>)>)>>>
+
+"DRDFLT -- read a value from the system-supplied tailor data base"
+
+<DEFINE DRDFLT (ITM "AUX" IV (DFL <DATUM "COMSYS-MSG-DATA">)) 
+	#DECL ((DFL) VECTOR (ITM) <OR FIX STRING> (IV) <OR FALSE VECTOR>)
+	<SET ITM <GETSTRING .ITM>>
+	<COND (<AND <TYPE? .ITM STRING>
+		    <SET IV <VCTSRC .DFL .ITM>>>
+	       <2 .IV>)>>
+
+\
+
+"FORGET-TAI -- flush in-core user tailor data, if also given
+  optional arg t, will flush default also"
+
+<DEFINE FORGET-TAI ("OPTIONAL" (F <>)) 
+	#DECL ((F) <OR 'T FALSE>)
+	<SETG TAIU <IVECTOR ,TAINUM ""> ;"USER NAMES">
+	<SETG TAIC <IUVECTOR ,TAINUM 1> ;"LAST TIME USED">
+	<SETG TAID <IVECTOR ,TAINUM '[]> ;"WILL HOLD TAILOR DB'S">
+	<COND (.F <FORGETIT "DEFAULT-MSG-DATA">)>>
+
+"READ-TAILOR -- read and check the tailor file if any and return its contents"
+
+<DEFINE READ-TAILOR (USR "AUX" (TSNM <DATUM "TAILOR-DIR">) (TAISTR <>) TAI
+		     (U <ANAME .USR>) (V? <OR ,DEMON? ,DEMON-DEBUG?>))
+	#DECL ((USR) ADDRESS (U TSNM) STRING (V?) <OR ATOM FALSE>
+	       (TAISTR) <OR STRING FALSE> (TAI) ANY)
+	<SET TAI
+	     <COND (<AND <AHOST .USR> <NOT <HOME? <HOST <AHOST .USR>>>>>
+		    <SET TAISTR <>>
+		    '[])
+		   (<AND <DIR? .U>
+			 <CREATED? "TAILOR" .U "DSK" .U>
+			 <GET-DATUM
+			  <SET TAISTR
+			       <AFILE "TAILOR" .U "DSK" .U>>>>)
+		   (<AND <DIR? .U>
+			 <CREATED? "COMSYS" "INIT" "DSK" .U>
+			 <GET-DATUM
+			  <SET TAISTR
+			       <AFILE "COMSYS" "INIT" "DSK" .U>>>>)
+		   (<AND <CREATED? "TAILOR" .U "DSK" .TSNM>
+			 <GET-DATUM
+			  <SET TAISTR
+			       <AFILE "TAILOR" .U "DSK" .TSNM>>>>)
+		   (<AND <CREATED? "COMSYS" .U "DSK" .TSNM>
+			 <GET-DATUM
+			  <SET TAISTR
+			       <AFILE "COMSYS" .U "DSK" .TSNM>>>>)
+		   (ELSE <SET TAISTR <>> '[])>>
+	<COND (.TAISTR
+	       <COND (<DECL? .TAI '<VECTOR [REST STRING ANY]>>
+		      <COND (.V?
+			     <SCROUT "Loaded Tailor Data for "
+				     .U
+				     " from "
+				     .TAISTR
+				     CRLF>)>)
+		     (ELSE
+		      <COND (.V?
+			     <SCROUT ">>>>> Bad Tailor Data for " .U
+				     " <<<<<" CRLF>)>
+		      <SET TAI '[]>)>)
+	      (.V? <SCROUT "No Tailor Data found for " .U CRLF>)>
+	.TAI>
+
+<ENDPACKAGE>

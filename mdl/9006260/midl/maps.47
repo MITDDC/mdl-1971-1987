@@ -1,0 +1,503 @@
+;"***CAUTION, AT THIS TIME, MAPFs PROBABLY DO NOT WORK.***"
+
+;"MAPF/MAPR, ETC."
+
+;"CASES:
+MAPF <-->  MAPR
+FALSE FINALF <--> CUMULATIVE FINALF <--> NORMAL FINALF
+IN-LINE LOOPF <--> CALLED LOOPF"
+
+<SETG CUMULATIVE ![+ * MIN MAX AND? OR? ANDB ORB EQVB XORB LIST FORM]> 
+
+<DEFINE COMPILE:MAPF (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS NLEVEL) 
+	#DECL ((MOBJ) FORM (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (ACT-LIST DEF-ACT MAP-LIST) LIST (NLEVEL) FIX
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]>)
+	<COMPILE-MAPF/R MAPF .MOBJ .RETVAR .REF .NXT .ACT-LIST
+			.DEF-ACT .MAP-LIST .SYMBOLS .NLEVEL>>
+
+<DEFINE COMPILE:MAPR (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS NLEVEL)
+	#DECL ((MOBJ) FORM (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (ACT-LIST DEF-ACT MAP-LIST) LIST (NLEVEL) FIX
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]>)
+	<COMPILE-MAPF/R MAPR .MOBJ .RETVAR .REF .NXT .ACT-LIST
+			.DEF-ACT .MAP-LIST .SYMBOLS .NLEVEL>>
+
+"REMAINING:
+	1. DECLS IN IN-LINE
+	4. TUPLE, ITUPLE IN LOOPF.
+	5. SEGMENTS"
+
+<DEFMAC COMPILE-GENERATORS ()
+	;"externals not used elsewhere: INLINE-ARGS"
+	'<PROG (NTHCNTR MINLENGTH NXTTST)
+	       #DECL ((NTHCNTR MINLENGTH NXTTST) VARIABLE)
+	       <COND (<EMPTY? .STRUCTURES>
+		      ;"initialize NTH, counter."
+		      ;"WHAT ABOUT REST LISTS WHILE NTHING?"
+		      <COND (<==? .MAPTYPE MAPF>
+			     <MCODIFY <FORM MSET <SET NTHCNTR <GENSYM>> 1>
+				      .REF
+				      <SET REF <GENREF>>>
+			     ;"find length of shortest structure"
+			     ;"INEFFICIENT FOR PRIMTYPE LIST."
+			     <MCODIFY <FORM MSET
+					    <SET MINLENGTH <GENSYM>>
+					    <FORM MIN
+						  !<MAPF ,LIST
+							 <FUNCTION (STRUC)
+							  <FORM LENGTH .STRUC>>
+							 .STRUCTURES>>>
+				      .REF <SET REF .MAPRET-LOC>>)>
+		      ;"go here when repeating loopf."
+		      ;"code to test for empty structures"
+		      <COND (<==? .MAPTYPE MAPR>
+			     <MAPF <>
+				   <FUNCTION (STRUC "AUX" NXTTST)
+				    #DECL ((STRUC) <OR VARIABLE STRUCTURED>
+					   (NXTTST) VARIABLE)
+				    <MCODIFY <FORM IF
+						   <FORM EMPTY? .STRUC>
+						   .MAPSTOP-LOC
+						   <SET NXTTST <GENREF>>>
+					     .REF <SET REF .NXTTST>>>
+				   .STRUCTURES>)
+			    (ELSE
+			     ;"for MAPF, compare counter with structure length"
+			     <MCODIFY <FORM IF
+					    <MCODIFY
+					     <FORM MSET
+						   <GENREF>
+						   <FORM G? .NTHCNTR
+							 .MINLENGTH>>
+					     .REF <SET REF <GENREF>>>
+					    .MAPSTOP-LOC
+					    <SET NXTTST <GENREF>>>
+				      .REF <SET REF .NXTTST>>)>
+		      ;"code to get elements or rest of structures."		
+		      <COND (<TYPE? .LOOPF FUNCTION>
+			     ;"WHAT ABOUT MACROS, CERTAIN SUBRS, FSUBRS?"
+			     ;"LOOPF can be compiled in-line."
+			     <SET INLINE-ARGS
+				  <MAPF ,LIST
+					<FUNCTION (STRUC)
+					 #DECL ((STRUC)
+						<OR VARIABLE STRUCTURED>)
+					 <COND (<==? .MAPTYPE MAPR>
+						<MCODIFY 
+						 <FORM MSET
+						       .STRUC
+						       <FORM REST .STRUC>>
+						 .REF
+						 <SET REF <GENREF>>>
+						<MCODIFY <FORM MSET
+							       <GENSYM>
+							       .STRUC>
+							 .REF
+							 <SET REF <GENREF>>>)
+					       (ELSE
+						<MCODIFY <FORM MSET
+							       <GENSYM>
+							       <FORM NTH .STRUC
+								     .NTHCNTR>>
+							 .REF
+							 <SET REF <GENREF>>>
+						<MCODIFY
+						 <FORM MSET
+						       .NTHCNTR
+						       <FORM + .NTHCNTR 1>>
+						 .REF <SET REF <GENREF>>>)>>
+					.STRUCTURES>>)
+			    (ELSE
+			     ;"not inline--push args"
+			     <MAPF ,LIST
+				   <FUNCTION (STRUC)
+				    #DECL ((STRUC) <OR VARIABLE STRUCTURED>)   
+				    <COND (<==? .MAPTYPE MAPR>
+					   <MCODIFY <FORM MSET
+							  .STRUC
+							  <FORM REST .STRUC>>
+						    .REF
+						    <SET REF <GENREF>>>
+					   <MCODE-PUSH .STRUC
+					    .REF <SET REF <GENREF>>>)
+					  (ELSE
+					   <MCODE-PUSH
+					    <FORM NTH .STRUC .NTHCNTR>
+					    .REF <SET REF <GENREF>>>
+					   <MCODIFY <FORM MSET
+							  .NTHCNTR
+							  <+ .NTHCNTR 1>>
+						    .REF <SET REF <GENREF>>>)>>
+				   .STRUCTURES>)>)>>>
+
+<DEFMAC COMPILE-LOOPF ()
+	'<PROG (ACT-NAME RLOOPF ARG-LIST SARG)
+	      #DECL ((ACT-NAME) ATOM (RLOOPF ARG-LIST) LIST (SARG) VARIABLE)
+	      <COND (<TYPE? .LOOPF FUNCTION>
+		     ;"can be compiled in-line."
+		     <SET SYMBOLS (<MAKE-SYMBOL-TABLE> !.SYMBOLS)>
+		     <COND (<TYPE? <2 .LOOPF> ATOM>
+			    ;"there is a HEWITT ATOM here."
+			    <SET ACT-NAME <NEW-SYMBOL <SPNAME <2 .LOOPF>>
+						      <GENSYM>
+						      .SYMBOLS>>
+			    ;"rest to argument list."
+			    <SET RLOOPF <REST .LOOPF 2>>)
+			   (ELSE <SET RLOOPF <REST .LOOPF>>)>
+		     <SET ARG-LIST <1 .RLOOPF>>
+		     ;"process argument list"
+		     <PROG ACT ((RARGS .ARG-LIST) (I 1))
+		      ;"do standard-type args"
+		      <REPEAT ()
+		       <COND (<EMPTY? .RARGS>
+			      <COND (<G? .I <LENGTH .INLINE-ARGS>>
+				     <RETURN T .ACT>)
+				    (ELSE
+				     <REPORT-ERROR
+				      WRONG-NUMBER-OF-ARGS-TO-LOOPF
+				      COMPILE-MAPF/R>)>)
+			     (<TYPE? <1 .RARGS> ATOM>
+			      ;"usual case"
+			      <COND (<G? .I <LENGTH .INLINE-ARGS>>
+				     <REPORT-ERROR
+				      WRONG-NUMBER-OF-ARGS-TO-LOOPF
+				      COMPILE-MAPF/R>)>
+			      ;"get nth of structure and bind to atom."
+			      ;"assume no SEGMENTS for now."
+			      <SET SARG
+				   <NEW-SYMBOL <SPNAME <1 .RARGS>>
+					       <NTH .INLINE-ARGS .I>
+					       .SYMBOLS>>
+			      ;"the code for doing the assignment"
+			      ;"was produced in COMPILE-GENERATORS."
+			      <SET .RARGS <REST .RARGS>>
+			      <SET I <+ .I 1>>)>>
+
+		      ;"do OPTIONAL arguments."
+		      <COND (<OR <=? <1 .RARGS> "OPTIONAL">
+				 <=? <1 .RARGS> "OPT">>
+			     ;"flush the string."
+			     <SET RARGS <REST .RARGS>>
+			     <REPEAT ACT ()
+			      <COND (<EMPTY? .RARGS>
+				     <COND (<G? .I <LENGTH .STRUCTURES>>
+					    <RETURN T .ACT>)
+					   (ELSE
+					    <REPORT-ERROR
+					     WRONG-NUMBER-OF-ARGS-TO-LOOPF
+					     COMPILE-MAPF/R>)>)
+				    (<G? .I <LENGTH .STRUCTURES>>
+				     ;"treat remaining optionals"
+				     ;"like AUX variables."
+				     <REPEAT ()
+				      <COND (<TYPE? <1 .RARGS> ATOM>
+					     <NEW-SYMBOL <SPNAME <1 .RARGS>>
+							 <GENSYM>
+							 .SYMBOLS>
+					     <SET RARGS <REST .RARGS>>)
+					    (<TYPE? <1 .RARGS> LIST>
+					     <COND (<N==? <LENGTH <1 .RARGS>>
+							  2>
+						    <REPORT-ERROR
+						     MEANINGLESS-PARAMETER
+						     COMPILE-MAPF/R>)
+						   (ELSE
+						    ;"do default assignment"
+						    <MCODE-DISPATCH
+						     <2 <1 .RARGS>>
+						     <NEW-SYMBOL
+						      <SPNAME <1 <1 .RARGS>>>
+						      <GENSYM>
+						      .SYMBOLS>
+						     .REF
+						     <SET REF <GENREF>>
+						     .ACT-LIST
+						     .DEF-ACT
+						     (.MAPRET-LOC .MAPSTOP-LOC
+						      .MAPLEAVE-LOC .STACK-SAVE
+						      .MAP-NLEVEL !.MAP-LIST)
+						     .SYMBOLS
+						     <+ .NLEVEL 1>>
+						    <SET RARGS
+							 <REST .RARGS>>)>)
+					    (ELSE <RETURN T .OPTIONAL-HACK>)>>)
+				    (<TYPE? <1 .RARGS> ATOM>
+				     ;"treat just like ordinary parameter"
+				     <SET SARG
+					  <NEW-SYMBOL <SPNAME <1 .RARGS>>
+						      <NTH .INLINE-ARGS .I>
+						      .SYMBOLS>>
+				     <SET RARGS <REST .RARGS>>
+				     <SET I <+ .I 1>>)>>)>
+
+		      ;"do TUPLE"
+		      <COND (<=? <1 .RARGS> "TUPLE">
+			     <SET RARGS <REST .RARGS>>
+			     ;"put all remaining args in a TUPLE."
+			     <COND (<NOT <TYPE? <1 .RARGS> ATOM>>
+				    <REPORT-ERROR
+				     MEANINGLESS-PARAMETER-AFTER-TUPLE-IN-LOOPF
+				     COMPILE-MAPF/R>)
+				   (ELSE
+				    ;"TEMPORARILY, WE WON'T DO THIS CASE."
+				    ;"increment I, REST RARGS, too.")>)>
+
+		      ;"test for AUX variables."
+		      ;"*TEST HERE TO SEE IF ALL STRUCTURES ARE USED UP.*"
+		      <COND (<OR <=? <1 .RARGS> "AUX">
+				 <=? <1 .RARGS> "EXTRA">>
+			     ;"just invent VARIABLES for the ATOMS,"
+			     ;"and assign if of the form (foo bar)."
+			     <SET RARGS <REST .RARGS>>
+			     <REPEAT ()
+			      <COND (<TYPE? <1 .RARGS> ATOM>
+				     <NEW-SYMBOL <SPNAME <1 .RARGS>>
+						 <GENSYM>
+						 .SYMBOLS>
+				     <SET RARGS <REST .RARGS>>)
+				    (<TYPE? <1 .RARGS> LIST>	     
+				     <COND (<OR <N==? <LENGTH <1 .RARGS>> 2>
+						<NOT <TYPE? <1 <1 .RARGS>>
+							    ATOM>>>
+					    <REPORT-ERROR
+					     AUX-LIST-SCREWED
+					     COMPILE-MAPF/R>)
+					   (ELSE
+					    <MCODIFY
+					     <FORM MSET
+						   <NEW-SYMBOL
+						    <SPNAME <1 .RARGS>>
+						    <GENSYM>
+						    .SYMBOLS>
+						   <MCODE-DISPATCH
+						    <2 <1 .RARGS>>
+						    <GENSYM>
+						    .REF
+						    <SET REF <GENREF>>
+						    .ACT-LIST
+						    .DEF-ACT
+						    (.MAPRET-LOC .MAPSTOP-LOC
+						     .MAPLEAVE-LOC .STACK-SAVE
+						     .NLEVEL !.MAP-LIST)
+						    .SYMBOLS
+						    <+ .NLEVEL 1>>>
+					     .REF <SET REF <GENREF>>>
+					    <SET RARGS <REST .RARGS>>)>)>>)>
+
+		      ;"activations"
+		      <COND (<OR <=? <1 .RARGS> "NAME">
+				 <=? <1 .RARGS> "ACT">>
+			     <SET RARGS <REST .RARGS>>
+			     <COND (<NOT <TYPE? <1 .RARGS> ATOM>>
+				    <REPORT-ERROR
+				     MEANINGLESS-ACTIVATION-SPECIFICATION
+				     COMPILE-MAPF/R>)
+				   (ELSE
+				    <SET ACT-NAME
+					 <NEW-SYMBOL <SPNAME <1 .RARGS>>
+						     <GENSYM>
+						     .SYMBOLS>>)>)>
+
+		      ;"known undoable cases."
+		      <COND (<OR <AND <TYPE? <1 .RARGS> FORM>
+				      <==? <1 <1 .RARGS>> QUOTE>>
+				 <=? <1 .RARGS> "CALL">
+				 <=? <1 .RARGS> "ARGS">>
+			     <REPORT-ERROR LOOPF-MUST-EVAL-ARGS
+					   COMPILE-MAPF/R>)
+			    (ELSE
+			     ;"duh? -- must be something really obscure!"
+			     <REPORT-ERROR MEANINGLESS-PARAMETER-DECLARATION
+					   COMPILE-MAPF/R>)>>
+
+		     ;"compile body of function."
+		     <TRANSLATE-CLAUSE <REST .RLOOPF> <SET LOOPF-RET <GENSYM>>
+				       .REF .NXT
+				       <SET D-A
+					    (.ACT-NAME .REF .NXT .RETVAR
+					     .NLEVEL !.ACT-LIST)>
+				       .D-A
+				       (.MAPRET-LOC .MAPSTOP-LOC
+					.MAPLEAVE-LOC .STACK-SAVE
+					.NLEVEL !.MAP-LIST)
+				       .SYMBOLS
+				       <+ .NLEVEL 1>>)
+
+		    (ELSE
+		     ;"must be explicitly CALLed"
+		     <MCODIFY <FORM MSET
+				    .LOOPF-RET
+				    <FORM CALL
+					  .FINALF
+					  ;"next won't work with segments." 
+					  <LENGTH .STRUCTURES>>>
+			      .REF <SET REF <GENREF>>>)>>>
+
+;"offsets for MAP-LIST"
+
+<PROG ()
+      <SETG MAPRET-LOC 1>
+      <SETG MAPSTOP-LOC 2>
+      <SETG MAPLEAVE-LOC 3>
+      <SETG MAP-STACK 4>
+      <SETG MAP-NLEVEL 5>
+      <MANIFEST MAPRET-LOC MAPSTOP-LOC MAPLEAVE-LOC MAP-STACK MAP-NLEVEL>>
+
+<DEFINE COMPILE-MAPF/R (MAPTYPE MOBJ RETVAR REF NXT ACT-LIST DEF-ACT
+			MAP-LIST SYMBOLS "AUX" (CUMULATIVE <>) INLINE-ARGS
+			FINALF LOOPF MAPARGS STRUCTURES MAPRET-LOC MAPSTOP-LOC
+			MAPLEAVE-LOC FIRST LOOPF-RET (STACK-STATE #VARIABLE 0)
+			FARGS D-A)
+	#DECL ((MAPTYPE) ATOM (MOBJ) FORM (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (ACT-LIST DEF-ACT MAP-LIST D-A) LIST
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]>
+	       (CUMULATIVE) <OR FALSE ATOM> (IN-LINE FIRST) <OR FALSE 'T>
+	       (FINALF LOOPF MAPARGS STRUCTURES) ANY
+	       (MAPRET-LOC MAPSTOP-LOC MAPLEAVE-LOC) FORWRD
+	       (LOOPF-RET FARGS STACK-STATE) VARIABLE
+	       (INLINE-ARGS) LIST)
+	;"for now, STACK-STATE = $0 ==> no finalf."
+	<COND (<L? <LENGTH .MOBJ> 3>
+	       <REPORT-ERROR TOO-FEW-ARGS-TO-MAPF COMPILE:MAPF>)
+	      (ELSE
+	       ;"if 2nd arg is of the form ,FOO,"
+	       ;"get FOO instead of evaluating."
+	       ;"MAYBE LATER EXPAND IN-LINE IF <FUNCTION...."
+	       <COND (<AND <TYPE? <2 .MOBJ> FORM>
+			   <==? <LENGTH <2 .MOBJ>> 2>
+			   <==? <1 <2 .MOBJ>> GVAL>>
+		      ;"finalf is of the form ,FOO"
+		      <COND (<NOT <TYPE? <2 <2 .MOBJ>>> ATOM>
+			     <REPORT-ERROR
+			      WRONG-TYPE-ARG-TO-GVAL
+			      COMPILE-MAPF/R>)
+			    (ELSE
+			     <SET FINALF <2 <2 .MOBJ>>>)>)>
+
+	       ;"look at unevaluated 3rd arg."
+	       <COND (<AND <TYPE? <3 .MOBJ> FORM>
+			   <==? <LENGTH <3 .MOBJ> 2>>
+			   <==? <1 <3 .MOBJ>> GVAL>>
+		      <COND (<NOT <TYPE? <2 <3 .MOBJ>> ATOM>>
+			     <REPORT-ERROR
+			      WRONG-TYPE-ARG-TO-GVAL
+			      COMPILE-MAPF/R>)
+			    (ELSE
+			     <SET LOOPF <2 <3 .MOBJ>>>)>)>
+
+	       ;"eval args to MAPF"	       
+	       <SET MAPARGS
+		    <SEQUENTIALIZE <REST .MOBJ>
+				   <GENSYM>
+				   .REF
+				   <SET REF <GENREF>>
+				   .ACT-LIST
+				   .DEF-ACT
+				   .MAP-LIST
+				   .SYMBOLS
+				   <+ .NLEVEL 1>>>
+
+	       ;"see if assigned already, above."
+	       <COND (<NOT <ASSIGNED? FINALF>>
+			   <SET FINALF <1 .MAPARGS>>)>
+	       <COND (<NOT <ASSIGNED? LOOPF>>
+		      <SET LOOPF <2 .MAPARGS>>)>
+	       <SET STRUCTURES <REST .MAPARGS 2>>
+	       <SET MAPRET-LOC <GENREF>>
+	       <SET MAPSTOP-LOC <GENREF>>
+	       <SET MAPLEAVE-LOC <GENREF>>
+
+	       ;"variable for cumulative finalfs"
+	       <COND (<SET CUMULATIVE <MEMQ .FINALF ,CUMULATIVE>>
+		      <MCODIFY <FORM MSET <SET FIRST <GENSYM>> T>
+			       .REF <SET REF <GENREF>>>)>
+
+	       ;"save stack if arguments are going to be pushed for the finalf.
+		 (should it be saved for non-local mapleaves, etc?)"
+	       <COND (<AND <NOT .FINALF>
+			   <NOT .CUMULATIVE>>
+		      <MCODIFY <FORM MSET
+				     <SET STACK-STATE <GENSYM>>
+				     '<STACK-POINTER>>
+			       .REF <SET REF <GENREF>>>)>
+
+	       ;"MACRO that expands to appropriate code"
+	       ;"this macro SETs INLINE-CODE sometimes."
+	       %<EXPAND '<COMPILE-GENERATORS>>
+
+	       ;"MACRO like above."
+	       ;"can set LOOPF-RET"
+	       %<EXPAND '<COMPILE-LOOPF>>
+
+	       ;"accumulate arguments for finalf here, if there is a finalf."
+	       <COND (<NOT .FINALF>
+		      ;"there is no final function -- do nothing.")
+		     (.CUMULATIVE
+		      ;"FIRST is a variable that is T on the 1st iteration,"
+		      ;"false thereafter."
+		      <COMPILE-CUMULATIVE .FINALF .FIRST .RETVAR .LOOPF-RET
+					  .REF <SET REF <GENREF>>>)
+		     (ELSE
+		      <MCODE-PUSH .LOOPF-RET
+				  .REF <SET REF <GENREF>>>)>
+
+	       ;"iterate"
+	       <MCODIFY <FORM GO .MAPRET-LOC> .REF <SET REF <GENREF>>>
+	       ;"code for final-function"
+	       ;"number of args pushed"
+	       <MCODIFY <FORM MSET
+			      <SET FARGS <GENSYM>>
+			      <FORM - .STACK-STATE
+				    <MCODIFY <FORM MSET
+						   <GENSYM>
+						   '<STACK-POINTER>>
+					     .REF <SET REF <GENREF>>>>>
+			.REF <SET REF <GENREF>>>
+
+	       ;"call finalf."
+	       <COND (<AND .FINALF <NOT .CUMULATIVE>>
+		      <MCODIFY <FORM MSET
+				     .RETVAR
+				     <FORM CALL .FINALF .FARGS>>
+			       .REF <SET REF <GENREF>>>)>)>>
+
+<DEFINE COMPILE-CUMULATIVE (CUMF FIRST ARGVAR RETVAR REF NXT
+			    "AUX" INITIAL NORMAL ACCUM END) 
+	#DECL ((CUMF) ATOM (FIRST RETVAR ARGVAR) VARIABLE (REF NXT END) FORWRD
+	       (INITIAL NORMAL ACCUM) VARIABLE)
+	;"compiles a cumulative function inside a loop. The variable FIRST"
+	;"should be T if this is the first iteration, <> otherwise."
+	;"ARGVAR is where to get the next value to accumulate, RETVAR is the"
+	;"return variable."
+	<SET END .NXT>
+	<MCODIFY <FORM IF .FIRST <SET INITIAL <GENREF>> <SET NORMAL <GENREF>>>
+		 .REF .INITIAL>
+	<CASE ,==? .CUMF
+	      (!'(+ AND? OR? * MIN MAX ANDB ORB EQVB XORB)
+	       ;"code for initial application."
+	       <MCODIFY <FORM MSET .RETVAR <FORM .CUMF .ARGVAR>>
+			.INITIAL <SET REF <GENREF>>>
+	       <MCODIFY <FORM MSET .FIRST <>>
+			.REF .END>
+	       ;"code for remaining iterations."
+	       <MCODIFY <FORM MSET .RETVAR <FORM .CUMF .RETVAR .ARGVAR>>
+			.NORMAL .END>)
+	      (!'(LIST FORM)
+	       ;"initial code builds structure like (foo)"
+	       <MCODIFY <FORM MSET .RETVAR <FORM .CUMF .ARGVAR>>
+			.INITIAL <SET REF <GENREF>>>
+	       <MCODIFY <FORM MSET
+			      <SET ACCUM <GENSYM>>
+			      .RETVAR>
+			.REF <SET REF <GENREF>>>	       
+	       <MCODIFY <FORM MSET .FIRST <>> .REF .END>
+	       ;"remaining iterations just putrest onto the end."	       
+	       <MCODIFY <FORM MSET .ACCUM
+			      <MCODIFY <FORM MSET
+					     <GENSYM>
+					     <FORM PUTREST .ACCUM
+						   <FORM CUMF .ARGVAR>>>
+				       .REF <SET REF <GENREF>>>>
+			.REF .END>)
+	      ;"it would be nice to be able to do - & /">>

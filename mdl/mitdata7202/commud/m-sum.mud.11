@@ -1,0 +1,135 @@
+<PACKAGE "M-SUM">
+
+"MESSAGE SUMMARY"
+
+<ENTRY PSUMMARY RSUMMARY>
+
+<USE "M-DEFS" "M-READ" "ITIME" "FIELDS" "PRTUTI">
+
+<DEFINE PSUMMARY (N "AUX" S (OUTCHAN .OUTCHAN) (ST <+ 21 <14 .OUTCHAN>>)
+		  (TXT <>) TT (LINE <16 .OUTCHAN>)) 
+	#DECL ((TXT) ANY (S) <OR FALSE STRING LIST> (OUTCHAN) CHANNEL
+	       (LINE N ST TT) FIX)
+	<COND (<G=? .N 100000>)
+	      (<G=? .N 10000> <PRINC " ">)
+	      (<G=? .N 1000> <PRINC "  ">)
+	      (<G=? .N 100> <PRINC "   ">)
+	      (<G=? .N 10> <PRINC "    ">)
+	      (ELSE <PRINC "     ">)>
+	<PRINC !\#>
+	<PRINC .N>
+	<PRINC ": ">
+	<DPRT <OR <DRDMSG () <GETFIX "WHEN-ORIGINATED">>
+		  <DRDMSG () <GETFIX "WHEN-RECEIVED">>>>
+	<INDENT-TO .ST>
+	<COND (<SET S <DRDMSG () <GETFIX "FROM">>>
+	       <DDT-ADRL .S .OUTCHAN T .ST>)
+	      (<SET S <DRDMSG () <GETFIX "SENDER">>>
+	       <DDT-ADRL .S .OUTCHAN T .ST>)
+	      (<SET S <DRDMSG () <GETFIX "REPLY-TO">>>
+	       <DDT-ADR .S .OUTCHAN T .ST>)
+	      (ELSE <PRINC "??">)>
+	<PRINC " => ">
+	<APRT <DRDMSG () <GETFIX "TO">> .ST>
+	<COND (<AND <SET TXT
+			 <OR <DRDMSG () <GETFIX "MESSAGE">>
+			     <DRDMSG () <GETFIX "BODY">>>>
+		    <TYPE? .TXT STRING>>
+	       <SET TT <+ 2 <FLATSIZE <LENGTH .TXT> 10>>>)>
+	<SPRT <COND (<SET S <DRDMSG () <GETFIX "SUBJECT">>>)
+		    (ELSE .TXT)>
+	      .ST
+	      <COND (.S T)>
+	      <+ .TT 1>
+	      <G? <16 .OUTCHAN> .LINE>>
+	<COND (.TXT
+	       <PRINC " [">
+	       <PRINC <COND (<TYPE? .TXT STRING> <LENGTH .TXT>)
+			    (ELSE "MM")>>
+	       <PRINC !\]>)>>
+
+\
+
+<DEFINE RSUMMARY (N "AUX" S L (OUTCHAN .OUTCHAN) (ST <+ 13 <14 .OUTCHAN>>)
+		  TXT) 
+	#DECL ((S) <OR FALSE STRING> (OUTCHAN) CHANNEL (N ST) FIX
+	       (TXT) ANY (L) <OR FALSE LIST>)
+	<DPRT <DRDMSG () <GETFIX "REMIND">>>
+	<COND (<AND <SET L <DRDMSG () <GETFIX "TO">>>
+		    <NOT <LENGTH? .L 1>>>
+	       <PRINC "  => ">
+	       <APRT .L .ST>)>
+	<COND (<AND <SET S <DRDMSG () <GETFIX "SUBJECT">>>
+		    <N=? <MEMBER "REMINDER for " .S> .S>>
+	       <SPRT .S .ST>)
+	      (<AND <SET TXT
+			 <OR <DRDMSG () <GETFIX "MESSAGE">>
+			     <DRDMSG () <GETFIX "BODY">>>>
+		    <TYPE? .TXT STRING>>
+	       <SPRT .TXT .ST <>>)>>
+
+\
+
+<DEFINE SPRT (S "OPTIONAL" (ST 21) (S? T) (TT 0) (CRLF? <>)
+	      "AUX" (OUTCHAN .OUTCHAN) (R <- <13 .OUTCHAN> <14 .OUTCHAN>>) SX SL)
+	#DECL ((S SX) <OR STRING FALSE> (R SL ST TT) FIX (OUTCHAN) CHANNEL
+	       (CRLF? S?) <OR ATOM FALSE>)
+	<COND (<SET S <ANY? .S>>
+	       <COND (<AND .S? <=? <MEMBER "Re: " .S> .S>>
+		      <SET S <REST .S 4>>)>
+	       <COND (<SET SX <MEMQ <ASCII 13> .S>>
+		      <SET SL <- <LENGTH .S> <LENGTH .SX>>>)
+		     (<SET SL <LENGTH .S>>)>
+	       <COND (<OR .CRLF? <AND .S? <G? <+ .SL 6> .R>>>
+		      <CRLF>
+		      <INDENT-TO .ST>)
+		     (<PRINC "  ">)>
+	       <SET R <- <13 .OUTCHAN> <14 .OUTCHAN> 4 .TT>>
+	       <COND (.S? <PRINC "Re: ">)
+		     (ELSE <PRINC !\"> <SET R <- .R 1>>)>
+	       <SET R <PRINTSTRING .S
+				   .OUTCHAN
+				   <MIN .R .SL>>>
+	       <COND (<NOT .S?>
+		      <COND (<G? <LENGTH .S> .R>
+			     <PRINC "...">)>
+		      <PRINC "\"">)>)>>
+
+<DEFINE ANY? (S)
+	#DECL ((S) STRING (VALUE) <OR STRING FALSE>)
+	<MAPR <>
+	      <FUNCTION (S)
+		#DECL ((S) STRING)
+		<AND <NOT <MEMQ <1 .S> " 	
+">>
+		     <MAPLEAVE .S>>>
+	      .S>>
+
+<DEFINE APRT (L "OPTIONAL" (ST 21) "AUX" (OUTCHAN .OUTCHAN))
+	#DECL ((L) <OR FALSE <LIST [REST ADDRESS]>> (OUTCHAN) CHANNEL)
+	<COND (.L
+	       <DDT-ADRL .L .OUTCHAN T .ST>)
+	      (ELSE <PRINC "??">)>>
+
+<DEFINE DPRT (DT "AUX" D (OUTCHAN .OUTCHAN)) 
+	#DECL ((DT) <OR FALSE FIX UVECTOR LIST>
+	       (D) <LIST [2 <LIST [3 FIX]>] STRING>
+	       (OUTCHAN) CHANNEL)
+	<COND (<NOT .DT> <PRINC "??/?? ??:??">)
+	      (ELSE
+	       <COND (<TYPE? .DT LIST> <SET D .DT>)
+		     (<TYPE? .DT UVECTOR FIX> <SET D <LTIME .DT>>)>
+	       <PNUM <2 <1 .D>>>
+	       <PRINC !\/>
+	       <PNUM <3 <1 .D>>>
+	       <PRINC !\ >
+	       <PNUM <1 <2 .D>>>
+	       <PRINC !\:>
+	       <PNUM <2 <2 .D>>>)>>
+
+<DEFINE PNUM (N "AUX" (OUTCHAN .OUTCHAN))
+	#DECL ((N) FIX (OUTCHAN) CHANNEL)
+	<COND (<L? .N 10> <PRINC !\0>)>
+	<PRINC .N>>
+
+<ENDPACKAGE>

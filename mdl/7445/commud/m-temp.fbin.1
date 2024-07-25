@@ -1,0 +1,51 @@
+'<PCODE "1M-TEM">
+
+<PACKAGE "M-TEMP"> 
+
+<ENTRY TEMPOPEN TEMPAPPEND TEMPCLOSE TEMPDELETE TEMPFAILURE?> 
+
+<USE "CHAN" "OPSYS"> 
+
+"
+TEMPOPEN	-- open a new file for writing
+TEMPAPPEND	-- append a file to a temporary open on a channel
+TEMPCLOSE	-- close and rename a temporary file
+TEMPDELETE	-- close and delete a temporary file
+" 
+
+<MANIFEST RNAME1 RNAME2 RDIRECTORY RDEVICE> 
+
+"TEMPOPEN -- open a temporary file for writing" 
+
+<SETG TEMPOPEN  %<RSUBR!- '[ %<PCODE!- "1M-TEM" 0> TEMPOPEN #DECL ("VALUE" <OR 
+FALSE CHANNEL> STRING) "PRINT" "COMSYS" "TMP" "READ" CANNOT-RENAME-TEMP-FILE 
+TEMPRENAME T]>> 
+<AND <ASSIGNED? GLUE> .GLUE <PUT ,TEMPOPEN PGLUE ![0!]>> 
+
+
+\ 
+
+"TEMPAPPEND -- given channel, copies any existing file of same
+  real name to end of channel, deletes old file, and renames temp
+  to be new version.  error if rename lost, or if channel not obtained
+  originally from tempfile call" 
+
+<SETG TEMPAPPEND %<RSUBR-ENTRY '[TEMPOPEN TEMPAPPEND #DECL ("VALUE" ATOM CHANNEL
+)] 30>> 
+
+"TEMPCLOSE -- given channel, renames file, outputs buffers" 
+
+<SETG TEMPCLOSE %<RSUBR-ENTRY '[TEMPOPEN TEMPCLOSE #DECL ("VALUE" ATOM CHANNEL)]
+80>> 
+
+"TEMPDELETE -- given channel open to temp file, closes and deletes it" 
+
+<SETG TEMPDELETE %<RSUBR-ENTRY '[TEMPOPEN TEMPDELETE #DECL ("VALUE" <OR ATOM 
+FALSE> CHANNEL)] 129>> 
+
+"TEMPFAILURE? -- returns T if open failure is a temporary one" 
+
+<SETG TEMPFAILURE? %<RSUBR-ENTRY '[TEMPOPEN TEMPFAILURE? #DECL ("VALUE" <OR ATOM
+FALSE> FALSE)] 152>> 
+
+<ENDPACKAGE> 

@@ -1,0 +1,440 @@
+
+<PACKAGE "M-CLEAN">
+
+<ENTRY MIGRATE
+       GC-ASYLUMS
+       DO-IT
+       DELETE-LIST
+       CAREFUL?
+       MOVE-TO-READER-ASYLUMS
+       UPDATE-READER-ASYLUM
+       SANITIZE>
+
+<USE "R.DEFS">
+
+<USE "M-DEFS"
+     "M-DATA"
+     "M-TIME"
+     "M-MSG"
+     "FILINF"
+     "MADMAN"
+     "ASYLUM"
+     "FIELDS"
+     "M-READ"
+     "M-DAC"
+     "ITIME"
+     "GNJFN">
+
+<DEFINE MIGRATE ("OPTIONAL" (HOWOLD? <>) (SCRIPT <>) "AUX" F TXT)
+	#DECL ((F) <OR STRING <FALSE STRING>> (SCRIPT) <OR CHANNEL FALSE>
+	       (TXT) STRING)
+	<COND (<G? <GC-ASYLUMS .HOWOLD?> 0>
+	       <COND (<SET F <1 ,DELETE-LIST>>)
+		     (ELSE <SET F <1 .F>>)>
+	       <SET TXT
+<STRING "     A message asylum has been deleted and its messages moved to user
+asylums:  " .F ".  See HUDINI;MIGRAT > for details.">>
+	       <COND (.SCRIPT
+		      <SENDMSG '("COMSYS")
+			       "Migration of Messages"
+			       .TXT
+			       <SNAME>
+			       "ENCLOSURES"
+			       ([<7 .SCRIPT> <8 .SCRIPT>
+				 <9 .SCRIPT> <10 .SCRIPT>])>)
+		     (ELSE
+		      <SENDMSG '("COMSYS")
+			       "Migration of Messages"
+			       .TXT>)>
+	       <DO-IT 1>)>>
+
+<SETG DELETE-LIST ()>
+<SETG CAREFUL? <>>
+<GDECL (DELETE-LIST) <LIST [REST <OR STRING FALSE> <LIST [2 FIX]>]>
+       (CAREFUL?) <OR ATOM FALSE>>
+
+"GC-ASYLUMS -- set up list of asylums that can be flushed"
+
+<DEFINE GC-ASYLUMS ("OPTIONAL" (HOWOLD? <>)
+		    "AUX" MAP Q (CNT 0) (DLST ()) (OUTCHAN .OUTCHAN) HI)
+	#DECL ((MAP) VECTOR (Q) LIST (OUTCHAN) CHANNEL
+	       (HOWOLD?) <OR FALSE FIX> (DLST) LIST (HI CNT) FIX)
+	<INIT>
+	<SET Q ,PENDING-QUEUE>
+	<MSG-LOC <SET HI <- <HIGH-MESSAGE-ID> 1>>>
+	<SET MAP <VECTOR !,COMSYS-ASYLUM-MAP>>
+	<REPEAT ((MAP .MAP))
+		#DECL ((MAP) VECTOR)
+		<AND <EMPTY? .MAP> <RETURN>>
+		<PUT .MAP 1 (<- .HI 1> <SET HI <1 .MAP>>)>
+		<SET MAP <REST .MAP 2>>>
+	<PUT .MAP 2 <CHTYPE (<2 .MAP>) FALSE>>
+	<MAPF <>
+	      <FUNCTION (L "AUX" N A)
+		   #DECL ((L) <LIST FIX> (N) FIX (A) <OR FALSE STRING>)
+		   <COND (<SET A <MSG-LOC <SET N <1 .L>>>>
+			  <FINDASY .A .N <REST .MAP 2>>)
+			 (ELSE
+			  <SCROUT ">>>> " .N " is not pointed to by the map? <<<<">)>>
+	      <REST .Q>>
+	<REPEAT ((M .MAP) C X D? S AGE)
+	    #DECL ((M) <VECTOR [REST <OR FIX LIST> <OR FALSE STRING>]>
+		   (D?) <OR ATOM FALSE> (X) <OR FALSE STRING>
+		   (AGE) FIX (S) STRING (C) <OR FALSE CHANNEL>)
+	    <COND (<EMPTY? .M> <CRLF> <RETURN>)>
+	    <SET X <2 .M>>
+	    <SET S <COND (<TYPE? .X STRING> .X)(ELSE <1 .X>)>>
+	    <COND (<AND <NOT .X> <LENGTH? .X 1>>
+		   <SCROUT "   '" .S "' is the current message asylum.">)
+		  (ELSE
+		   <COND (<SET C <OPEN-NR "READ" .S>>
+			  <SET D? <DUMPED? .C>>
+			  <SET AGE <FILE-AGE .C>>
+			  <CLOSE .C>)>
+		   <COND (<AND .X <NOT .C>>)
+			 (ELSE
+			  <CRLF>
+			  <PRINC <COND (<AND .C
+					     .D?
+					     <OR <NOT .HOWOLD?>
+						 <G? .AGE .HOWOLD?>>>
+					<SET CNT <+ .CNT 1>>
+					<SET DLST (.X <1 .M> !.DLST)>
+					"=> '")
+				       (ELSE "   '")>>
+			  <PRINC .S>
+			  <COND (<NOT .C> <PRINC "' has been deleted!">)
+				(<NOT .D?> <PRINC "' has not been dumped.">)
+				(<AND .HOWOLD? <L=? .AGE .HOWOLD?>>
+				 <PRINC "' is less than ">
+				 <PRINC .HOWOLD?>
+				 <PRINC " days old.">)
+				(<NOT .X> <PRINC "' is pointed to by">)
+				(ELSE <PRINC "' may be deleted.">)>
+			  <COND (<AND .C <NOT .X>>
+				 <PRINC !\ >
+				 <PRINC <REST .X>>)>)>)>
+	    <SET M <REST .M 2>>>
+	<READER-SPACES>
+	<SETG DELETE-LIST .DLST>
+	.CNT>
+
+<DEFINE FILE-AGE (C "AUX" (CDATE <ITIME <CREATION-DATE .C>>) (T <ITIME>))
+	#DECL ((C) CHANNEL (CDATE T VALUE) FIX)
+	<- <CHTYPE <GETBITS .T <BITS 18 18>> FIX>
+	   <CHTYPE <GETBITS .CDATE <BITS 18 18>> FIX>>>
+
+<DEFINE FINDASY (A N MAP)
+	#DECL ((A) STRING (N) FIX (MAP) VECTOR)
+	<MAPR <>
+	      <FUNCTION (MM "AUX" (MA <1 .MM>))
+		   #DECL ((MM) VECTOR (MA) <OR FALSE LIST STRING>)
+		   <COND (<=? .A .MA>
+			  <PUT .MM 1 <CHTYPE (.MA .N) FALSE>>)
+			 (<AND <NOT .MA> <=? .A <1 .MA>>>
+			  <PUTREST <REST .MA <- <LENGTH .MA> 1>> (.N)>)>>
+	      .MAP>>
+
+"DO-IT -- flush asylums marked for deletion"
+
+<DEFINE DO-IT (N "AUX" (OUTCHAN .OUTCHAN) (L ,DELETE-LIST) S B F O)
+	#DECL ((N) FIX (OUTCHAN) CHANNEL (L) LIST (F) STRING
+	       (O) <LIST [REST FIX]>
+	       (S) <OR <FALSE STRING [REST FIX]> STRING> (B) <LIST FIX FIX>)
+	<SETG WON? T>
+	<REPEAT ()
+		<COND (<OR <EMPTY? .L> <L? <SET N <- .N 1>> 0>>
+		       <SETG DELETE-LIST .L>
+		       <RETURN>)>
+		<SET S <1 .L>>
+		<COND (<TYPE? .S STRING>
+		       <SET F .S>
+		       <SET O ()>)
+		      (ELSE
+		       <SET F <1 .S>>
+		       <SET O <REST .S>>)>
+		<PRINC .F>
+		<MOVE-TO-OLD-ASYLUM .O>
+		<SET B <2 .L>>
+		<MOVE-TO-READER-ASYLUMS <2 .B> <1 .B>>
+		<DCLOSE>
+		<PRINT .F>
+		<PRIN1 <COND (,WON? <RENAME .F>)>>
+		<SET L <REST .L 2>>>
+	<CRLF>>
+
+<DEFINE MOVE-TO-OLD-ASYLUM (L "AUX" O (OUTCHAN .OUTCHAN))
+	#DECL ((L) <LIST [REST FIX]> (O) <OR ASYLUM FALSE>
+	       (OUTCHAN) CHANNEL)
+	<COND (<EMPTY? .L>)
+	      (<SET O
+		    <OPEN-DATA-FILE <DATUM "COMSYS-LONGTERM">
+				    ,LAST-ASYLUM>>
+	       <CRLF>
+	       <PRINC "[Longterm storage]">
+	       <CRLF>
+	       <MAPF <>
+		     <FUNCTION (N "AUX" R)
+			  #DECL ((N) FIX (R) ANY)
+			  <COND (<SET R <DATA-AREAD .O .N <ARESET ,MSG-SPACE>>>
+				 <PRINC " [">
+				 <PRINC .N>
+				 <PRINC !\]>)
+				(<SET R <MREAD .N>>
+				 <SET R <DATA-APRINT .O .N
+						     ,MSG-SPACE
+						     <MVDATA ,MDB>>>
+				 <COND (<NOT .R>
+					<ERROR COPY .N .R>)>
+				 <PRINC !\ >
+				 <PRINC .N>)
+				(<ERROR READ .N .R>)>>
+		     .L>
+	       <DUMPED? <1 .O> <>>
+	       <CLOSE-DATA-FILE .O>
+	       .L)
+	      (<ERROR CANT-OPEN .O>)>>
+
+"MOVE-TO-READER-ASYLUMS -- moves messages in a given range to the reader
+asylums"
+
+<DEFINE MOVE-TO-READER-ASYLUMS (BEG END "AUX" (OUTCHAN .OUTCHAN) J C)
+	#DECL ((BEG END) FIX (OUTCHAN) CHANNEL
+	       (C) <OR FALSE CHANNEL> (J) <OR FALSE <VECTOR STRING>>)
+	<GNJFN-RESET>
+	<REPEAT ()
+		<COND (<SET J <NEXT-FILE "*;* ASYLUM">>
+		       <COND (<AND <SET C <OPEN "READ" <1 .J>>>
+				   <CLOSE .C>
+				   <N=? <10 .C> "COMDAT">
+				   <OR <=? <7 .C> <10 .C>>
+				       <MEMBER <10 .C> '["USERS1" "USERS2"]>>>
+			      <UPDATE-READER-ASYLUM <1 .J> .BEG .END>)>)
+		      (ELSE <RETURN>)>>>
+
+\ 
+
+<SETG LAST-ASYLUM <>>
+
+"UPDATE-READER-ASYLUM -- copy all public messages in a given range to the
+user asylum, assuming it points at them."
+
+<DEFINE UPDATE-READER-ASYLUM (FILE BEG END
+			      "AUX" USR DIR RA (RS ,READER-SPACE)
+			      (MS ,MSG-SPACE)
+			      MT UV NML ML OML R (SS ,SCRATCH-SPACE)
+			      TUP (OUTCHAN .OUTCHAN) READER-MSGS OREADE-MSGS)
+	#DECL ((USR DIR) STRING (BEG END) FIX (RA) <OR FALSE ASYLUM> (TUP) FIX
+	       (RS MS SS) SPACE (R) <OR FALSE FIX MANIAC VECTOR>
+	       (OML ML) <OR FALSE VECTOR> (MT) <OR FALSE MTABLE>
+	       (UV) <UVECTOR [REST FIX]> (NML) VECTOR (OUTCHAN) CHANNEL
+	       (READER-MSGS OREADE-MSGS) <LIST [REST FIX]>)
+	<PRINT .FILE>
+	<COND (<NOT <SET RA <OPEN-DATA-FILE .FILE ,LAST-ASYLUM>>>
+	       <PRINC " -- Can't open: ">
+	       <PRIN1 .RA>
+	       <CRLF>
+	       .RA)
+	      (<NOT <SET MT <DATA-AREAD .RA ,M-TABLE <ARESET .RS>>>>
+	       <PRINC " -- Can't read: ">
+	       <PRIN1 .MT>
+	       <CRLF>
+	       <CLOSE-DATA-FILE .RA>)
+	      (ELSE
+	       <SET USR <7 <1 .RA>>>
+	       <SET DIR <10 <1 .RA>>>
+	       <SET READER-MSGS <READ-READER .USR "READER" .DIR>>
+	       <SET OREADE-MSGS <READ-READER .USR "OREADE" .DIR>>
+	       <SETG LAST-ASYLUM .RA>
+	       <COND (<AND <SET OML <DATA-AREAD .RA ,M-ASYLUM <ARESET .SS>>>
+			   <NOT <EMPTY? .OML>>
+			   <TYPE? <1 .OML> FIX>>
+		      <SET OML <VERIFY .OML .MT>>)
+		     (ELSE <SET OML '[]>)>
+	       <COND (<NOT <0? <SET TUP </ <LENGTH .OML> 2>>>>
+		      <PRINC !\ >
+		      <PRIN1 .TUP>
+		      <PRINC " messages already locally stored.">)>
+	       <CRLF>
+	       <SET TUP <R-TUPLE .MT>>
+	       <SET UV <REST .MT <R-HEADER .MT>>>
+	       <SET ML
+	       <MAPF ,VECTOR
+		     <FUNCTION ("AUX" M)
+			  #DECL ((M) FIX)
+			  <COND (<NOT <OR <EMPTY? .UV> <0? <1 .UV>>>>
+				 <SET M <MSG .UV>>
+				 <SET UV <REST .UV .TUP>>)
+				(<NOT <EMPTY? .READER-MSGS>>
+				 <SET M <1 .READER-MSGS>>
+				 <SET READER-MSGS <REST .READER-MSGS>>)
+				(<NOT <EMPTY? .OREADE-MSGS>>
+				 <SET M <1 .OREADE-MSGS>>
+				 <SET OREADE-MSGS <REST .OREADE-MSGS>>)
+				(ELSE <MAPSTOP>)>
+			  <COND (<OR <L? .M .BEG> <G? .M .END>>
+				 <MAPRET>)
+				(<AND <MEMQ .M .OML>
+				      <DATA-AREAD .RA <2 .OML> <ARESET .MS>>>
+				 <PRINC " [">
+				 <PRINC .M>
+				 <PRINC !\]>
+				 <MAPRET>)
+				(<AND <SET R <MREAD .M>>
+				      <SET R <SANITIZE .USR>>
+				      <SET R <DATA-OPEN "PRINT" .RA -1>>
+				      <OR <G=? <1 .R> 10>
+					  <ERROR ABOUT-TO-CLOBBER <1 .R>>>
+				      <SET R
+					   <DATA-IPRINT .RA
+							.R
+							.MS
+							<MVDATA ,MDB>>>
+				      <SET R <DATA-CLOSE .RA .R>>>
+				 <PRINC " ">
+				 <PRINC .M>
+				 <COND (<EMPTY? <3 ,MDB>> <PRINC !\?>)>
+				 <MAPRET .M <1 .R>>)
+				(ELSE <ERROR OUTPUT-FAILED .M .R> <MAPRET>)>>>>
+	       <COND (<AND .ML <NOT <EMPTY? .ML>>>
+		      <SET NML <AVECTOR <ARESET .SS> !.OML !.ML>>
+		      <COND (,CAREFUL? <ERROR "OLD" .OML "NEW" .NML>)>
+		      <COND (<NOT <SET R <DATA-APRINT .RA ,M-ASYLUM .SS .NML>>>
+			     <ERROR ASYLUM-UPDATE-FAILED .R>)
+			    (ELSE
+			     <DATA-PRINTW
+			       .RA
+			       ,M-ASYLUM
+			       <+ </ <LENGTH .ML> 2>
+				  <CHTYPE <DATA-READW .RA ,M-ASYLUM> FIX>>>)>)>
+	       <DUMPED? <1 .RA> <>>
+	       <CLOSE-DATA-FILE .RA>
+	       .ML)>>
+
+<DEFINE READ-READER (USR FNM DIR "AUX" A (MSGS ()) R) 
+	#DECL ((A) <OR FALSE CHANNEL> (MSGS) <LIST [REST FIX]>
+	       (USR FNM DIR) STRING (R) ANY)
+	<COND (<SET A <OPEN "READ" .USR .FNM "DSK" .DIR>>
+	       <REPEAT ()
+		       <COND (<NOT <SET R <READ .A '<>>>>
+			      <AND <NOT <0? <1 .A>>> <CLOSE .A>>
+			      <RETURN .MSGS>)
+			     (<NOT <TYPE? .R FIX>> <RETURN ()>)
+			     (ELSE
+			      <COND (<L? .R 0> <SET R <- .R>>)>
+			      <COND (<MEMQ .R .MSGS>)
+				    (ELSE <SET MSGS (.R !.MSGS)>)>)>>)
+	      (ELSE ())>>
+
+<DEFINE VERIFY (ML MT "AUX" (SEC? <>))
+	#DECL ((ML) <VECTOR [REST FIX]> (MT) <UVECTOR [REST FIX]>
+	       (SEC?) <OR ATOM FALSE>)
+	<MAPF ,VECTOR
+	      <FUNCTION (N)
+		   #DECL ((N) FIX)
+		   <COND (.SEC? <SET SEC? <>> .N)
+			 (<MT? .N .MT>
+			  <SET SEC? T>
+			  .N)
+			 (ELSE <MAPRET>)>>
+	      .ML>>
+
+<DEFINE MT? (N MT "AUX" (T <R-TUPLE .MT>))
+	#DECL ((N T) FIX (MT) MTABLE)
+	<SET MT <REST .MT <R-HEADER .MT>>>
+	<REPEAT ()
+		<COND (<OR <EMPTY? .MT> <0? <1 .MT>>> <RETURN <>>)
+		      (<==? <MSG .MT> .N> <RETURN T>)
+		      (ELSE <SET MT <REST .MT .T>>)>>>
+
+\ 
+
+"SUBTITLE Functions to reduce a message to the areas which may be accessed
+by a particular addressee.  This is in preparation for writing it into his
+message asylum."
+
+"SANITIZE -- reduce message to what addressee can legitimately see"
+
+<DEFINE SANITIZE (ADR
+		  "AUX" (DR <OR <GETDAT .ADR> <GETDAT <SET ADR "">>>) DA
+			(LR <DRD "" <GETFIX "LINK-TO-ADDRESSEE-AREA">>)
+			(CR <DRD "" <GETFIX "COPY-TO-ADDRESSEE-AREA">>)
+			(LA <OR <DRDA "" <GETFIX "LINK-TO-AUTHOR-AREA">> ()>)
+			(MS ,MSG-SPACE) (STR <>) (MDB ,MDB))
+	#DECL ((ADR) STRING (DR) <OR FALSE VECTOR> (DA MDB) VECTOR
+	       (STR) <OR FALSE STRING> (LR CR LA) LIST (MS) SPACE)
+	<PROG ()
+	<COND (<NOT .DR> <RETURN>)
+	      (<=? .ADR "">
+	       <MAPR <>
+		     <FUNCTION (V "AUX" (SV <1 .V>)) 
+			     #DECL ((V) VECTOR (SV) <OR STRING VECTOR>)
+			     <COND (<TYPE? .SV STRING> <SET STR .SV>)
+				   (<AND .STR <N=? .STR "">>
+				    <PUT .SV 2 <COBBLE .STR <2 .SV> .LA ()>>
+				    <PUT .SV 1 <AVECTOR .MS>>)>>
+		     <SET DA <MVDATA .MDB>>>)
+	      (ELSE
+	       <SET DA
+		    <AVECTOR .MS
+			     <ASTRING .MS .ADR> .DR
+			     <ASTRING .MS> <SET DR <GETDAT "">>>>
+	       <PRUNE .ADR .DR .LR .CR>
+	       <PUT .MDB ,MVDATA .DA>)>
+	<PUT .MDB ,MVMSG 0>
+	<PUT .MDB ,MVDATA <SHRINK .DA ,SCRATCH-SPACE .MS>>>>
+
+<DEFINE COBBLE (ADR DA L C "AUX" (CURSPACE ,MSG-SPACE) (STR <>)) 
+	#DECL ((ADR) STRING (DA) VECTOR (STR) <OR VECTOR STRING FALSE>
+	       (L C) LIST (CURSPACE) <SPECIAL SPACE>)
+	<MAPF ,ALVECTOR
+	      <FUNCTION (F "AUX" FLD) 
+		      #DECL ((F) ANY (FLD) <OR STRING VECTOR>)
+		      <COND (.STR
+			     <SET FLD .STR>
+			     <SET STR <>>
+			     <COND (<MEMBER .FLD .L> <MAPRET .FLD .F>)
+				   (<AND .F
+					 <MEMBER .FLD .C>
+					 <SET F <SPLIT-PRUNE .ADR .F>>>
+				    <MAPRET .FLD .F>)
+				   (ELSE <MAPRET>)>)
+			    (ELSE <SET STR .F> <MAPRET>)>>
+	      .DA>>
+
+"PRUNE -- takes addressee, data area for addressee, link- and copy-to
+addressee-area lists.  returns data area pruned to what addressee can
+legally see."
+
+<DEFINE PRUNE (ADR D LR CR "AUX" (N 0)) 
+	#DECL ((ADR) STRING (D) <VECTOR [2 VECTOR]>
+	       (LR CR) <LIST [REST <OR STRING FIX>]> (N) FIX)
+	<MAPR <>
+	      <FUNCTION (DR "AUX" (C <SET N <+ .N 1>>)) 
+		      #DECL ((DR) VECTOR (C) FIX)
+		      <COND (<MEMQ .C .LR>)
+			    (<MEMQ .C .CR>
+			     <PUT .DR 1 <SPLIT-PRUNE .ADR <1 .DR>>>)
+			    (ELSE <PUT .DR 1 <>>)>>
+	      <1 .D>>
+	<PUT .D 2 <COBBLE .ADR <2 .D> .LR .CR>>>
+
+<DEFINE SPLIT-PRUNE (ADR SDAT "AUX" ADRK)
+	#DECL ((ADR) STRING (SDAT) LIST (ADRK) <OR FALSE STRING>)
+	<COND (<AND <SET ADRK <DRDMSG .ADR <GETFIX "ADDRESSED-TO">>>
+		    <N=? .ADR .ADRK>>)
+	      (ELSE <SET ADRK <>>)>
+	<REPEAT (F A)
+		#DECL ((F) <LIST <LIST [REST STRING]> ANY>
+		       (A) <OR FALSE <LIST [REST STRING]>>)
+		<COND (<EMPTY? .SDAT> <RETURN <>>)>
+		<SET F <1 .SDAT>>
+		<COND (<OR <SET A <MEMBER .ADR <1 .F>>>
+			   <AND .ADRK 
+				<SET A <MEMBER .ADRK <1 .F>>>>>
+		       <PUTREST .SDAT ()>
+		       <PUTREST .A ()>
+		       <RETURN .SDAT>)
+		      (ELSE <SET SDAT <REST .SDAT>>)>>>
+
+<ENDPACKAGE>

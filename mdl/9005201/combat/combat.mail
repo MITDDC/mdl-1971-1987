@@ -1,0 +1,112 @@
+ñ¢ ãéı;÷-éıî AôB«øè!Ï›úfE¥õ(0ôAù²j-‰ù´ÆŠş[öºAô Aô ¡ø“aéôdÔ[ø“iúywdËşN Aô Aú& Ãşˆ&É©õ±&ÓñTúâÕü¸ú:Aô AôªÇAøsæĞ“ù‘iù¹yóÃüùPiÉ÷H A÷–æÉ©õ±&Ó»õÍ[3iöÏ†ŠñSùiÏı;°ôËü Aôš ƒú±Ğ7oôz cöLœ ‹ø•Š¥ü¸òéíü¹ Aô eö¨ ÕôÛ Ãşˆ²iö("Ä©ñ¢†Š§ü¹PK…únæÄ§úg ¥ø°çÒ‰ô·òAü(CßıÙpåü¹ Ãığùçô°ìçü¨tÑü=Šçü¹vóAş›ĞbËôPmÓş}0ëËõÃE	_ü˜{eñCEAction-to:     (BUG COMPIL) at MIT-DMS
+From:          SWG at MIT-DMS
+Sender:        SWG at MIT-DMS
+Subject:       BUG COMPIL
+Message id:    <[MIT-DMS].56417>
+
+Originated:    26 AUG 77 at 1752 EDT
+Received:      26 AUG 77 at 1756 EDT
+
+CARE TO LOOK AT FCOMPL AGAIN?  NOT OLD #FSUBR PROBLEM, BUT DIFFERENT
+RESULTS WITH COMPILED CODE & UNCOMPILED:
+<RESTORE "MUFTI;FCOMPL">
+<COMPILER SHOW-FOLDER-FORMAT>
+	-- AND YOU GET SOME RESULT LIKE ("SHOW-FOLDER-FORMAT" ...)
+<FLOAD "MME4;FCOMPL NBIN">
+<COMPILER SHOW-FOLDER-FORMAT>
+	-- STARTS TO PRINT THE FORMAT BECAUSE AN ERROR WAS DETECTED.
+
+SOURCE FILE IS MME4;FCOMPL >.  PLAN IS SWG;PLANôWñ¢† ñPqôÓıû–ôß÷H Aô
+!UôçÍ¡ù3 Ãşˆ&É©õ±&ÓñQ¹oÛ÷H Aô Aô"LAü=M“ú‹bM§ñ¢©åİü™y:Aô Aô(D™ôz ›ù5Ä›úcESëüZ²ãé÷H AôB«øè!Ï›úfù¹yóÃüùPiÉ÷H A÷–æÉ©õ±&Ó»õÍ[5k÷†ŠñSùiÏı;°ôËü Aôœ ƒú±Ğ7oôz cö­ ‹ø•Š¥ü¸òéíü¹ Aô e÷( ÕôÛ Ãşˆµk÷"Ä©ñ¢†ŠúçÍ¡ôòåÛşh:oAüz7íáô÷ yúj ]ÿ#OŸô¼¾]ô$ôAşx|óAı=cÃıÉúü™qéÉü¨;èËşš2òAı=9 Ãô*ÔAıüaAújP¥ùô Åü¸ğõçü¨:hËô2ãÙôóşš2 çü¸÷îÉôygAı<Ğ#ø3)ÅQõ+ ‡ıöğñ¢„¯Éü=²ñ¢†Šñ¢ ãéı;÷-éıî AôB«øè!Ï›úf)Aü=M“ú‹bM§ñ¢£rßı® Aô Aô(D™ôz ›ù5Ä›úcESËıÙ2òuô AôP‰ùˆ0ôAù²j-‰ù´ÆŠ§ş¸µeÇş Aô …ú±ĞCŸù´$ÌñSróçü9ò Óü Aô-Í“ú‹bM§û«š¶möìßñ¢§òÓüúwaéü¹ Aô±Aø5c oöè0ôAö,Y°Aø±*úYqåÓşÙr:Aô AölPA«øè·Aü=1cölPE‰úƒEúš2 Íş»±ôÓıûN«ù²æU‰øñPiİôáSwùÕfÆ“û çü¹vóAş›ĞlßşyW Aú»±ïÛşveÉñ¢´ôAşyóËşh0 yù’iÔAût¢Ó©ôèAû¯tßôªÍ¡úSæÏ©ø¨0ôAşš2 ËıÙ Aúš2ü{öğÓı™r íü¼¹éßıÈ8açşyy Qõ+açô4oëüútÑü¨!Ïøˆ4îçı92 éıPP¥ùñÆŠïü<Ğnßşˆ;ïåızwg]ñ¢„¯Éü=²ñ¢†Šñ¢ ãéı;÷-éıî AôB«øè!Ï›úf)Aü=M“ú‹bM§ñ¢£rßı® Aô Aô%M…ôz ›ù5Ä›úcESËıÙ2òuô AôJ›øH0ôAù²j-‰ù´ÆŠ§ş¸µeÇş Aô …ú±ĞCŸù´$ÌñSróçü9ò Óü Aô-Í“ú‹bM§û«š¶m÷ñ¢§òÓüúwaéü¹ Aô±Aø5c oöè0ôAö-˜1Aø±*úYqåÓşÙr:Aô AölPA«øè·Aü=1möLE‰úƒE÷“`Ğô&Á¡úQj ]õËŸ ÉıùyîOşˆ;ïåık†ŠñCŠƒction-to:     (BUG COMPIL) at MIT-DMS
+From:          TAA at MIT-DMS
+Sender:        TAA at MIT-DMS
+Subject:       BUG COMPIL
+Message id:    <[MIT-DMS].56980>
+
+Originated:    5 SEP 77 at 2121 EDT
+Received:      5 SEP 77 at 2122 EDT
+
+	In the new compiler (in debug mode), ASSIGNED?-ANA calls ADVMESS,
+which has no value.
+
+
+To:            (BUG COMPIL) at MIT-DMS
+From:          BKD at MIT-DMS
+Subject:       BUG COMPIL
+Message id:    <[MIT-DMS].58127>
+
+Originated:    21 Sep 77 at 1910 EDT
+Received:      21 Sep 77 at 1913 EDT
+
+The appropriate DEBUG-COMPILE messages should
+be put into the CASE compiler to inform the
+loser why his Case code is:
+	1) not suitable for CASE-GEN
+	2) not suitable for a dispatch table
+		(i.e. a skip chain instead)
+
+
+
+FROM MB 9/22/77 17:42:58
+TO: CLR, BTB, BKD, LIM
+ALSO TO: pdl
+Since the message seemed not to get thru using bug-compile, here it is again.
+
+ 
+Got OUT-OF-BOUNDS in STOREV!-ICC!-CC when attempting to compile 
+<PROG () <SET A <MAPF ,B <FUNCTION () <COND (<SET ...>) (<MAPSTOP !$
+
+Actual record is at end of file MB;GRONK RECORD, which includes <FR&> and a circular
+<FRAMES>.  This was done using :NPCOMP, on the file GRONK PCOMP attempting to compile
+MB;MMECP 55
+
+The form in apparent violation of the world is on page 2, line 158 of MMECP 55
+in the function SHOW-AMBIGUITIES
+
+BTB waved a hand and said that 'INACS and ACRESIDUE dont agree'
+in reference to ac A and variable .STR!-IMMECP!-MMECP!-PACKAGE
+
+Note: if you get this soon, you will find the state still exists in :UJOB MB GRONK
+otherwise it takes 1:39 to do the preload and another 1:07 to compile up to the loss
+(less than 3 mins cpu time)
+
+	mike
+
+ps: another function exhibited this feature too, again
+a <MAPF <FUNCTION <COND () (<MAPSTOP !$
+this was in the function ERROR-MATCH-SUPER , page 2 line 246
+
+
+FROM BKD
+
+SEE THE FILE "APL;CHPRIM LOSS" FOR INFO ABOUT
+A NTH/REST/PUT-OUT-OF-BOUNDS IN MAPFR-GEN (NPCOMP).
+BE SURE TO USE THE EXACT INPUT FILE IT MENTIONS
+I.E. "APL;CHPRIM 91". YOU CAN USE "APL;CHPRIM NBIN"
+AS A PRECOMPILED.
+
+IN A LATER VERSION OF THE FILE, I CHANGED THE 4TH
+ARG TO THE MAPF FROM ![1 2 3 4 5 6 7 8] TO THE TASTEFUL
+'![1 2 3 4 5 6 7 8] AND I CHANGED THE DECL OF THE
+3RD ARG ,ALL-FILES FROM <UVECTOR [8 FILE]> TO THE
+MORE PRECISE !<UVECTOR [8 FILE]>.
+THESE TWO CHANGES SEEMED TO CAUSE THE ERROR TO GO AWAY.
+
+
+To:            (BUG COMPIL) at MIT-DMS
+From:          BKD at MIT-DMS
+Subject:       BUG COMPIL
+Message id:    <[MIT-DMS].58369>
+
+Originated:    23 Sep 77 at 1906 EDT
+Received:      23 Sep 77 at 1908 EDT
+
+FOR A OUT-OF-BOUNDS IN LVAL-GEN (NPCOMP) SEE "APL;CH LOSúcEñ¢† ñU7ºAô Aô Aô
+!UôçÍ¡ù3 Ãşˆ&É©õ±&ÓñQ¹oÛ÷H Aô Aô"LAü=M“ú‹bM§ñ¢©õÅıYqôuô Aô*hËôyõÃıƒEMËş|ğçËôr:Aô<·ù²j-‰ù´î®k÷5}ñ¢†ŠŸşZséİü=2äuô eöˆ)åáôÛ Ãşˆ¶göˆ"Ä©ñ¢©eÇüº{eÉ÷H Aô4Aúyx oöè0ôAö-š5Aø±*ñ¢ Aô'oİõ¼úrëü}:òËüˆ0òÏô7 ú’rËş}pëşˆ:oáôù Åü8õ ÓıÈ&Á¡øÔ–Ç‹ùË†Š‡ıûxiÙı;³ §ùë­‰ù4ê ÓıÈ(D™÷s`É™ô'Ó‹úK ‡ıûxlËş™PrËü{ùdAı;Mƒù3LŸúuñ+òaíü£Eñ¢† Añ¢ªouô Aô AôB«øè!Ï›úf)Aü=M“ú‹bM§ñ¢£rßı® Aô Aô(D™ôz ›ù5Ä›úcESëüZ²ãé÷H AôH‹ù”ù¹yóÃüùPiÉ÷H A÷–æÉ©õ±&Ó»õÍ\4e÷/†ŠñSùiÏı;°ôËü Aôš §ü¼7oôz cöìØ ‹ø•Š¥ü¸òéíü¹ Aô eöˆ)åáôÛ Ãşˆ·g÷("Ä©ñ¢†Š©ıPoÙüˆ1ïÛşveåôòôçôPFƒúf,Aù°iK‹øˆ8aÓşH7õéşzreAştòAş|0ãËôôôÑñ¢©ÈŸúëbI§úˆ4îAù°dÌ]ô$E™úP¡Cô#Eñˆ Añ¢ªouô Aô AôB«øè!Ï›úf)Aü=M“ú‹bM§ñ¢£rßı® Aô Aô!K‰ôz ›ù5Ä›úcESëüZ²ãé÷H AôB«øè!Ï›úfù¹yóÃüùPiÉ÷H A÷–æÉ©õ±&Ó»õÍ\4iö¯†ŠñSùiÏı;°ôËü Aôš §ü¼7oôz eö ‹ø•Š¥ü¸òéíü¹ Aô eöˆ)åáôÛ Ãşˆ0iö("Ä©ñ¢†Š“øÈ'Î‹ôiÅ§ô$EAøsæĞ“ù‘i'§ôàÓ‹ù‘CŸø‘PO÷CE	yøpiÅAõ•,Ğ‹÷èXñBD¨ƒõ³¢×©û4" ]õË—ù5CŸù´$Ì‹úh$Î©ùè  §ùrh ‡ùdÎAù’eÅuñ¢„Ãƒù1PAYö-Úù5O…úÒgÕ§ù–PN‹úÑi ‘ø°iDAùñN‹úõ,Ğ‹úk†ŠñCEAñ¢ªouô Aô AôB«øè!Ï›úfESôz ›ù5Ä›úcEFåıû] Aô AôM…ôz ›ù5Ä›úcESëüZ²ãé÷H AôN©ùhU©õ´¢Ó©õ³êÔ[ùñ–ÒƒùÑâ ­ø4©¡[ù0á®]õÈP«úr% ¡õ‹!Éøµù¹yóÃüùPiÉ÷H A÷–æÉ©õ±&Ó»õÍ\6kö/†ŠñSùiÏı;°ôËü Aô› §ü¼7oôz a÷,Ù ‹ø•Š¥ü¸òéíü¹ Aô eöè)åáôÛ Ãşˆ9göè"Ä©ñ¢†Š§ø±PM…÷u Ò§ô¢ÃŸúQFŸúH)E‡ùô¢ ƒùÑF¥ôÃE Aô&ÂwúĞiSAúçÍ¡ô§ÒAúçÍ¡õÈRƒùÈ#O¥ôİ2eô' øµB«øãE AôU•ùğM…ô Ò§ô§ÒAøséEAù3`Ç‹ñ¢†ŠñC Añ¢ªouô Aô AôB«øè!Ï›úf)Aü=M“ú‹bM§ñ¢£rßı® Aô Aô(D™ôz ›ù5Ä›úcEMËş|ğçËôr:Aô<·ù²j-‰ù´î®k÷›´}ñ¢†ŠŸşZséİü=2äuô eöè)åáôÛ Ãşˆ¶eöH"Ä©ñ¢©eÇüº{eÉ÷H Aô7Aúyx oöè0ôAö-™¶Aø±*ñ¢©åËô"LwúóéKAù“éÅ¥ô·òAü(1ïÛş2ôËıPdßü}våİş™r Åş¹ĞtÑü=ŠÓıÙ²óéşh1oéı:hËôödAü;² éıPnËşè1ïÛşveåşk†Šõù0öËñ¢†ŠñC Añ¢ªouô Aô AôB«øè!Ï›úf)Aü=M“ú‹bM§ñ¢£rßı® Aô Aô%F•ôz ›ù5Ä›úcESëüZ²ãé÷H AôB«øè!Ï›úfù¹yóÃüùPiÉ÷H A÷–æÉ©õ±&Ó»õÍ\8gö†ŠñSùiÏı;°ôËü Aôœ §ü¼7oôz eö,Ü ‹ø•Š¥ü¸òéíü¹ Aô e÷()åáôÛ Ãşˆ1i÷("Ä©ñ¢†Š“øÈ#OŸôi ‡ø3&E‰ôg ƒùÈ Õ±ô$Ó©÷CE Aô"ƒú¶ QûSéKA÷‘§ÏAõĞ ÒAõĞ Òc÷ÊTø3¢ µùô¥ “úh'E­ø´U§ø± “úˆ)Å‹ù´ĞT‘ø5CŸø‘PTŸôàÌ™ô§ÏAù4ĞNŸúˆ#Åø´ Ô‹ø‹†ŠñCEAñ¢ªouô Aô Aôbëüè1ïÛşv)Aü=M“ú‹bM§ñ¢£rßı® Aô Aô(D™ôz ›ù5Ä›úhP]ô0öÓüˆ&eÅıšwgSñ¢©õÅıYqôuô Aô+èÃşˆ"ìçü¯ÆŠ›ü¼ùáÏü¨4äuô yûsdÔ[ø“iİ]ö®¹o÷ÃEùü´çÓıØzeÉ÷H AöH'ãéôÛ Ãşˆ³gö("Ä©ñ¢©eÇüº{eÉ÷H Aô Ÿü}7oôz cöm ‹ø•ŠñH AôòåAú&;›õÑ ÃAù“éÅ¥ô·òAıùrÓü[2 ƒùÑÏ¥ô7óçü9ò ïı=4 Ãô7óçı8¶eñY0óÑôó áü¹xhßı™PcÑıûxaÏü¨:håıı÷ ÓıË†Šõù0öËñ¢†ŠñC Añ¢ªouô Aô AôB«øè!Ï›úf)Aü=M“ú‹bM§ñ¢£rßı® Aô Aô*Aƒôz ›ù5Ä›úhTÓı»úhóôW ƒıÙ2òçıû”ú}qjËü} Aô AøUc ‡ùóhI™ñ¢¦åçşxsåAı9 Aô[›ù5Ä›úwW5söÚ>ñCEOåı9ôîÃş™r:Aô2Aùøú oöè0ôAöLØ·Aø±*úYqåÓşÙr:Aô Aöh'ãéôÛ Ãşˆ2iöH"Ä©ñ¢†Š©ü<úeÍş»P¡úRgTAüz7íáü¹iİô4eAıÙ{ ÇıûxiÙü¼ Aşš2 Íş»±ôÓıûL“úuÂ™ùğåĞYñ¢´îAşytÓü}vaåõˆ6áİü9òäAş›ĞdËüzreAü=tÑü¨1eÏı;·iİüè7æAü(6oßş:hÃşˆ'Õ©øh4óñZw ƒõˆ;èËıÈ4îAü=lËü<ú ßıÙPcÃşyP(éıPcßıÙtÑü=eİüœĞwÓşšaİôcÁ“ùÊPnßşš4îÏñ¢´óAı;A]ô)åËôr Íıüuİü<ùåÛü[<¬Aü½1®ñCEAñ¢ªouô Aô AôB«øè!Ï›úf)Aü=M“ú‹bM§ñ¢£rßı® Aô Aô(D™ôz ›ù5Ä›úhP]ô0öÓüˆ&eÅıšwgSñ¢©õÅıYqôuô Aô!ÈƒùÓ¢Ìçñ¢¦åçşxsåAı9 Aô[›ù5Ä›úwW5sö->ñCEOåı9ôîÃş™r:Aô4Aùøú oöè0ôAö,Y5Aø±*úYqåÓşÙr:Aô Aöˆ'ãéôÛ Ãşˆ±e÷"Ä©ñ¢†ŠAô ƒüx÷òÉı;³ éıè:hËô2âëüùôîÏô÷íáı;2òYô4eAı=9 ÇıwnËıˆ7uÛüYy çı›úı;aAüz0îİü»içôw ëıÚ÷oïıÈ:yáü¨P “ôğóAü›ôîÏô?A÷ŒPcÑü;·eÙ÷ÏaİüƒEgßşˆ0 Éü¸ºçÏı;³ İıı2 çü>tîÏô òÓşš6åéı8ĞcÃıÉê ßşw ÇıûxiÙü¨tóşPiçñ¢‘<ŸúH#I±ô¦Oƒú‘ ïıqèAı˜ztËşH9eçş»:sAüÜ·íAı=sËüºwgAşš2 a÷ëIAü<ùõÛü«†ŠAô ‡ıöğYôôoÛş†Šõù0öËñ¢†ŠñC Añ¢ªouô Aô AôB«øè!Ï›úfESôz ›ù5Ä›úcECÇô7ºAô AôP‰ùˆ0ôAù²j-‰ù´ÆŠş[öºAô Aô ›øH0ôAù²j-‰ù´Ğ(›ı:ò …şYyãÓü*FŠ§ş¸µeÇş Aô ›ø4#/¥ô É™ù3£ ©ùè)E§úˆ Î³ôªÔAùiÔAúu)U‡ú•iEñSróçü9ò Óü Aô-Í“ú‹bM§û«š¹cö_ñ¢§òÓüúwaéü¹ Aô Ÿü}7oôz cö,› ‹ø•Š¥ü¸òéíü¹ Aô iôñôAöíĞaéôX³gôbTñCE(‡ø4¡Oô' ¡ø“ ©ùi “úh'Mƒù3(…ú±ĞCŸù´$Ì‹õ*FŠñU$EAøÓæLŸúògGAøÕgC©ù3ç ‰ùñi ùõCŸù´$Ì‹ôçÒ¥ø°êL³ôg úçÍ¡ñ¢†Šyø‘cIø¨&Á¡øÓç Qõ(Mƒú,Uô#Uøu$Ïô
+  …õ(Ä‹øs(Qø(!)AøÒl)A÷ŠĞ.ƒô¡>}ñ¢„‰ñ* eôĞ4AöªP(cö0Aöl4aôX)}÷ÃEùó¦YAú’" ™ø4ê ™ù4ê “úh!Ï¥úQaÔ™û()E§ú‘b,Aù5S‹ø³i ©ùj ©ùPEøˆ'ÆAú’"ù“çĞAúQiÔ§ôfLAùñT‘ø³V …úµDŸø´ĞNŸúˆ)ÔŸúQPT‘ø³PBƒørĞIô$EAúu Ã—ôæO©úcET‘ø¨!Eù3§Iøè'ÆAú’" ™ùóè Qú’" ‹ùÑT‹úu ¥ø³'Á‰úh ÃOúh#RŸù¨*H‹ôêA‡ùh)ÌŸú”ÆŠQø¶!Å¡úˆ#O¥ô$EAùiÔAø4£¬Aúò$Ã‘ôj §ø±fÓAú“ĞR‹ù±fÂ‹úH$ÓAø3)Eƒø–PIôg ƒøjFŠ©ùPO¥ù1äÎƒùˆ(RŸøS"ÍAúği ©ùPF«ùĞêIŸùÈF“úTê-©ùòâÎEôg ›ù±Z»›ù±aĞAö®FŠ¯ùaÈAùi ƒô&Á¡úHA™úu)IøèF«ùĞêIŸùÈAAøH!©AõË—>Aõ—.Sôm®]õ×P!·õË—]}ñ¢©Å‹ôa;¡øsæĞAøÒiS©ñ¢†Šù²eÅñCEñˆ Añ¢ªouô Aô AôB«øè!Ï›úf)Aü=M“ú‹bM§ñ¢£rßı® Aô Aô!T…ôz ›ù5Ä›új!rÓü;BËşZ÷÷Óş”ú}qjËü} Aô AøUc ‡ùóhI™ñ¢¦åçşxsåAı9 Aô[›ù5Ä›úwW5sölš>ñCEOåı9ôîÃş™r:Aô6Aùøú oöè0ôAö-Ø°Aø±*úYqåÓşÙr:Aô AöÈ'ãéôÛ Ãşˆ·cöÈ"Ä©ñ¢†ŠƒıØvyçı<Ğiİô4eAıÙ{ ÇıûxiÙü¼sËü»y éıè1èßı¼oİô¦D…÷s&PƒøóP>]ñ¢¤ôAüùzsAı;ºoAü;iİüÚwiéü¨6oßş4îAşš2 Íş»±ôÓıûF™ú´ä-¡ø1âÓ]ô$ éıwkñZz ÙıüòóAüYqáëşyPoÍô4eAü{öğÙı8ğôËüˆ#Ä‹øsoÍôªÆø´–ÍƒùĞcÅ›ø³ª-«úÑaÔŸúCEaİüˆ9åËı¼Ğtßô0öËôPgßıùdËü;oÍô9oëü[2 åü¼úiİüè4ôAü^PaAı¸wiÍü¼úeÉôvïëıİŠ…ú±£E¥õ³`ÎƒøñfÅú‹aLŸørÖÌ‹ùÑêH]ô)åËôªBwù“éÉøè(LƒùÈ4æAÿ;ú Éü¸ôäËô7ü™quÏô4içñ¢„‰©ıwkAÿ;ú¬ñBDÂåı8wñ¢† Añ¢ªouô Aô AôB«øè!Ï›úfESôz ›ù5Ä›úkB©øH0ôAù²j-‰ù´ÆŠş[öºAô Aô ¡ø“aéôdÔ[ø“i QúDÃşÚr ™ü¸¶iİüêFŠ§ş¸µeÇş Aô ‰ø°æSñSróçü9ò Óü Aô-Í“ú‹bM§û«š¹göìßñ¢§òÓüúwaéü¹ Aô Ÿü}7oôz cöL ‹ø•Š¥ü¸òéíü¹ Aô oôñôAöíĞaéôY2sôbTñCETÑü¨1ïÛşveåôòåÛşh:oAıøñáçı;÷aÙıPpåıù:ãËôPdËü{tÑü=tÑü¨ Ğ¡ù–FŠÇıù2§çôôeÇızwgAüz7íáşh7î]ô)ğËüzsiÇü;6yAşš2 Íş»±ôÓıûF“ù‹bÒ¥ôwù´)OöNæ®ù3gËşœĞaAúĞfU‹ô2ãÙô4aéô9oÉş¸òóAø³"Í‹ùÕÎŸú‹`ÔŸù«cO¥ù«FŠŸúKkE‡ú“é.Aô4eAùĞ¤ÎAı<Ğiİô$Â¥ù¬İÍ]øÒf øRg.ñBWäÃşÙFŠñCEAñ¢ªouô Aô AôB«øè!Ï›úfE¥õ(0ôAù²j-‰ù´ÆŠş[öºAô Aô ›øH0ôAù²j-‰ù´Ğ(›ı:ò …şYyãÓü*FŠ§ş¸µeÇş Aô …ú±ĞCŸù´$Ì‹úCEMËş|ğçËôr:Aô<·ù²j-‰ù´î®k÷-œ1}ñ¢†ŠŸşZséİü=2äuô cö('ãéôÛ Ãşˆ9eö"Ä©ñ¢©eÇüº{eÉ÷H Aô±Aùøú oöè0ôAöY2Aø±*ñ¢”N‹úè!Ï›úfE¥ô$A©ôi©ñPjT‹ù´* ©ùèP«úˆ-O¥ørD‹øs<­ø°êO¥ôéE§úˆ#I±û¯ŸøğkEAøsæĞ“ù‘i ƒô¤ÔAúò"ÎAú”¬Éøè*OAøsæĞ“ù‘PSŸù±jH“ùÑĞD‹øsÅ‰ôi µùô¡ÈñTâÅAù°ÚŸúPä }õˆ Î‰ô§Ò‡ù)E‡ùô¢.ñJ!Ï›úfE¥ô$ÄAùÓê …ùóa,Aù±iE™û(#Á­ø¨!Ï›úfA©ù3ç ƒøSéT‹øˆ'ÎAú’" ú³¡Ô“ùó”ñ¢†Šñ¢ªouô Aô AôB«øè!Ï›úfESôz ›ù5Ä›úcEFåıû] Aô AôP‰ùˆ0ôAù²j-‰ù´Ğ(¡õÈ"aíı9LËü[4îÏõ#ESëüZ²ãé÷H AôWÑü=EÙşy_ù¹yóÃüùPiÉ÷H A÷–æÉ©õ±&Ó»õÍ\·qö/†ŠñSùiÏı;°ôËü AôY Ÿü}7oôz cöMX ‹ø•Š¥ü¸òéíü¹ Aô cöH'ãéôÛ Ãşˆ²köh"Ä©ñ¢†ŠAô §ü¹PP‰ùáÅ™ø´ê ™ùôâÒAüÛù Ãô²ãßşYoÍô2åáıöeAıü:.Aı›ùóÃüùWúš2 çııycËô´ìËôğóAù´)O÷pâÌ‹úu>Yô4eAüİwcéı;÷ ïü<ĞN‹ûĞ‘ø4â®ñBWäÃşÙFŠñCEAñ¢ªouô Aô AôB«øè!Ï›úfESôz ›ù5Ä›úcEFåıû] Aô AôM…ôz ›ù5Ä›úhMÓıyPBåü¼ñéÃõ#ESëüZ²ãé÷H AôB«øè!Ï›úfEñSróçü9ò Óü Aô-Í“ú‹bM§û«›0cöÍŸñ¢§òÓüúwaéü¹ Aô¸Aùøú oöè0ôAö,š1Aø±*úYqåÓşÙr:Aô Aö.OÇşˆ·Aü=1eöŒE‰úƒEúš2 ›ø4#/¥ôºçAüÚ| Éıùy İıısËü»Ptßô² ÓıÜúaÙı™r óü½úš2 Íş»±ôÓıûIù5ÎŸø‘Piİôa;›ù±aTA÷È2oËşh7oéô²óéô4eAüÚyséôygñ]ôeİô÷íáı;2ä]ñ¢†ŠñC Añ¢ªouô Aô AôB«øè!Ï›úf)Aü=M“ú‹bM§ñ¢£rßı® Aô Aô*Aƒôz ›ù5Ä›úhTÓı»úhóôW ƒıÙ2òçıû”ú}qjËü} Aô AøUc ‡ùóhI™ñ¢¦åçşxsåAı9 Aô[›ù5Ä›úwW6aöŒ¾ñCEOåı9ôîÃş™r:Aô2eôñôAöíĞaéô˜1iôbTñT²ãËı=²äuô Aô™ Ÿü}7oôz eö™ ‹ø•ŠñBjhËô·ìÙııôîÏô÷îçşœºãéôòîËşXzeÉô÷íËô²áçıû°âÙÿ(1iõü<¹eAü{òeuñ¢Mƒú<}ô#Uøu$Ïô
+, Eø5l"AõêRA÷ŒP.±÷ÊTñ( Gø‘aÌAõ
+,)A÷•¢Ã©ùô[¥ø´ê §ú”¤Îû¯(§ú”” §ú”¤Îõ#E	AôP«úˆXAö(R‹úu.§ú”<™ø³£Ô‘ô©Ô¥÷ÏŸ>ñBP.­÷ÃEwÑü¼² ­ôy Ãıœ÷ yúÑaÔŸúH-Ò‹úuS©úRgG»÷Ë ©ıPcßü™PgËıÙyaéü¹dÓüˆ:hËô´òçşƒEpëşˆ4îAü(6ïåü¨7òAı™yóAşYpóßıØqlËôğùYô4eİô4äAü(!L©ôó éıPfÓş\ú Ëı™våİşƒEoÍô4eAşÙqôßşH:håıısèAşš2 åü¼ú ßüÈ:hËô²ãéıü— Aúš4óAıø»ißş¼öyAı<÷'éôzééü£EwÑü=IAır ÓıÈ6éİü‹ ş¼ºhËşH2eéü:vsAş}xpÙı9r ÓüÈ7eËü™r.ñCEAñ¢ªouô Aô AôB«øè!Ï›úf)Aü=M“ú‹bM§ñ¢£rßı® Aô Aô*Aƒôz ›ù5Ä›úhTÓı»úhóôW ƒıÙ2òçıû”ú}qjËü} Aô AøUc ‡ùóhI™ñ¢¦åçşxsåAı9 Aô[›ù5Ä›úwW6aöŒ¾ñCEOåı9ôîÃş™r:Aô2eôñôAöíĞaéô˜2qôbTñT²ãËı=²äuô Aô™ Ÿü}7oôz eöœ ‹ø•ŠñBjhËô´ìËşh:aÃ÷y>Aü;² éü8]æAş{úòÇü¨1ïİş˜tîAü;eñü;xlËôó Ûÿ#Epåü½´ïëşh6oçşxså]ô"öÓü™wtÙÿ(4ôAı<ĞnËüyyóÃş^PtßôòôAøpiEú³tßô°ìçü¨:oñXğõçü¨4ôAş›ĞhÃş2î]ñ¢†Šñ¢ªouô Aô AôB«øè!Ï›úf)Aü=M“ú‹bM§ñ¢£rßı® Aô Aô(D™ôz ›ù5Ä›úhP]ô0öÓüˆ&eÅıšwgSñ¢©õÅıYqôuô Aô!UôçÍ¡ù3Š›ü¼ùáÏü¨4äuô yûsdÔ[ø“iİ]öÌX1i÷ÃEùü´çÓıØzeÉ÷H Aö('oíôÛ Ãşˆ³cöh"Ó©ñ¢©eÇüº{eÉ÷H Aô ıı7oôz cöl[ ‹úuŠñTòåAú&;“ùÑ¢Ò“ô'Ó‹úH0îÉôgF‹úRPLŸút¢ÃAüÛù éıPlÃş™yôAı;wÃş}2 ÃıÙtËıÛ°çËõÃE	_ü˜{eñCEñˆ Añ¢ªouô Aô AôB«øè!Ï›úf)Aü=M“ú‹bM§ñ¢£rßı® Aô Aô(D™ôz ›ù5Ä›úhP]ô0öÓüˆ&eÅıšwgSñ¢©õÅıYqôuô Aô!UôçÍ¡ù3Š›ü¼ùáÏü¨4äuô yûsdÔ[ø“iİ]öÌX1k÷ÃEùü´çÓıØzeÉ÷H Aö('oíôÛ Ãşˆ³eö"Ó©ñ¢©eÇüº{eÉ÷H Aô ıı7oôz cöl[ ‹úuŠñRw éıPsÃı¹PIøÑiIAı›ùóÃüùV çü¹PaÙş{ĞIøËiE§ú³*,Aşú4ãÑô|hÓüZzsñ]²òóôòdAüYtaíı;ù.Aù=sËü»y éıè7oéô÷oïô4aéô½ô(R“ùµ,Ğ‹ô¬>Aù’iÔ}ñ¢¹ğËüzsiËşh:hËôúrëü}:òËô²éİüè&Á¡úYoİõÈTÑü¼² Óşh0ìçıè:hÓşh7äÉñ¢ºrÃıÜóoåı¨3rßı¨F«ùĞêIŸùÈxSô—.}ô7 yøÕgC©ù3ç QôPjØEô ]õËŸ Aù<ĞtÑü=ŠÃô²áéş¼²¿ñCESÓıºvaåıV Óşh4ôAü½²òAüûôîÏô7 ×ıÛû éız yö(1èÃıÛ²ì}ôy Ãô¤Øñ¢†Šõù0öËñ¢†Šáşn ŸıÙPmßşYPbÓşˆ7æAı;³ouô*hÓşh1ïÛşvaéı;÷ ïü<ĞwÓşšCƒúQcU™ôòôAş›ÆŠø3)Å]ôYËşkIAı{·÷Yô0ëÓıÙĞmóô4æËôwtßô| ßşûhÃıÙ9¬Aü;² Ãı›tÑü=.]õ#Eñ¢† Añ¢ªouô Aô AôB«øè!Ï›úf)Aü=M“ú‹bM§ñ¢£rßı® Aô Aô(D™ôz ›ù5Ä›úhP]ô0öÓüˆ&eÅıšwgSñ¢©õÅıYqôuô Aô!UôçÍ¡ù3Š›ü¼ùáÏü¨4äuô yûsdÔ[ø“iİ]öÌØ¶g÷ÃEùü´çÓıØzeÉ÷H AöH"eÇôÛ Ãşˆ²cöˆ"Ó©ñ¢©eÇüº{eÉ÷H Aô ‰ü¸Ğ7oôz cöM ‹úuŠñTòåAú&;ù3(A¥ôäO›úĞfßşH0 éü<úeÍş»lÓş6eAı›ùóÃüùPwÑü¼² Ãô7ïáñ¢»aåı8qlËôy ÅüºwgAıyxtAı;AYôºôAş{öåßıÙPeÙşyP(ßüÈ6iéş›2 ÅşXtîSñ¢²eÇı92óAı=óAş¼òæëıˆ:oAü{7âÅü¼iéô·òAü;A‰ø“P(Ãşˆ*AöŠÚ)]ñ¢ Aô!èßı¼4îÏıVñ10öËñ¢†ŠñC Añ¢£RŸù¨!Ï›øPj Aöí×±eõì› AöL5o÷LZøsæÂƒúˆ iô'Ó©ôg qõÍ7iö®\ §ø°çÎ‰úcE	…ø°àÕ§ø¨ ÎAø´©O¥ô Ğ¡ø³¢Ä]ñ¢¨A‡ùpcÅAñ¢‘S³ù°§Ì§ôHŠùõÆŸú³¢![ø´©O¥úhŠñCE0AôiRŸúBmĞƒøràÇ‹ô©Ù›øSæSEô§Ô[øÓêÎ‰ô+bÒ¥ùô©İñLP «úqD‰·ôU"Î±ù3Ñ EúvfÂŸù”Ñ Eù³bÄ‹øÈ"›ù±`Õ±ôHM›øµª"AôSfÅ­úQ]ñL ‹úĞf	ûo*Ó‹ôªEûg¢AôTìÍ…ùó)¢AôSfÅ‰ø±‘ Eù³bÁ«û"›ù±kTEô¦Í‹úÕ ¢}û£E3AôéO«úfOƒø‚m¢‰úrİM›ø­]Í›øµªJA÷È®öˆF“ù‘VÃŸù´$Ì‹ñ6ÑD§ùn¦Í‹ö®æÍ‹úÕ% }ôHD§ùn¦Í‹ö®æÍ‹úÕ% øRg"»ñ¢š AøĞçÍ¡ñ6ÑÃ‘ø3§E™ûi® Eø”åº›ù±Z»›ù±kT•ô‘ Eø”åº›ù±Z»›ù±kT•ô¡IôWFŠmô"Öƒù‚DÛyøĞçÍ¡ôáÈƒùÓ¢Ì·ô×P"‰úrİM›ø­]Í›øµªJA÷È"MôO®öèLŸø1‰·ôpäAùÑf[aô©Eƒøˆ"¡ùg"AôO Eø”å¢AôPçÍ…ø5 Eú ÎEôš"AôË—]»ñ¢œ AøPjC‘õ°çÍ¡ù3­GøĞfS‹ô
+‰·û£E9AôkA™ñ"m¼…ø5!È[øsæĞ“ùˆV£ø3)ÅAõ
+_]ñLX ‹úĞf	ûo!Ïøˆ&Sô
+)Aõ	” QôÊP(Mõ/®ö,E­ø3‰·÷‘*Í¡õ°çÍ¡ô§CŸù´$»øh´§ø5¢¢A÷Ÿ]ñLY ™ù4êEñ6îñ¢ªouô Aô AôB«øè!Ï›úf)Aü=M“ú‹bM§ñ¢£rßı® Aô Aô*Aƒôz ›ù5Ä›úhTÓı»úhóôW ƒıÙ2òçıû”ú}qjËü} Aô AøUc ‡ùóhI™ñ¢¦åçşxsåAı9 Aô[›ù5Ä›úwW6mö[>ñCEOåı9ôîÃş™r:Aô1eô°îAöîaéô˜3aôiÔñT²ãËı=²äuô AôY •ü;7qôz eöÚ ‹úuŠñT7ïåôâËAı›ùôAü›ôîÏôL‹ùÑêHAõÑ§Ï}ô£OŸ÷È7îAü(6içş‹ ƒıÈ0îİıı0ôËüˆ9ïëşXòı¸| Åü¨3oëıÙiİôâËwøRc §ùõiC‹õÃEñˆ Añ¢ªouô Aô AôB«øè!Ï›úf)Aü=M“ú‹bM§ñ¢£rßı® Aô Aô"L‰ôz ›ù5Ä›úhDÃşÚr ™õÈ"iÙıŠFŠ§ş¸µeÇş Aô …ú±ĞCŸù´$ÌñSróçü9ò Óü Aô-Í“ú‹bM§û«›6eönñ¢§òÓüúwaéü¹ Aô´AùXw o÷0ôAöLš3Aø´êúYqåÓşÙr:Aô Aö-JÃıÈ¸Aü=2eöE§úƒEúš2 Íş»±ôÓıûO‡úQ`ÄAı;dÙüúeçşˆ åü½:òİşh0EôôeİôP0Aı<Ğtóşr Ãşˆ4ôñZwtËş\9eéı=²ìóõÈ+èËıÈ4ôAı<Ğcßı¼4ìËü‹iéô²ôëş[¹ GøRcÎ«ù¨=åÛş<ı]ñ¢«èËıÈ:hËôqôÓşØzißıÈ!RAı<ĞdËü{åÉôy ÃıÈ0ãéı=°ôÓıû– Óşˆ1ïÛşveçô÷òåü¸úlóõÃETƒø(0îÉô"LAşx| éıy Óşh7oéô²áçıû°âÙü«†ŠñC Añ¢ªouô Aô AôB«øè!Ï›úfESôz ›ù5Ä›úcEFåıû] Aô AôP‰ùˆ0ôAù²j-‰ù´Ğ(¡õÈ"aíı9LËü[4îÏõ#ESëüZ²ãé÷H AôB«øè!Ï›úfEñSróçü9ò Óü Aô-Í“ú‹bM§û«›6sömŸñ¢§òÓüúwaéü¹ Aô4AùXw o÷0ôAö.5Aø´êúYqåÓşÙr:Aô AöMJÃıÈ¸Aü=1qöPE§úƒEúœ¼ éıPfßı›7÷ÓıÙĞiİô4eAıÙ{ ÇıûxiÙü¼ñ¢D‹øÒgEAøÈLSôâE‡ùˆ(™õ(&I§úŠP<cô(U©úQiÔA÷”¢Ó©ô¦>Aõ
+_>}ñ¢†ŠyøsæĞ“ù‘PFAõÓêÔ‡ùg>ñCETÑü¨9eçş»: Óşh7oéôôaéôwõAıºsèéô|pËü}.]õË†Šø˜{eñCEñˆ A

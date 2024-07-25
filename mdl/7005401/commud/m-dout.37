@@ -1,0 +1,196 @@
+
+<PACKAGE "M-DOUT">
+
+<ENTRY DO-OUTPUT DO-APPLY ADR>
+
+<USE "M-READ" "PRTUTI" "AP" "M-DEFS" "MADMAN">
+
+<GDECL (IH EH) HANDLER>
+
+<DEFINE DO-OUTPUT-IHAND ("TUPLE" STUFF "AUX" (MS ,MSG-SPACE)) 
+	#DECL ((STUFF) TUPLE (OUT) ACTIVATION (MS) SPACE)
+	<COND (<AND <ASSIGNED? OUT>
+		    <LEGAL? .OUT>>
+	       <DISMISS <AFALSE 15
+				<ASTRING .MS
+					 "IOC DURING OUTPUT: "
+					 <UNPARSE .STUFF>>>
+			.OUT>)>>
+
+<DEFINE DO-OUTPUT-EHAND ("TUPLE" STUFF "AUX" (MS ,MSG-SPACE)) 
+	#DECL ((STUFF) TUPLE (OUT) ACTIVATION (MS) SPACE)
+	<COND (<AND <ASSIGNED? OUT>
+		    <LEGAL? .OUT>>
+	       <DISMISS <AFALSE 16
+				<ASTRING .MS
+					 "ERROR IN OUTPUT: "
+					 <UNPARSE .STUFF>>>
+			.OUT>)>>
+
+\
+
+<DEFINE DO-APPLY (ADR AFMT OUTCHAN "AUX" VAL) 
+   #DECL ((VALUE VAL) <OR FALSE ATOM> (ADR) STRING (OUTCHAN) CHANNEL)
+   <SET VAL
+    <PROG OUT ()
+      #DECL ((OUT) <SPECIAL ACTIVATION>)
+      <WATCH IH "IOC" ,DO-OUTPUT-IHAND 4>
+      <WATCH EH "ERROR" ,DO-OUTPUT-EHAND 4>
+      <APPLY .AFMT .ADR .OUTCHAN>>>
+   <OFF ,EH>
+   <OFF ,IH>
+   .VAL>
+
+\
+
+"DO-OUTPUT -- format-driven message output routine
+	adr -- addressee whose message is being printed
+	flist -- format control
+	outchan -- output channel
+
+-- returns t if winning, false(reason:string) if loss in format.
+   attempt to print empty field is not a reason for lossage.
+
+Formats, such as are passed as the second arg to DO-OUTPUT, look like
+lists.  Each element specifies how to treat a specific field:
+
+	field-name:string		print the field value
+	felement:list
+	   (prefix:string-or-false
+	    field
+	    suffix:string
+	    printer)
+
+	'prefix', if non-false, is print before the field value
+	'field' may be:
+
+	fix		field number
+	string		field name
+	vector		print only if fields given are different
+	list		pass list of all these fields
+
+	'suffix', if present, is printed after the field value
+"
+
+<DEFINE DO-OUTPUT (ADR FLIST OUTCHAN
+		   "AUX" FELE LDATA DAT STR SUF TYP AFN VAL (MS ,MSG-SPACE)) 
+   #DECL ((TYP) FIX (VALUE VAL) <OR FALSE ATOM> (STR SUF) <OR FALSE STRING>
+	  (ADR) STRING (FELE DAT LDATA) ANY (FLIST) LIST (OUTCHAN) CHANNEL
+	  (MS) SPACE (AFN) <OR FALSE APPLICABLE>)
+   <SET VAL
+    <PROG OUT ()
+      #DECL ((OUT) <SPECIAL ACTIVATION>)
+      <WATCH IH "IOC" ,DO-OUTPUT-IHAND 4>
+      <WATCH EH "ERROR" ,DO-OUTPUT-EHAND 4>
+      <REPEAT ()
+	<COND (<EMPTY? .FLIST> <RETURN T>)
+	      (<TYPE? <SET FELE <1 .FLIST>> FIX STRING>
+	       <COND (<SET DAT <DRDA .ADR .FELE>> <PRINT .DAT>)>)
+	      (<AND <TYPE? .FELE LIST> <NOT <EMPTY? .FELE>>>
+	       <COND (<TYPE? <1 .FELE> STRING FALSE>
+		      <SET STR <1 .FELE>>		   ;"FIELD PREFIX"
+		      <SET SUF <>>			   ;"FIELD SUFFIX"
+		      <SET FELE <REST .FELE>>
+		      <COND (<EMPTY? .FELE>
+			     <AND .STR <PRINTSTRING .STR .OUTCHAN>>)
+			    (<SET DAT
+				  <COND (<TYPE? <SET LDATA <1 .FELE>> FIX STRING>
+					 <DRDA .ADR .LDATA>)
+					(<TYPE? .LDATA LIST>
+					 <DATLIST .ADR .LDATA>)
+					(<TYPE? .LDATA VECTOR>
+					 <DATVECT .ADR .LDATA>)>>
+			     <SET FELE <REST .FELE>>
+			     <PROG ()
+				   <COND (<EMPTY? .FELE> <SET TYP 2>)
+					 (<TYPE? <SET LDATA <1 .FELE>> STRING>
+					  <SET SUF .LDATA>
+					  <SET FELE <REST .FELE>>
+					  <AGAIN>)
+					 (<TYPE? .LDATA FIX> <SET TYP .LDATA>)
+					 (<SET AFN <AP? .LDATA>> <SET TYP -1>)
+					 (ELSE
+					  <RETURN <AFALSE 4
+						    <ASTRING .MS
+							     "Bad Output Function Type: "
+							     <UNPARSE .LDATA>>>>)>>
+			     <COND (.STR
+				    <PRINTSTRING .STR .OUTCHAN>)>
+			     <COND (<==? .TYP 1> <PRINT .DAT .OUTCHAN>)
+				   (<==? .TYP 2> <PRINTSTRING .DAT .OUTCHAN>)
+				   (<==? .TYP 3> <PPRINT .DAT .OUTCHAN>)
+				   (<==? .TYP 4> <P-ADDRL .DAT .OUTCHAN>)
+				   (<==? .TYP 5> <P-SLIST .DAT .OUTCHAN>)
+				   (<==? .TYP 6> <P-SPLIT .DAT .OUTCHAN>)
+				   (<==? .TYP 8> <P-TIME .DAT .OUTCHAN>)
+				   (<==? .TYP 9> <P-ADDR .DAT .OUTCHAN>)
+				   (<==? .TYP 10> <NET-P-DATE .DAT .OUTCHAN>)
+				   (<==? .TYP 11> <NET-P-LINE .DAT .OUTCHAN>)
+				   (<==? .TYP 12> <P-NOTES .DAT .OUTCHAN>)
+				   (<==? .TYP 13> <P-ENCLOSURES .DAT .OUTCHAN>)
+				   (<==? .TYP 14> <NET-FROM .DAT .OUTCHAN>)
+				   (<==? .TYP 15> <P-FORWARD .DAT .OUTCHAN .STR>)
+				   (<==? .TYP -1> <APPLY .AFN .DAT .OUTCHAN>)
+				   (ELSE
+				    <RETURN
+				      <AFALSE 4
+					      <ASTRING .MS
+						       "Illegal Function Specification: "
+						       <UNPARSE .TYP>>>>)>
+			     <AND .SUF <PRINTSTRING .SUF .OUTCHAN>>)>)
+		     (ELSE
+		      <RETURN <AFALSE 4
+				      <ASTRING .MS
+					       "Improper Field Format Element: "
+					       <UNPARSE <1 .FELE>>>>>)>)
+	      (ELSE
+	       <RETURN <AFALSE 4
+			       <ASTRING .MS
+					"Bad Format Element: "
+					<UNPARSE .FELE>>>>)>
+	<SET FLIST <REST .FLIST>>>>>
+   <OFF ,EH>
+   <OFF ,IH>
+   .VAL>
+
+\
+
+"DATVECT -- takes a vector naming two fields.  returns the contents of
+the first field only if it is different from those of the second field.
+this is used (for example) to show the SENDER field only if it is
+different from the FROM field.  Note that it takes into account that
+one field may be a LIST of a STRING while the other may be just a
+STRING."
+
+<DEFINE DATVECT (ADR V "AUX" (V1 <1 .V>) (V2 <2 .V>))
+	#DECL ((ADR) STRING (V) <VECTOR [2 <OR STRING FIX>]> (V1 V2) ANY)
+	<COND (<AND <TYPE? .V1 FIX STRING>
+		    <TYPE? .V2 FIX STRING>
+		    <SET V1 <DRDA .ADR .V1>>>
+	       <SET V2 <DRDA .ADR .V2>>
+	       <COND (<AND <TYPE? .V1 LIST> <1? <LENGTH .V1>>>
+		      <SET V1 <1 .V1>>)>
+	       <COND (<AND <TYPE? .V2 LIST> <1? <LENGTH .V2>>>
+		      <SET V2 <1 .V2>>)>
+	       <AND <N=? .V1 .V2> .V1>)>>
+
+"DATLIST -- used to return a list of the contents of several fields.
+Returns FALSE if the first field specified doesn't exist."
+
+<DEFINE DATLIST (ADR L "AUX" TMP (FIRST T) (CURSPACE ,MSG-SPACE))
+	#DECL ((ADR) STRING (L) LIST (VALUE) <OR LIST FALSE>
+	       (CURSPACE) <SPECIAL SPACE> (TMP) ANY (FIRST) <OR ATOM FALSE>)
+	<COND (<EMPTY? .L> <>)
+	      (ELSE
+	       <MAPF ,ALLIST
+		     <FUNCTION (D)
+			  #DECL ((D) ANY)
+			  <SET TMP <>>
+			  <COND (<TYPE? .D FIX STRING>
+				 <SET TMP <DRDA .ADR .D>>)>
+			  <COND (<AND .FIRST <NOT .TMP>> <MAPLEAVE <>>)
+				(ELSE <SET FIRST <>>)>
+			  <MAPRET .TMP>>
+		     .L>)>>
+
+<ENDPACKAGE>

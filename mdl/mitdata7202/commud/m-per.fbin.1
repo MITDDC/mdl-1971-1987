@@ -1,0 +1,70 @@
+'<PCODE "1M-PER">
+
+<PACKAGE "M-PER"> 
+
+<ENTRY PERSONAL-PROCESSING AUTHOR-PROCESSING RECEIVER-PROCESSING PRC-ERR> 
+
+<USE "AP" "FIELDS" "M-DEFS" "M-READ" "M-ERR" "M-PRCD" "DMAIL" "MADMAN"> 
+
+<DEMON-PROCESS "AUTHOR-PROCESSING" AUTHOR-PROCESSING PRC-ERR [,FATAL ,FATAL ,
+FATAL <> ,FATAL ,FATAL]> 
+
+<DEMON-PROCESS "RECEIVER-PROCESSING" RECEIVER-PROCESSING PRC-ERR [,FATAL ,FATAL 
+,FATAL <> ,FATAL ,FATAL]> 
+
+<DEMON-PROCESS "PERSONAL-PROCESSING" PERSONAL-PROCESSING PRC-ERR [,FATAL ,FATAL 
+,FATAL <> ,FATAL ,FATAL]> 
+
+\ 
+
+<GDECL (EH) HANDLER> 
+
+<SETG PERSONAL-PROCESSING  %<RSUBR!- '[ %<PCODE!- "1M-PER" 0> 
+PERSONAL-PROCESSING #DECL ("VALUE" <OR ATOM FALSE> ADDRESS) ADDBACK AP? LST-DO 
+WATCH AFALSE OK? DRD %<RGLOC MSG-SPACE T> %<TYPE-W SPACE VECTOR> 
+"AUTHOR-PROCESSING" "RECEIVER-PROCESSING" T EH "ERROR" %<RGLOC PERHND T> "INPUT"
+ PRC-ACT (ACTIVATION) %<RGLOC SCRATCH-SPACE T> %<RGLOC MDB T> %<INTERNAL-RSUBR 
+AVECTOR 262143> %<INTERNAL-RSUBR ASTRING 262143> %<INTERNAL-RSUBR ALIST 262143> 
+"APPLY" "EVAL" "FALSE FROM EVAL" %<RGLOC EH T> "     The " 
+" process failed because " 
+"the specifications obtained
+were not in the proper format.  I.e., the data in the " "
+field was unusable." 
+"an error occurred while
+processing an 'INPUT' command.  The error result from the input handler
+was:
+
+" 
+"an unrecognized or
+unimplemented command was encountered in the processing specifications.
+The bad command was:
+
+" 
+"a non-applicable object was
+encountered in a list of arguments to be APPLYed, i.e., using the
+APPLY command.  The bad object was:
+
+" 
+"an MDL error was generated
+during processing of an APPLY, INPUT, or EVAL command.  The arguments
+to the ERROR call were:
+
+"]>> 
+<AND <ASSIGNED? GLUE> .GLUE <PUT ,PERSONAL-PROCESSING PGLUE ![715784192 0 0!]>> 
+
+
+<SETG RECEIVER-PROCESSING ,PERSONAL-PROCESSING> 
+
+<SETG AUTHOR-PROCESSING ,PERSONAL-PROCESSING> 
+
+<SETG PERHND %<RSUBR-ENTRY '[PERSONAL-PROCESSING PERHND #DECL ("VALUE" ANY 
+"TUPLE" TUPLE)] 371>> 
+
+\ 
+
+"ERROR-ANALYZER" 
+
+<SETG PRC-ERR %<RSUBR-ENTRY '[PERSONAL-PROCESSING PRC-ERR #DECL ("VALUE" <OR 
+FALSE LIST> STRING <FALSE FIX> ADDRESS)] 435>> 
+
+<ENDPACKAGE> 

@@ -1,0 +1,20 @@
+Compilation record for: DSK:MUDBUG;FRMSP UJMB08
+Output file:  DSK:MUDBUG;FRMSP NBIN
+
+It is now Tuesday, 27 Nov 1979 18:12 EST
+
+File loaded.
+Precompilation loaded.
+Functions ordered.
+COMPILING FRTYPE!-FRMSP!-PACKAGE
+*** NOTE	Special variable never used: FRACT 
+Peephole  0% 289/287
+Job done in:  45 / 3:02
+   
+
+Total time used is
+	55 sec. CPU time,
+	18 sec. garbage collector CPU time,
+	3 min. 28 sec. real time.
+CPU utilization is 26.442307%.
+Number of garbage collects = 3

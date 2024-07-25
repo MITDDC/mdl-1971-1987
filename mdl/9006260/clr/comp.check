@@ -1,0 +1,245 @@
+
+"PROBLEMS CAUSED BY CHECK:VARS IN CACS - CLR - 2/18/78 "
+
+<DEFINE PRINARGL (L PB OUTC M "AUX" POS Q (OL .L))
+	#DECL ((L) <SPECIAL LIST> (PB M) FIX (POS) FIX (OL) LIST
+	       (Q) <OR LIST STRING FALSE> (OUTC) <CHANNEL [12 ANY] [4 FIX]>)
+	<COND (<CHECK .L 0 .L .OUTC .M>
+	       <PRINC !\( .OUTC>
+	       <LIST-ELEMENTS .L .OUTC <+ .M 1>>
+	       <PRINC !\) .OUTC>
+	       #FALSE ())
+	      (ELSE
+	       <COND (<NOT <CHECK <SET Q <ABUNCH L>> -1 .L .OUTC .M>>
+		      <TERPRI .OUTC>
+		      <INDENT-TO .PB .OUTC>)>
+	       <PRINC !\( .OUTC>
+	       <SET POS <LINPOS .OUTC>>
+	       <REPEAT ((FIRST T) (N <+ .M 1>))
+		       #DECL ((FIRST) <OR FALSE ATOM> (N) FIX)
+		       <COND (<NOT .Q> <RETURN>)>
+		       <COND (<TYPE? .Q STRING>
+			      <COND (<NOT .FIRST> <TERPRI .OUTC>
+				     <INDENT-TO .POS .OUTC>)>
+			      <PRIN1 .Q .OUTC>
+			      <COND (<LIST-COMMENTS .OL .OUTC .M>
+				     <OR <EMPTY? .L>
+					 <TERPRI .OUTC>
+					 <INDENT-TO .POS .OUTC>>)
+				    (<NOT <EMPTY? .L>> <PRINC !\  .OUTC>)>)
+			     (<LIST-BLOCKP .OL <LINPOS .OUTC> .OUTC .N .L>)>
+		       <SET FIRST <>>
+		       <SET OL .L>
+		       <SET Q <ABUNCH L>>>
+	       <PRINC !\) .OUTC>
+	       <TERPRI .OUTC>
+	       T)>>
+
+	<PSEUDO <SETG FRM2!-TMP 0>>
+	<PSEUDO <SETG FRM1!-TMP 4>>
+	<TITLE PRINARGL #FALSE ()>
+	<DECLARE ("VALUE" <OR ATOM FALSE> LIST FIX <CHANNEL [12 ANY] [4 FIX]> 
+FIX)>
+	<`PUSH  `TP*  `(AB) >
+	<`PUSH  `TP*  `(AB)  1>
+	<`PUSH  `TP*  `(AB)  2>
+	<`PUSH  `TP*  `(AB)  3>
+	<`PUSH  `TP*  `(AB)  4>
+	<`PUSH  `TP*  `(AB)  5>
+	<`PUSH  `TP*  `(AB)  6>
+	<`PUSH  `TP*  `(AB)  7>
+	<`PUSHJ  `P*  PRINARGL0!-TMP>
+	<`JRST  |FINIS >
+	<INTERNAL-ENTRY PRINARGL0!-TMP 4>
+	<`SUBM  `M*  `(P) >
+	<`PUSH  `TP*  <TYPE-WORD FIX>>
+	<`PUSH  `TP*  [0]>
+	<`PUSH  `TP*  [0]>
+	<`PUSH  `TP*  [0]>
+	<`PUSH  `TP*  [<(39) -1>]>
+	<`PUSH  `TP*  <MQUOTE 'L>>
+	<`PUSH  `TP*  `(TP)  -13>
+	<`PUSH  `TP*  `(TP)  -13>
+	<`PUSH  `TP*  <MQUOTE '(LIST)> -1>
+	<`PUSH  `TP*  <MQUOTE '(LIST)>>
+	<`PUSHJ  `P*  |SPECBN >
+	<`PUSH  `TP*  `(TP)  -3>
+	<`PUSH  `TP*  `(TP)  -3>
+	<INTGO>
+	<`PUSH  `TP*  `(TP)  -5>
+	<`PUSH  `TP*  `(TP)  -5>
+	<`PUSH  `TP*  <TYPE-WORD FIX>>
+	<`PUSH  `TP*  [0]>
+	<`PUSH  `TP*  `(TP)  -9>
+	<`PUSH  `TP*  `(TP)  -9>
+	<`PUSH  `TP*  <TYPE-WORD CHANNEL>>
+	<`PUSH  `TP*  `(TP)  -21>
+	<`PUSH  `TP*  <TYPE-WORD FIX>>
+	<`PUSH  `TP*  `(TP)  -21>
+	<MCALL 5 CHECK>
+	<GETYP `O  `A >
+	<`CAIN  `O  <TYPE-CODE FALSE>>
+	<`JRST  PHRASE7!-TMP>
+	<`MOVE  `A*  <TYPE-WORD CHANNEL>>
+	<`MOVE  `B*  `(TP)  -14>
+	<`MOVEI  `D*  40>
+	<`PUSHJ  `P*  |CPCH >
+	<`PUSH  `TP*  `(TP)  -5>
+	<`PUSH  `TP*  `(TP)  -5>
+	<`PUSH  `TP*  <TYPE-WORD CHANNEL>>
+	<`PUSH  `TP*  `(TP)  -17>
+	<`MOVE  `A*  `(TP)  -16>
+	<`ADDI  `A*  1>
+	<`PUSH  `TP*  <TYPE-WORD FIX>>
+	<`PUSH  `TP*  `A >
+	<MCALL 3 LIST-ELEMENTS>
+	<`MOVE  `A*  <TYPE-WORD CHANNEL>>
+	<`MOVE  `B*  `(TP)  -14>
+	<`MOVEI  `D*  41>
+	<`PUSHJ  `P*  |CPCH >
+	<`MOVE  `A*  <TYPE-WORD FALSE>>
+	<`MOVEI  `B* >
+	<`JRST  PHRASE8!-TMP>
+PHRASE7!-TMP							;60
+	<`PUSH  `TP*  <MQUOTE 'L> -1>
+	<`PUSH  `TP*  <MQUOTE 'L>>
+	<MCALL 1 ABUNCH>
+	<`PUSH  `TP*  `A >
+	<`PUSH  `TP*  `B >
+	<`PUSH  `TP*  <TYPE-WORD FIX>>
+	<`PUSH  `TP*  [-1]>
+	<`PUSH  `TP*  `(TP)  -9>
+	<`PUSH  `TP*  `(TP)  -9>
+	<`PUSH  `TP*  <TYPE-WORD CHANNEL>>
+	<`PUSH  `TP*  `(TP)  -21>
+	<`PUSH  `TP*  <TYPE-WORD FIX>>
+	<`PUSH  `TP*  `(TP)  -21>
+	<`MOVEM  `A*  `(TP)  -19>
+	<`MOVEM  `B*  `(TP)  -18>
+	<MCALL 5 CHECK>
+	<GETYP `O  `A >
+	<`CAIE  `O  <TYPE-CODE FALSE>>
+	<`JRST  PHRASE10!-TMP>
+	<`MOVE  `A*  <TYPE-WORD CHANNEL>>
+	<`MOVE  `B*  `(TP)  -14>
+	<`PUSHJ  `P*  |CITERP >
+	<`PUSH  `TP*  <TYPE-WORD FIX>>
+	<`PUSH  `TP*  `(TP)  -17>
+	<`PUSH  `TP*  <TYPE-WORD CHANNEL>>
+	<`PUSH  `TP*  `(TP)  -17>
+	<MCALL 2 INDENT-TO>
+PHRASE10!-TMP							;87
+	<`MOVE  `A*  <TYPE-WORD CHANNEL>>
+	<`MOVE  `B*  `(TP)  -14>
+	<`MOVEI  `D*  40>
+	<`PUSHJ  `P*  |CPCH >
+	<`MOVE  `A*  `(TP)  -14>
+	<`MOVE  `B*  (`A ) 27>
+	<`PUSH  `TP*  <MQUOTE 'T> -1>
+	<`PUSH  `TP*  <MQUOTE 'T>>
+	<`MOVE  `C*  `(TP)  -14>
+	<`ADDI  `C*  1>
+	<`PUSH  `TP*  <TYPE-WORD FIX>>
+	<`PUSH  `TP*  `C >
+	<`MOVEM  `B*  `(TP)  -14>
+AGAIN13!-TMP							;100
+	<`SKIPGE  |INTFLG >
+	<`SAVAC*  [<(#WORD *000000150000*) #WORD *000000000000*>]>
+	<GETYP `O  <- -11 ,FRM2!-TMP ,FRM1!-TMP> 2 `(TP) >
+	<`CAIE  `O  <TYPE-CODE FALSE>>
+	<`JRST  PHRASE17!-TMP>
+	<`SUB  `TP*  [<(4) 4>]>
+	<`JRST  EXIT11!-TMP>
+PHRASE17!-TMP							;107
+	<`MOVEM  `A*  `(TP)  -18>
+	<GETYP `O  <- -11 ,FRM2!-TMP ,FRM1!-TMP> 2 `(TP) >
+	<`CAIE  <TYPE-CODE STRING>>
+	<`JRST  PHRASE21!-TMP>
+	<`SKIPGE  `(TP)  -2>
+	<`JRST  PHRASE23!-TMP>
+	<`MOVE  `B*  `A >
+	<`MOVE  `A*  <TYPE-WORD CHANNEL>>
+	<`PUSHJ  `P*  |CITERP >
+	<`PUSH  `TP*  `(TP)  -15>
+	<`PUSH  `TP*  `(TP)  -15>
+	<`PUSH  `TP*  <TYPE-WORD CHANNEL>>
+	<`PUSH  `TP*  `(TP)  -21>
+	<MCALL 2 INDENT-TO>
+PHRASE23!-TMP							;121
+	<`MOVE  `A*  <TYPE-WORD CHANNEL>>
+	<`MOVE  `B*  `(TP)  -18>
+	<`MOVE  `C*  `(TP)  -13>
+	<`MOVE  `D*  `(TP)  -12>
+	<`MOVEM  `B*  `(TP)  -18>
+	<`PUSHJ  `P*  |CP1STR >
+	<`PUSH  `TP*  `(TP)  -5>
+	<`PUSH  `TP*  `(TP)  -5>
+	<`PUSH  `TP*  <TYPE-WORD CHANNEL>>
+	<`PUSH  `TP*  `(TP)  -21>
+	<`PUSH  `TP*  <TYPE-WORD FIX>>
+	<`PUSH  `TP*  `(TP)  -21>
+	<MCALL 3 LIST-COMMENTS>
+	<GETYP `O  `A >
+	<`CAIN  `O  <TYPE-CODE FALSE>>
+	<`JRST  PHRASE25!-TMP>
+	<`MOVE  `A*  `(TP)  -8>
+	<`JUMPE  `A*  COND18!-TMP>
+	<`MOVE  `A*  <TYPE-WORD CHANNEL>>
+	<`MOVE  `B*  `(TP)  -18>
+	<`PUSHJ  `P*  |CITERP >
+	<`PUSH  `TP*  `(TP)  -15>
+	<`PUSH  `TP*  `(TP)  -15>
+	<`PUSH  `TP*  <TYPE-WORD CHANNEL>>
+	<`PUSH  `TP*  `(TP)  -21>
+	<MCALL 2 INDENT-TO>
+	<`JRST  COND18!-TMP>
+PHRASE25!-TMP							;148
+	<`MOVE  `A*  `(TP)  -8>
+	<`JUMPE  `A*  COND18!-TMP>
+	<`MOVE  `A*  <TYPE-WORD CHANNEL>>
+	<`MOVE  `B*  `(TP)  -18>
+	<`MOVEI  `D*  32>
+	<`PUSHJ  `P*  |CPCH >
+	<`JRST  COND18!-TMP>
+PHRASE21!-TMP							;155
+	<`PUSH  `TP*  `(TP)  -5>
+	<`PUSH  `TP*  `(TP)  -5>
+	<`PUSH  `TP*  <TYPE-WORD FIX>>
+	<`PUSH  `TP*  (`A ) 27>
+	<`PUSH  `TP*  <TYPE-WORD CHANNEL>>
+	<`PUSH  `TP*  `A >
+	<`PUSH  `TP*  `(TP)  -7>
+	<`PUSH  `TP*  `(TP)  -7>
+	<`PUSH  `TP*  `(TP)  -17>
+	<`PUSH  `TP*  `(TP)  -17>
+	<`MOVEM  `A*  `(TP)  -28>
+	<MCALL 5 LIST-BLOCKP>
+COND18!-TMP							;167
+	<`MOVE  `A*  <TYPE-WORD FALSE>>
+	<`MOVEI  `B* >
+	<`MOVE  `C*  `(TP)  -8>
+	<`PUSH  `TP*  <MQUOTE 'L> -1>
+	<`PUSH  `TP*  <MQUOTE 'L>>
+	<`MOVEM  `A*  `(TP)  -5>
+	<`MOVEM  `B*  `(TP)  -4>
+	<`MOVEM  `C*  `(TP)  -6>
+	<MCALL 1 ABUNCH>
+	<`MOVEM  `A*  `(TP)  -13>
+	<`MOVEM  `B*  `(TP)  -12>
+	<`MOVE  `A*  `(TP)  -18>
+	<`JRST  AGAIN13!-TMP>
+EXIT11!-TMP							;180
+	<`MOVEM  `A*  `(TP)  -14>
+	<`MOVE  `B*  `A >
+	<`MOVE  `A*  <TYPE-WORD CHANNEL>>
+	<`MOVEI  `D*  41>
+	<`PUSHJ  `P*  |CPCH >
+	<`MOVE  `A*  <TYPE-WORD CHANNEL>>
+	<`MOVE  `B*  `(TP)  -14>
+	<`PUSHJ  `P*  |CITERP >
+	<`MOVE  `A*  <MQUOTE 'T> -1>
+	<`MOVE  `B*  <MQUOTE 'T>>
+PHRASE8!-TMP							;190
+	<`SUB  `TP*  [<(20) 20>]>
+	<`PUSHJ  `P*  |SSPECS >
+	<`JRST  |MPOPJ >

@@ -1,0 +1,29 @@
+<PACKAGE "M-HNG">
+
+<ENTRY DIRHNG WORK-DIRS NEW-WORK>
+
+"DIRHNG sets up interrupts for each directory in its argument, which looks
+like:  [dir:string
+	...]"
+
+<SETG WORK-DIRS <>>
+<SETG NEW-WORK <>>
+<GDECL (WORK-DIRS) <OR FALSE <VECTOR [REST STRING]>>
+       (NEW-WORK) <OR ATOM FALSE>>
+
+<DEFINE DIRHNG ("TUPLE" DIRS "AUX" C)
+	#DECL ((DIRS) <TUPLE [REST STRING]> (C) <OR FALSE CHANNEL>)
+	<SETG WORK-DIRS <VECTOR !.DIRS>>
+	<REPEAT ()
+		<COND (<EMPTY? .DIRS> <RETURN>)>
+		<COND (<SET C
+			    <OPEN "READ" ".FILE." "(DIR)" "DIRHNG" <1 .DIRS>>>
+		       <ON "CHAR" ,DIRHNGER 4 <MAIN> .C>)>
+		<SET DIRS <REST .DIRS>>>>
+
+<DEFINE DIRHNGER (CHAN)
+	#DECL ((CHAN) CHANNEL)
+	<SETG NEW-WORK T>
+	<DISMISS T>>
+
+<ENDPACKAGE>

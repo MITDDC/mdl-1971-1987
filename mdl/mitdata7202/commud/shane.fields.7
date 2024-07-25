@@ -1,0 +1,192 @@
+I.MAILBOX FORMAT
+    
+     mailbox := (uname) | (uname host) | (uname host port)
+	        | (uname host port person) | (uname host port person extra)
+
+     uname   := STRING
+
+     host    := STRING | FALSE
+
+     port    := STRING | FIX | FALSE
+
+     person  := STRING | FALSE
+
+     extra   := (name value name value ...)
+
+     name    := STRING
+
+     value   := ANY
+
+A mailbox is a LIST which contains at least one element. The MDL decl pattern
+for a mailbox is:
+
+        <LIST STRING [OPT <OR STRING FALSE>
+                          <OR STRING FALSE>
+                          <OR STRING FALSE>
+                          <LIST [REST STRING ANY]>]>
+
+II. BODY FORMAT
+
+	body := structure
+
+	structure := medium | multiple_media
+
+	multiple-media := [presentation_mode (structure structure ... )]
+
+	medium := text | notes | enclosures | exotic 
+
+	text := (STRING STRING ... )
+
+	exotic := [media_name (format ANY ... "RFC767" source ... format ANY)]
+
+	format := STRING
+
+	media_name := "FAX" | "IMAGE" | "VOICE" | "GRAPHICS"
+
+	file := CHANNEL | STRING
+
+	source := STRING | CHANNEL | UVECTOR | BYTES
+
+	presentation-mode := "INDEPENDENT" | "SEQUENTIAL" | "SIMULTANEOUS"
+                             | "BRANCH" | FALSE
+
+III. DOCUMENT FORMAT
+
+	message := [name value name value ...]
+
+	name := STRING
+
+	value := ANY
+
+                      DEFINED NAMES AND ASSOCIATED VALUES
+
+
+"WHEN-ORIGINATED"    	FIX       
+
+        A machine dependent integer which specifies the date and time a message
+        was created. (DATE)
+
+"MESSAGE-ID"		STRING
+
+	A unique (with respect to COMSYS database) identifier. (MESSAGE-ID)
+
+"FROM"		<LIST mailbox [REST mailbox]>
+	
+	Identifies originator(s) of a message. (FROM)
+
+
+"SENDER"	mailbox
+
+	Identifies actual sender of message. Appears only if sender is
+	is not the message originator. (SENDER)
+
+
+"REPLY-TO"   	<LIST mailbox [REST mailbox]>
+
+	The mailbox(es) to which message reply should be directed. (REPLY-TO)
+
+
+"SUBJECT"	STRING
+
+	Brief description of contents or purpose of message. (SUBJECT)
+
+
+"IN-REPLY-TO"	STRING
+
+	Indicates message is a response to a previously received message and
+	identifies the previous message. (RE)
+
+
+"TO"    	<LIST mailbox [REST mailbox]>
+	
+	Mailbox(es) to whom message is addressed. (TO)
+
+
+"CARBON-COPY-TO"  	<LIST mailbox [REST mailbox]>
+
+	Mailbox(es) receiving copy of message. (CC)
+
+
+"BLIND"   	<LIST mailbox [REST mailbox]>
+
+	Mailbox(es) receiving blind copy of message. (BCC)
+
+"KEYWORDS"	<LIST STRING [REST STRING]>
+
+	Identifies keywords appearing in message. (KEYWORDS)
+
+
+"REFERENCES"	<LIST STRING [REST STRING]>
+
+	Identifies documents referred to in message. (REFERENCES)
+
+
+	See description above. (ENCLOSURES)
+
+"COMMENTS"      STRING
+
+        Comments on the message. (COMMENTS)
+
+"MISCELLANEOUS" 	<LIST [REST STRING <OR STRING FIX>]>	
+
+        A list of name-value pairs. This field is intended for use as a 
+        catchall for header fields not supported by COMSYS (such as 
+        article-id, etc).
+
+"BODY"		body
+
+	See description above. The actual body of the message. The "BODY"      
+        field should be the last element of a message vector. (BODY)
+
+IV. MESSAGE EXAMPLES.
+
+["WHEN-ORIGINATED"
+ 11832292846
+ "FROM"
+ (("SHANE" "MIT-XX.ARPA" <> "K. Shane Hartman"))
+ "TO"
+ (("FINN" "USC-ISIF.ARPA" <> "Gregory G. Finn"))
+ "CARBON-COPY-TO"
+ (("SHANE"))
+ "SUBJECT"
+ "Test of the new multimedia mail system."
+ "BODY"
+ ("Beautiful and bright it should be on the surface, feathery and evanescent,
+   one colour melting into another like the colours on a butterfly's wing;
+   but beneath the fabric must be clamped together with bolts of iron."
+  "- Virginia Woolf")]
+
+["WHEN-ORIGINATED"
+ 11832292846
+ "FROM"
+ (("PDL" "MIT-XX.ARPA" <> "P. David Lebling")
+  ("SHANE" "MIT-XX.ARPA" <> "K. Shane Hartman")
+  ("SWG" "MIT-XX.ARPA" <> "Stuart Galley"))
+ "SENDER"
+ ("SHANE")
+ "TO"
+ (("POSTEL" "USC-ISIF.ARPA" <> "Jon Postel"))
+ "CARBON-COPY-TO"
+ (("AV" "MIT-XX.ARPA" <> "Al Vezza"))
+ "SUBJECT"
+ "Our first image."
+ "BODY"
+ [#FALSE ()
+  (("Howdy,"                                    
+    "Enclosed you will find an image of the Earth floating beneath the logo of
+     the Laboratory for Computer Science. The Earth image was produced by a
+     program written at MIT-MULTICS several years ago. The program accepted two
+     coordinates, latitude and longitude, and drew an Earth image centered at
+     those coordinates. Yep, you guessed it, this image is centered at
+     Cambridge. I wish you luck in decoding this message ... and happy 
+     hacking!")
+   ["IMAGE"
+    ("BG"                                      ;"Possible representation for a"
+     ("FILE" "<AMS>LCS.BG" "X" 768 "Y" 1024)     ;"display program."
+     "RFC767"                                  ;"Required representation."
+     "<AMS>LCS.ENCODED"
+     "PRESS"
+     "<AMS>LCS.PRESS")])]]
+
+
+

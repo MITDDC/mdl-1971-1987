@@ -1,0 +1,240 @@
+<PACKAGE "M-TST">
+
+<ENTRY MAIL MLFL MAIL-ALL MLFL-ALL MAIL-TEST MLFL-TEST SERVERS ICP-RETRY>
+
+<USE-TOTAL "M-DLV">
+
+<USE "M-DEFS" "M-TIME" "HOSTS" "NETFTP" "STR" "PRTUTI">
+
+<SETG ICP-RETRY 1>
+
+<SETG VERBOSE? <>>
+
+<DEFINE MAIL ("OPTIONAL" (V <>)) <MAIL-ALL "MTST >" .V>>
+
+<DEFINE MAIL-ALL ("OPTIONAL" (FIL "MTST >") (V? <>)
+		  "AUX" (OUTCHAN .OUTCHAN) (P ,MAIL-PEOPLE))
+	#DECL ((FIL) <OR FALSE STRING> (OUTCHAN) <SPECIAL <OR FALSE CHANNEL>>
+	       (P) VECTOR)
+	<SETG VERBOSE? .V?>
+	<COND (.FIL
+	       <SET OUTCHAN <OPEN "PRINT" .FIL>>
+	       <PUT <TOP .OUTCHAN> 1 (,OUTCHAN)>)>
+	<REPEAT ()
+		<COND (<EMPTY? .P> <AND .FIL <CLOSE .OUTCHAN>> <RETURN>)>
+		<COND (<AND <NOT <1 .P>> .FIL>
+		       <PUT .P 1 <MAIL-TEST <HOST <2 .P>>>>)
+		      (<AND <NOT .FIL> <TYPE? <1 .P> FIX>> <PUT .P 1 <>>)>
+		<SET P <REST .P 2>>>>
+
+<DEFINE MLFL ("OPTIONAL" (V <>)) <MLFL-ALL "MLFL >" .V>>
+
+<DEFINE MLFL-ALL ("OPTIONAL" (FIL "MLFL >") (V? <>)
+	      "AUX" (OUTCHAN .OUTCHAN) (P ,MLFL-PEOPLE))
+	#DECL ((FIL) <OR FALSE STRING> (OUTCHAN) <SPECIAL <OR FALSE CHANNEL>>
+	       (P) VECTOR)
+	<SETG VERBOSE? .V?>
+	<COND (.FIL
+	       <SET OUTCHAN <OPEN "PRINT" .FIL>>
+	       <PUT <TOP .OUTCHAN> 1 (,OUTCHAN)>)>
+	<REPEAT ()
+		<COND (<EMPTY? .P> <AND .FIL <CLOSE .OUTCHAN>> <RETURN>)>
+		<COND (<AND <NOT <1 .P>> .FIL>
+		       <PUT .P 1 <MLFL-TEST <HOST <3 .P>> <2 .P>>>)
+		      (<AND <NOT .FIL> <TYPE? <1 .P> FIX>> <PUT .P 1 <>>)>
+		<SET P <REST .P 3>>>>
+
+<DEFINE MAIL-TEST (HST "OPTIONAL" (RCVR "Fzorkness")
+		   "AUX" REPLY (RES <>) (FTP <>) OCH ICH S CD)
+	#DECL ((RCVR) STRING (HST) <OR FALSE FIX> (ICH OCH) CHANNEL
+	       (FTP) <OR FALSE LIST> (REPLY) <OR FIX FALSE> (S) STRING (CD) FIX)
+	<UNSOAK>
+	<PROG ()
+	      <HEADER .HST .RCVR>
+	      <SET RES
+		   <PROG NETOUT ()
+			 #DECL ((NETOUT) <SPECIAL ACTIVATION>)
+			 <COND (<NOT <SET FTP <MAIL-ICP .HST>>>
+				<RETURN #FALSE (ICP-FAILED)>)>
+			 <SET OCH <2 .FTP>>
+			 <SET ICH <1 .FTP>>
+			 <COND (<NOT <SET REPLY <FTP-LOGIN "MAIL" .RCVR .ICH .OCH>>>
+				<RETURN <CHTYPE (BAD-RESP ,LAST-RESP) FALSE>>)>
+			 <SCROUT "Beginning Transfer">
+			 <PMSG .OCH>
+			 <PRINC ,EOM .OCH>
+			 <COND (<NOT <WAITRESP .ICH '(256)>> #FALSE (NO-256))>
+			 <SCROUT "Transfer Complete and Acknowledged.">
+			 T>>
+	      <CLOSE-CONN .FTP>>
+	<OFF ,EHAN>
+	<OFF ,IHAN>
+	.RES>
+
+<DEFINE MLFL-TEST (HST "OPTIONAL" (RCVR "Fzorkness")
+		   "AUX" REPLY (RES <>) (FTP <>) OCH ICH ODCH S
+			 SOCK MM (DAT <>))
+	#DECL ((RCVR) STRING (HST) <OR FALSE FIX> (ICH OCH) CHANNEL
+	       (ODCH) <OR FALSE CHANNEL>
+	       (MM) <OR FALSE STRING> (FTP) <OR FALSE LIST>
+	       (REPLY) <OR FIX FALSE> (S) STRING)
+	<COND (,VERBOSE?
+	       <CRLF ,OUTCHAN>
+	       <PRINC .HST ,OUTCHAN>
+	       <INDENT-TO 4 ,OUTCHAN>
+	       <PRINC <HOST .HST> ,OUTCHAN>
+	       <PRINC !\  ,OUTCHAN>
+	       <PRINC .RCVR ,OUTCHAN>)>
+	<UNSOAK>
+	<PROG ()
+	      <HEADER .HST .RCVR>
+	      <SET RES
+		   <PROG NETOUT ()
+			 #DECL ((NETOUT) <SPECIAL ACTIVATION>)
+			 <COND (<NOT <SET FTP <MAIL-ICP .HST>>>
+				<RETURN #FALSE (ICP-FAILED)>)>
+			 <SET OCH <2 .FTP>>
+			 <SET ICH <1 .FTP>>
+			 <COND (<NOT <SET REPLY <FTP-LOGIN "MLFL" .RCVR .ICH .OCH>>>
+				<RETURN <CHTYPE (BAD-RESP ,LAST-RESP) FALSE>>)>
+			 <SET S ,LAST-RESP>
+			 <COND (<SET MM <SUBSNC "SOCK " .S>>)
+			       (ELSE <RETURN #FALSE (NO-SOCKET)>)>
+			 <SET MM <REST .MM 5>>
+			 <SET SOCK <PARSE .MM>>
+			 <SCROUT "Connecting to Socket " .SOCK>
+			 <COND (<SET ODCH <DATA-LISTEN .HST .ICH .SOCK>>)
+			       (ELSE <RETURN .ODCH>)>
+			 <COND (<NOT <WAITRESP .ICH '(250)>>
+				<CLOSE .ODCH>
+				<AND <GASSIGNED? RHAN> <OFF ,RHAN>>
+				<RETURN #FALSE (NO-250)>)>
+			 <AND <GASSIGNED? RHAN> <OFF ,RHAN>>
+			 <PMSG .ODCH>
+			 <CLOSE .ODCH>
+			 <COND (<NOT <WAITRESP .ICH '(252)>>
+				<RETURN #FALSE (NO-252)>)>
+			 <SCROUT "Transfer Complete and Acknowledged.">
+			 T>>
+	      <CLOSE-CONN .FTP>>
+	<OFF ,EHAN>
+	<OFF ,IHAN>
+	<COND (,VERBOSE? <INDENT-TO 40 ,OUTCHAN> <PRIN1 .RES ,OUTCHAN>)>
+	.RES>
+
+<SETG DATA-CHANNEL <>>
+
+<DEFINE DATA-LISTEN (HST ICH SOCK)
+	<SET DCH <OPEN "PRINT" <+ 3 <7 .ICH>> -1 "NET" .HST 8>>
+	<COND (<NETACC .DCH> <SCROUT "RFC Ready">)
+	      (ELSE <SETG RHAN <ON "CHAR" ,DATA-ACCEPT 3 0 .DCH>>)>
+	.DCH>
+
+<DEFINE DATA-ACCEPT (NS DC)
+	<COND (<AND .DC <NETACC .DC>>
+	       <SCROUT "RFC Accepted">
+	       <OFF ,RHAN>
+	       <DISMISS T>)>>
+
+<DEFINE CLOSE-CONN (F)
+	<COND (.F <CLOSE <1 .F>> <CLOSE <2 .F>>)>>
+
+<DEFINE MAIL-ICP (HST "AUX" (ICPCNT ,ICP-RETRY) FTP)
+	<WATCH EHAN "ERROR" ,ERRHND 4>
+	<WATCH IHAN "IOC" ,IOCHND 4>
+	<REALTIMER 60>
+	<REPEAT ()
+		<COND (<SET FTP <ICP .HST 3>>
+		       <SCROUT "ICP Successful">
+		       <RETURN .FTP>)
+		      (<NOT .FTP>
+		       <SET ICPCNT <- .ICPCNT 1>>
+		       <COND (<L? .ICPCNT 0> <RETURN <>>)
+			     (ELSE
+			      <SLEEP 5>
+			      <SCROUT "Retrying ICP">)>)>>>
+
+<DEFINE FTP-LOGIN (CMD RCVR ICH OCH "AUX" M REPLY)
+	<SET REPLY <WAITRESP .ICH '(300)>>
+	<COND (<NOT .REPLY>)
+	      (ELSE
+	       <PR .OCH .CMD " " .RCVR>
+	       <SET REPLY <WAITRESP .ICH '(255 350 504)>>
+	       <COND (<==? .REPLY 255>)
+		     (<==? .REPLY 350>)
+		     (<==? .REPLY 504>
+		      <PR .OCH "USER NETML">
+		      <WAITRESP .ICH '(330)>
+		      <PR .OCH "PASS NETML">
+		      <WAITRESP .ICH '(230)>
+		      <PR .OCH .CMD " " .RCVR>
+		      <SET REPLY <WAITRESP .ICH '(255 350)>>)>)>
+	.REPLY>
+
+<DEFINE SERVERS ("AUX" (N 0) S)
+	<MAPF ,VECTOR
+	      <FUNCTION ()
+		  <COND (<==? <SET N <+ .N 1>> 400> <MAPSTOP>)
+			(<AND <SET S <SERVER .N>> <NOT <0? .S>>>
+			 <MAPRET <HOST .N>>)
+			(<MAPRET>)>>>>
+
+\
+
+<SETG EOL "
+">
+
+<DEFINE HEADER (HST ADR "AUX" (HSTS ""))
+	<COND (<L? .HST 10> <SET HSTS "  ">)
+	      (<L? .HST 100> <SET HSTS " ">)>
+	<COND (<AND .HST .ADR>
+		 <COND (<1? <SET SRV <SERVER .HST>>>
+			<SCROUT ,EOL ">>>>>>> " .HSTS .HST " == " <HOST .HST>>)
+		       (<0? .SRV>
+			<SCROUT ,EOL "======= " .HSTS .HST
+				" == " <HOST .HST> " -- not a server">
+			<RETURN <>>)
+		       (<SCROUT ,EOL "------- " .HSTS .HST " == " .ADR>
+			<RETURN <>>)>)
+		(ELSE
+		 <SCROUT ,EOL "------- " .HSTS .HST " == " .ADR>
+		 <RETURN <>>)>>
+
+<DEFINE PMSG (ODCH)
+	#DECL ((ODCH) CHANNEL)
+	<PRINC "Date:     " .ODCH>
+	<NET-P-DATE <TNOW> .ODCH>
+	<PRINC ,MSG .ODCH>>
+
+<SETG MSG
+      
+"
+From:     PDL at MIT-DMS  (P. David Lebling)
+Subject:  Survey of FTP MAIL and MLFL
+
+This is a test of the FTP MAIL and MLFL command.  No response is
+necessary. You are receiving this mail because you are a member of the
+Header-People mailing list from your Arpanet site, or because you were
+the first entry for your site I found in the Arpanet directory.
+
+Sorry to clog up your mailbox.
+
+	Dave Lebling (PDL@MIT-DMS)
+">
+
+<ENDPACKAGE>
+
+<PACKAGE "NETFTP">
+
+<DEFINE TIMED-OUT? ("AUX" W)
+	#DECL ((W) ACTIVATION (START-COUNTER) FIX)
+	<SETG CLOCK-COUNTER <+ ,CLOCK-COUNTER 1>>
+	<COND (<AND <ASSIGNED? WAIT-ACT>
+		    <LEGAL? <SET W .WAIT-ACT>>
+		    <G=? <- ,CLOCK-COUNTER .START-COUNTER> 2>>
+	       <PRINC "
+	<timed out>
+">
+	       <RETURN #FALSE () .W>)>>
+
+<ENDPACKAGE>

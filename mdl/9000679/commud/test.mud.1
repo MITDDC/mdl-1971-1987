@@ -1,0 +1,17 @@
+<USE "NETFTP" "HOSTS">
+<SETG SOAK? <>>
+
+<DEFINE CHK (HST)
+	<COND (<SET C <ICP .HST 57>>
+	       <PRINC "connection established">
+	       <WAITRESP <1 .C> '(220)>
+	       <CLOSE <1 .C>>
+	       <CLOSE <2 .C>>)>>
+
+<DEFINE TEST ("AUX" (N 0))
+	<REPEAT ()
+		<COND (<G? <SET N <+ .N 1>> 255>
+		       <RETURN>)
+		      (<SERVER .N>
+		       <PRINT <HOST .N>>
+		       <CHK .N>)>>>

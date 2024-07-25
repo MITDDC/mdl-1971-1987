@@ -1,0 +1,56 @@
+<PACKAGE "DPERFORM">
+
+<ENTRY PERFORM>
+
+<USE "DDEFS" "M-DATA" "M-TIME" "M-MSG">
+
+<DEFINE PERFORM (DISP
+		 "AUX" (TO <DTO .DISP>) (SE <DSERVICE .DISP>) (SL <>) R
+		  (SERVICES <DATUM "SERVICES">))
+	#DECL ((DISP) DISPATCH (SE) STRING (SL) <OR FALSE VECTOR>
+	       (TO) LIST (SERVICES) VECTOR)
+        <SCROUT "~~~~ " .SE " from " <DFROM .DISP> " to " .TO " ~~~~">
+	<SET R
+	     <COND (<TYPE? <SET R <MY-ROLE? .TO>> STRING>
+		    <MAPF <>
+			  <FUNCTION (ST)
+			       #DECL ((ST) <VECTOR STRING VECTOR>)
+			       <COND (<=? .SE <1 .ST>>
+				      <MAPLEAVE <SET SL <2 .ST>>>)>>
+			  .SERVICES>
+		    <COND (.SL
+			   <COND (<SET R <AND <GASSIGNED? <2 .SL>>
+					      <APPLY ,<2 .SL> .DISP>>>)
+				 (ELSE
+				  <SCROUT "~~~~ " .SE " Service Failure? ~~~~">
+				  <SCROUT "~~~~ " !.R " ~~~~">
+				  <CHTYPE ("Service failure." !.R) FALSE>)>)
+			  (ELSE
+			   <SCROUT "~~~~ " .SE " Service Unknown? ~~~~">
+			   <CHTYPE ("No such service?" .SE) FALSE>)>)
+		   (<TYPE? .R LIST>
+		    <SCROUT "~~~~ " .TO " Non-local service ~~~~">
+		    <CHTYPE ("Non-local service" !.TO) FALSE>)
+		   (ELSE
+		    <SCROUT "~~~~ " <1 .TO> " Role Unknown ~~~~">
+		    <CHTYPE ("No such role?" <1 .TO>) FALSE>)>>
+	<COND (.R)
+	      (ELSE
+	       <SENDMSG <DFROM .DISP>
+			.SE
+			"Service request failed."
+			"MAILER"
+			"DISPID" <DID .DISP>
+			"REASON" .R>
+	       T)>>
+
+<DEFINE MY-ROLE? (TO "AUX" (ROLES <DATUM "ROLES">))
+	#DECL ((TO) LIST (ROLES) <VECTOR [REST STRING]>)
+	<COND (<EMPTY? .TO> <>)
+	      (<AND <NOT <LENGTH? .TO 1>>
+		    <NOT <HOME? <HOST <2 .TO>>>>>
+	       .TO)
+	      (<MEMBER <1 .TO> .ROLES>
+	       <1 .TO>)>>
+
+<ENDPACKAGE>

@@ -1,0 +1,21 @@
+; "MSG-FORMAT-1 -- MSG FORMAT MESSAGE OUTPUT"
+
+( ("DISTRIB: " <GETFIX "DISTRIB"> ,DDT-LIST)
+  ("
+EXPIRES: " <GETFIX "EXPIRES"> ,QUICK-DATE)
+  ("
+" <GETFIX "FROM"> ,MSG-FROM)
+  (" " <GETFIX "WHEN-ORIGINATED"> ,QUICK-DATE)
+  ("  Re: " <GETFIX "SUBJECT"> 2)
+  ("
+CC To: " <GETFIX "CARBON-COPY-TO"> ,DDT-ADRL)
+  ("
+Blind CC To: " <GETFIX "BLIND"> ,DDT-ADRL)
+  ("
+" <GETFIX "TEXT"> 2)
+  ("
+Keywords: " <GETFIX "KEYWORDS"> ,DDT-LIST)
+  ("
+"))
+
+

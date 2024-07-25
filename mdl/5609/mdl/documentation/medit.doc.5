@@ -1,0 +1,69 @@
+
+
+   The MEDIT package implements an interface between MDL and EMACS.  It
+allows the user invoke an EMACS inferior to his MDL and to only
+re-load the functions that have been edited, rather than the whole
+file.  Needless to say, this capability is really nice to have when
+the load average is high.
+
+  To use MEDIT, there must be a special line in your EMACS.INIT file.
+The magic incantation is:
+
+FS LISPT"N M(M.MLoad Library)PS:<mdllib>medit'
+
+This line loads in the MEDIT library if EMACS is invoked from MDL.
+
+  To get into EMACS from MDL, do <MEDIT>$.  MEDIT will clear the
+screen, type something like "MEDIT==>" and go into EMACS.  The EMACS
+invoked will be in MEDIT mode (note the name in the lower left hand
+corner!).  The only difference between MEDIT-Emacs and regular EMACS
+is that there are two additional functions defined.  They are as
+follows:
+
+               M-z,M-Z: marks the current DEFINE, or the immediately 
+                        following DEFINE.
+
+               ^X Z:    exit from MEDIT.  Saves the marked functions
+                        and offers to save all changed buffers.  If
+                        EMACS is exited with ^X ^Z like normal, it
+                        will NOT save anything, and you will have
+                        gained nothing.
+
+As soon as ^X Z is finished, MEDIT returns to MDL and loads in the
+edited functions, if there are any.  It will type a message to this
+effect.
+
+Remember that since the EMACS is inferior to the MDL, it is not the
+same as any EMACS that may have been invoked from EXEC.  It will be
+empty when it is created.  However, successive invocations of MEDIT
+will always get the same EMACS; i.e, it will be just as it was left,
+with all buffers intact.
+
+[NOTE: Differences between MDL106 and MIM versions of MEDIT]
+
+The MDL106 version of MEDIT supports the following options:
+
+[1] MEDIT-EDITOR: SETG this atom to the string name of the exe file of
+    your preferred EMACS based editor BEFORE calling MEDIT. The default
+    is "SYS:EMACS.EXE". This switch is useful to those persons using a
+    customized, dumped EMACS.
+
+[2] MEDIT-QUERY?: If MEDIT-QUERY? is non-false, then the following
+    events will occur whenever code is transferred from EMACS to MDL:
+
+    You will be asked if you wish to name a package. If you reply no (N),
+    MEDIT reads the transferred code with the MDL default oblist-path in	
+    force, namely .OBLIST. If you reply yes (Y), and MEDIT-DEFAULT-PATH
+    is false (see below) then you will be asked to type a package name
+    (If the package is not loaded, you are informed and asked again.
+     If you type <cr> at this point, the oblist path is effectively .OBLIST).
+    You will be asked to name another package; if it is loaded, its oblists
+    will be spliced in front of the accumulated oblist path. When you have
+    named all the packages you desire, type <cr> to the prompt.
+
+[3] MEDIT-DEFAULT-PATH: If gval of this atom is non-false (should be a list
+    oblists) and MEDIT-QUERY? is non-false and you indicate that you wish to
+    name a package after returning from the editor, then you will be asked 
+    if you wish to use MEDIT-DEFAULT-PATH. If you answer yes, the the 
+    transferred code is read with the path (!,MEDIT-DEFAULT-PATH !.OBLIST)
+    in force. If you answer no, you will drop into the package naming loop.

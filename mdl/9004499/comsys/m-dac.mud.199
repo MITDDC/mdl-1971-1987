@@ -1,0 +1,832 @@
+<PACKAGE "M-DAC">
+
+<ENTRY INIT
+       DB-SETUP>
+
+<ENTRY MREAD
+       HIGH-MESSAGE-ID
+       SET-NEXT-MESSAGE
+       NEW-MESSAGE-ID
+       NEWMESSAGE
+       MID>
+
+<ENTRY MAXOFFSET
+       DADD
+       DAPP
+       DRMV
+       DRDC
+       DWT
+       DADDMSG
+       DAPPMSG
+       DRMVMSG
+       A?>
+
+<ENTRY UPDMSG
+       DMPMSG
+       SHRINK>
+
+<ENTRY ADDPNQ
+       RMVPNQ
+       NXTPNQ
+       MSGPNQ
+       TIMPNQ
+       EMERGENCY
+       PRCADD
+       PRCRMV
+       PRCGET
+       PRCERR?
+       FINDPRC>
+
+<USE "FILINF"
+     "M-DEFS"
+     "M-READ"
+     "M-TIME"
+     "ITIME"
+     "M-DB"
+     "MADMAN"
+     "ASYLUM"
+     "M-DATA"
+     "FIELDS"
+     "M-TAI"
+     "USRUTI"
+     "M-SET"
+     "HOSTS">
+
+<SETG PNQDECL '<LIST FIX [REST <LIST FIX STRING <OR FALSE FIX>>]>>
+
+"message data base -- for current message:
+	  1/ message number
+	  2/ t ==> data has been modified
+	  3/ actual data, vector, [adr data adr data ...]
+	  4/ list, users who have had process scheduling done -- look at these
+	     when updating daemon queue
+	  5/ false or asylum to data base"
+
+<SETG MAXOFFSET 32>
+<GDECL (MAXOFFSET) FIX>
+"vector size for fix offset type data, for new messages"
+
+\ 
+
+"HIGH-MESSAGE-ID -- returns fix of highest id allocated + 1"
+
+<DEFINE HIGH-MESSAGE-ID ()
+	#DECL ((VALUE) FIX)
+	<CHTYPE <DATA-READW ,SYSTEM-ASYLUM ,COMSYS-MSG-MAP> FIX>>
+
+"NEW-MESSAGE-ID -- function for allocating unique message ids."
+
+<DEFINE NEW-MESSAGE-ID ("AUX" (TT <HIGH-MESSAGE-ID>) R)
+	#DECL ((VALUE TT) FIX (R) <OR FALSE MANIAC>)
+	<REPEAT ()
+		<COND (<SET R
+			    <DATA-PRINTW ,SYSTEM-ASYLUM
+					 ,COMSYS-MSG-MAP
+					 <+ .TT 1>>>
+		       <RETURN .TT>)
+		      (ELSE <ERROR CANT-ALLOCATE-NEW-ID!-ERRORS .R>)>>>
+
+\
+
+"INIT -- initialize spaces and open system asylum"
+
+<DEFINE INIT () 
+	<INIT-SPACES>
+	<COND (<AND <SOPEN> <DOPEN>>
+	       <DATA-UNLOCK ,SYSTEM-ASYLUM ,COMSYS-PENDING-QUEUE>
+	       <COND (<NOT <SETG PENDING-QUEUE
+			    <DATA-AREAD ,SYSTEM-ASYLUM ,COMSYS-PENDING-QUEUE ,QUEUE-SPACE>>>
+		      <ERROR PENDING-QUEUE-MISSING!-ERRORS ,PENDING-QUEUE>)
+		     (,READ-WRITE? <SCROUT "Read Pending Queue">)>
+	       <DATA-UNLOCK ,SYSTEM-ASYLUM ,COMSYS-MSG-MAP>
+	       T)>>
+
+"DB-SETUP -- make new system and msg data base"
+
+<DEFINE DB-SETUP ("OPTIONAL" (FIRST 1) "AUX" NAME ASY MSGN S)
+    #DECL ((NAME S MSGN) STRING (ASY) ASYLUM (FIRST) FIX)
+    <INIT-SPACES>
+    <MAKE-DATA-BASE <SET NAME <DATUM "COMSYS-SYSTEM-ASYLUM">> 20>
+    <MAKE-DATA-BASE <SET MSGN <DATUM "COMSYS-MSG-ASYLUM">>>
+    <SET ASY <OPEN-DATA-FILE .NAME>>
+    <SET S <ASTRING ,SCRATCH-SPACE .MSGN>>
+    <DATA-APRINT .ASY ,COMSYS-PENDING-QUEUE ,QUEUE-SPACE <ALIST ,QUEUE-SPACE 0>>
+    <DATA-APRINT .ASY ,COMSYS-MSG-MAP ,SCRATCH-SPACE <AVECTOR ,SCRATCH-SPACE 1 .S>>
+    <DATA-PRINTW .ASY ,COMSYS-MSG-MAP .FIRST>
+    <CLOSE-DATA-FILE .ASY>
+    T>
+
+<DEFINE SET-NEXT-MESSAGE (N "AUX" (ASY ,SYSTEM-ASYLUM) OLD)
+	#DECL ((N) FIX (OLD) <PRIMTYPE WORD> (ASY) ASYLUM)
+	<COND (<AND <SET OLD <DATA-READW .ASY ,COMSYS-MSG-MAP>>
+		    <G=? .N <CHTYPE .OLD FIX>>
+		    <DATA-PRINTW .ASY ,COMSYS-MSG-MAP .N>>
+	       .N)
+	      (ELSE <CHTYPE ("CLOBBERING DATA" .OLD .N) FALSE>)>>
+
+\
+
+"UPDMSG -- used to remove current message, outputting updated
+  copy if necessary -- resets mdb to contain no message
+ -- also outputs request files to change pending queue
+ -- if optional arg supplied as t, will acopy msg and queue before
+    writing them"
+
+<DEFINE UPDMSG ("OPTIONAL" (TT <>) (MSG-RESET? .TT)
+		"AUX" (MDB ,MDB) PN (MS ,MSG-SPACE) (QS ,QUEUE-SPACE)
+		      (SS ,SCRATCH-SPACE) (MD <MVDATA .MDB>) TIM
+		      (M <MVMSG .MDB>) (ASY <MVCHAN .MDB>) (SA ,SYSTEM-ASYLUM)
+		      (Q <MVQUEUE .MDB>) (PQ ,PENDING-QUEUE) R)
+   #DECL ((MDB) MDBVEC (VALUE) ATOM (M) FIX (SA) ASYLUM
+	  (PN) <OR FALSE <LIST ANY [REST PRCSTATE]>> (MD) VECTOR
+	  (ASY) ASYLUM (MS QS SS) SPACE (TIM) <OR FIX FALSE>
+	  (Q) <LIST [REST STRING]> (TT MSG-RESET?) <OR ATOM FALSE>
+	  (PQ) LIST (R) <OR <FALSE FIX> MANIAC>)
+   <PROG ()
+	 <COND (<0? .M> <RETURN T>)		       ;"NOTHING THERE">
+	 <COND (<MVMOD .MDB>
+		<AND ,MDEBUG? <CHECKEM UPDMSG-BEFORE>>
+		<COND (.MSG-RESET?
+		       <PUT .MDB ,MVDATA <AVECTOR .MS>>
+		       <SET MD
+			    <SHRINK .MD .SS .MS
+				    '<VECTOR [REST STRING VECTOR]>>>
+		       <PUT .MDB ,MVDATA .MD>)>
+		<AND ,READ-WRITE? <SCROUT "Write: " .M>>
+		<COND (<SET R <DATA-APRINT .ASY .M .MS .MD>>
+		       <DUMPED? <1 .ASY> <>>)
+		      (ELSE
+		       <ERROR MESSAGE-PRINT-LOST!-ERRORS
+			      .M
+			      .R
+			      <NTH ,DATA-ERRORS <1 .R>>>)>
+		<MAPF <>
+		      <FUNCTION (U) 
+			      #DECL ((U) STRING)
+			      <SET PN <DRDMSG .U <GETFIX "PROCESSING-NEEDED">>>
+			      <SET TIM
+				   <COND (<OR <NOT .PN>
+					      <LENGTH? .PN 1>
+					      <PRCERR? .PN>>
+					  0)
+					 (ELSE <PTIM <2 .PN>>)>>
+			      <COND (<AND .TIM <0? .TIM>> <RMVPNQ .M .U>)
+				    (ELSE <ADDPNQ .M .U .TIM>)>>
+		      .Q>
+		<COND (<NOT <EMPTY? .Q>> <ARELEASE .QS .Q -1>)>
+		<PUT .MDB ,MVMOD <>>
+		<PUT .MDB ,MVQUEUE ()>
+		<AND ,MDEBUG? <CHECKEM UPDMSG-AFTER>>
+		<COND (.TT
+		       <SET PQ
+			    <SHRINK .PQ .SS .QS ,PNQDECL>>
+		       <SETG PENDING-QUEUE .PQ>)>
+		<AND ,READ-WRITE? <SCROUT "Write Pending Queue">>
+		<COND (<SET R <DATA-APRINT .SA
+					   ,COMSYS-PENDING-QUEUE
+					   .QS
+					   .PQ>>
+		       <DUMPED? <1 .SA> <>>)
+		      (ELSE
+		       <ERROR PENDING-QUEUE-PRINT-LOST!-ERRORS
+			      .R
+			      <NTH ,DATA-ERRORS <1 .R>>>)>)>
+	 <COND (.MSG-RESET?
+		<PUT .MDB ,MVMSG 0>
+		<PUT .MDB ,MVDATA '[]>
+		<AND ,READ-WRITE? <SCROUT "Resetting Msg, Scratch spaces">>
+		<ARESET .MS T ,MDEBUG?>
+		<ARESET .SS T ,MDEBUG?>)>
+	 T>>
+
+"SHRINK -- flushes extraneous junk from space before updating to disk"
+
+<DEFINE SHRINK (OBJ S1 S2 "OPTIONAL" (DC <>) "AUX" NOBJ)
+	#DECL ((NOBJ OBJ) ANY (S1 S2) SPACE (DC) <OR FALSE FORM>)
+	<AND ,READ-WRITE? <SCROUT "Compacting message">>
+	<ARESET .S1 T ,MDEBUG?>
+	<COND (<SET NOBJ <AGC .S1 .OBJ>>
+	       <COND (<AND .DC <NOT <DECL? .NOBJ .DC>>>
+		      <ERROR AGC-TO-TEMP-DECL-VIOLATION!-ERRORS .DC .NOBJ>)>
+	       <ARESET .S2 T ,MDEBUG?>
+	       <COND (<SET OBJ <AGC .S2 .NOBJ>>
+		      <COND (<AND .DC <NOT <DECL? .OBJ .DC>>>
+			     <ERROR AGC-TO-SOURCE-DECL-VIOLATION!-ERRORS .DC .OBJ>)
+			    (ELSE .OBJ)>)
+		     (ELSE <ERROR AGC-TO-SOURCE-FAILED!-ERRORS .OBJ>)>)
+	      (ELSE <ERROR AGC-TO-TEMP-FAILED!-ERRORS .OBJ>)>>
+
+\
+
+<DEFINE DMPMSG ("AUX" (MDB ,MDB) (M <MVMSG .MDB>) ASY R)
+   #DECL ((MDB) MDBVEC (VALUE) ATOM (M) FIX (ASY) ASYLUM
+	  (R) <OR <FALSE FIX> MANIAC>)
+   <COND (<AND <NOT <0? .M>> <MVMOD .MDB>>
+	  <AND ,READ-WRITE? <SCROUT "Dump: " .M>>
+	  <COND (<SET R
+		      <DATA-APRINT <SET ASY <MVCHAN .MDB>>
+				   .M
+				   ,MSG-SPACE
+				   <MVDATA .MDB>>>
+		 <DUMPED? <1 .ASY> <>>)
+		(ELSE
+		 <ERROR MESSAGE-DUMP-LOST!-ERRORS
+			.M
+			.R
+			<NTH ,DATA-ERRORS <1 .R>>>)>)>
+   T>
+
+\
+
+"FUNCTIONS ASSOCIATED WITH VARIOUS STORAGE LOCATIONS OF MESSAGES"
+
+<DEFINE MREAD (M "OPTIONAL" (NEW? <>)) 
+	#DECL ((M) FIX (NEW?) <OR ATOM FALSE>)
+	<COND (<==? <MVMSG ,MDB> .M> .M)
+	      (ELSE
+	       <UPDMSG <> <NOT .NEW?>>
+	       <MRD .M .NEW?>)>>
+
+\ 
+
+"MAIN DATA ACCESS FUNCTIONS"
+
+<DEFINE APPEND (DAT OLD "AUX" (MS ,MSG-SPACE) NEW)
+	#DECL ((DAT OLD) ANY (NEW VALUE) <OR LIST VECTOR STRING> (MS) SPACE)
+	<COND (<==? <TYPE .OLD> <TYPE .DAT>>
+	       <COND (<TYPE? .OLD LIST> <SET NEW <ALIST .MS !.OLD !.DAT>>)
+		     (<TYPE? .OLD VECTOR> <SET NEW <AVECTOR .MS !.OLD !.DAT>>)
+		     (<TYPE? .OLD STRING> <SET NEW <ASTRING .MS .OLD .DAT>>)
+		     (ELSE <ERROR APPEND!-ERRORS .DAT .OLD>)>
+	       <ARELEASE .MS .OLD>
+	       .NEW)
+	      (ELSE <ERROR TYPE-MISMATCH!-ERRORS .DAT .OLD APPEND>)>>
+
+<DEFINE DAPP (DAT ADR ITM "AUX" OLD) 
+	#DECL ((ADR) STRING (ITM) <OR FIX STRING>
+	       (VALUE) <OR ATOM FALSE> (DAT OLD) ANY)
+	<COND (<NOT <TYPE? .ITM FIX>> <SET ITM <GETFIX .ITM>>)>
+	<COND (<AND <EMPTY? .ADR>
+		    <MEMBER <GETSTRING .ITM>
+			    <DRDFLT "COPY-TO-ADDRESSEE-AREA">>>
+	       <SET DAT <SPLIT-MERGE <DRDMSG "" .ITM> .DAT>>)
+	      (<SET OLD <DRDC .ADR .ITM>>
+	       <SET DAT <APPEND .DAT .OLD>>)>
+	<DWT .DAT .ADR .ITM>>
+
+"DAPPMSG -- same as dapp, but only looks at msg data itself"
+
+<DEFINE DAPPMSG (DAT ADR ITM "AUX" OLD) 
+	#DECL ((ADR) STRING (ITM) <OR FIX STRING>
+	       (VALUE) <OR ATOM FALSE> (DAT OLD) ANY)
+	<COND (<NOT <TYPE? .ITM FIX>> <SET ITM <GETFIX .ITM>>)>
+	<COND (<AND <EMPTY? .ADR>
+		    <MEMBER <GETSTRING .ITM>
+			    <DRDFLT "COPY-TO-ADDRESSEE-AREA">>>
+	       <SET DAT <SPLIT-MERGE <DRDMSG "" .ITM> .DAT>>)
+	      (<SET OLD <DRDMSG .ADR .ITM>>
+	       <SET DAT <APPEND .DAT .OLD>>)>
+	<DWT .DAT .ADR .ITM>>
+
+<DEFINE SPLIT-MERGE (OLD NEW "AUX" (MS ,MSG-SPACE) NE N D I O)
+	#DECL ((OLD O) <OR FALSE LIST> (NEW) LIST (MS) SPACE
+	       (NE) <LIST LIST LIST> (N I) <LIST [REST STRING]>
+	       (D) LIST)
+	<COND (<AND .OLD <NOT <EMPTY? .OLD>>>
+	       <REPEAT ()
+		       <COND (<EMPTY? .NEW> <RETURN>)>
+		       <SET NE <1 .NEW>>
+		       <SET N <1 .NE>>
+		       <SET D <2 .NE>>
+		       <REPEAT ()
+			       <COND (<EMPTY? .N> <RETURN>)
+				     (<MEMBER <1 .N> <REST .N>>
+				      <SET N <REST .N>>)
+				     (ELSE
+				      <SET I .N>
+				      <SET N <REST .N>>
+				      <PUTREST .I ()>
+				      <COND (<SET O <SPLIT-VALUE <1 .I> .OLD>>
+					     <PUTREST <REST .O
+							    <- <LENGTH .O> 1>>
+						      .D>)
+					    (ELSE
+					     <SET OLD
+						  <ACONS .MS
+							 <ALIST .MS .I .D>
+							 .OLD>>)>)>>
+		       <SET NEW <REST .NEW>>>
+	       .OLD)
+	      (ELSE .NEW)>>
+
+<DEFINE SPLIT-VALUE (S L "AUX" M I D (MS ,MSG-SPACE))
+	#DECL ((S) STRING (L) <LIST [REST <LIST LIST LIST>]>
+	       (I) <LIST <LIST [REST STRING]> LIST> (M) <OR FALSE LIST>
+	       (MS) SPACE (D) LIST)
+	<REPEAT ()
+		<COND (<EMPTY? .L> <RETURN <>>)
+		      (<AND <SET M <MEMBER .S <1 <SET I <1 .L>>>>>
+			    <==? .M <1 .I>>>
+		       <RETURN <2 .I>>)
+		      (.M
+		       <PUT .I 1 <RMV .S <1 .I>>>
+		       <PUTREST .L
+				<ACONS .MS
+				       <ALIST .MS
+					      <ALIST .MS .S>
+					      <SET D <ALIST .MS !<2 .I>>>>
+				       <REST .L>>>
+		       <RETURN .D>)>
+		<SET L <REST .L>>>>
+
+\ 
+
+"DADD -- adds a datum to a list or vector, iff it is not already
+  there (by =? test).  if field is initially false, puts datum into
+  field, contained in a list"
+
+<DEFINE ADD (DAT TT "AUX" (MS ,MSG-SPACE))
+	#DECL ((DAT TT) ANY (MS) SPACE)
+	<COND (<AND <TYPE? .TT LIST> <NOT <MEMBER .DAT .TT>>>
+	       <ACONS .MS .DAT .TT>)
+	      (<AND <TYPE? .TT VECTOR> <NOT <MEMBER .DAT .TT>>>
+	       <AVECTOR .MS .DAT !.TT>)
+	      (ELSE <ERROR TYPE-MISMATCH!-ERRORS .DAT .TT ADD>)>>
+
+<DEFINE DADD (DAT ADR ITM "AUX" TT) 
+	#DECL ((ITM) <OR FIX STRING> (ADR) STRING (VALUE) <OR FALSE ATOM>
+	       (DAT TT) ANY)
+	<COND (<NOT <TYPE? .ITM FIX>> <SET ITM <GETFIX .ITM>>)>
+	<COND (<SET TT <DRDC .ADR .ITM>>
+	       <SET DAT <ADD .DAT .TT>>)
+	      (ELSE <SET DAT <ALIST ,MSG-SPACE .DAT>>)>
+	<DWT .DAT .ADR .ITM>>
+
+"DADDMSG -- same as dadd, but only reads msg itself"
+
+<DEFINE DADDMSG (DAT ADR ITM "AUX" TT) 
+	#DECL ((ITM) <OR FIX STRING> (ADR) STRING (VALUE) <OR FALSE ATOM>
+	       (DAT TT) ANY)
+	<COND (<NOT <TYPE? .ITM FIX>> <SET ITM <GETFIX .ITM>>)>
+	<COND (<SET TT <DRDMSG .ADR .ITM>>
+	       <SET DAT <ADD .DAT .TT>>)
+	      (ELSE <SET DAT <ALIST ,MSG-SPACE .DAT>>)>
+	<DWT .DAT .ADR .ITM>>
+
+\ 
+
+"DRMV -- inverse of DADD --- removes an item from a list"
+
+<DEFINE RMV (DAT TT "AUX" LL L (FLG <>))
+	#DECL ((TT) ANY (LL L) LIST (DAT) ANY (FLG) <OR ATOM FALSE>)
+	<COND (<TYPE? .TT LIST>
+	       <SET LL .TT>
+	       <REPEAT ()
+		       <COND (<EMPTY? .LL> <RETURN .LL>)
+			     (<=? .DAT <1 .LL>>
+			      <SET TT <SET LL <REST .LL>>>
+			      <SET FLG T>
+			      <AGAIN>)
+			     (ELSE <RETURN>)>>
+	       <COND (<EMPTY? .LL>)
+		     (<SET L <REST .LL>>
+		      <REPEAT ()
+			      <COND (<EMPTY? .L> <RETURN <>>)
+				    (<=? .DAT <1 .L>>
+				     <PUTREST .LL <SET L <REST .L>>>
+				     <SET FLG T>
+				     <AGAIN>)
+				    (ELSE <SET LL .L> <SET L <REST .L>>)>>)>
+	       <COND (.FLG .TT)>)
+	      (ELSE <ERROR TYPE-MISMATCH!-ERRORS .DAT .TT RMV>)>> 
+
+<DEFINE DRMV (DAT ADR ITM "AUX" TT) 
+	#DECL ((ITM) <OR FIX STRING> (TT DAT) ANY (VALUE) <OR ATOM FALSE>
+	       (ADR) STRING)
+	<COND (<NOT <TYPE? .ITM FIX>> <SET ITM <GETFIX .ITM>>)>
+	<COND (<AND <SET TT <DRDC .ADR .ITM>>
+		    <SET TT <RMV .DAT .TT>>>
+	       <DWT .TT .ADR .ITM>)
+	      (ELSE T)>>
+
+"DRMVMSG -- SAME AS DRMV, BUT LOOKS ONLY AT MSG ITSELF"
+
+<DEFINE DRMVMSG (DAT ADR ITM "AUX" TT) 
+	#DECL ((ITM) <OR FIX STRING> (TT DAT) ANY (VALUE) <OR ATOM FALSE>
+	       (ADR) STRING)
+	<COND (<NOT <TYPE? .ITM FIX>> <SET ITM <GETFIX .ITM>>)>
+	<COND (<AND <SET TT <DRDMSG .ADR .ITM>>
+		    <SET DAT <RMV .DAT .TT>>>
+	       <DWT .TT .ADR .ITM>)
+	      (ELSE T)>>
+
+\ 
+
+"A? -- check legality of objects being stuffed into space.  Used for
+debugging only, as is very slow"
+
+<DEFINE A? (SP OBJ "AUX" (OK? T) (OUTCHAN .OUTCHAN)) 
+	#DECL ((SP) SPACE (OBJ) ANY (OUTCHAN) CHANNEL (OK?) <OR ATOM FALSE>)
+	<COND (<ALEGAL? .SP .OBJ>
+	       <COND (<TYPE? .OBJ LIST VECTOR UVECTOR FALSE>
+		      <MAPF <>
+			    <FUNCTION (OBJ) <SET OK? <AND .OK? <A? .SP .OBJ>>>>
+			    .OBJ>
+		      .OK?)
+		     (<TYPE? .OBJ STRING> T)
+		     (<STRUCTURED? .OBJ> <PRINT .OBJ> <>)
+		     (T)>)
+	      (ELSE <PRINT .OBJ> <>)>>
+
+\ 
+
+"DWT -- WRITE A DATUM INTO A SPECIFIED FIELD
+
+ -- IF GIVEN OPTIONAL DATA VECTOR TO USE INSTEAD OF ONE FROM ,MDB
+    WILL RETURN IT AFTER CHANGING -- MAY BE A NEW VECTOR, IF NEW ADDRESSEE
+    HAD TO BE ADDED"
+
+<DEFINE DWT (DAT ADR ITM "AUX" VF VD (MDB ,MDB) L (MS ,MSG-SPACE) TMP)
+   #DECL ((DAT) ANY (ADR) STRING (ITM) <OR STRING FIX> (MDB) MDBVEC (MS) SPACE
+	  (VD) <VECTOR VECTOR> (TMP) VECTOR (L VF) <OR FALSE VECTOR>
+	  (VALUE) <OR VECTOR ATOM FALSE>)
+   <COND
+    (<AND ,MDEBUG? <NOT <A? .MS .DAT>>>
+     <ERROR ATTEMPT-TO-POINT-OUTSIDE-SPACE!-ERRORS .DAT>)
+    (ELSE
+     <PROG ()
+	   <COND (<NOT <TYPE? .ITM FIX>> <SET ITM <GETFIX .ITM>>)>
+	   <COND (<SET VF <GETDAT .ADR>> <SET VD .VF>)
+		 (ELSE
+		  <SET VD
+		       <AVECTOR .MS
+				<AIVECTOR .MS ,MAXOFFSET <>>
+				<AVECTOR .MS>>>
+		  <SET TMP <MVDATA .MDB>>
+		  <PUT .MDB
+		       ,MVDATA
+		       <AVECTOR .MS .ADR .VD !.TMP>>
+		  <ARELEASE .MS .TMP>)>
+	   <PUT .MDB ,MVMOD T>
+	   <COND (<AND <TYPE? .ITM FIX> <L=? .ITM <LENGTH <1 .VD>>>>
+		  <PUT <1 .VD> .ITM .DAT>
+		  <RETURN T>)>
+	   <SET ITM <GETSTRING .ITM>>
+	   <COND (<NOT <TYPE? .ITM STRING>>
+		  <RETURN <ERROR FIELD-OFFSET-TOO-LARGE!-ERRORS>>)>
+	   <COND (<SET L <MEMBER .ITM <2 .VD>>> <PUT .L 2 .DAT>)
+		 (ELSE
+		  <PUT .VD 2 <AVECTOR .MS <ACOPY .MS .ITM> .DAT !<2 .VD>>>)>
+	   T>)>>
+
+\ 
+
+"DRDC -- like DRD, but copy if read from tailor or system default."
+
+<DEFINE DRDC (ADR ITM)
+	#DECL ((ADR) STRING (ITM) <OR FIX STRING>)
+	<DRD .ADR .ITM <> T>>
+
+\ 
+ 
+"MISCELLANEOUS UTILITIES"
+
+"NEWMESSAGE -- utility to allocate a new message number and id"
+
+<DEFINE NEWMESSAGE ("AUX" TT (MS ,MSG-SPACE) R) 
+	#DECL ((TT VALUE) FIX (MS) SPACE (R) <OR FIX FALSE>)
+	<REPEAT ()
+		<SET TT <NEW-MESSAGE-ID>>
+		<SET R <MREAD .TT NEW>>
+		<COND (.R
+		       <COND (<EMPTY? <3 ,MDB>>
+			      <SCROUT .TT ": New message">
+			      <RETURN>)
+			     (ELSE
+			      <SCROUT .TT ": Old lost message?">)>)
+		      (ELSE
+		       <SCROUT ">>>> Error <<<< " .TT ": " .R>
+		       <RETURN>)>>
+	<DWT .TT <ASTRING .MS> <GETFIX "MSG-NO">>
+	<DWT <ITIME> "" <GETFIX "WHEN-ORIGINATED">>
+	<DWT ,HOSTNUMBER "" <GETFIX "RECEIVED-FROM-HOST">>
+	<DWT ,VER "" <GETFIX "DAEMON">>
+	<DWT <MID .TT> "" <GETFIX "MESSAGE-ID">>
+	<DWT <ALIST .MS 0> "" <GETFIX "PROCESSING-NEEDED">>
+	.TT>
+
+
+"MID -- GIVEN FIX, ID NUMBER, RETURNS A STRING, OUR FORM OF MSGID"
+
+<DEFINE MID (F) 
+	#DECL ((F) FIX (VALUE) STRING)
+	<ASTRING ,MSG-SPACE "<[" <HOST ,HOSTNUMBER> "]." <UNPARSE .F> ">">>
+
+\ 
+
+"SUBTITLE Queue Utilities, for Daemon Use Only"
+
+<DEFINE MSGPNQ ("AUX" (MDB ,MDB) (UL <4 .MDB>) PN TM (M <ABS <MVMSG .MDB>>)) 
+	#DECL ((MDB) MDBVEC (UL) <LIST [REST STRING]> (TM) <OR FALSE FIX>
+	       (PN) <OR FALSE <LIST ANY [REST PRCSTATE]>> (M) FIX)
+	<COND (<NOT <DAEMON?>> <ERROR NOT-IN-DAEMON!-ERRORS MSGPNQ>)
+	      (ELSE
+	       <MAPF <>
+		     <FUNCTION (U) 
+			  #DECL ((U) STRING)
+			  <SET PN <DRDMSG .U <GETFIX "PROCESSING-NEEDED">>>
+			  <COND (<AND .PN <NOT <LENGTH? .PN 1>>>
+				 <SET TM <PTIM <2 .PN>>>
+				 <COND (<N==? .TM -1> <ADDPNQ .M .U .TM>)>)>>
+		     .UL>)>>
+
+\ 
+
+"ADDPNQ -- used to add a request to look at a message/addressee
+  if time not specified, asap assumed
+  will only schedule an earlier run.  if postponement of run
+  is desired, entry must be removed and readded."
+
+<DEFINE ADDPNQ (F S
+		"OPTIONAL" (TIM <>)
+		"AUX" E (PNQ ,PENDING-QUEUE) (PNQS .PNQ) EBE
+		(SS ,SCRATCH-SPACE) (MS ,QUEUE-SPACE))
+	#DECL ((F) FIX (S) STRING (VALUE) ATOM (MS SS) SPACE
+	       (E) <OR FALSE PNQENTRY> (PNQ PNQS) <LIST ANY [REST PNQENTRY]>
+	       (EBE) PNQENTRY (TIM) <OR FALSE FIX>)
+	<COND (<NOT <DAEMON?>> <ERROR NOT-IN-DAEMON!-ERRORS>)>
+	<REPEAT ()
+		<COND (<LENGTH? .PNQ 1> <SET E <>> <RETURN>)>
+		<SET E <2 .PNQ>>
+		<COND (<AND <==? .F <QMSG .E>> <=? .S <QADR .E>>>
+		       <DEQUEUE .MS .PNQ>
+		       <RETURN>)>
+		<SET PNQ <REST .PNQ>>>
+	<COND (.E
+	       <COND (<NOT <QTIM .E>>)
+		     (<OR <NOT .TIM> <L? .TIM <QTIM .E>>>
+		      <PUT .E ,QTIM .TIM>)>)
+	      (ELSE
+	       <SET E <ACOPY .MS <ALIST .SS .F .S .TIM>>>)>
+	<SET PNQ .PNQS>
+	<COND (<NOT <QTIM .E>>
+	       <REPEAT ()
+		       <COND (<OR <LENGTH? .PNQ 1>
+				  <QTIM <2 .PNQ>>>
+			      <PUTREST .PNQ <ACONS .MS .E <REST .PNQ>>>
+			      <RETURN>)
+			     (ELSE <SET PNQ <REST .PNQ>>)>>)
+	      (.E
+	       <REPEAT ()
+		       <COND (<LENGTH? .PNQ 1>
+			      <PUTREST .PNQ <ALIST .MS .E>>
+			      <RETURN>)
+			     (<NOT <QTIM <SET EBE <2 .PNQ>>>>)
+			     (<L? <QTIM .E> <QTIM .EBE>>
+			      <PUTREST .PNQ <ACONS .MS .E <REST .PNQ>>>
+			      <RETURN>)>
+		       <SET PNQ <REST .PNQ>>>)>
+	T>
+
+\ 
+
+"RMVPNQ -- used to remove an entry from the queue"
+
+<DEFINE RMVPNQ (F S "AUX" (PNQ ,PENDING-QUEUE) (QS ,QUEUE-SPACE) QE) 
+	#DECL ((F) FIX (S) STRING (VALUE) ATOM (PNQ) <LIST ANY [REST PNQENTRY]>
+	       (QS) SPACE (QE) PNQENTRY)
+	<COND (<NOT <DAEMON?>> <ERROR NOT-IN-DAEMON!-ERRORS>)>
+	<REPEAT ()
+		<COND (<LENGTH? .PNQ 1> <RETURN T>)>
+		<SET QE <2 .PNQ>>				   ;"NEXT ENTRY"
+		<COND (<AND <==? .F <QMSG .QE>> <=? .S <QADR .QE>>>
+		       <DEQUEUE .QS .PNQ T>		   ;"SPLICE OUT"
+		       <RETURN T>)>
+		<SET PNQ <REST .PNQ>>>>
+
+\ 
+
+"NXTPNQ -- used to return an element from the queue for the daemon to work on"
+
+<DEFINE NXTPNQ ("AUX" QEL (PNQ ,PENDING-QUEUE) (MDB ,MDB) (QPC <>)
+		(QP2B <>) (QS ,QUEUE-SPACE) MSG M R)
+   #DECL ((QPC QP2B) <OR LIST FALSE> (QEL) LIST (PNQ) <LIST ANY>
+	  (VALUE) <OR FALSE PNQENTRY> (MSG) <OR FALSE FIX> 
+	  (M) FIX (R) ANY (QS) SPACE (MDB) MDBVEC)
+   <SET MSG <COND (<G? <MVMSG .MDB> 0> <MVMSG .MDB>)>>
+   <MAPR <>
+    <FUNCTION (Q QB "AUX" (QE <1 .Q>) QT) 
+       #DECL ((Q QB) LIST (QE) PNQENTRY (QT) <OR FALSE FIX>)
+       <SET QT <QTIM .QE>>
+       <COND (<OR <NOT .QT> <L? .QT <ITIME>>>
+	      <COND (<AND .MSG <==? <QMSG .QE> .MSG>>
+		     <SET QPC .QB>)
+		    (ELSE <SET QP2B .QB>)>
+	      <AND .QPC .QP2B <MAPLEAVE>>)
+	     (ELSE <MAPLEAVE>)>>
+    <REST .PNQ>
+    .PNQ>
+   <COND (.QPC
+	  <SET QEL <2 .QPC>>
+	  <DEQUEUE .QS .QPC>
+	  .QEL)
+	 (.QP2B
+	  <SET QEL <2 .QP2B>>
+	  <COND (<SET R <MREAD <SET M <QMSG .QEL>>>>
+		 <SCROUT .M ": Queued message">)
+		(ELSE <SCROUT ">>>> Error <<<< " .M ": " .R>)>
+	  <DEQUEUE .QS .QP2B>
+	  .QEL)>>
+
+\ 
+
+"SUBTITLE Pending Queue Utilities for General Use"
+
+"TIMPNQ -- used to obtain earliest time for which any process is scheduled
+ to run
+ -- returns t if asap, false if never, else time spec"
+
+<DEFINE TIMPNQ ("AUX" (PNQ ()) (DAT ,PENDING-QUEUE))
+	#DECL ((PNQ) <LIST [REST LIST]> (DAT) ANY (VALUE) <OR ATOM FALSE FIX>)
+	<COND (<TYPE? .DAT LIST> <SET PNQ <REST .DAT>>)>
+	<COND (<EMPTY? .PNQ> <>)
+	      (<NOT <QTIM <1 .PNQ>>> T)
+	      (ELSE <QTIM <1 .PNQ>>)>>
+
+\ 
+
+"SUBTITLE Processing-needed Utilities"
+
+"EMERGENCY -- clears the P-N queue and then schedules a process"
+
+<DEFINE EMERGENCY (ADR PRC)
+	#DECL ((ADR PRC) STRING)
+	<DWT <> .ADR <GETFIX "PROCESSING-NEEDED">>
+	<DWT <> .ADR <GETFIX "ERROR-CONDITIONS">>
+	<PRCADD .ADR .PRC>>
+
+"PRCADD -- schedule a process"
+
+<DEFINE PRCADD (ADR PRC
+		"OPTIONAL" (TIM <>) (NUM <>) (FLG '()) (INC <>)
+		"AUX" (ERR? <>) PE E PN OTIM (MS ,MSG-SPACE)
+		      (CRI <DATUM "COMSYS-PROCESS-INTERVAL">))
+   #DECL ((ADR PRC) STRING (TIM) <OR FALSE FIX> (VALUE) ATOM
+	  (INC) <OR FIX FALSE> (CRI) FIX
+	  (PN) <OR <LIST ANY [REST PRCSTATE]> FALSE>
+	  (PE) <OR <LIST ANY PRCSTATE> FALSE> (MS) SPACE (NUM) <OR FALSE FIX>
+	  (OTIM) <OR FIX FALSE> (ERR?) <OR ATOM FALSE>
+	  (FLG) <OR FIX LIST FALSE> (E) PRCSTATE)
+   <SET PN <OR <DRDMSG .ADR <GETFIX "PROCESSING-NEEDED">> <ALIST .MS 0>>>
+   <PROG ()
+	 <COND (<SET PE <FINDPRC .PRC .PN>>)
+	       (<SET PE <FINDPRC .PRC .PN <>>> <SET ERR? T>)>
+	 <COND (.PE
+		<SET E <2 .PE>>
+		<SET OTIM <PTIM .E>>
+		<COND (<==? .OTIM -1> <RETURN>)>
+		<COND (<OR <==? .TIM -1>
+			   <AND <NOT .TIM> .OTIM>
+			   <AND .TIM .OTIM <L? .TIM .OTIM>>>
+		       <DEQUEUE .MS .PE>
+		       <PUT .E ,PTIM .TIM>
+		       <AND .NUM <PUT .E ,PCNT .NUM>>
+		       <AND <N==? .FLG 0> <PUT .E ,PFLG .FLG>>
+		       <AND .INC <PUT .E ,PINC .INC>>)
+		      (ELSE <RETURN>)>)
+	       (ELSE
+		<COND (<TYPE? .FLG FIX> <SET FLG '()>)>
+		<SET E
+		     <ALIST .MS
+			    <ASTRING .MS .PRC>
+			    .TIM
+			    <OR .NUM 10>
+			    .FLG
+			    <OR .INC .CRI>>>)>
+	 <COND (<NOT .ERR?> <QUEUE .ADR>)>
+	 <COND
+	  (<==? <PTIM .E> -1>
+	   <SET PN <ARLIST .MS <REST .PN> 0 .E>>)
+	  (<NOT <PTIM .E>>
+	   <MAPR <>
+		 <FUNCTION (PL "AUX" PT) 
+			 #DECL ((PL) <LIST ANY [REST PRCSTATE]>
+				(PT) <OR FIX FALSE>)
+			 <COND (<OR <LENGTH? .PL 1>
+				    <AND <TYPE? <SET PT <PTIM <2 .PL>>> FIX>
+					 <N==? .PT -1>>>
+				<PUTREST .PL <ACONS .MS .E <REST .PL>>>
+				<MAPLEAVE>)>>
+		 .PN>)
+	  (ELSE
+	   <MAPR <>
+		 <FUNCTION (PL "AUX" PT) 
+			 #DECL ((PL) <LIST ANY [REST PRCSTATE]>
+				(PT) <OR FIX FALSE>)
+			 <COND (<OR <LENGTH? .PL 1>
+				    <AND <TYPE? <SET PT <PTIM <2 .PL>>> FIX>
+					 <L? <PTIM .E> .PT>>>
+				<PUTREST .PL <ACONS .MS .E <REST .PL>>>
+				<MAPLEAVE>)>>
+		 .PN>)>
+	 <DWT .PN .ADR <GETFIX "PROCESSING-NEEDED">>
+	 T>>
+
+\
+
+"DEQUEUE -- remove an element from a queue list"
+
+<DEFINE DEQUEUE (SP PN "OPTIONAL" (R? <>) "AUX" P PR)
+	#DECL ((PN P PR) LIST (SP) SPACE (R?) <OR ATOM FALSE>)
+	<SET P <REST .PN>>
+	<SET PR <REST .P>>
+	<PUTREST .P ()>
+	<PUTREST .PN .PR>
+	<AND ,MDEBUG? <CHECKEM DEQUEUE-BEFORE>>
+	<COND (.R? <ARELEASE .SP .P -1>)
+	      (ELSE <ARELEASE .SP .P>)>
+	<AND ,MDEBUG? <CHECKEM DEQUEUE-AFTER>>>
+
+"QUEUE -- add an addressee to the message queue"
+
+<DEFINE QUEUE (ADR "AUX" (MDB ,MDB) (Q <MVQUEUE .MDB>) (QS ,QUEUE-SPACE))
+	#DECL ((ADR) STRING (MDB) MDBVEC (Q) LIST (QS) SPACE)
+	<COND (<NOT <MEMBER .ADR .Q>>
+	       <PUT .MDB ,MVQUEUE <ACONS .QS <ACOPY .QS .ADR> .Q>>
+	       <AND ,MDEBUG? <CHECKEM QUEUE>>)>>
+
+<DEFINE CHECKEM (WHO)
+	#DECL ((WHO) ANY)
+	<COND (<NOT <DECL? ,PENDING-QUEUE ,PNQDECL>>
+	       <ERROR PENDING-QUEUE-CLOBBERED!-ERRORS .WHO ,PENDING-QUEUE>)
+	      (<NOT <BOUNDS-CHECK ,MSG-SPACE>>
+	       <ERROR OUT-OF-BOUNDS!-ERRORS .WHO MSG-SPACE>)
+	      (<NOT <BOUNDS-CHECK ,QUEUE-SPACE>>
+	       <ERROR OUT-OF-BOUNDS!-ERRORS .WHO QUEUE-SPACE>)>>
+
+\ 
+
+"PRCRMV -- used to remove a process' entry in a p-n list."
+
+<DEFINE PRCRMV (ADR PRC "AUX" PN PQ (MS ,MSG-SPACE)) 
+	#DECL ((ADR PRC) STRING (PN) <OR FALSE LIST> (VALUE) ATOM
+	       (MS) SPACE (PQ) <OR FALSE LIST>)
+	<COND (<AND <SET PN <DRDMSG .ADR <GETFIX "PROCESSING-NEEDED">>>
+		    <SET PQ <FINDPRC .PRC .PN <>>>>
+	       <DEQUEUE .MS .PQ>			   ;"SPLICE OUT"
+	       <DWT .PN .ADR <GETFIX "PROCESSING-NEEDED">>
+	       <QUEUE .ADR>)>
+	T>
+
+"PRCGET -- used to get next runnable process from msgs p-n field
+  -- returns #false() if none
+             #false(time) if none until time
+             #false(-1) if error stop
+             process element (list) if one found, also splices
+             it out of the field"
+
+<DEFINE PRCGET (ADR "AUX" PN P PT (MS ,MSG-SPACE)) 
+	#DECL ((ADR) STRING (VALUE) <OR FALSE LIST>
+	       (PN) <OR <LIST ANY [REST PRCSTATE]> FALSE> (P) PRCSTATE
+	       (PT) <OR FIX FALSE> (MS) SPACE)
+	<COND (<AND <SET PN <DRDMSG .ADR <GETFIX "PROCESSING-NEEDED">>>
+		    <NOT <LENGTH? .PN 1>>>
+	       <SET P <2 .PN>>
+	       <COND (<==? <SET PT <PTIM .P>> -1>
+		      <CHTYPE <ALIST .MS -1> FALSE>)
+		     (<OR <NOT .PT> <L? .PT <ITIME>>>
+		      <DEQUEUE .MS .PN>
+		      <DWT .PN .ADR <GETFIX "PROCESSING-NEEDED">>
+		      <QUEUE .ADR>
+		      .P)
+		     (.PT <CHTYPE <ALIST .MS .PT> FALSE>)>)
+	      (ELSE <>)>>
+
+\ 
+
+"PRCERR? -- used to decide if a message is in error state, by examining
+  the processing-needed data, returns t or false"
+
+<DEFINE PRCERR? (PN) 
+	#DECL ((VALUE) <OR ATOM FALSE> (PN) <LIST ANY [REST PRCSTATE]>)
+	<COND (<LENGTH? .PN 1> <>)
+	      (<==? <PTIM <2 .PN>> -1> T)>>
+
+"FINDPRC -- given pn data list, returns list whose el 2 is element
+  for specified process.  if optional arg = t, will not pass beyond
+  any process in error-hold state.  returns false if no entry found"
+
+<DEFINE FINDPRC (PRC PN "OPTIONAL" (HLT T) "AUX" (PNF <REST .PN>)) 
+	#DECL ((PRC) STRING (PN) LIST (PNF) <LIST [REST PRCSTATE]>
+	       (HLT) <OR ATOM FALSE> (VALUE) <OR FALSE LIST>)
+	<MAPR <>
+	      <FUNCTION (QPB QP "AUX" (PR <1 .QP>)) 
+		      #DECL ((QPB) LIST (QP) <LIST [REST PRCSTATE]>
+			     (PR) PRCSTATE)
+		      <COND (<=? .PRC <PNAM .PR>> <MAPLEAVE .QPB>)
+			    (<AND .HLT <==? <PTIM .PR> -1> <PFLG .PR>>
+			     <MAPLEAVE <>>)>>
+	      .PN
+	      .PNF>>
+
+<ENDPACKAGE>

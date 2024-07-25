@@ -1,0 +1,64 @@
+
+The CASE MACRO (with special compiler features)
+
+	Bruce Daniels has written a CASE macro for MUDDLE and the
+compiler has been modified to generate efficient code in certain
+special instances.  CASE is actually just a special case of COND.
+It is no more powerful than COND but it is often more convenient to
+use.  The CASE macro changes the CASE form into a COND and then EVALs
+it.
+
+Usage:
+
+	The general form of invocation of CASE is:
+
+	<CASE <-predicate>- <-object>- <-clause 1>- ... <-clause n>- >
+
+	<-predicate>-	-	a predicate of 2 arguments (==?, TYPE? etc.)
+
+	<-object>-	-	the object being tested
+
+	<-clause..>	-	these specify the different cases
+
+	The clauses are the interesting part of the CASE.  With one
+exception (see below) they are all the LISTs.  The first element of the
+LIST is supplied along with <-object>- to the predicate.  If the predicate
+returns true, the other elements of the list are evaluated and the
+value of the last one is returned as the value of CASE.  If the predicate
+returns false, the next clause is tried.  If no clauses succeed then
+the CASE returns false.
+
+	The exception mentioned above is that one clause may be the atom
+DEFAULT.  If this atom occurs, the next list (which must exist) contains
+the forms to EVAL in the default case.  There should be only one use of
+default.
+
+Example:
+
+	<CASE ,==? .X (1 FOO) (2 <PRINT "more than one?"> BAR) (3 BLA)
+			DEFAULT (<PRINT "this is the default"> BLETCH)>
+
+Loading:
+
+	Currently the CASE macro exists in an RPACKAGE in the file
+"BKD;MACROS NBIN".  It should be in the library soon.
+
+Compiling:
+
+	The compiler will generate dispatch tables in some special cases
+of the CASE macro.  For these special cases to be invoked, the predicate
+must be either ==? or TYPE? (soon PRIMTYPE? will also be available) and
+all the potential values must be constant at compile time.  In addition,
+in the ==? case, all of the values must be of primtype WORD.  Also the
+values must be close enough together to make a dispatch table feasible.
+
+	In order to compile cases, the user should invoke:
+
+	<FLOAD "COMPIL;CASELD >">
+
+as a thing to do before....
+
+Bugs:
+
+	Report MACRO bugs to BKD@DMS and Compiler bugs to either
+CLR@DMS or BTB@DMS.

@@ -1,0 +1,159 @@
+
+<DEFINE GET-DATUM (DNAME "OPTIONAL" (DTYPE <>) "EXTRA" A R (LAST <>)) 
+	#DECL ((DNAME) STRING (A) <OR CHANNEL FALSE> (R LAST DTYPE) ANY)
+	<COND (<SET A <OPEN-DATUM .DNAME>>
+	       <OR ,GET-DATUM-ERRORS?
+		   <WATCH GETDERR "ERROR" ,READ-ERROR 4>>
+	       <SET LAST
+		    <REPEAT GETDACT ()
+		       #DECL ((GETDACT) <SPECIAL ACTIVATION>)
+		       <SET R <READ .A '<>>>
+		       <COND (<NOT .R> <RETURN .LAST>)
+			     (<AND .DTYPE <DECL? .R .DTYPE>>
+			      <RETURN <SET LAST .R>>)
+			     (ELSE <SET LAST <EVAL .R>>)>>>
+	       <OR ,GET-DATUM-ERRORS? <OFF ,GETDERR>>
+	       <AND <NOT <0? <1 .A>>> <CLOSE .A>>
+	       .LAST)>>
+
+	<TITLE GET-DATUM>
+
+	<DECLARE ("VALUE" ANY STRING "OPTIONAL" ANY)>
+	<MOVE	A* AB>
+TAG1	<PUSH	TP* (AB) >				    ; 1
+	<PUSH	TP* (AB) 1>
+	<ADD	AB* [<(2) 2>]>
+	<JUMPL	AB* TAG1>
+	<HLRES	A>
+	<ASH	A* -1 >
+	<ADDI	A* TAG2>
+	<PUSHJ	P* @ (A) 1 >
+	<JRST	|FINIS >
+	<TAG3>
+TAG2	<TAG4>						    ; 11
+TAG4	<PUSH	TP* <TYPE-WORD FALSE>>			    ; 12 [2]
+	<PUSH	TP* [0]>				    ; [3]
+TAG3	<SUBM	M* (P) >				    ; 14
+	<PUSH	TP* [0]>				    ; [4]
+	<PUSH	TP* [0]>				    ; [5]
+	<PUSH	TP* [0]>				    ; [6]
+	<PUSH	TP* [0]>				    ; [7]
+	<PUSH	TP* <TYPE-WORD FALSE>>			    ; [8]
+	<PUSH	TP* [0]>				    ; [9]
+	<INTGO>
+	<PUSH	TP* (TP) -9>				    ; (0) [10]
+	<PUSH	TP* (TP) -9>				    ; (1) [11]
+	<MCALL	1 OPEN-DATUM>
+	<MOVEM	A* (TP) -5>				    ; (4)
+	<MOVEM	B* (TP) -4>				    ; (5)
+	<JUMPGE	B* TAG5>
+	<MOVE	D* <MQUOTE %<RGLOC GET-DATUM-ERRORS? T>>>
+	<ADD	D* |GLOTOP 1>
+	<SKIPGE	(D) 1>
+	<JRST	TAG6>
+	<PUSH	TP* <MQUOTE GETDERR> -1>		    ; [10]
+	<PUSH	TP* <MQUOTE GETDERR>>			    ; [11]
+	<PUSH	TP* <MQUOTE "ERROR"> -1>		    ; [12]
+	<PUSH	TP* <MQUOTE "ERROR">>			    ; [13]
+	<MOVE	D* <MQUOTE %<RGLOC READ-ERROR T>>>
+	<ADD	D* |GLOTOP 1>
+	<PUSH	TP* (D) >				    ; [14]
+	<PUSH	TP* (D) 1>				    ; [15]
+	<PUSH	TP* <TYPE-WORD FIX>>			    ; [16]
+	<PUSH	TP* [4]>				    ; [17]
+	<MCALL	4 WATCH>
+TAG6	<MOVEI	A* TAG7>				    ; 44
+	<SUB	A* M>
+	<PUSHJ	P* |BFRAME >
+	<MOVEI	O* TAG8>
+	<SUB	O* M>
+	<HRLI	O* *35* >
+	<PUSH	TP* O>					    ; [10]
+	<PUSH	TP* [0]>				    ; [11]
+	<PUSHJ	P* |MAKACT >
+	<PUSH	TP* [<(%<TYPE-CODE ATOM>) -1>]>		    ; [12]
+	<PUSH	TP* <MQUOTE GETDACT>>			    ; [13]
+	<PUSH	TP* A>					    ; [14]
+	<PUSH	TP* B>					    ; [15]
+	<PUSH	TP* <MQUOTE (ACTIVATION)> -1>		    ; [16]
+	<PUSH	TP* <MQUOTE (ACTIVATION)>>		    ; [17]
+	<PUSHJ	P* |SPECBN >
+	<MOVEM	TP* (TB) 1>				    ; (1)
+TAG8	<INTGO>						    ; 61
+	<PUSH	TP* (TB) -9>				    ; (-9) [18]
+	<PUSH	TP* (TB) -8>				    ; (-8) [19]
+	<HLRZ	O* TB>
+	<PUSH	P* O>
+	<PUSH	TP* <TYPE-WORD TIME>>			    ; [20]
+	<PUSH	TP* O>					    ; [21]
+	<MCALL	2 READ>
+	<GETYP	O* A>
+	<POP	P* C>
+	<CAIN	O* <TYPE-CODE TIME>>
+	<CAIE	B* (C) 0>
+	<JRST	TAG9>
+	<MOVE	A* <TYPE-WORD FALSE>>
+	<MOVEI	B* 0>
+TAG9	<MOVEM	A* (TB) -7>				    ; 77 (-7)
+	<MOVEM	B* (TB) -6>				    ; (-6)
+	<GETYP	O* A>
+	<CAIE	O* <TYPE-CODE FALSE>>
+	<JRST	TAG10>
+	<MOVE	A* (TB) -9>				    ; (-9)
+	<MOVE	B* (TB) -8>				    ; (-8)
+	<JRST	|FINIS >
+TAG10	<GETYP	O* (TB) -11>				    ; 85 (-11)
+	<CAIN	O* <TYPE-CODE FALSE>>
+	<JRST	TAG11>
+	<PUSH	TP* A>					    ; [18]
+	<PUSH	TP* B>					    ; [19]
+	<PUSH	TP* (TB) -11>				    ; (-11) [20]
+	<PUSH	TP* (TB) -10>				    ; (-10) [21]
+	<MCALL	2 DECL?>
+	<GETYP	O* A>
+	<CAIN	O* <TYPE-CODE FALSE>>
+	<JRST	TAG11>
+	<MOVE	A* (TB) -7>				    ; (-7)
+	<MOVE	B* (TB) -6>				    ; (-6)
+	<MOVEM	A* (TB) -9>				    ; (-9)
+	<MOVEM	B* (TB) -8>				    ; (-8)
+	<JRST	|FINIS >
+TAG11	<PUSH	TP* (TB) -7>				    ; 101 (-7) [18]
+	<PUSH	TP* (TB) -6>				    ; (-6) [19]
+	<MCALL	1 EVAL>
+	<MOVEM	A* (TB) -9>				    ; (-9)
+	<MOVEM	B* (TB) -8>				    ; (-8)
+	<JRST	TAG8>
+TAG7	<MOVEM	A* (TP) -1>				    ; 107 (16)
+	<MOVEM	B* (TP) >				    ; (17)
+	<MOVE	D* <MQUOTE %<RGLOC GET-DATUM-ERRORS? T>>>
+	<ADD	D* |GLOTOP 1>
+	<SKIPGE	(D) 1>
+	<JRST	TAG12>
+	<MOVE	D* <MQUOTE %<RGLOC GETDERR T>>>
+	<ADD	D* |GLOTOP 1>
+	<PUSH	TP* <TYPE-WORD HANDLER>>		    ; [18]
+	<PUSH	TP* (D) 1>				    ; [19]
+	<MCALL	1 OFF>
+TAG12	<MOVE	B* (TP) -4>				    ; 118 (13)
+	<SKIPN	(B) 1>
+	<JRST	TAG13>
+	<PUSH	TP* <TYPE-WORD CHANNEL>>		    ; [18]
+	<PUSH	TP* B>					    ; [19]
+	<MCALL	1 CLOSE>
+TAG13	<MOVE	A* (TP) -1>				    ; 124 (16)
+	<MOVE	B* (TP) >				    ; (17)
+TAG5	<SUB	TP* [<(10) 10>]>			    ; 126
+	<JRST	|MPOPJ >
+	<(2) 2>
+	<0>
+	<4>
+	<(*47*) -1>
+	<IMULI	TB* 1 >
+	<IMULI	TB* (TB) -11>				    ; (-11)
+	<(10) 10>
+	<(2) *16*>
+	<(1) *14*>
+	<(*55212*) *412526*>
+	<0>
+	<(2) 2>

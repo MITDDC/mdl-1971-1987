@@ -1,0 +1,844 @@
+<DEFINE COMPILE:+ (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS "AUX" ARGS ACCUM)
+	#DECL ((VALUE) ANY (MOBJ) ANY (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]> (ACT-LIST) LIST
+	       (ARGS) LIST (ACCUM) ANY)
+	;"canonical compiler arguments. ARGS a list of the results of"
+	;"evaluating the arguments. The value of ACCUM is the result"
+	;"of each 2-argument addition (for reducing an addition with more"
+	;"than 2 args to a bunch of 2-argument additions)."
+	<COND (<LENGTH? .MOBJ 1>
+	       <REPORT-ERROR TOO-FEW-ARGUMENTS .MOBJ COMPILE:+>)
+	      (<LENGTH? .MOBJ 2>
+	       ;"** IF ARG IS A FIX OR FLOAT! **"
+	       ;"should just return argument"
+	       ;"compute decl to be <OR FIX FLOAT> here."
+	       <MCODE-DISPATCH <2 .MOBJ>
+			       .RETVAR
+			       .REF
+			       .NXT
+			       .ACT-LIST
+			       .SYMBOLS>)
+	      (ELSE
+	       ;"this compiles code for evaluating the arguments. Returns a list of"
+	       ;"results."
+	       <SET ARGS <SEQUENTIALIZE <REST .MOBJ>
+					;"generate new RETVAR for later use."
+					<GENSYM>
+					.REF		    ;"becomes ref of 1st arg"
+					<SET REF <GENREF>> ;"NXT after args."
+					;"in case of AGAIN, etc."
+					.ACT-LIST					 
+					.SYMBOLS>>
+
+	       ;"ACCUM is the result of each 2-operand +."
+	       ;"It is initialized here to make the first"
+	       ;"application of + do the right thing."
+
+	       <SET ACCUM <1 .ARGS>>
+	       <SET ARGS <REST .ARGS>>
+	       ;"compiles into code of the form:
+			<SET tmp1 <eval arg1>>
+			<SET tmp2 <eval arg2>>
+			<SET tmp3 <eval arg3>>
+			<SET tmp4 <+ tmp1 tmp2>
+			<SET tmp5 <+ tmp3 tmp4>> ..."
+	       <MAPR <>
+		     <FUNCTION (ARGL)
+			       #DECL ((ARGL) LIST)
+			       ;"possible FIX/FLOAT optimizations here"
+			       <SET ACCUM
+				    <MCODIFY <FORM MSET
+						   ;"create temporaries for intermediate"
+						   ;"values, except last one."
+						   ;"Might help common sub-expressions."
+						   <COND (<LENGTH? .ARGL 1>
+							  .RETVAR)
+							 (ELSE <GENSYM>)>
+						   <FORM +
+							 .ACCUM
+							 <1 .ARGL>>>
+					     .REF
+					     <COND (<LENGTH? .ARGL 1>
+						    .NXT)
+						   (ELSE
+						    <SET REF <GENREF>>)>>>>
+		     .ARGS>
+	       ;"returns temporary for result of last addition."
+	       ;"type <OR FIX FLOAT>")>>
+
+<DEFINE COMPILE:- (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS "AUX" ARGS ACCUM)
+	#DECL ((VALUE) ANY (MOBJ) ANY (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]> (ACT-LIST) LIST
+	       (ARGS) LIST (ACCUM) ANY)
+	;"canonical compiler arguments. ARGS a list of the results of"
+	;"evaluating the arguments. The value of ACCUM is the result"
+	;"of each 2-argument subtraction (for reducing a subtraction with more"
+	;"than 2 args to a bunch of 2-argument subtractions)."
+	<COND (<LENGTH? .MOBJ 1>
+	       <REPORT-ERROR TOO-FEW-ARGUMENTS .MOBJ COMPILE:+>)
+	      (<LENGTH? .MOBJ 2>
+	       ;"** IF ARG IS A FIX OR FLOAT! **"
+	       ;"should return negative of argument"
+	       ;"compute decl to be <OR FIX FLOAT> here."
+	       <MCODIFY <FORM MSET
+			      .RETVAR
+			      <FORM -
+				    <MCODE-DISPATCH <2 .MOBJ>
+						    ;"temporary for RETVAR"
+						    <GENSYM>
+						    .REF
+						    <SET REF <GENREF>>
+						    .ACT-LIST
+						    .SYMBOLS>>>
+			.REF
+			.NXT>)
+	      (ELSE
+	       ;"this compiles code for evaluating the arguments. Returns a list of"
+	       ;"results."
+	       <SET ARGS <SEQUENTIALIZE <REST .MOBJ>
+					;"generate temporaries for later use."
+					<GENSYM>
+					.REF		    ;"becomes ref of 1st arg"
+					<SET REF <GENREF>> ;"NXT after args."
+					.ACT-LIST
+					.SYMBOLS>>
+
+	       ;"ACCUM is the result of each 2-operand -."
+	       ;"It is initialized here to make the first"
+	       ;"application of - do the right thing."
+
+	       <SET ACCUM <1 .ARGS>>
+	       <SET ARGS <REST .ARGS>>
+	       ;"compiles into code of the form:
+			<SET tmp1 <eval arg1>>
+			<SET tmp2 <eval arg2>>
+			<SET tmp3 <eval arg3>>
+			<SET tmp4 <+ tmp1 tmp2>
+			<SET tmp5 <+ tmp3 tmp4>> ..."
+	       <MAPR <>
+		     <FUNCTION (ARGL)
+			       #DECL ((ARGL) LIST)
+			       ;"possible FIX/FLOAT optimizations here"
+			       <SET ACCUM
+				    <MCODIFY <FORM MSET
+						   ;"New temporaries for all"
+						   ;"intermediate values except the"
+						   ;"last one."
+						   <COND (<LENGTH? .ARGL 1>
+							  .RETVAR)
+							 (ELSE <GENSYM>)>
+						   <FORM -
+							 .ACCUM
+							 <1 .ARGL>>>
+					     .REF
+					     <COND (<LENGTH? .ARGL 1>
+						    .NXT)
+						   (ELSE <SET REF <GENREF>>)>>>>
+		     .ARGS>
+	       ;"returns temporary for result of last subtraction."
+	       ;"type <OR FIX FLOAT>")>>
+
+<DEFINE COMPILE:* (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS "AUX" ARGS ACCUM)
+	#DECL ((VALUE) ANY (MOBJ) ANY (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]>
+	       (ACT-LIST) LIST (ARGS) LIST (ACCUM) ANY)
+	;"canonical compiler arguments. ARGS a list of the results of"
+	;"evaluating the arguments. The value of ACCUM is the result"
+	;"of each 2-argument multiplication (for reducing a multiplication with more"
+	;"than 2 args to a bunch of 2-argument multiplications)."
+	<COND (<LENGTH? .MOBJ 1>
+	       <REPORT-ERROR TOO-FEW-ARGUMENTS .MOBJ COMPILE:*>)
+	      (<LENGTH? .MOBJ 2>
+	       ;"** IF ARG IS A FIX OR FLOAT! **"
+	       ;"should just return argument"
+	       ;"compute decl to be <OR FIX FLOAT> here."
+	       <MCODE-DISPATCH <2 .MOBJ>
+			       .RETVAR
+			       .REF
+			       .NXT
+			       .ACT-LIST
+			       .SYMBOLS>)
+	      (ELSE
+	       ;"this compiles code for evaluating the arguments. Returns a list of"
+	       ;"results."
+	       <SET ARGS <SEQUENTIALIZE <REST .MOBJ>
+					;"generate temps to hold intermediate values."
+					<GENSYM>
+					.REF		    ;"becomes ref of 1st arg"
+					<SET REF <GENREF>> ;"NXT for last arg."
+					.ACT-LIST
+					;"in case of AGAIN, etc."
+					.SYMBOLS>>
+
+	       ;"ACCUM is the result of each 2-operand *."
+	       ;"It is initialized here to make the first"
+	       ;"application of * do the right thing."
+
+	       <SET ACCUM <1 .ARGS>>
+	       <SET ARGS <REST .ARGS>>
+	       ;"compiles into code of the form:
+			<SET tmp1 <eval arg1>>
+			<SET tmp2 <eval arg2>>
+			<SET tmp3 <eval arg3>>
+			<SET tmp4 <* tmp1 tmp2>
+			<SET tmp5 <* tmp3 tmp4>> ..."
+	       <MAPR <>
+		     <FUNCTION (ARGL)
+			       #DECL ((ARGL) LIST)
+			       ;"possible FIX/FLOAT optimizations here"
+			       <SET ACCUM <MCODIFY <FORM MSET
+							 <COND (<LENGTH? .ARGL 1>
+								.RETVAR)
+							       (ELSE <GENSYM>)>
+							 <FORM *
+							       .ACCUM
+							       <1 .ARGL>>>
+						    .REF
+						    <COND (<LENGTH? .ARGL 1>
+							   .NXT)
+							  (ELSE
+							   <SET REF <GENREF>>)>>>>
+		     .ARGS>
+	       ;"returns temporary for result of last multiplication."
+	       ;"type <OR FIX FLOAT>")>>
+
+<DEFINE COMPILE:/ (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS "AUX" ARGS ACCUM)
+	#DECL ((VALUE) ANY (MOBJ) ANY (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]>
+	       (ACT-LIST) LIST (ARGS) LIST (ACCUM) ANY)
+	;"canonical compiler arguments. ARGS a list of the results of"
+	;"evaluating the arguments. The value of ACCUM is the result"
+	;"of each 2-argument division (for reducing a division with more"
+	;"than 2 args to a bunch of 2-argument divisions)."
+	<COND (<LENGTH? .MOBJ 1>
+	       <REPORT-ERROR TOO-FEW-ARGUMENTS .MOBJ COMPILE:/>)
+	      (<LENGTH? .MOBJ 2>
+	       ;"** IF ARG IS A FIX OR FLOAT! **"
+	       ;"should return reciprocal of argument (0 if FIX)"
+	       ;"compute decl to be <OR FIX FLOAT> here."
+	       <MCODIFY <FORM MSET
+			      .RETVAR
+			      <FORM /
+				    1
+				    <MCODE-DISPATCH <2 .MOBJ>
+						    ;"VARIABLE for return value."
+						    <GENSYM>
+						    .REF
+						    <SET REF <GENREF>>
+						    .ACT-LIST
+						    .SYMBOLS>>>
+			.REF
+			.NXT>)
+	      (ELSE
+	       ;"this compiles code for evaluating the arguments. Returns a list of"
+	       ;"results."
+	       <SET ARGS <SEQUENTIALIZE <REST .MOBJ>
+					;"temps for return values"
+					<GENSYM>
+					.REF		    ;"becomes ref of 1st arg"
+					<SET REF <GENREF>> ;"NXT for last arg."
+					.ACT-LIST
+					;"in case of AGAIN, etc."
+					.SYMBOLS>>
+
+	       ;"ACCUM is the result of each 2-operand /."
+	       ;"It is initialized here to make the first"
+	       ;"application of / do the right thing."
+
+	       <SET ACCUM <1 .ARGS>>
+	       <SET ARGS <REST .ARGS>>
+	       ;"compiles into code of the form:
+			<SET tmp1 <eval arg1>>
+			<SET tmp2 <eval arg2>>
+			<SET tmp3 <eval arg3>>
+			<SET tmp4 </ tmp1 tmp2>
+			<SET tmp5 </ tmp3 tmp4>> ..."
+	       <MAPR <>
+		     <FUNCTION (ARGL)
+			       #DECL ((ARGL) LIST)
+			       ;"possible FIX/FLOAT optimizations here"
+			       <SET ACCUM <MCODIFY <FORM MSET
+							 <COND (<LENGTH? .ARGL 1>
+								.RETVAR)
+							       (ELSE <GENSYM>)>
+							 <FORM /
+							       .ACCUM
+							       <1 .ARGL>>>
+						   <COND (<LENGTH? .ARGL 1>
+							  .NXT)
+							 (ELSE <SET REF <GENREF>>)>>>>
+		     .ARGS>
+	       ;"returns temporary for result of last division."
+	       ;"type <OR FIX FLOAT>")>>
+
+<DEFINE COMPILE:MOD (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS "AUX" ARGS ACCUM)
+	#DECL ((VALUE) ANY (MOBJ) ANY (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]>
+	       (ACT-LIST) LIST (ARGS) LIST (ACCUM) ANY)
+	;"format is inconsistent with later ones (unimportant)"
+	<COND (<NOT <==? <LENGTH .MOBJ> 3>>
+	       <REPORT-ERROR WRONG-NUMBER-OF-ARGUMENTS .MOBJ COMPILE:MOD>)
+	      (ELSE
+	       ;"must be of type FIX, compute decl accordingly."
+	       ;"this compiles code for evaluating the arguments. Returns a list of"
+	       ;"results (length 2)."
+	       <SET ARGS <SEQUENTIALIZE <REST .MOBJ>
+					;"temps to hold results"
+					<GENSYM>
+					.REF		    ;"becomes ref of 1st arg"
+					<SET REF <GENREF>> ;"NXT for last arg."
+					.ACT-LIST
+					;"in case of AGAIN, etc."
+					.SYMBOLS>>
+	       ;"compiles into code of the form:
+			<SET tmp1 arg1>
+			<SET tmp2 arg2>
+			<SET tmp3 <MOD tmp1 tmp2>>"
+
+	       <MCODIFY <FORM MSET
+			      .RETVAR
+			      <FORM MOD
+				    !.ARGS>>				    
+			;"FORWRD refering to this MCODE."
+			.REF
+			.NXT>
+	       ;"returns temporary containing result of MOD"
+	       ;"type FIX (has to be positive?)")>>
+
+<DEFINE COMPILE:0? (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS)
+	#DECL ((VALUE) ANY (MOBJ) ANY (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]>
+	       (ACT-LIST) LIST)
+	<COND (<NOT <==? <LENGTH .MOBJ> 1>>
+	       <REPORT-ERROR WRONG-NUMBER-OF-ARGUMENTS .MOBJ COMPILE:0?>)
+	      (ELSE
+	       ;"must be of type FIX/FLOAT, compute decl accordingly."
+	       ;"compile into:
+			 <SET tmp1 arg1>
+			 <SET tmp2 <0? tmp1>>."
+	       <MCODIFY <FORM MSET
+			      .RETVAR
+			      <FORM 0?
+				    <MCODE-DISPATCH <2 .MOBJ>
+						    <GENSYM>
+						    .REF
+						    <SET REF <GENREF>>
+						    .ACT-LIST
+						    .SYMBOLS>>>
+			;"this returned result of evaluating arg"
+			.REF
+			.NXT>
+	       ;"returns temporary containing result of 0?"
+	       ;"type <OR 'T FALSE>")>>
+
+<DEFINE COMPILE:1? (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS)
+	#DECL ((VALUE) ANY (MOBJ) ANY (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]>
+	       (ACT-LIST) LIST)
+	<COND (<NOT <==? <LENGTH .MOBJ> 1>>
+	       <REPORT-ERROR WRONG-NUMBER-OF-ARGUMENTS .MOBJ COMPILE:1?>)
+	      (ELSE
+	       ;"must be of type FIX/FLOAT, compute decl accordingly."
+	       ;"compile into:
+			 <SET tmp1 arg1>
+			 <SET tmp2 <1? tmp1>>."
+	       <MCODIFY <FORM MSET
+			      .RETVAR
+			      <FORM 1?
+				    <MCODE-DISPATCH <2 .MOBJ>
+						    <GENSYM>
+						    .REF
+						    <SET REF <GENREF>>
+						    .ACT-LIST
+						    .SYMBOLS>>>
+			;"NXT of last last MCODE-DISPATCH."
+			.REF
+			.NXT>
+	       ;"returns temporary containing result of 1?"
+	       ;"type <OR 'T FALSE>")>>
+
+<DEFINE COMPILE:G=? (MOBJ REFVAR REF NXT ACT-LIST SYMBOLS)
+	#DECL ((VALUE) ANY (MOBJ) ANY (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]>
+	       (ACT-LIST) LIST)
+	<COND (<NOT <==? <LENGTH .MOBJ> 2>>
+	       <REPORT-ERROR WRONG-NUMBER-OF-ARGUMENTS .MOBJ COMPILE:G=?>)
+	      (ELSE
+	       ;"must be of type FIX/FLOAT, compute decl accordingly."
+	       ;"compile into:
+			 <SET tmp1 arg1>
+			 <SET tmp2 arg2>
+			 <SET tmp3 <G=? tmp1 tmp2>>."
+	       <MCODIFY <FORM MSET
+			      .RETVAR
+			      <FORM G=?
+				    ;"return list of results from compiling args."
+				    !<SEQUENTIALIZE-ARGS <REST .MOBJ>
+							 <GENSYM>
+							 .REF
+							 <SET REF <GENREF>>
+							 .ACT-LIST
+							 .SYMBOLS>>>
+			;"NXT of last SEQUENTIALIZE."
+			.REF
+			.NXT>
+	       ;"returns temporary containing result of G=?"
+	       ;"type <OR 'T FALSE>")>>
+
+<DEFINE COMPILE:G? (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS)
+	#DECL ((VALUE) ANY (MOBJ) ANY (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]>
+	       (ACT-LIST) LIST)
+	<COND (<NOT <==? <LENGTH .MOBJ> 2>>
+	       <REPORT-ERROR WRONG-NUMBER-OF-ARGUMENTS .MOBJ COMPILE:G?>)
+	      (ELSE
+	       ;"must be of type FIX/FLOAT, compute decl accordingly."
+	       ;"compile into:
+			 <SET tmp1 arg1>
+			 <SET tmp2 arg2>
+			 <SET tmp3 <G? tmp1 tmp2>>."
+	       <MCODIFY <FORM MSET
+			      .RETVAR
+			      <FORM G?
+				    ;"return list of results from compiling args."
+				    !<SEQUENTIALIZE-ARGS <REST .MOBJ>
+							 <GENSYM>
+							 .REF
+							 <SET REF <GENREF>>
+							 .ACT-LIST
+							 .SYMBOLS>>>
+			.REF
+			.NXT>
+	       ;"returns temporary containing result of G?"
+	       ;"returns <OR 'T FALSE>")>>
+
+<DEFINE COMPILE:L=? (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS)
+	#DECL ((VALUE) ANY (MOBJ) ANY (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]>
+	       (ACT-LIST) LIST)
+	<COND (<NOT <==? <LENGTH .MOBJ> 2>>
+	       <REPORT-ERROR WRONG-NUMBER-OF-ARGUMENTS .MOBJ COMPILE:L=?>)
+	      (ELSE
+	       ;"must be of type FIX/FLOAT, compute decl accordingly."
+	       ;"compile into:
+			 <SET tmp1 arg1>
+			 <SET tmp2 arg2>
+			 <SET tmp3 <L=? tmp1 tmp2>>."
+	       <MCODIFY <FORM MSET
+			      .RETVAR
+			      <FORM L=?
+				    ;"return list of results from compiling args."
+				    !<SEQUENTIALIZE-ARGS <REST .MOBJ>
+							 <GENSYM>
+							 .REF
+							 <SET REF <GENREF>>
+							 .ACT-LIST
+							 .SYMBOLS>>>
+			.REF
+			.NXT>
+	       ;"returns temporary containing result of L=?"
+	       ;"type <OR 'T FALSE>")>>
+
+<DEFINE COMPILE:L? (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS)
+	#DECL ((VALUE) ANY (MOBJ) ANY (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]>
+	       (ACT-LIST) LIST)
+	<COND (<NOT <==? <LENGTH .MOBJ> 2>>
+	       <REPORT-ERROR WRONG-NUMBER-OF-ARGUMENTS .MOBJ COMPILE:L?>)
+	      (ELSE
+	       ;"must be of type FIX/FLOAT, compute decl accordingly."
+	       ;"compile into:
+			 <SET tmp1 arg1>
+			 <SET tmp2 arg2>
+			 <SET tmp3 <L? tmp1 tmp2>>."
+	       <MCODIFY <FORM MSET
+			      .RETVAR
+			      <FORM L?
+				    ;"return list of results from compiling args."
+				    !<SEQUENTIALIZE-ARGS <REST .MOBJ>
+							 <GENSYM>
+							 .REF
+							 <SET REF <GENREF>>
+							 .ACT-LIST
+							 .SYMBOLS>>>
+			.REF
+			.NXT>
+	       ;"returns temporary containing result of L?"
+	       ;"type <OR 'T FALSE>")>>
+
+<DEFINE COMPILE:MAX (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS "AUX" ARGS ACCUM)
+	#DECL ((VALUE) ANY (MOBJ) ANY (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]>
+	       (ACT-LIST) LIST (ARGS) LIST (ACCUM) ANY)
+	;"canonical compiler arguments. ARGS a list of the results of"
+	;"evaluating the arguments. The value of ACCUM is the result"
+	;"of each 2-argument MAX (for reducing a MAX with more"
+	;"than 2 args to a bunch of 2-argument MAXes)."
+	<COND (<LENGTH? .MOBJ 1>
+	       ;"returns least floating point number if no arguments"
+	       <MAX>)
+	      (<LENGTH? .MOBJ 2>
+	       ;"** IF ARG IS A FIX OR FLOAT! **"
+	       ;"should just return argument"
+	       ;"compute decl to be <OR FIX FLOAT> here."
+	       <MCODE-DISPATCH <2 .MOBJ>
+			       .RETVAR
+			       .REF
+			       .NXT
+			       .ACT-LIST
+			       .SYMBOLS>)
+	      (ELSE
+	       ;"this compiles code for evaluating the arguments. Returns a list of"
+	       ;"results."
+	       <SET ARGS <SEQUENTIALIZE <REST .MOBJ>
+					;"temps for return variables"
+					<GENSYM>
+					.REF		;"becomes ref of 1st arg"
+					<SET REF <GENREF>>
+					.ACT-LIST
+					.SYMBOLS>>
+
+	       ;"ACCUM is the result of each 2-operand MAX."
+	       ;"It is initialized here to make the first"
+	       ;"application of MAX do the right thing."
+
+	       <SET ACCUM <1 .ARGS>>
+	       <SET ARGS <REST .ARGS>>
+	       ;"compiles into code of the form:
+			<SET tmp1 <eval arg1>>
+			<SET tmp2 <eval arg2>>
+			<SET tmp3 <eval arg3>>
+			<SET tmp4 <MAX tmp1 tmp2>
+			<SET tmp5 <MAX tmp3 tmp4>> ..."
+	       <MAPR <>
+		     <FUNCTION (ARGL)
+			       #DECL ((ARGL) LIST)
+			       ;"possible FIX/FLOAT optimizations here"
+			       <SET ACCUM <MCODIFY <FORM MSET
+							 <COND (<LENGTH? .ARGL 1>
+								.RETVAR)
+							       (ELSE <GENSYM>)>
+							 <FORM MAX
+							       .ACCUM
+							       <1 .ARGL>>>
+						   <COND (<LENGTH? .ARGL 1>
+							  .NXT)
+							 (ELSE <SET REF <GENREF>>)>>>>
+		     .ARGS>
+	       ;"returns temporary for result of last MAX."
+	       ;"type <OR FIX FLOAT>")>>
+
+<DEFINE COMPILE:MIN (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS "AUX" ARGS ACCUM)
+	#DECL ((VALUE) ANY (MOBJ) ANY (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]>
+	       (ACT-LIST) LIST (ARGS) LIST (ACCUM) ANY)
+	;"canonical compiler arguments. ARGS a list of the results of"
+	;"evaluating the arguments. The value of ACCUM is the result"
+	;"of each 2-argument MIN (for reducing a MIN with more"
+	;"than 2 args to a bunch of 2-argument MINes)."
+	<COND (<LENGTH? .MOBJ 1>
+	       ;"returns greatest floating point number if no arguments"
+	       <MIN>)
+	      (<LENGTH? .MOBJ 2>
+	       ;"** IF ARG IS A FIX OR FLOAT! **"
+	       ;"should just return argument"
+	       ;"compute decl to be <OR FIX FLOAT> here."
+	       <MCODE-DISPATCH <2 .MOBJ>
+			       .RETVAR
+			       .REF
+			       .NXT
+			       .ACT-LIST
+			       .SYMBOLS>)
+	      (ELSE
+	       ;"this compiles code for evaluating the arguments. Returns a list of"
+	       ;"results."
+	       <SET ARGS <SEQUENTIALIZE <REST .MOBJ>
+					<GENSYM>
+					.REF		;"becomes ref of 1st arg"
+					<SET REF <GENREF>>
+					.ACT-LIST
+					.SYMBOLS>>
+
+	       ;"ACCUM is the result of each 2-operand MIN."
+	       ;"It is initialized here to make the first"
+	       ;"application of MIN do the right thing."
+
+	       <SET ACCUM <1 .ARGS>>
+	       <SET ARGS <REST .ARGS>>
+	       ;"compiles into code of the form:
+			<SET tmp1 <eval arg1>>
+			<SET tmp2 <eval arg2>>
+			<SET tmp3 <eval arg3>>
+			<SET tmp4 <MIN tmp1 tmp2>
+			<SET tmp5 <MIN tmp3 tmp4>> ..."
+	       <MAPR <>
+		     <FUNCTION (ARGL)
+			       #DECL ((ARGL) LIST)
+			       ;"possible FIX/FLOAT optimizations here"
+			       <SET ACCUM <MCODIFY <FORM MSET
+							 <COND (<LENGTH? .ARGL 1>
+								.RETVAR)
+							       (ELSE <GENSYM>)>
+							 <FORM MIN
+							       .ACCUM
+							       <1 .ARGL>>>
+						   <COND (<LENGTH? .ARGL 1>
+							  .NXT)
+							 (ELSE <SET REF <GENREF>>)>>>>
+				    
+		     .ARGS>
+	       ;"returns temporary for result of last MIN."
+	       ;"type <OR FIX FLOAT>")>>
+
+<DEFINE COMPILE:ATAN (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS)
+	#DECL ((VALUE) ANY (MOBJ) ANY (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]>
+	       (ACT-LIST) LIST)
+	<COND (<NOT <==? <LENGTH .MOBJ> 1>>
+	       <REPORT-ERROR WRONG-NUMBER-OF-ARGUMENTS .MOBJ COMPILE:ATAN>)
+	      (ELSE
+	       ;"must be of type FIX/FLOAT, compute decl accordingly."
+	       ;"compile into:
+			 <SET tmp1 arg1>
+			 <SET tmp2 <ATAN tmp1>>."
+	       <MCODIFY <FORM MSET
+			      .RETVAR
+			      <FORM ATAN
+				    <MCODE-DISPATCH <2 .MOBJ>
+						    <GENSYM>
+						    .REF
+						    <SET REF <GENREF>>
+						    .ACT-LIST
+						    .SYMBOLS>>>
+			.REF
+			.NXT>
+	       ;"returns temporary containing result of ATAN"
+	       ;"type FLOAT")>>
+
+<DEFINE COMPILE:SIN (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS)
+	#DECL ((VALUE) ANY (MOBJ) ANY (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (ACT-LIST) LIST (SYMBOLS) <LIST [REST SYMBOL-TABLE]>)
+	<COND (<NOT <==? <LENGTH .MOBJ> 1>>
+	       <REPORT-ERROR WRONG-NUMBER-OF-ARGUMENTS .MOBJ COMPILE:SIN>)
+	      (ELSE
+	       ;"must be of type FIX/FLOAT, compute decl accordingly."
+	       ;"compile into:
+			 <SET tmp1 arg1>
+			 <SET tmp2 <SIN tmp1>>."
+	       <MCODIFY <FORM MSET
+			      .RETVAR
+			      <FORM SIN
+				    <MCODE-DISPATCH <2 .MOBJ>
+						    <GENSYM>
+						    .REF
+						    <SET REF <GENREF>>
+						    .ACT-LIST
+						    .SYMBOLS>>>
+			.REF
+			.NXT>
+	       ;"returns temporary containing result of SIN"
+	       ;"type FLOAT")>>
+
+<DEFINE COMPILE:COS (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS)
+	#DECL ((VALUE) ANY (MOBJ) ANY (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (ACT-LIST) LIST (SYMBOLS) <LIST [REST SYMBOL-TABLE]>)
+	<COND (<NOT <==? <LENGTH .MOBJ> 1>>
+	       <REPORT-ERROR WRONG-NUMBER-OF-ARGUMENTS .MOBJ COMPILE:COS>)
+	      (ELSE
+	       ;"must be of type FIX/FLOAT, compute decl accordingly."
+	       ;"compile into:
+			 <SET tmp1 arg1>
+			 <SET tmp2 <COS tmp1>>."
+	       <MCODIFY <FORM MSET
+			      .RETVAR
+			      <FORM COS
+				    <MCODE-DISPATCH <2 .MOBJ>
+						    <GENSYM>
+						    .REF
+						    <SET REF <GENREF>>
+						    .ACT-LIST
+						    .SYMBOLS>>>
+			.REF
+			.NXT>
+	       ;"returns temporary containing result of COS"
+	       ;"type FLOAT")>>
+
+<DEFINE COMPILE:EXP (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS)
+	#DECL ((VALUE) ANY (MOBJ) ANY (RETVAR) VARIABLE (REF NXT) FORWRD	       
+	       (ACT-LIST) LIST (SYMBOLS) <LIST [REST SYMBOL-TABLE]>)
+	<COND (<NOT <==? <LENGTH .MOBJ> 1>>
+	       <REPORT-ERROR WRONG-NUMBER-OF-ARGUMENTS .MOBJ COMPILE:EXP>)
+	      (ELSE
+	       ;"must be of type FIX/FLOAT, compute decl accordingly."
+	       ;"compile into:
+			 <SET tmp1 arg1>
+			 <SET tmp2 <EXP tmp1>>."
+	       <MCODIFY <FORM MSET
+			      .RETVAR
+			      <FORM EXP
+				    <MCODE-DISPATCH <2 .MOBJ>
+						    <GENSYM>
+						    .REF
+						    <SET REF <GENREF>>
+						    .ACT-LIST
+						    .SYMBOLS>>>
+			.REF
+			.NXT>
+	       ;"returns temporary containing result of EXP"
+	       ;"type FLOAT")>>
+
+<DEFINE COMPILE:LOG (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS)
+	#DECL ((VALUE) ANY (MOBJ) ANY (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (ACT-LIST) LIST (SYMBOLS) <LIST [REST SYMBOL-TABLE]>)
+	<COND (<NOT <==? <LENGTH .MOBJ> 1>>
+	       <REPORT-ERROR WRONG-NUMBER-OF-ARGUMENTS .MOBJ COMPILE:LOG>)
+	      (ELSE
+	       ;"must be of type FIX/FLOAT, compute decl accordingly."
+	       ;"compile into:
+			 <SET tmp1 arg1>
+			 <SET tmp2 <LOG tmp1>>."
+	       <MCODIFY <FORM MSET
+			      <GENSYM>
+			      <FORM LOG
+				    <MCODE-DISPATCH <2 .MOBJ>
+						    .REF
+						    <SET REF <GENREF>>
+						    .ACT-LIST
+						    .SYMBOLS>>>
+			.REF
+			.NXT>
+	       ;"returns temporary containing result of LOG"
+	       ;"type FLOAT")>>
+
+<DEFINE COMPILE:FIX (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS)
+	#DECL ((VALUE) ANY (MOBJ) ANY (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]>
+	       (ACT-LIST) LIST)
+	<COND (<NOT <==? <LENGTH .MOBJ> 1>>
+	       <REPORT-ERROR WRONG-NUMBER-OF-ARGUMENTS .MOBJ COMPILE:FIX>)
+	      (ELSE
+	       ;"must be of type FIX/FLOAT compute decl accordingly."
+	       ;"compile into:
+			 <SET tmp1 arg1>
+			 <SET tmp2 <FIX tmp1>>."
+	       <MCODIFY <FORM MSET
+			      .RETVAR
+			      <FORM FIX
+				    <MCODE-DISPATCH <2 .MOBJ>
+						    <GENSYM>
+						    .REF
+						    .NXT
+						    .ACT-LIST
+						    .SYMBOLS>>>
+			.REF
+			.NXT>
+	       ;"returns temporary containing result of FIX"
+	       ;"type FIX")>>
+
+<DEFINE COMPILE:FLOAT (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS)
+	#DECL ((VALUE) ANY (MOBJ) ANY (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]>
+	       (ACT-LIST) LIST)
+	<COND (<NOT <==? <LENGTH .MOBJ> 1>>
+	       <REPORT-ERROR WRONG-NUMBER-OF-ARGUMENTS .MOBJ COMPILE:FLOAT>)
+	      (ELSE
+	       ;"must be of type FIX/FLOAT, compute decl accordingly."
+	       ;"compile into:
+			 <SET tmp1 arg1>
+			 <SET tmp2 <FLOAT tmp1>>."
+	       <MCODIFY <FORM MSET
+			      .RETVAR
+			      <FORM FLOAT
+				    <MCODE-DISPATCH <2 .MOBJ>
+						    <GENSYM>
+						    .REF
+						    <SET REF <GENREF>>
+						    .ACT-LIST
+						    .SYMBOLS>>>
+			.REF
+			.NXT>
+	       ;"returns temporary containing result of FLOAT"
+	       ;"type FLOAT")>>
+
+<DEFINE COMPILE:ABS (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS)
+	#DECL ((VALUE) ANY (MOBJ) ANY (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]>
+	       (ACT-LIST) LIST)
+	<COND (<NOT <==? <LENGTH .MOBJ> 1>>
+	       <REPORT-ERROR WRONG-NUMBER-OF-ARGUMENTS .MOBJ COMPILE:ABS>)
+	      (ELSE
+	       ;"must be of type FIX/FLOAT, compute decl accordingly."
+	       ;"compile into:
+			 <SET tmp1 arg1>
+			 <SET tmp2 <ABS tmp1>>."
+	       <MCODIFY <FORM MSET
+			      .RETVAR
+			      <FORM ABS
+				    <MCODE-DISPATCH <2 .MOBJ>
+						    <GENSYM>
+						    .REF
+						    <SET REF <GENREF>>
+						    .ACT-LIST
+						    .SYMBOLS>>>
+			.REF
+			.NXT>
+	       ;"returns temporary containing result of ABS"
+	       ;"type FIX/FLOAT")>>
+
+<DEFINE COMPILE:RANDOM (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS)
+	#DECL ((VALUE) ANY (MOBJ) ANY (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (ACT-LIST) LIST (SYMBOLS) <LIST [REST SYMBOL-TABLE]>)
+	;"**BEWARE** this function has side-effects, in that it can change"
+	;"the result of the next call to RANDOM."
+	<COND (<NOT <LENGTH? .MOBJ 3>>
+	       <REPORT-ERROR TOO-MANY-ARGUMENTS .MOBJ COMPILE:RANDOM>)
+	      (ELSE
+	       ;"must be of type FIX/FLOAT, compute decl accordingly."
+	       ;"compile into:
+			 <SET tmp1 arg1>
+			 <SET tmp2 <RANDOM tmp1>>."
+	       <MCODIFY <FORM MSET
+			      .RETVAR
+			      <FORM RANDOM
+				    !<SEQUENTIALIZE <REST .MOBJ>
+						    <GENSYM>
+						    .REF
+						    <SET REF <GENREF>>
+						    .ACT-LIST
+						    .SYMBOLS>>>
+			.REF
+			.NXT>
+	       ;"returns temporary containing result of RANDOM"
+	       ;"type FIX")>>
+
+<DEFINE COMPILE:OVERFLOW (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS)
+	#DECL ((VALUE) ANY (MOBJ) ANY (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]>
+	       (ACT-LIST) LIST)
+	<COND (<NOT <LENGTH? .MOBJ 2>>
+	       <REPORT-ERROR WRONG-NUMBER-OF-ARGUMENTS .MOBJ COMPILE:OVERFLOW>)
+	      (<LENGTH? .MOBJ 1>
+	       ;"compile into:
+			 <SET tmp1 <OVERFLOW tmp1>>."
+	       <MCODIFY <FORM MSET
+			      .RETVAR
+			      <FORM OVERFLOW>>
+			.REF
+			.NXT>)
+	      (ELSE
+	       ;"compile into
+			 <SET tmp1 arg1>
+			 <SET tmp2 <OVERFLOW tmp1>>"
+	       <MCODIFY <FORM MSET 
+			      .RETVAR
+			      <FORM OVERFLOW
+				    <MCODIFY <2 .MOBJ>
+					     <GENSYM>
+					     .REF
+					     <SET <GENREF>>
+					     .ACT-LIST>>>
+			.REF
+			.NXT>)
+	       ;"returns temporary containing result of OVERFLOW"
+	       ;"type FLOAT">>
+

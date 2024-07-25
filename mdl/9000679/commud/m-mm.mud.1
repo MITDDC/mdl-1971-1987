@@ -1,0 +1,159 @@
+<PACKAGE "M-MM">
+
+<ENTRY READMAIL>
+
+<USE "R-DEFS" "M-PRS" "M-READ" "M-DEFS" "ASYLUM" "MADMAN">
+
+<SETG HSTR <ISTRING 22>>
+
+<GDECL (HSTR) STRING>
+
+<SETG SELECTION 0>
+
+<MANIFEST SELECTION>
+
+<DEFINE READMAIL (ADR "OPTIONAL" (SELECTION ,SELECTION)
+		  "AUX" (C <OPEN "READ" <STRING "<" .ADR ">MAIL.TXT">>)
+		  (RA <OPEN-DATA-FILE <STRING "<" .ADR ">READER.ASYLUM">>)
+		  TMP (LS ()) (NEW ()) (NLS (0)) (L .NLS) (NNEW (0)) (N .NNEW)
+		  (SS ,SCRATCH-SPACE) R) 
+	#DECL ((C) <OR CHANNEL FALSE> (SELECTION) FIX (M) <OR LIST FALSE>
+	       (RA) <OR ASYLUM FALSE> (LS) <OR FALSE LIST VECTOR>
+	       (NEW) <OR FALSE LIST UVECTOR> (NLS L NNEW N) LIST
+	       (R) <OR FALSE MANIAC> (SS) SPACE)
+	<COND (<AND .C .RA>
+	       <COND (<SET TMP <DATA-AREAD .RA ,M-ASYLUM <ARESET .SS>>>
+		      <SET LS <LIST !.TMP>>)>
+	       <COND (<SET TMP <DATA-AREAD .RA ,M-NEW <ARESET .SS>>>
+		      <SET NEW <LIST !.TMP>>)>
+	       <MAPF <>
+		     <FUNCTION ("AUX" U) 
+			  #DECL ((U) <OR FALSE <LIST FIX FIX>>)
+			  <COND (<READMESSAGE .C .SELECTION>
+				 <SET U <MAIL-DELIVERY .RA>>
+				 <PUTREST .L .U>
+				 <SET L <REST .L 2>>
+				 <PUTREST .N <SET N (<1 .U>)>>
+				 <COND (<0? <1 .C>> <MAPLEAVE>)>)
+				(ELSE <CLOSE .C> <MAPLEAVE>)>>>
+	       <SET LS <AVECTOR <ARESET .SS> !<ATTACH .LS <REST .NLS>>>>
+	       <COND (<SET R <DATA-APRINT .RA ,M-ASYLUM .SS .LS>>)
+		     (ELSE <ERROR M-ASYLUM .R>)>
+	       <SET NEW <AUVECTOR <ARESET .SS> !<ATTACH .NEW <REST .NNEW>>>>
+	       <COND (<SET R <DATA-APRINT .RA ,M-NEW .SS .NEW>>)
+		     (ELSE <ERROR M-NEW .R>)>
+	       <CLOSE-DATA-FILE .RA>)>>
+
+<DEFINE ATTACH (L1 L2)
+	#DECL ((L1 L2 VALUE) LIST)
+	<COND (<EMPTY? .L1> .L2)
+	      (<EMPTY? .L2> .L1)
+	      (ELSE
+	       <PUTREST <REST .L1 <- <LENGTH .L1> 1>> .L2>
+	       .L1)>>
+
+<DEFINE READMESSAGE (C SELECTION "AUX" L MSGLEN MSGBITS (HSTR ,HSTR) MSG
+		     (SS ,SCRATCH-SPACE) FLDLST) 
+	#DECL ((L MSGLEN MSGBITS) <OR FIX FALSE> (HSTR) STRING (C) CHANNEL
+	       (FLDLST) LIST (SS) SPACE (MSG) STRING)
+	<PROG ()
+	      <ARESET .SS>
+	      <PUT ,MDB ,MVDATA <AVECTOR <ARESET ,MSG-SPACE>>>
+	      <COND (<AND <SET L
+			       <READSTRING .HSTR
+					   .C
+					   <LENGTH .HSTR>
+					   '#FALSE ("Eof")>>
+			  <==? .L <LENGTH .HSTR>>>
+		     <READCHR .C>			    ;"read terminator")
+		    (.L <RETURN #FALSE ("Eof")>)
+		    (ELSE <RETURN .L>)>
+	      <COND (<SET MSGLEN <READNUM .C>>)
+		    (ELSE <RETURN #FALSE ("Bad Message Length")>)>
+	      <COND (<SET MSGBITS <READWORD .C>>)
+		    (ELSE <RETURN #FALSE ("Bad Message Bits")>)>
+	      <COND (<0? <CHTYPE <ANDB .MSGBITS .SELECTION> FIX>>
+		     <COND (<N==? <READSTRING <SET MSG <AISTRING .SS .MSGLEN>>
+					      .C>
+				  .MSGLEN>
+			    <RETURN #FALSE ("Message Length Lied")>)>
+		     <SET FLDLST <MAIL-PARSE .MSG>>
+		     <ADDFLD "MSG-NO" <GENERATE-ID> .FLDLST>
+		     <ADDFLD "WHEN-RECEIVED" <MPDATE .HSTR !\-> .FLDLST>
+		     <ADDFLD "BITS" <CHTYPE .MSGBITS WORD> .FLDLST>
+		     <STORE-PARSE .FLDLST>)
+		    (ELSE <ACCESS .C <+ <17 .C> .MSGLEN>>)>>>
+
+<SETG BASE-ID 10000>
+
+<GDECL (BASE-ID) FIX>
+
+<DEFINE GENERATE-ID ()
+	<PUT ,MDB ,MVMSG <SETG BASE-ID <+ ,BASE-ID 1>>>
+	,BASE-ID>
+
+<DEFINE READWORD (CH "AUX" (NUM 0))
+	#DECL ((CH) CHANNEL (NUM) FIX (VALUE) <OR FIX FALSE>)
+	<MAPF <>
+	      <FUNCTION ("AUX" (C <READCHR .CH '<>>))
+		   #DECL ((C) <OR FALSE CHARACTER>)
+		   <COND (<==? .C <ASCII 13>>
+			  <READCHR .CH>
+			  <MAPLEAVE .NUM>)
+			 (<OR <==? .C !\,> <==? .C !\;>>
+			  <MAPLEAVE .NUM>)
+			 (<AND <G=? <ASCII .C> <ASCII !\0>>
+			       <L=? <ASCII .C> <ASCII !\9>>>
+			  <SET NUM
+			       <CHTYPE <ORB <- <ASCII .C> 48> <LSH .NUM 3>>
+				       FIX>>)
+			 (ELSE <MAPLEAVE <>>)>>>>
+
+<DEFINE READNUM (CH "AUX" (NUM 0))
+	#DECL ((CH) CHANNEL (NUM) FIX (VALUE) <OR FIX FALSE>)
+	<MAPF <>
+	      <FUNCTION ("AUX" (C <READCHR .CH '<>>))
+		   #DECL ((C) <OR FALSE CHARACTER>)
+		   <COND (<==? .C <ASCII 13>>
+			  <READCHR .CH>
+			  <MAPLEAVE .NUM>)
+			 (<OR <==? .C !\,> <==? .C !\;>>
+			  <MAPLEAVE .NUM>)
+			 (<AND <G=? <ASCII .C> <ASCII !\0>>
+			       <L=? <ASCII .C> <ASCII !\9>>>
+			  <SET NUM <+ <- <ASCII .C> 48> <* .NUM 10>>>)
+			 (ELSE <MAPLEAVE <>>)>>>>
+
+\
+
+"MAIL-DELIVERY -- deliver citation and message to user's asylum
+	takes: asylum to deliver to
+	       vector of locally-stored messages from that asylum
+	returns: uvector of id and local maniac stored under (or false)"
+
+<DEFINE MAIL-DELIVERY (RA "AUX" (MS ,MSG-SPACE) LC ID R RR (M -1))
+	#DECL ((RA) <OR FALSE ASYLUM> (MS SS) SPACE (RR R) <OR FALSE MANIAC>
+	       (M LC) FIX)
+	<SET ID <DRDMSG "" "MSG-NO">>
+	<COND (<NOT <SET R <DATA-OPEN "PRINT" .RA .M>>>
+	       <AFALSE 30 <ACOPY .MS .R>>)
+	      (<L? <SET LC <1 .R>> 10>
+	       <DATA-CLOSE .RA .R>
+	       <AFALSE 31
+		       <ASTRING .MS "ABOUT-TO-CLOBBER"> <1 .R>>)
+	      (<NOT <SET RR <DATA-IPRINT .RA .R .MS <MVDATA ,MDB>>>>
+	       <DATA-CLOSE .RA .R>
+	       <AFALSE 32 <ACOPY .MS .RR>>)
+	      (<NOT <SET R <DATA-CLOSE .RA .R>>>
+	       <AFALSE 33 <ACOPY .MS .R>>)
+	      (ELSE
+	       <LIST .ID .LC>)>>
+
+<DEFINE FIND-LOCAL (ID V)
+	#DECL ((ID) FIX (V) <VECTOR [REST FIX]>)
+	<REPEAT ()
+		<COND (<EMPTY? .V> <RETURN <>>)
+		      (<==? <1 .V> .ID> <RETURN <2 .V>>)
+		      (ELSE <SET V <REST .V 2>>)>>>
+
+<ENDPACKAGE>

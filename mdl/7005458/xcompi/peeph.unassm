@@ -1,0 +1,843 @@
+	<PSEUDO <SETG FRM1!-TMP 2>>
+	<TITLE INSTYPE!-IPEEPH!-PEEPH!-PACKAGE #FALSE ()>
+	<DECLARE ("VALUE" ANY ANY)>
+	<`PUSH  `TP*  `(AB) >
+	<`PUSH  `TP*  `(AB)  1>
+	<`PUSHJ  `P*  INSTYPE0!-TMP>
+	<`JRST  |FINIS >
+	<INTERNAL-ENTRY INSTYPE0!-TMP 1>
+	<`SUBM  `M*  `(P) >
+	<`PUSH  `TP*  <TYPE-WORD FIX>>
+	<`PUSH  `TP*  [0]>
+	<`PUSH  `TP*  <TYPE-WORD UNBOUND>>
+	<`PUSH  `TP*  [-1]>
+	<INTGO>
+	<GETYP `O*  <- -3 ,FRM1!-TMP> `(TP) >
+	<`CAIE  <TYPE-CODE FORM>>
+	<`JRST  PHRASE6!-TMP>
+	<`MOVE  `B*  `(TP)  -4>
+	<`JUMPE  `B*  |CERR2 >
+	<GETYP `O*  (`B )>
+	<`CAIN  `O*  TDEFER>
+	<`MOVE  `B*  (`B ) 1>
+	<`MOVE  `D*  (`B )>
+	<`MOVE  `F*  (`B ) 1>
+	<GETYP `O*  `D >
+	<`CAIE  <TYPE-CODE OPCODE>>
+	<`JRST  PHRASE6!-TMP>
+	<`LDB  `B*  [<#OPCODE 29142024192 `F >]>
+	<`MOVE  `TVP*  <TYPE-WORD FIX>>
+	<`MOVEM  `TVP*  `(TP)  -1>
+	<`MOVEM  `B*  `(TP) >
+	<`CAIN  `B*  172>
+	<`JRST  BOOL10!-TMP>
+	<`CAIL  `B*  192>
+	<`CAILE  `B*  255>
+	<`JRST  PHRASE6!-TMP>
+BOOL10!-TMP							;33
+	<`LDB  `B*  [<#OPCODE 3321888768 -1 `(TP)  1>]>
+	<`MOVEM  `B*  `(TP)  -2>
+	<`MOVE  `D*  `(TP) >
+	<`CAIN  `D*  172>
+	<`JRST  BOOL16!-TMP>
+	<`CAIN  `B*  24>
+	<`JRST  PHRASE14!-TMP>
+	<`ANDI  `B*  1>
+	<`JUMPN  `B*  PHRASE14!-TMP>
+BOOL16!-TMP							;42
+	<`LDB  `B*  [<`F*  `D >]>
+	<`MOVEM  `B*  `(TP)  -2>
+	<`JUMPE  `B*  PHRASE14!-TMP>
+	<`MOVE  `E*  `(TP)  -4>
+	<`HRRZ  `E*  (`E )>
+	<`MOVE  `C*  <TYPE-WORD FALSE>>
+	<`MOVEI  `D* >
+	<`PUSHJ  `P*  |C1CONS >
+	<`MOVE  `D*  `(TP)  -2>
+	<`CAIE  `D*  4>
+	<`JRST  TAG21!-TMP>
+	<`MOVE  `C*  <MQUOTE 'T> -1>
+	<`MOVE  `D*  <MQUOTE 'T>>
+	<`JRST  TAG22!-TMP>
+TAG21!-TMP							;56
+	<`MOVE  `C*  <TYPE-WORD FALSE>>
+	<`MOVEI  `D* >
+TAG22!-TMP							;58
+	<`MOVE  `E*  `B >
+	<`PUSHJ  `P*  |C1CONS >
+	<`MOVE  `C*  `(TP)  -3>
+	<`MOVE  `D*  `(TP)  -2>
+	<`MOVE  `E*  `B >
+	<`PUSHJ  `P*  |C1CONS >
+	<`MOVE  `C*  `(TP)  -1>
+	<`MOVE  `D*  `(TP) >
+	<`MOVE  `E*  `B >
+	<`PUSHJ  `P*  |C1CONS >
+	<`MOVE  `A*  <TYPE-WORD JUMP-INS!-IPEEPH!-PEEPH!-PACKAGE>>
+	<`JRST  COND5!-TMP>
+PHRASE14!-TMP							;70
+	<`LDB  `B*  [<`F*  `D >]>
+	<`MOVEM  `B*  `(TP)  -2>
+	<`JUMPE  `B*  PHRASE28!-TMP>
+	<`MOVE  `E*  `(TP)  -4>
+	<`HRRZ  `E*  (`E )>
+	<`CAIE  `B*  4>
+	<`JRST  TAG26!-TMP>
+	<`MOVE  `C*  <MQUOTE 'T> -1>
+	<`MOVE  `D*  <MQUOTE 'T>>
+	<`JRST  TAG27!-TMP>
+TAG26!-TMP							;80
+	<`MOVE  `C*  <TYPE-WORD FALSE>>
+	<`MOVEI  `D* >
+TAG27!-TMP							;82
+	<`PUSHJ  `P*  |C1CONS >
+	<`MOVE  `C*  <TYPE-WORD FALSE>>
+	<`MOVEI  `D* >
+	<`MOVE  `E*  `B >
+	<`PUSHJ  `P*  |C1CONS >
+	<`MOVE  `C*  `(TP)  -3>
+	<`MOVE  `D*  `(TP)  -2>
+	<`MOVE  `E*  `B >
+	<`PUSHJ  `P*  |C1CONS >
+	<`MOVE  `C*  `(TP)  -1>
+	<`MOVE  `D*  `(TP) >
+	<`MOVE  `E*  `B >
+	<`PUSHJ  `P*  |C1CONS >
+	<`MOVE  `A*  <TYPE-WORD SKIP-INS!-IPEEPH!-PEEPH!-PACKAGE>>
+	<`JRST  COND5!-TMP>
+PHRASE6!-TMP							;97
+	<GETYP `O*  -1 `(TP) >
+	<`CAIN  `O*  <TYPE-CODE UNBOUND>>
+	<`JRST  PHRASE28!-TMP>
+	<`MOVE  `B*  `(TP) >
+	<`CAIL  `B*  384>
+	<`CAILE  `B*  447>
+	<`JRST  PHRASE28!-TMP>
+	<`LDB  `D*  [<#OPCODE 1107296256 `B >]>
+	<`MOVEM  `D*  `(TP)  -2>
+	<`JUMPE  `D*  PHRASE28!-TMP>
+	<`MOVE  `E*  `(TP)  -4>
+	<`JUMPE  `E*  |CERR2 >
+	<`HRRZ  `E*  (`E )>
+	<`MOVE  `B*  `(TP)  -2>
+	<`CAIE  `B*  2>
+	<`JRST  TAG32!-TMP>
+	<`MOVE  `C*  <MQUOTE 'T> -1>
+	<`MOVE  `D*  <MQUOTE 'T>>
+	<`JRST  TAG33!-TMP>
+TAG32!-TMP							;116
+	<`MOVE  `C*  <TYPE-WORD FALSE>>
+	<`MOVEI  `D* >
+TAG33!-TMP							;118
+	<`PUSHJ  `P*  |C1CONS >
+	<`MOVE  `C*  <MQUOTE 'T> -1>
+	<`MOVE  `D*  <MQUOTE 'T>>
+	<`MOVE  `E*  `B >
+	<`PUSHJ  `P*  |C1CONS >
+	<`MOVE  `C*  `(TP)  -3>
+	<`MOVE  `D*  `(TP)  -2>
+	<`MOVE  `E*  `B >
+	<`PUSHJ  `P*  |C1CONS >
+	<`MOVE  `C*  `(TP)  -1>
+	<`MOVE  `D*  `(TP) >
+	<`MOVE  `E*  `B >
+	<`PUSHJ  `P*  |C1CONS >
+	<`MOVE  `A*  <TYPE-WORD SKIP-INS!-IPEEPH!-PEEPH!-PACKAGE>>
+	<`JRST  COND5!-TMP>
+PHRASE28!-TMP							;133
+	<`MOVE  `A*  `(TP)  -5>
+	<`MOVE  `B*  `(TP)  -4>
+COND5!-TMP							;135
+	<`SUB  `TP*  [<(6) 6>]>
+	<`JRST  |MPOPJ >
+
+  	<PSEUDO <SETG FRM1!-TMP 2>>
+	<TITLE DEL-JUMP-LN!-IPEEPH!-PEEPH!-PACKAGE #FALSE ()>
+	<DECLARE ("VALUE" <OR ATOM FALSE> TUPLE)>
+	<`PUSH  `TP*  `(AB) >
+	<`PUSH  `TP*  `(AB)  1>
+	<`PUSHJ  `P*  DEL-JUMP-LN0!-TMP>
+	<`JRST  |FINIS >
+	<INTERNAL-ENTRY DEL-JUMP-LN0!-TMP 1>
+	<`SUBM  `M*  `(P) >
+	<`PUSH  `TP*  <TYPE-WORD LIST>>
+	<`PUSH  `TP*  [0]>
+	<`MOVE  `B*  `(TP)  -3>
+	<`MOVE  `D*  `(TP)  -2>
+	<`JUMPGE  `D*  |CERR2 >
+	<`PUSH  `TP*  <TYPE-WORD JUMP-INS!-IPEEPH!-PEEPH!-PACKAGE>>
+	<`PUSH  `TP*  (`D ) 1>
+	<INTGO>
+	<`MOVE  `C*  `(TP)  -5>
+	<`MOVE  `E*  `(TP)  -4>
+	<`MOVE  `TVP*  `(TP) >
+	<`MOVEI  `D*  3>
+TAG10!-TMP							;18
+	<`HRRZ  `TVP*  (`TVP )>
+	<`SOJG  `D*  TAG10!-TMP>
+	<`MOVE  `D*  (`TVP )>
+	<`MOVE  `F*  (`TVP ) 1>
+	<`MOVE  `B*  (`F ) 3>
+	<`MOVE  `A*  <TYPE-WORD LIST>>
+	<`MOVEM  `B*  `(TP)  -2>
+	<`JUMPE  `B*  TAG7!-TMP>
+TAG9!-TMP							;26
+	<`MOVE  `TVP*  (`B ) 1>
+	<GETYP `O*  0 (`TVP )>
+	<`CAIN  `O*  <TYPE-CODE TUPLE>>
+	<`CAME  `E*  (`TVP ) 1>
+	<`SKIPA >
+	<`JRST  TAG8!-TMP>
+	<`HRRZ  `B*  (`B )>
+	<`JUMPN  `B*  TAG9!-TMP>
+TAG7!-TMP							;34
+	<`MOVE  `A*  <TYPE-WORD FALSE>>
+	<`MOVEI  `B* >
+	<`JRST  TAG12!-TMP>
+TAG8!-TMP							;37
+	<`MOVE  `A*  <TYPE-WORD LIST>>
+TAG12!-TMP							;38
+	<GETYP `O*  `A >
+	<`CAIN  `O*  <TYPE-CODE FALSE>>
+	<`JRST  PHRASE6!-TMP>
+	<`CAME  `B*  `(TP)  -2>
+	<`JRST  PHRASE14!-TMP>
+	<`JUMPE  `B*  |CERR2 >
+	<`HRRZ  `B*  (`B )>
+	<`MOVEM  `B*  (`F ) 3>
+	<`JRST  PHRASE17!-TMP>
+PHRASE14!-TMP							;47
+	<`MOVE  `TVP*  `(TP)  -2>
+	<`JRST  TAG20!-TMP>
+TAG21!-TMP							;49
+	<`HRR  `TVP*  (`TVP ) -1>
+TAG20!-TMP							;50
+	<`TRNE  `TVP*  -1>
+	<`AOBJP  `TVP*  TAG21!-TMP>
+	<`HLRZS  `TVP >
+	<`MOVE  `E*  `B >
+	<`JRST  TAG22!-TMP>
+TAG23!-TMP							;55
+	<`HRR  `E*  (`E ) -1>
+TAG22!-TMP							;56
+	<`TRNE  `E*  -1>
+	<`AOBJP  `E*  TAG23!-TMP>
+	<`HLRZS  `E >
+	<`SUB  `TVP*  `E >
+	<`SUBI  `TVP*  1>
+	<`MOVE  `C*  `(TP)  -2>
+	<`JUMPL  `TVP*  |CERR1 >
+	<`JUMPE  `TVP*  TAG19!-TMP>
+TAG18!-TMP							;64
+	<`JUMPE  `C*  |CERR2 >
+	<`HRRZ  `C*  (`C )>
+	<`SOJG  `TVP*  TAG18!-TMP>
+TAG19!-TMP							;67
+	<`JUMPE  `B*  |CERR2 >
+	<`HRRZ  `B*  (`B )>
+	<`JUMPE  `C*  |CERR2 >
+	<`HRRM  `B*  (`C )>
+PHRASE17!-TMP							;71
+	<`MOVE  `A*  <MQUOTE 'T> -1>
+	<`MOVE  `B*  <MQUOTE 'T>>
+PHRASE6!-TMP							;73
+	<`SUB  `TP*  [<(6) 6>]>
+	<`JRST  |MPOPJ >
+
+ 	<PSEUDO <SETG FRM1!-TMP 4>>
+	<TITLE MAKE:LABEL!-IPEEPH!-PEEPH!-PACKAGE #FALSE ()>
+	<DECLARE ("VALUE" ATOM)>
+	<`PUSHJ  `P*  MAKE:LABEL0!-TMP>
+	<`JRST  |FINIS >
+	<INTERNAL-ENTRY MAKE:LABEL0!-TMP 0>
+	<`SUBM  `M*  `(P) >
+	<`PUSH  `TP*  [0]>
+	<`PUSH  `TP*  [0]>
+	<`PUSH  `TP*  [0]>
+	<`PUSH  `TP*  [0]>
+	<INTGO>
+	<`PUSH  `TP*  <MQUOTE '"OPT"> -1>
+	<`PUSH  `TP*  <MQUOTE '"OPT">>
+	<`MOVE  `B*  <MQUOTE 'LABNUM!-IPEEPH!-PEEPH!-PACKAGE>>
+	<`PUSHJ  `P*  |CILVAL >
+	<`ADDI  `B*  1>
+	<`MOVE  `C*  <MQUOTE 'LABNUM!-IPEEPH!-PEEPH!-PACKAGE>>
+	<`PUSHJ  `P*  |CISET >
+	<`MOVEI  `C*  10>
+	<`PUSHJ  `P*  |CIUPRS >
+	<`PUSH  `TP*  `A >
+	<`PUSH  `TP*  `B >
+	<`MOVEI  `A*  2>
+	<`PUSHJ  `P*  |CISTNG >
+	<`MOVE  `C*  `A >
+	<`MOVE  `D*  `B >
+	<`MOVE  `A*  <MQUOTE 'TMP> -1>
+	<`MOVE  `B*  <MQUOTE 'TMP>>
+	<`MOVE  `E*  `C >
+	<`MOVE  `F*  `D >
+	<`MOVE  `C*  <MQUOTE 'OBLIST> -1>
+	<`MOVE  `D*  <MQUOTE 'OBLIST>>
+	<`MOVEM  `E*  `(TP)  -3>
+	<`MOVEM  `F*  `(TP)  -2>
+	<`MOVEM  `E*  `(TP)  -1>
+	<`MOVEM  `F*  `(TP) >
+	<`PUSHJ  `P*  |CIGET >
+	<`JFCL >
+	<`MOVE  `C*  `B >
+	<`MOVE  `A*  `(TP)  -1>
+	<`MOVE  `B*  `(TP) >
+	<`PUSHJ  `P*  |CLOOKU >
+	<`JRST  TAG7!-TMP>
+	<`JRST  BOOL5!-TMP>
+TAG7!-TMP							;42
+	<`MOVE  `A*  `(TP)  -3>
+	<`MOVE  `B*  `(TP)  -2>
+	<`MOVE  `C*  `A >
+	<`MOVE  `D*  `B >
+	<`MOVE  `A*  <MQUOTE 'TMP> -1>
+	<`MOVE  `B*  <MQUOTE 'TMP>>
+	<`MOVE  `E*  `C >
+	<`MOVE  `F*  `D >
+	<`MOVE  `C*  <MQUOTE 'OBLIST> -1>
+	<`MOVE  `D*  <MQUOTE 'OBLIST>>
+	<`MOVEM  `E*  `(TP)  -1>
+	<`MOVEM  `F*  `(TP) >
+	<`PUSHJ  `P*  |CIGET >
+	<`JFCL >
+	<`MOVE  `C*  `B >
+	<`MOVE  `A*  `(TP)  -1>
+	<`MOVE  `B*  `(TP) >
+	<`PUSHJ  `P*  |CINSER >
+BOOL5!-TMP							;60
+	<`SUB  `TP*  [<(4) 4>]>
+	<`MOVE  `A*  <TYPE-WORD ATOM>>
+	<`JRST  |MPOPJ >
+
+	<PSEUDO <SETG FRM4!-TMP 0>>
+	<PSEUDO <SETG FRM3!-TMP 2>>
+	<TITLE NEXTS!-IPEEPH!-PEEPH!-PACKAGE #FALSE ()>
+	<DECLARE ("VALUE" ANY TUPLE "OPTIONAL" ANY FIX)>
+	<`MOVE  `A*  `AB >
+TAG5!-TMP							;1
+	<`PUSH  `TP*  `(AB) >
+	<`PUSH  `TP*  `(AB)  1>
+	<`ADD  `AB*  [<2 (2)>]>
+	<`JUMPL  `AB*  TAG5!-TMP>
+	<`HLRES  `A >
+	<`ASH  `A*  -1>
+	<`ADDI  `A*  TAG6!-TMP>
+	<`PUSHJ  `P*  `@  `(A)  1>
+	<`JRST  |FINIS >
+	<NEXTS0!-TMP>
+	<NEXTS1!-TMP>
+TAG6!-TMP							;12
+	<NEXTS2!-TMP>
+	<INTERNAL-ENTRY NEXTS2!-TMP 1>
+	<`PUSH  `TP*  <TYPE-WORD FALSE>>
+	<`PUSH  `TP*  [0]>
+	<INTERNAL-ENTRY NEXTS1!-TMP 2>
+	<`PUSH  `TP*  <TYPE-WORD FIX>>
+	<`PUSH  `TP*  [1]>
+	<INTERNAL-ENTRY NEXTS0!-TMP 3>
+	<`SUBM  `M*  `(P) >
+	<`PUSH  `TP*  [0]>
+	<`PUSH  `TP*  [0]>
+	<INTGO>
+AGAIN11!-TMP							;22
+	<INTGO>
+	<`MOVE  `B*  `(TP)  -7>
+	<`MOVE  `D*  `(TP)  -6>
+	<`JUMPGE  `D*  |CERR2 >
+	<`MOVE  `F*  (`D )>
+	<`MOVE  `TVP*  (`D ) 1>
+	<`MOVEM  `F*  `(TP)  -1>
+	<`MOVEM  `TVP*  `(TP) >
+	<GETYP `O*  `F >
+	<`CAIE  <TYPE-CODE NULL>>
+	<`CAIN  <TYPE-CODE ATOM>>
+	<`JRST  PHRASE13!-TMP>
+	<`SOS  `C*  `(TP)  -2>
+	<`JUMPE  `C*  EXIT10!-TMP>
+PHRASE13!-TMP							;37
+	<`ADD  `D*  [<(2) 2>]>
+	<`JUMPL  `D*  BOOL14!-TMP>
+	<`SUB  `D*  [<(2) 2>]>
+	<`JRST  EXIT10!-TMP>
+BOOL14!-TMP							;41
+	<`MOVEM  `B*  `(TP)  -7>
+	<`MOVEM  `D*  `(TP)  -6>
+	<`JRST  AGAIN11!-TMP>
+EXIT10!-TMP							;44
+	<`MOVEM  `B*  `(TP)  -7>
+	<`MOVEM  `D*  `(TP)  -6>
+	<GETYP `O*  <- -3 ,FRM3!-TMP> `(TP) >
+	<`CAIN  `O*  <TYPE-CODE FALSE>>
+	<`JRST  PHRASE19!-TMP>
+	<`MOVE  `A*  `B >
+	<`MOVE  `B*  `D >
+	<`JRST  PHRASE20!-TMP>
+PHRASE19!-TMP							;52
+	<`MOVE  `A*  `(TP)  -1>
+	<`MOVE  `B*  `(TP) >
+PHRASE20!-TMP							;54
+	<`SUB  `TP*  [<(8) 8>]>
+	<`JRST  |MPOPJ >
+
+ 	<PSEUDO <SETG FRM4!-TMP 0>>
+	<PSEUDO <SETG FRM3!-TMP 0>>
+	<PSEUDO <SETG FRM5!-TMP 4>>
+	<PSEUDO <SETG FRM2!-TMP 6>>
+	<PSEUDO <SETG FRM1!-TMP 2>>
+	<TITLE CROSS-OPT!-IPEEPH!-PEEPH!-PACKAGE #FALSE ()>
+	<DECLARE ("VALUE" ATOM TUPLE TUPLE "TUPLE" TUPLE)>
+	<`PUSH  `TP*  <TYPE-WORD LNODE!-IPEEPH!-PEEPH!-PACKAGE>>
+	<`PUSH  `TP*  [0]>
+	<`PUSH  `TP*  `(AB)  2>
+	<`PUSH  `TP*  `(AB)  3>
+	<`MOVE  `B*  `AB >
+	<`ADD  `B*  [<4 (4)>]>
+	<`HLRZ  `A*  |OTBSAV  `(TB) >
+	<`HRLI  `A*  <TYPE-CODE TUPLE>>
+	<`PUSH  `TP*  `A >
+	<`PUSH  `TP*  `B >
+	<`PUSH  `TP*  [0]>
+	<`PUSH  `TP*  [0]>
+	<`PUSH  `TP*  <TYPE-WORD ATOM>>
+	<`PUSH  `TP*  [0]>
+	<`PUSH  `TP*  [0]>
+	<`PUSH  `TP*  [0]>
+	<`PUSH  `TP*  <TYPE-WORD FIX>>
+	<`PUSH  `TP*  [0]>
+	<`PUSH  `TP*  <MQUOTE 'T> -1>
+	<`PUSH  `TP*  <MQUOTE 'T>>
+AGAIN9!-TMP							;20
+	<INTGO>
+	<`MOVE  `B*  `(TB)  2>
+	<`MOVE  `D*  `(TB)  3>
+	<`CAME  `D*  `(AB)  1>
+	<`JRST  BOOL10!-TMP>
+OPT23!-TMP							;26
+	<`MOVE  `B*  <MQUOTE 'T>>
+	<`SUB  `TP*  [<(10) 10>]>
+	<`JRST  EXIT8!-TMP>
+BOOL10!-TMP							;29
+	<`SUB  `D*  [<(2) 2>]>
+	<`MOVE  `F*  `(TB)  4>
+	<`MOVE  `TVP*  `(TB)  5>
+	<`MOVEM  `B*  `(TB)  2>
+	<`MOVEM  `D*  `(TB)  3>
+	<`JUMPGE  `TVP*  MAP11!-TMP>
+MAP13!-TMP							;35
+	<`PUSH  `TP*  (`TVP )>
+	<`PUSH  `TP*  (`TVP ) 1>
+	<`MOVEM  `F*  `(TB)  10>
+	<`MOVEM  `TVP*  `(TB)  11>
+	<GETYP `O*  `(TB)  8 ,FRM3!-TMP ,FRM2!-TMP ,FRM1!-TMP>
+	<`CAIN  <TYPE-CODE NULL>>
+	<`JRST  PHRASE24!-TMP>
+	<`MOVE  `C*  `(TB)  16>
+	<`MOVE  `E*  `(TB)  17>
+	<`CAMN  `E*  `(AB)  1>
+	<`JRST  PHRASE24!-TMP>
+AGAIN26!-TMP							;46
+	<`SKIPGE  |INTFLG >
+	<`LSAVA*  [<(#WORD *000000000000*) #WORD *000000020300*> <(#WORD 
+*000000060000*) #WORD *000000000000*>]>
+	<`SUB  `E*  [<(2) 2>]>
+	<`MOVEM  `C*  (`TVP )>
+	<`MOVEM  `E*  (`TVP ) 1>
+	<`MOVNI  `A*  1>
+	<`JUMPGE  `E*  |CERR2 >
+	<GETYP `O*  0 0 (`E )>
+	<`CAIE  <TYPE-CODE NULL>>
+	<`JRST  EXIT25!-TMP>
+	<`MOVEM  `A*  `(TB)  13>
+	<`JRST  AGAIN26!-TMP>
+EXIT25!-TMP							;58
+	<`MOVEM  `A*  `(TB)  13>
+	<`MOVEM  `C*  `(TB)  16>
+	<`MOVEM  `E*  `(TB)  17>
+PHRASE24!-TMP							;61
+	<`SUB  `TP*  [<(2) 2>]>
+	<`MOVE  `F*  `(TB)  10>
+	<`MOVE  `TVP*  `(TB)  11>
+	<`ADD  `TVP*  [<2 (2)>]>
+	<`JUMPL  `TVP*  MAP13!-TMP>
+MAP11!-TMP							;66
+	<`SKIPN  `B*  `(TB)  13>
+	<`JRST  OPT23!-TMP>
+	<`MOVEI  `D* >
+	<`MOVEM  `D*  `(TB)  13>
+	<`SKIPL  `(TB)  15>
+	<`JRST  PHRASE37!-TMP>
+	<MCALL 0 MAKE:LABEL!-IPEEPH!-PEEPH!-PACKAGE>
+	<`MOVE  `D*  <TYPE-WORD FALSE>>
+	<`MOVEI  `F* >
+	<`MOVEM  `B*  `(TB)  9>
+	<`MOVEM  `D*  `(TB)  14>
+	<`MOVEM  `F*  `(TB)  15>
+PHRASE37!-TMP							;78
+	<`MOVE  `C*  `(TB)  8>
+	<`MOVE  `D*  `(TB)  9>
+	<`MOVEI  `E* >
+	<`PUSHJ  `P*  |C1CONS >
+	<`PUSH  `TP*  `A >
+	<`PUSH  `TP*  `B >
+	<`PUSH  `TP*  <TYPE-WORD LIST>>
+	<`PUSH  `TP*  [0]>
+	<`PUSH  `TP*  `(TB)  2>
+	<`PUSH  `TP*  `(TB)  3>
+	<`PUSH  `TP*  `(TB)  8>
+	<`PUSH  `TP*  `(TB)  9>
+	<`MOVEI  `A*  4>
+	<`PUSHJ  `P*  |CIVEC >
+	<`MOVE  `D*  `(TB)  2>
+	<`MOVE  `F*  `(TB)  3>
+	<`JUMPGE  `F*  |CERR2 >
+	<`MOVE  `TVP*  (`F )>
+	<`MOVE  `C*  (`F ) 1>
+	<`MOVEM  `B*  `(TB)  1>
+	<`MOVEM  `TVP*  `(TB)  6>
+	<`MOVEM  `C*  `(TB)  7>
+	<`SUB  `F*  [<(2) 2>]>
+	<`PUSH  `TP*  (`F )>
+	<`PUSH  `TP*  (`F ) 1>
+	<MCALL 1 SKIPPABLE!-IPEEPH!-PEEPH!-PACKAGE>
+	<GETYP `O*  `A >
+	<`CAIE  `O*  <TYPE-CODE FALSE>>
+	<`JRST  OPT23!-TMP>
+	<`MOVE  `B*  `(TB)  2>
+	<`MOVE  `D*  `(TB)  3>
+	<`JUMPGE  `D*  |CERR2 >
+	<`PUSH  `TP*  (`D )>
+	<`PUSH  `TP*  (`D ) 1>
+	<MCALL 1 SKIPPABLE!-IPEEPH!-PEEPH!-PACKAGE>
+	<GETYP `O*  `A >
+	<`CAIE  `O*  <TYPE-CODE FALSE>>
+	<`JRST  OPT23!-TMP>
+	<`MOVE  `B*  `(TB)  4>
+	<`MOVE  `D*  `(TB)  5>
+	<`JUMPGE  `D*  MAP43!-TMP>
+MAP45!-TMP							;119
+	<`PUSH  `TP*  [0]>
+	<`PUSH  `TP*  [0]>
+	<`PUSH  `TP*  [0]>
+	<`PUSH  `TP*  [0]>
+	<`PUSH  `TP*  (`D )>
+	<`PUSH  `TP*  (`D ) 1>
+	<`MOVEM  `B*  `(TB)  16>
+	<`MOVEM  `D*  `(TB)  17>
+	<`MOVEM  `B*  `(TB)  10>
+	<`MOVEM  `D*  `(TB)  11>
+	<GETYP `O*  `(TB)  8 ,FRM5!-TMP ,FRM2!-TMP ,FRM1!-TMP>
+	<`CAIN  <TYPE-CODE NULL>>
+	<`JRST  COND55!-TMP>
+	<`MOVE  `F*  `(TB)  20>
+	<`MOVE  `TVP*  `(TB)  21>
+	<`JUMPGE  `TVP*  |CERR2 >
+	<`MOVE  `C*  (`TVP )>
+	<`MOVE  `E*  (`TVP ) 1>
+	<GETYP `O*  `C >
+	<`CAIN  `O*  <TYPE-CODE FALSE>>
+	<`JRST  COND55!-TMP>
+	<`CAMN  `TVP*  `(TB)  3>
+	<`JRST  PHRASE56!-TMP>
+	<`MOVE  `A*  `C >
+	<`MOVE  `B*  `E >
+	<`MOVE  `C*  `(TB)  6>
+	<`MOVE  `D*  `(TB)  7>
+	<`PUSHJ  `P*  |CIEQUA >
+	<`JRST  PHRASE56!-TMP>
+	<`MOVE  `B*  <MQUOTE 'T> -1>
+	<`MOVE  `D*  <MQUOTE 'T>>
+	<`MOVEM  `B*  `(TB)  14>
+	<`MOVEM  `D*  `(TB)  15>
+	<`MOVE  `F*  `(TB)  20>
+	<`MOVE  `TVP*  `(TB)  21>
+	<`JUMPGE  `TVP*  |CERR2 >
+	<GETYP `O*  0 0 (`TVP )>
+	<`CAIE  <TYPE-CODE JUMP-INS!-IPEEPH!-PEEPH!-PACKAGE>>
+	<`JRST  PHRASE60!-TMP>
+	<`PUSH  `TP*  `F >
+	<`PUSH  `TP*  `TVP >
+	<MCALL 1 DEL-JUMP-LN!-IPEEPH!-PEEPH!-PACKAGE>
+PHRASE60!-TMP							;161
+	<`MOVE  `B*  `(TB)  2>
+	<`MOVE  `D*  `(TB)  3>
+	<`MOVE  `F*  `(TB)  21>
+	<`ADD  `F*  [<(2) 2>]>
+	<`CAILE  `F*  -1>
+	<`JRST  |CERR2 >
+	<`PUSH  `TP*  `(TB)  20>
+	<`PUSH  `TP*  `F >
+	<`PUSH  `TP*  <MQUOTE 'T> -1>
+	<`PUSH  `TP*  <MQUOTE 'T>>
+	<`MOVEM  `B*  `(TB)  18>
+	<`MOVEM  `D*  `(TB)  19>
+	<MCALL 2 NEXTS!-IPEEPH!-PEEPH!-PACKAGE>
+	<GETYP `O*  `A >
+	<`CAMN  `B*  `(TB)  19>
+	<`CAIE  `O*  <TYPE-CODE TUPLE>>
+	<`JRST  PHRASE62!-TMP>
+	<`MOVE  `B*  `(TB)  20>
+	<`MOVE  `D*  `(TB)  21>
+	<`JUMPGE  `D*  |CERR2 >
+	<`MOVE  `O*  <TYPE-WORD NULL>>
+	<`MOVEM  `O*  (`D )>
+	<`SETZM  (`D ) 1>
+	<`JRST  PHRASE63!-TMP>
+PHRASE62!-TMP							;185
+	<`MOVE  `C*  `(TB)  8>
+	<`MOVE  `D*  `(TB)  9>
+	<`MOVEI  `E* >
+	<`PUSHJ  `P*  |C1CONS >
+	<`MOVE  `C*  `(TB) >
+	<`MOVE  `D*  `(TB)  1>
+	<`MOVE  `E*  `B >
+	<`PUSHJ  `P*  |C1CONS >
+	<`MOVE  `C*  <MQUOTE 'T> -1>
+	<`MOVE  `D*  <MQUOTE 'T>>
+	<`MOVE  `E*  `B >
+	<`PUSHJ  `P*  |C1CONS >
+	<`MOVE  `C*  <TYPE-WORD FIX>>
+	<`MOVEI  `D*  4>
+	<`MOVE  `E*  `B >
+	<`PUSHJ  `P*  |C1CONS >
+	<`MOVE  `C*  <TYPE-WORD FIX>>
+	<`MOVEI  `D*  172>
+	<`MOVE  `E*  `B >
+	<`PUSHJ  `P*  |C1CONS >
+	<`MOVE  `D*  `(TB)  20>
+	<`MOVE  `F*  `(TB)  21>
+	<`JUMPGE  `F*  |CERR2 >
+	<`MOVE  `O*  <TYPE-WORD JUMP-INS!-IPEEPH!-PEEPH!-PACKAGE>>
+	<`MOVEM  `O*  (`F )>
+	<`MOVEM  `B*  (`F ) 1>
+	<`MOVE  `TVP*  `(TB)  1>
+	<`MOVE  `E*  (`TVP ) 3>
+	<`MOVE  `C*  `D >
+	<`MOVE  `D*  `F >
+	<`PUSHJ  `P*  |CICONS >
+	<`MOVE  `D*  `(TB)  1>
+	<`MOVEM  `B*  (`D ) 3>
+PHRASE63!-TMP							;218
+	<`MOVE  `A*  <MQUOTE '"CROSS-OPTIMIZATION"> -1>
+	<`MOVE  `B*  <MQUOTE '"CROSS-OPTIMIZATION">>
+	<`MOVE  `C*  <MQUOTE 'REDO>>
+	<`PUSHJ  `P*  |CISET >
+	<`MOVNI  `B*  1>
+	<`MOVEM  `B*  `(TB)  13>
+	<`JRST  COND55!-TMP>
+PHRASE56!-TMP							;225
+	<`MOVE  `B*  `(TB)  16>
+	<`MOVE  `D*  `(TB)  17>
+	<`JUMPGE  `D*  |CERR2 >
+	<`MOVE  `O*  <TYPE-WORD NULL>>
+	<`MOVEM  `O*  (`D )>
+	<`SETZM  (`D ) 1>
+COND55!-TMP							;231
+	<`SUB  `TP*  [<(6) 6>]>
+	<`MOVE  `B*  `(TB)  10>
+	<`MOVE  `D*  `(TB)  11>
+	<`ADD  `D*  [<2 (2)>]>
+	<`JUMPL  `D*  MAP45!-TMP>
+MAP43!-TMP							;236
+	<`SKIPN  `B*  `(TB)  13>
+	<`JRST  PHRASE65!-TMP>
+	<`MOVE  `C*  `(TB)  2>
+	<`MOVE  `D*  `(TB)  3>
+	<`MOVEI  `E* >
+	<`PUSHJ  `P*  |CICONS >
+	<`MOVE  `C*  `(TB)  8>
+	<`MOVE  `D*  `(TB)  9>
+	<`MOVE  `E*  `B >
+	<`PUSHJ  `P*  |C1CONS >
+	<`PUSH  `TP*  `A >
+	<`PUSH  `TP*  `B >
+	<`MOVE  `B*  <MQUOTE 'NLABLS!-IPEEPH!-PEEPH!-PACKAGE>>
+	<`PUSHJ  `P*  |CILVAL >
+	<`PUSH  `P*  [1]>
+	<`MOVEI  `O*  |SEGLST >
+	<`PUSHJ  `P*  |RCALL >
+	<`SUB  `P*  [<1 (1)>]>
+	<`MOVE  `C*  <MQUOTE 'NLABLS!-IPEEPH!-PEEPH!-PACKAGE>>
+	<`PUSHJ  `P*  |CISET >
+	<`MOVE  `B*  <MQUOTE 'MODLN!-IPEEPH!-PEEPH!-PACKAGE>>
+	<`PUSHJ  `P*  |CILVAL >
+	<`MOVE  `E*  `B >
+	<`MOVE  `C*  `(TB) >
+	<`MOVE  `D*  `(TB)  1>
+	<`PUSHJ  `P*  |C1CONS >
+	<`MOVE  `C*  <MQUOTE 'MODLN!-IPEEPH!-PEEPH!-PACKAGE>>
+	<`PUSHJ  `P*  |CISET >
+PHRASE65!-TMP							;264
+	<`SKIPN  `B*  `(TB)  13>
+	<`JRST  OPT23!-TMP>
+	<`MOVEI  `D* >
+	<`MOVEM  `D*  `(TB)  13>
+	<`JRST  AGAIN9!-TMP>
+EXIT8!-TMP							;269
+	<`MOVE  `A*  <TYPE-WORD ATOM>>
+	<`JRST  |FINIS >
+
+    	<PSEUDO <SETG FRM3!-TMP 6>>
+	<PSEUDO <SETG FRM2!-TMP 4>>
+	<PSEUDO <SETG FRM1!-TMP 2>>
+	<TITLE FLUSH-LABELS!-IPEEPH!-PEEPH!-PACKAGE #FALSE ()>
+	<DECLARE ("VALUE" LIST LIST)>
+	<`PUSH  `TP*  `(AB) >
+	<`PUSH  `TP*  `(AB)  1>
+	<`PUSHJ  `P*  FLUSH-LABELS0!-TMP>
+	<`JRST  |FINIS >
+	<INTERNAL-ENTRY FLUSH-LABELS0!-TMP 1>
+	<`SUBM  `M*  `(P) >
+	<`PUSH  `TP*  <TYPE-WORD LIST>>
+	<`PUSH  `TP*  [0]>
+	<`PUSH  `TP*  <TYPE-WORD LIST>>
+	<`PUSH  `TP*  [0]>
+	<INTGO>
+	<`MOVE  `B*  `(TP)  -4>
+	<`JUMPE  `B*  MAP7!-TMP>
+MAP9!-TMP							;13
+	<`PUSH  `TP*  <TYPE-WORD LIST>>
+	<`PUSH  `TP*  [0]>
+	<`PUSH  `TP*  <TYPE-WORD LNODE!-IPEEPH!-PEEPH!-PACKAGE>>
+	<`PUSH  `TP*  [0]>
+	<`MOVE  `D*  (`B ) 1>
+	<`SKIPGE  |INTFLG >
+	<`SAVAC*  [<(#WORD *000000001200*) #WORD *000000150000*>]>
+	<`MOVEM  `B*  `(TP)  -2>
+	<`MOVEM  `B*  `(TP)  -6>
+	<`MOVEM  `D*  `(TP) >
+	<`MOVE  `B*  <MQUOTE 'SLABS!-IPEEPH!-PEEPH!-PACKAGE>>
+	<`PUSHJ  `P*  |CILVAL >
+	<`MOVE  `D*  `(TP) >
+	<`JUMPE  `B*  TAG23!-TMP>
+TAG24!-TMP							;27
+	<`CAMN  `D*  (`B ) 1>
+	<`JRST  PHRASE21!-TMP>
+	<`HRRZ  `B*  (`B )>
+	<`JUMPN  `B*  TAG24!-TMP>
+TAG23!-TMP							;31
+	<`MOVE  `B*  `(TP) >
+	<`MOVE  `D*  (`B ) 3>
+	<`JUMPN  `D*  PHRASE21!-TMP>
+	<GETYP `O*  4 0 (`B )>
+	<`CAIN  `O*  <TYPE-CODE FALSE>>
+	<`JRST  PHRASE21!-TMP>
+	<`PUSH  `TP*  <TYPE-WORD LIST>>
+	<`PUSH  `TP*  [0]>
+	<`PUSH  `TP*  <TYPE-WORD LIST>>
+	<`PUSH  `TP*  [0]>
+	<`PUSH  `TP*  <TYPE-WORD LIST>>
+	<`PUSH  `TP*  [0]>
+	<`MOVE  `B*  <MQUOTE 'NLABLS!-IPEEPH!-PEEPH!-PACKAGE>>
+	<`PUSHJ  `P*  |CILVAL >
+	<`MOVE  `D*  `(TP)  -6>
+	<`MOVE  `F*  (`D ) 1>
+AGAIN28!-TMP							;47
+	<`SKIPGE  |INTFLG >
+	<`SAVAC*  [<(#WORD *000000000100*) #WORD *000000150012*>]>
+	<`JUMPN  `B*  BOOL29!-TMP>
+OPT8!-TMP							;50
+	<`SUB  `TP*  [<(6) 6>]>
+	<`JRST  EXIT25!-TMP>
+BOOL29!-TMP							;52
+	<`MOVEM  `F*  `(TP) >
+	<`MOVE  `TVP*  (`B ) 1>
+	<`JUMPE  `TVP*  |CERR2 >
+	<GETYP `O*  (`TVP )>
+	<`CAIN  `O*  TDEFER>
+	<`MOVE  `TVP*  (`TVP ) 1>
+	<GETYP `O*  0 0 (`TVP )>
+	<`CAIE  `O*  <TYPE-CODE ATOM>>
+	<`JRST  PHRASE37!-TMP>
+	<`MOVE  `C*  (`TVP ) 1>
+	<`JUMPE  `F*  PHRASE37!-TMP>
+TAG39!-TMP							;63
+	<`CAMN  `C*  (`F ) 1>
+	<`JRST  TAG38!-TMP>
+	<`HRRZ  `F*  (`F )>
+	<`JUMPN  `F*  TAG39!-TMP>
+	<`JRST  PHRASE37!-TMP>
+TAG38!-TMP							;68
+	<`MOVE  `B*  <MQUOTE 'NLABLS!-IPEEPH!-PEEPH!-PACKAGE>>
+	<`PUSHJ  `P*  |CILVAL >
+	<`CAME  `B*  `(TP)  -4>
+	<`JRST  PHRASE45!-TMP>
+	<`MOVE  `B*  <MQUOTE 'NLABLS!-IPEEPH!-PEEPH!-PACKAGE>>
+	<`PUSHJ  `P*  |CILVAL >
+	<`JUMPE  `B*  |CERR2 >
+	<`HRRZ  `B*  (`B )>
+	<`MOVE  `C*  <MQUOTE 'NLABLS!-IPEEPH!-PEEPH!-PACKAGE>>
+	<`PUSHJ  `P*  |CISET >
+	<`JRST  OPT8!-TMP>
+PHRASE45!-TMP							;79
+	<`MOVE  `B*  `(TP)  -4>
+	<`HRRZ  `B*  (`B )>
+	<`SKIPN  `(TP)  -2>
+	<`JRST  |CERR2 >
+	<`HRRM  `B*  `@  `(TP)  -2>
+	<`JRST  OPT8!-TMP>
+PHRASE37!-TMP							;85
+	<`HRRZ  `F*  (`B )>
+	<`MOVEM  `B*  `(TP)  -2>
+	<`MOVE  `B*  `F >
+	<`MOVE  `A*  <TYPE-WORD LIST>>
+	<`MOVE  `F*  `(TP) >
+	<`JRST  AGAIN28!-TMP>
+EXIT25!-TMP							;91
+	<`MOVE  `B*  `(TP)  -2>
+	<`CAME  `B*  `(TP)  -8>
+	<`JRST  PHRASE55!-TMP>
+	<`MOVE  `D*  `(TP)  -8>
+	<`JUMPE  `D*  |CERR2 >
+	<`HRRZ  `D*  (`D )>
+	<`MOVEM  `D*  `(TP)  -8>
+	<`JRST  PHRASE58!-TMP>
+PHRASE55!-TMP							;99
+	<`HRRZ  `B*  (`B )>
+	<`SKIPN  `(TP)  -4>
+	<`JRST  |CERR2 >
+	<`HRRM  `B*  `@  `(TP)  -4>
+	<`MOVE  `B*  `(TP)  -5>
+	<`MOVE  `D*  `(TP)  -4>
+	<`MOVEM  `D*  `(TP)  -2>
+PHRASE58!-TMP							;106
+	<`MOVE  `B*  `(TP) >
+	<`MOVE  `D*  (`B ) 7>
+	<`MOVE  `F*  (`B ) 4>
+	<`MOVE  `TVP*  (`B ) 5>
+	<`JUMPGE  `TVP*  |CERR2 >
+	<GETYP `O*  0 0 (`TVP )>
+	<`CAMN  `D*  (`TVP ) 1>
+	<`CAIE  `O*  <TYPE-CODE ATOM>>
+	<`JRST  PHRASE62!-TMP>
+	<`MOVE  `O*  <TYPE-WORD NULL>>
+	<`MOVEM  `O*  (`TVP )>
+	<`SETZM  (`TVP ) 1>
+	<`MOVE  `B*  <MQUOTE 'NNUMLABS!-IPEEPH!-PEEPH!-PACKAGE>>
+	<`PUSHJ  `P*  |CILVAL >
+	<`ADDI  `B*  1>
+	<`MOVE  `C*  <MQUOTE 'NNUMLABS!-IPEEPH!-PEEPH!-PACKAGE>>
+	<`PUSHJ  `P*  |CISET >
+PHRASE62!-TMP							;123
+	<`MOVE  `A*  <MQUOTE '"FLUSH REDUNDANT LABELS"> -1>
+	<`MOVE  `B*  <MQUOTE '"FLUSH REDUNDANT LABELS">>
+	<`MOVE  `C*  <MQUOTE 'REDO>>
+	<`PUSHJ  `P*  |CISET >
+PHRASE21!-TMP							;127
+	<`MOVE  `B*  `(TP)  -2>
+	<`SUB  `TP*  [<(4) 4>]>
+	<`MOVEM  `B*  `(TP) >
+	<`MOVEM  `B*  `(TP) >
+	<`MOVE  `B*  `(TP)  -2>
+	<`HRRZ  `B*  (`B )>
+	<`JUMPN  `B*  MAP9!-TMP>
+MAP7!-TMP							;134
+	<`MOVE  `B*  `(TP)  -4>
+	<`SUB  `TP*  [<(6) 6>]>
+	<`MOVE  `A*  <TYPE-WORD LIST>>
+	<`JRST  |MPOPJ >
+
+   

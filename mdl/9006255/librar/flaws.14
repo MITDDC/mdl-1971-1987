@@ -1,0 +1,385 @@
+			PUC 8/79
+
+Pontificia Univ. Catolica do Rio de Janeiro
+
+On the problem of capacity assignment in
+computer networks which carry messages with
+different priorities.
+
+Menasce, Daniel A.
+Monteiro, Mario A.	May 1979  26 p.
+-----
+  computer networks
+
+			NORWEGIAN CC/NR 706
+
+Norwegian Computing Center
+
+Minutes from the annual meeting of the SIMULA
+standards group and the SIMULA development
+group.
+
+Syrrist, G.
+Wang, A.		Sept. 1981  52 p.
+-----
+  SIMULA
+  standardization
+  language development
+
+P5.20
+.M3
+1981
+
+Mathematical foundations of computer science.
+Tenth symposium. Held in Czechoslovakia. Aug.
+31-Sept. 4, 1981. Springer-Verlag. 1981.
+
+Lecture Notes in Computer Science 118,  559 p.
+-----
+  numerical analysis
+  metatheory
+  combinatorial mathematics
+
+			MATH. CENTRUM NW 113/81
+
+_Mathematisch Centrum. Amsterdam
+
+Rigorous high speed separation of zeros of
+Riemann's zeta function.
+
+Te Riele, H.J.J.
+Winter, D.T.		Oct. 1981  35 p.
+-----
+  Riemann hypothesis
+  Riemann zeta function
+  Riemann Siegel formula
+  Rosser's rule
+
+			MATH. CENTRUM IW 172/81
+
+_Mathematisch Centrum. Amsterdam
+
+PEP: an interactive programming system with
+an ALGOL-like programming langauge.
+
+Verster, N.F.		Aug. 1981  19 p.
+-----
+  PEP
+  ALGOL
+  interactive programming
+
+			REFERENCE
+
+-MIT Laboratory for Computer Science
+
+The MDL programming language primer.
+
+Dornbrook, Michael
+Blank, Marc		1981  125 p.
+-----
+  MDL
+
+			Newcastle #170
+
+-Newcastle Upon Tyne Computing Laboratory
+
+Robust data types.
+
+Cristian, F.		July 1981  39 p.
+-----
+  data abstraction
+  verification
+  exception handling
+
+			MIT/LCS/TR-263
+
+-MIT Laboratory for Computer Science
+
+Propositional dynamic logic of looping and
+converse. (Ph.D. thesis)
+
+MIT. Dept. of E.E. and C.S.
+Street, Richard S.	May 1981  37 p.
+----- 
+  logic, dynamic
+  propositional dynamic logic
+
+			MIT/LCS/TR-264
+
+-MIT Laboratory for Computer Science
+
+Interactive debugging in a distributed 
+computational environment. (S.M. thesis)
+
+MIT. Dept. of E.E. and C.S.
+Schiffenbaur, R. D.	Sept. 1981  187 p.
+-----
+  programming, logic
+  debugging
+
+3.15
+.M3
+1977
+
+Mandelbrot, Benoit B.
+
+Fractuals: form, chance and dimensions. 
+San Francisco. CA. W.H. Freeman. 1977.
+			
+			365 p.
+-----
+  geometry
+  mathematical models
+  stochastic processes
+
+			U ARIZONA CS-80-12
+
+-Arizona Univ. Dept. of Computer Science
+
+Distributed processor scheduling and user
+countermeasures.
+
+Barak, Amnon B.
+Downey, Peter J.	May 1980  19 p.
+-----
+  distributed computing
+  system performance analysis
+  queueing theory
+
+P1.2
+.A4
+1981
+
+Algorithms in modern mathematics and computer
+science. Proceedings of symposium held in 
+Urgench, Uzbek SSR, Sept. 16-22, 1979. Berlin.
+Springer-Verlag. 1981.
+
+Ershov, A.P. ed.
+Knuth, D.E. ed.
+
+Lecture Notes in Computer Science 122,  487 p.
+-----
+  philosophical foundations
+  algorithms
+  computational complexity
+
+			STAN-CS-81-867
+
+-Stanford Univ. Dept. of Computer Science
+
+ADAM-An ADA based language for multi-processing.
+				
+Luckman, D.C.
+Larsen, H.J.
+Stevenson, D.R.
+von Henke, F.W.		July 1981  71 p.
+-----
+  ADAM
+  ADA
+
+			ROCHESTER TR 66
+
+-Rochester Univ. Dept. of Computer Science
+
+A very high level language and optimized im-
+plementation design for relational database.
+
+Shopiro, Jonathon E.	April 1980  108 p.
+-----
+  THESEUS
+  programming language
+
+P1.0
+.C62
+1980
+
+ICCC
+
+Computer communication: increasing benefits
+for society. Proceedings of the fifth Inter-
+national Conference. Held in Atlanta, GA.
+Oct. 27-30, 1980
+
+Salz, J., ed.		870 p.
+-----
+  communication, computer
+
+6.29
+.W8
+1981
+
+HYDRA/C.mmp: an experimental computer system.
+New York. McGraw-Hill. 1981.
+
+Harbison, Samuel P.
+Levin, Roy
+Wulf, William A.	297 p.
+-----
+  HYDRA
+  computing systems
+  multiprocessors
+
+P4.33
+.S5
+1981
+
+SIGSMALL-SIGMOD. Joint Proceedings of Sympos-
+ium/Workshop on Small Systems and Small Data
+Base Systems held in Orlando, FL, Oct. 13-15,
+1981. (SIGSMALL Newsletter, Vol. 7, no. 2, Oct.
+1981).
+
+ACM SIGSMALL
+ACM SIGMOD		180 p.
+-----
+  computer system, small
+  data base, small
+
+			XEROX PARC CSL-81-10
+
+-Xerox Palo Alto Research Center
+
+Techniques for program verification.
+
+Nelson, Greg		June 1981  101 p.
+-----
+  verification
+  mechanical theorem-proving
+  specification languages
+  decision procedures
+  theory of quality
+
+P8.20
+.E8
+1981
+
+Eurographics '81. Proceedings of the second 
+International Conference and Exhibition. Held 
+in Darmstadt, Germany. Sept. 9-11, 1981.
+
+Encarnacao, Jose L., ed.	335 p.
+-----
+  Eurographics
+  computer graphics
+
+P8.20
+.E8
+1980
+
+Eurographics '80. Proceedings of the first 
+International Conference and Exhibition. Held
+in Geneva. Sept. 3-5, 1980.
+
+Vandoni, Carlo E., ed.		347 p.
+-----
+  Eurographics
+  computer graphics
+
+			CMU GERHART
+
+-Carnegie-Mellon Univ. Dept. of Computer
+Science
+
+Verification of APL programs.
+
+Gerhart, Susan L.	Nov. 1972  216 p.
+-----
+  program verification
+
+			MIT/LCS/TM-207
+
+-MIT Laboratory for Computer Science
+
+Power set models of Lambda-calculus: theories,
+expansions, isomorphisms.
+
+Longo, Giuseppe		Nov. 1981  36 p.
+-----
+  Lambda-calculus
+  abstraction
+  application
+
+4.6
+.W3
+1981
+
+Managing software reliability. New York.
+Elsevier North Holland, Inc. 1981.
+
+Walker, Michael G.		251 p.
+-----
+  reliability
+  software development
+
+P4.6
+.M4
+1981
+
+Performance evaluation review. 1981 ACM work-
+shop/symposium on measurement and evaluation 
+of software quality. March 25-27, 1981. New
+York. Acm. 1981.
+
+ACM SIGMETRICS
+Maryland University		197 p.
+-----
+  software, quality
+
+			MIT/LCS/TM-210
+
+_MIT Laboratory for Computer Science
+
+I-structures: an efficient data type for
+functional languages. Revised Oct. 1981.
+
+Arvind
+Thomas, Robert E.	Sept. 1980  19 p.
+-----
+  applicative languages
+  asynchrony
+  data structures
+  multiple processor system
+
+			MIT/LCS/TM-208
+
+-MIT Laboratory for Computer Science
+
+The traveling salesman problem with many
+visits to few cities.
+
+Cosmadakis, Stavros S.
+Papadimitriou, C. H.	Nov. 1981  21 p.
+-----
+  traveling salesman problem
+  dynamic programming
+  assignment problem
+  minimal Eulerian digraph
+  Edmonds-Karp scaling method
+
+			STAN-CS-81-872
+
+_Stanford Univ. Dept. of Computer Science
+
+Synthesis of communicating processes from
+temporal logic specification.
+
+Manna, Zohar
+Wolper, Pierre		Sept. 1981  28 p.
+-----
+  propositional temporal logic
+  communicating processes
+
+			MIT/LCS/TM-215
+
+_MIT Laboratory for Computer Science
+
+Optimizing synchronous systems.
+
+Leiserson, Charles E.
+Saxe, James B.		Mar. 1982  24 p.
+-----
+  circuit optimization
+  design methodology
+  synchronous systems
+  VLSI

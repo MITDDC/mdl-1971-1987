@@ -1,0 +1,652 @@
+
+<PACKAGE "M-DMN">
+
+;"MAIN DEMON FUNCTIONS/LOOPS/ETC."
+
+<ENTRY SAVE-IT
+       MAKE-RUN
+       WORK
+       READ-DATUMS
+       ADD-BATCH-TASK
+       UPDATE-NET-DELIVERY
+       BCKDO
+       FDO
+       NXTRUN
+       MORE-WORK?
+       BSTOP
+       BSTART
+       CRASH-FIXUP
+       CONTINUE
+       SCRIPT
+       SCRIPT-OFF
+       DEBUG-RUNNING-DEMON?>
+
+<USE "M-PRCD"
+     "M-PDO"
+     "M-ERR"
+     "NOW"
+     "M-SET"
+     "ITIME"
+     "M-TIME"
+     "LOGIN"
+     "FIELDS"
+     "M-READ"
+     "M-DAC"
+     "M-DLV"
+     "M-INP"
+     "RQFILE"
+     "M-MSG"
+     "M-DATA"
+     "M-TEMP"
+     "PRTUTI"
+     "GC"
+     "M-DEFS"
+     "M-DB"
+     "M-HNG"
+     "USRUTI"
+     "MADMAN"
+     "ASYLUM"
+     "FINT">
+
+<GDECL (SCRCHN)
+       <OR CHANNEL FALSE>
+       (DEBUG-RUNNING-DEMON? RUN1? STOP?)
+       <OR ATOM FALSE>
+       (EH IH SH GH BH)
+       HANDLER
+       (CR HDR)
+       STRING
+       (GC-TIME CPUSTART) FLOAT
+       (GC-COUNT) FIX
+       (BATCH-TASKS) <LIST ATOM [REST ANY]>>
+
+<PROG ()
+      <SETG GC-COUNT 0>
+      <SETG GC-TIME 0.0>
+      <SETG DEBUG-RUNNING-DEMON? <>>
+      <SETG RUN1? T>					      ;"T on first daemon run"
+      <SETG STOP? <>>						  ;"T means stop asap"
+      <SETG SCRCHN <>>						     ;"script channel"
+      <SETG CR <STRING <ASCII 13> <ASCII 10>>>
+      <SETG HDR
+	    <STRING ,CR
+		    <ASCII 12>
+		    ,CR
+		    <ISTRING 60 !\*>
+		    <ASCII 13>
+		    <ASCII 10>
+		    <ASCII 13>
+		    <ASCII 10>>>
+      <SETG BATCH-TASKS (T)>>
+
+\
+
+"SAVE-IT -- creates save file which will run daemon if restored
+  when not under tty, else sets up for debugging."
+
+<DEFINE SAVE-IT ("OPTIONAL" (VERSION <>) "AUX" FIL C) 
+	#DECL ((VERSION) <OR FALSE FIX> (FIL) STRING (C) <OR CHANNEL FALSE>)
+	<COND (.VERSION
+	       <PROG ((OUTCHAN .OUTCHAN))
+		     #DECL ((OUTCHAN) CHANNEL)
+		     <PRINC "Creating ">
+		     <SETG VER .VERSION>
+		     <SET FIL
+			  <STRING <DATUM "COMSYS-SAVE-FILE">
+				  ".SAVE">>
+		     <PRINC .FIL>
+		     <PRINC ", Version ">
+		     <PRIN1 ,VER>
+		     <TERPRI>>
+	       <DIVERT>
+	       <SNAME "">)>
+	<COND (<AND .VERSION <=? <SAVE .FIL <>> "SAVED">> "DONE")
+	      (<OR <NOT .VERSION>
+		   <=? <UNAME> <DATUM "COMSYS-DAEMON">>
+		   <LOGIN <DATUM "COMSYS-DAEMON">>>
+	       <IPC-OFF>
+	       <IPC-ON>
+	       <IPC-ENABLE>
+	       <ON "IPC" ,ILO 1>
+	       <WATCH GH "GC" ,WATCH-GC>
+	       <WATCH PH "PARITY" ,WATCH-PARITY>
+	       <COND (.VERSION
+		      <RSUBR-LINK T>
+		      <COND (<L? ,MUDDLE 100>
+			     <FLUSH-DEMON <DATUM "COMSYS-DAEMON">>)>
+		      <MDBG <>>
+		      <SETG L-NO-FILES T>
+		      <SETG L-NO-DEFER T>
+		      <SETG L-NO-MAGIC T>
+		      <SET L-LIBRARIES ("<MDLLIB>LIBMUD")>)>
+	       <COND (<SET C <OPEN "READ" <DATUM "COMSYS-UPDATE-FILE">>>
+		      <LOAD .C>
+		      <CLOSE .C>)>
+	       <SETG CPUSTART <TIME>>
+	       <SETG STARTTIME <ITIME>>
+	       <INIT>
+	       <MAKE-RUN>
+	       <LOGOUT>)
+	      (ELSE
+	       <MDBG T>
+	       <RSUBR-LINK <>>
+	       <SNAME "COMSYS">
+	       <SCROUT "Restored: " .FIL ", Version " <UNPARSE ,VER> CRLF>
+	       T)>>
+
+\ 
+
+"MAKE-RUN -- main drive for daemon"
+
+<DEFINE MAKE-RUN ("AUX" (RES <>)
+		  (WAIT? <>) (DEMON? <=? <UNAME> <DATUM "COMSYS-DAEMON">>)) 
+	#DECL ((RES) <OR FALSE FIX> (DEMON?) <OR ATOM FALSE>)
+	;<INTERRUPT "REALT">				     ;"GET WORLD GOING"
+	<REPEAT ()
+		<SET WAIT? <AND .DEMON? <FILE-EXISTS? <DATUM "COMSYS-STOP-FILE">>>>
+		<COND (<OR ,STOP? .WAIT?> 
+		       <SCHEDULE <SET RES <DATUM "COMSYS-RUN-INTERVAL">>>)
+		      (ELSE <SET RES <WORK>>)>
+		<AND <MDBG?> <RETURN>>
+		<REPEAT ()
+			<WAIT-FOR-WORK .RES .WAIT?>
+			<COND (<OR ,PENDING <MORE-WORK?>> <RETURN>)>>>>
+
+"WAIT-FOR-WORK -- sleep until goodies appear"
+
+<DEFINE WAIT-FOR-WORK (N WAIT? "AUX" H)
+	#DECL ((N) FIX (H) HANDLER)
+	<SETG NEW-WORK <>>
+	<SET H <DIRHNG <DATUM "COMSYS-MESSAGE-DIR">>>
+	<COND (<AND <NOT .WAIT?> <RQEXIST?>>)
+	      (ELSE
+	       <SLEEP <CHTYPE <GETBITS <QTIME .N> <BITS 18>> FIX>
+		      ',NEW-WORK>)>
+	<OFF .H>
+	T>
+
+<DEFINE ADD-BATCH-TASK (TASK "AUX" (BT ,BATCH-TASKS))
+	#DECL ((TASK) ANY (BT) <LIST ATOM [REST ANY]>)
+	<COND (<NOT <MEMBER .TASK <REST .BT>>>
+	       <SCROUT "Batching: " .TASK>
+	       <PUTREST <REST .BT <- <LENGTH .BT> 1>> (.TASK)>)>>
+
+<DEFINE DO-BATCH-TASKS ("AUX" (BT ,BATCH-TASKS))
+	#DECL ((BT) LIST)
+	<WATCH BH "ERROR" ,BATCH-ERR>
+	<MAPF <>
+	      <FUNCTION (TASK)
+		   #DECL ((TASK) ANY)
+		   <SCROUT "Batch: " .TASK>
+		   <PROG BATCH-ACT ()
+			 #DECL ((BATCH-ACT) <SPECIAL ACTIVATION>)
+			 <EVAL ,BATCH-TASKS>>>
+	      <REST .BT>>
+	<OFF ,BH>
+	<PUTREST .BT ()>>
+
+<DEFINE BATCH-ERR (FRM
+		   "TUPLE" STUFF
+		   "AUX" (LERR\ !-INTERRUPTS .LERR\ !-INTERRUPTS)
+		   "ACT" ERRACT) 
+	#DECL ((ERRACT) ACTIVATION (FRM) FRAME (STUFF) TUPLE
+	       (LERR\ !-INTERRUPTS) <SPECIAL FRAME>)
+	<SCRIPT>
+	<SCROUT ">>>> Error in Batch Task, Args -- " .STUFF " <<<<">
+	<SET LERR\ !-INTERRUPTS <CHTYPE .ERRACT FRAME>>
+	<FR&>
+	<CRLF>
+	<FRATM>
+	<COND (<AND <ASSIGNED? BATCH-ACT> <LEGAL? .BATCH-ACT>>
+	       <INT-LEVEL 0>
+	       <RETURN T .BATCH-ACT>)>>
+
+"MORE-WORK? -- returns t if new input files have arrived or had something
+ready on pending-queue when last went to sleep."
+
+<DEFINE MORE-WORK? () 
+	#DECL ((VALUE) <OR ATOM FALSE>)
+        <COND (,STOP? #FALSE ("STOPPED"))
+	      (ELSE <OR <RQEXIST?> #FALSE ("NO WORK")>)>>
+
+"READ-DATUMS -- read volatile datums if they are new"
+
+<DEFINE READ-DATUMS ("OPTIONAL" (TELL T) "AUX" (X <DATUM "COMSYS-VOLATILE-DATA">))
+	#DECL ((X) <VECTOR [REST STRING]> (TELL) <OR ATOM FALSE>)
+	<REPEAT ()
+		<COND (<LENGTH? .X 1> <RETURN>)>
+		<COND (<AND <DATED-DATUM <1 .X> <2 .X>> .TELL>
+		       <SCROUT "Loaded datum: " <1 .X> " from " <2 .X>>)>
+		<SET X <REST .X 2>>>>
+
+\ 
+
+"WORK -- make a run, return when no more to do with time til next run
+   or false if lossage
+   rescheduling of daemon handled internally"
+
+<DEFINE WORK ("AUX" RES (STARTCPU <TIME>) INIT D) 
+  	#DECL ((VALUE RES) <OR FALSE FIX> (INIT) <OR ATOM FALSE> (STARTCPU) FLOAT)
+	<BE-DAEMON>
+	<COND (<NOT <MDBG?>> <SCRIPT>)>
+	<SETG GC-TIME 0.0>
+	<SETG GC-COUNT 0>
+	<PROG ((OUTCHAN <OR ,SCRCHN .OUTCHAN>))
+	      #DECL ((OUTCHAN) <SPECIAL CHANNEL>)
+	      <SETG CHNLOC <LLOC OUTCHAN>>
+	      <PRINC ,HDR>
+	      <COND (,RUN1? 
+		     <SETG RUN1? <>>
+		     <SCROUT "Beginning Demon Run, Version: " ,VER ", " <NOW>>)
+		    (ELSE
+		     <SCROUT "Continuing Daemon Run, Version: " ,VER ", " <NOW>>)>
+	      <COND (<SET INIT <INIT>>
+		     <CRASH-FIXUP>
+		     <WATCH EH "ERROR" ,WATCH-ERR 4>
+		     ;<WATCH SH "SYSDOWN" ,WATCH-SYSDOWN 4>
+		     <SET D <DATUM "DEAD-HOSTS">>
+		     <READ-DATUMS>
+		     <COND (<N=? .D <DATUM "DEAD-HOSTS">>
+			    <UPDATE-NET-DELIVERY>
+			    <UPDMSG T>)>
+		     <REPEAT ()
+			     <REPEAT ()
+				     <BCKDO>
+				     <UPDMSG T>
+				     <COND (,STOP? <RETURN>)
+					   (<CHECK-DATA-BASE>)
+					   (,STOP? <RETURN>)>
+				     <FDO>
+				     <OR <MORE-WORK?> <RETURN>>>
+			     <SETG PENDING <>>
+			     <COND (<SET RES <NXTRUN>> <RETURN>)
+				   (,STOP?
+				    <SCROUT "Aborting Run, Stop Flag Set.">
+				    <RETURN>)>>
+		     <FTP-CLOSE>
+		     <FLUSH-NET-MESSAGE>
+		     <DO-BATCH-TASKS>
+		     <UPDMSG>
+		     <DCLOSE T>
+		     <WTIME <- <TIME> .STARTCPU>>
+		     <OFF ,EH>
+		     <OFF ,SH>)
+		    (ELSE
+		     <SCROUT ">>>> Can't Open Data Base: " .INIT " <<<<">)>
+	      <SCHEDULE <SET RES <OR .RES <DATUM "COMSYS-RUN-INTERVAL">>>>
+	      <SCRIPT-OFF>
+	      .RES>>
+
+<DEFINE WTIME (TIM "AUX" (OUTCHAN .OUTCHAN) (GCT ,GC-TIME) (GCC ,GC-COUNT))
+	#DECL ((GCC) FIX (TIM GCT) FLOAT (OUTCHAN) CHANNEL)
+	<SCROUT "Cpu-time Used: ">
+	<PFL <- .TIM .GCT>>
+	<PRINC " secs.">
+	<COND (<G? .GCT 0.0>
+	       <PRINC " (plus ">
+	       <PFL .GCT>
+	       <PRINC " secs. GC time in ">
+	       <COND (<G? <PRINC .GCC> 1> <PRINC " GCs)">)
+		     (ELSE <PRINC " GC)">)>)>
+	<CRLF>>
+
+\
+
+"UPDATE-NET-DELIVERY -- rehack delivery times for messages to dead sites"
+
+<DEFINE UPDATE-NET-DELIVERY ("AUX" (DH <DATUM "DEAD-HOSTS">)
+			     P (WON? <>) (I <+ <ITIME> 262144>))
+	#DECL ((DH) <OR FALSE VECTOR> (P) LIST (WON?) <OR ATOM FALSE>
+	       (I) FIX)
+	<REPEAT ()
+	   <SET WON? <>>
+	   <SET P ,PENDING-QUEUE>
+	   <COND
+	    (.DH
+	     <MAPF
+	      <>
+	      <FUNCTION (M "AUX" (MSG <QMSG .M>) (ADR <QADR .M>) PN D)
+		   #DECL ((M) PNQENTRY (ADR) STRING (PN) <OR FALSE LIST>
+			  (D) <OR FALSE <LIST [REST <FALSE FIX>]>>
+			  (MSG) FIX)
+		   <COND (<AND <NOT <EMPTY? .ADR>>
+			       <NOT <MEMQ <EXTRACT-HOST .ADR> .DH>>
+			       <QTIM .M>
+			       <G? <QTIM .M> .I>
+			       <MREAD .MSG>
+			       <SET PN <DRD .ADR "PROCESSING-NEEDED">>
+			       <MAPF <>
+				     <FUNCTION (N)
+					  #DECL ((N) PRCSTATE)
+					  <COND (<=? <PNAM .N> "DELIVERY">
+						 <MAPLEAVE T>)>>
+				     <REST .PN>>
+			       <SET D
+				    <DRD .ADR "NET-DELIVERY-ERRORS">>
+			       <NOT <EMPTY? .D>>
+			       <==? 20 <1 <NTH .D <LENGTH .D>>>>>
+			  <SCROUT .MSG
+				  ": Rescheduling DELIVERY to "
+				  .ADR
+				  ".">
+			  <PRCADD .ADR "DELIVERY">
+			  <MSGPNQ>
+			  <SET WON? T>
+			  <MAPLEAVE>)>>
+	      <REST .P>>)>
+	   <COND (<NOT .WON?> <RETURN>)>>>
+
+\
+
+"FDO -- file processor -- reads a file, clears queue, repeats
+  until all files gone"
+
+<DEFINE FDO ("AUX" IR REAS FIL M A E P) 
+	#DECL ((IR) <OR ATOM <FALSE STRING STRING <OR RQVECTOR FALSE>>>
+	       (P) <OR FALSE RQVECTOR>
+	       (FIL REAS) STRING (M) <OR FIX FALSE> (A E) <OR STRING FALSE>)
+	<REPEAT ()
+		<SET IR <RQ-DO>>
+		<COND (<==? .IR MOBY>
+		       <SCROUT "!!! Moby message arrived, reloading... !!!">
+		       <SCRIPT-OFF>
+		       <RESTORE <DATUM "COMSYS-SAVE-FILE">>)
+		      (<==? .IR NONE> <RETURN>)
+		      (<==? .IR SUCCESS>
+		       <MSGPNQ>
+		       <BCKDO>
+		       <UPDMSG T>
+		       <RQDELE>
+		       <COND (,STOP? <RETURN>)
+			     (<CHECK-DATA-BASE>)
+			     (,STOP? <RETURN>)>)
+		      (<==? .IR TRY-LATER>)
+		      (<NOT .IR>
+		       <SET REAS <1 .IR>>
+		       <SET FIL <2 .IR>>
+		       <COND (<SET P <3 .IR>>
+			      <SET M <RQMSG .P>>
+			      <SET A <RQADR .P>>
+			      <SET E <RQERR .P>>)
+			     (ELSE <SET M <SET A <SET E <>>>>)>
+		       <PROG ((SS ,SCRATCH-SPACE)
+			      (CSM <DATUM "COMSYS-MAINTAINER">))
+			     #DECL ((SS) SPACE (CSM) STRING)
+			     <SENDMSG
+			      <COND (.E <ALIST .SS .CSM .E>)
+				    (ELSE <ALIST .SS .CSM>)>
+			      "ERROR IN FILE INPUT"
+			      <ASTRING .SS
+				       "FILE: "
+				       <2 .IR>
+				       ,CR
+				       "REASON: "
+				       <1 .IR>
+				       ,CR
+				       "MSG #: "
+				       <COND (.M <UNPARSE .M>)
+					     (ELSE "--none--")>
+				       ,CR
+				       "ADDRESSEE: "
+				       <OR .A "--none--">
+				       ,CR
+				       ,CR>
+			      "COMMUNICATION-DAEMON">>)>>>
+
+\ 
+
+"NXTRUN -- returns time until next run, or false if asap"
+
+<DEFINE NXTRUN ("AUX" (QN <TIMPNQ>) (TNW <ITIME>) HR (BST <>) M) 
+	#DECL ((VALUE M) <OR FIX FALSE> (QN) <OR ATOM FALSE FIX>
+	       (TNW HR) FIX (BST) <OR FIX FALSE>)
+	<COND (<==? .QN T> #FALSE ("QUEUE NON-EMPTY"))
+	      (ELSE
+	       <SET BST .QN>
+	       <SET HR <+ .TNW <DATUM "COMSYS-RUN-INTERVAL">>>
+	       <COND (<OR <NOT .BST> <L? .HR .BST>> <SET BST .HR>)
+		     (ELSE <SETG PENDING T>)>
+	       <COND (<G? <SET M <- .BST .TNW>> 0> .M)
+		     (ELSE #FALSE ("QUEUE NON-EMPTY"))>)>>
+
+"CRASH-FIXUP -- cleans up files left if previous run crashed"
+
+<DEFINE CRASH-FIXUP ("AUX" I) 
+	#DECL ((I) FIX)
+	<COND (<G? <SET I <RQRCVR>> 0>
+	       <SCROUT .I " Input Files Recovered">)>>
+
+"BSTOP -- function which sets flag to stop background
+  processing prematurely, such as when system is about to go down"
+
+<DEFINE BSTOP () 
+	<SCROUT "Setting Flag to Stop Background Scan.">
+	<SETG STOP? T>>
+
+<DEFINE BSTART ()
+	<SCROUT "Setting Flag to Resume Background Scan.">
+	<SETG STOP? <>>>
+
+\ 
+
+"BCKDO -- main loop of processor
+
+ -- runs until no processes left on queue
+ -- does not load fresh queue on entry
+
+ -- if in bck loop for more than 25 msgs/users, does compaction
+    as needed to avoid filling up directories
+
+ -- returns t if all ok and queue empty now"
+
+<SETG BLOAT-UVECTOR <IUVECTOR 27 0>>
+
+<GDECL (BLOAT-UVECTOR) <UVECTOR [REST FIX]>>
+
+<DEFINE BCKDO ("AUX" ADR NXT P (AUTH <>) TS PRES (BS ,BLOAT-UVECTOR)
+	       (QS ,QUEUE-SPACE) M (OM 0) BGARBAGE GARBAGE (PI ,SHOW-PROCESS)) 
+	#DECL ((VALUE) ATOM (ADR) STRING (NXT) <OR FALSE LIST> (QS) SPACE
+	       (PI PRES) <OR ATOM FALSE> (TS) FLOAT (BS) <UVECTOR [REST FIX]>
+	       (M OM BGARBAGE GARBAGE) FIX (AUTH) <OR FALSE STRING>
+	       (P) <OR FALSE LIST> (RES) ANY)
+	<REPEAT ()			   ;"LOOP THROUGH ALL PENDING MESSAGES"
+		<COND (<OR ,STOP?
+			   <NOT <SET NXT <NXTPNQ>>>>
+		       <RETURN T>)>
+		<AND .PI <SET BGARBAGE <12 <SET BS <BLOAT-STAT .BS>>>>>
+		<SET ADR <2 .NXT>> ;"MESSAGE TO BE PROCESSED, SET UP AND DO IT"
+		<SET M <MVMSG ,MDB>>
+		<COND (<N==? .M .OM> <FLUSH-NET-MESSAGE>)>
+		<SET OM .M>
+		<COND (<EMPTY? .ADR>
+		       <OR .AUTH <SET AUTH <DRDMSG "" <GETFIX "FROM">>>>
+		       <COND (.AUTH
+			      <SCROUT .M " for Author: " .AUTH>)
+			     (ELSE
+			      <SCROUT .M " for Author">)>)
+		      (ELSE
+		       <SCROUT .M " for " .ADR>)>
+		<REPEAT ()	  ;"LOOP THROUGH ALL PROCESSES FOR THE MESSAGE"
+			<COND (,STOP? <RETURN T>)>
+			<COND (<NOT <SET P <PRCGET .ADR>>> <RETURN T>)
+			      (ELSE
+			       <SET TS <TIME>>
+			       <SET PRES <PRCRUN .P .ADR>>
+			       <PRCSKD .P .ADR .PRES>
+			       <PRC-PRINT .P
+					  .PRES
+					  <- <TIME> .TS>
+					  <10 <SET BS <BLOAT-STAT .BS>>>>)>>
+		<ARELEASE .QS .NXT -1>
+		<MSGPNQ>
+		<REPORT-ERRORS .ADR>
+		<COND (.PI
+		       <SET GARBAGE
+			    <- <12 <SET BS <BLOAT-STAT .BS>>> .BGARBAGE>>
+		       <SCROUT "...Total garbage generated: "
+			       .GARBAGE " words...">)>>>
+
+\ 
+
+"REPORT-ERRORS -- error reporting function -- looks at current
+  message, and reports any pending error conditions"
+
+<DEFINE REPORT-ERRORS (ADR "AUX" CONDITIONS ERR CN (R? <>)) 
+	#DECL ((ADR) STRING (ERR) ERRCOND (CN) <LIST [REST ERRCOND]>
+	       (R?) <OR ATOM FALSE> (CONDITIONS) <OR FALSE LIST>)
+	<COND (<AND <SET CONDITIONS <DRD .ADR <GETFIX "ERROR-CONDITIONS">>>
+		    <NOT <EMPTY? .CONDITIONS>>>
+	       <SET CN .CONDITIONS>
+	       <REPEAT ()
+		       <COND (<EMPTY? .CN> <RETURN>)
+			     (<NOT <ETIM <SET ERR <1 .CN>>>>
+			      <SET R? T>
+			      <ERR-REPORT <EPRC .ERR> <EERR .ERR> .ADR>
+			      <PUT .ERR ,ETIM <ITIME>>)>
+		       <SET CN <REST .CN>>>
+	       <AND .R? <DWT .CONDITIONS .ADR <GETFIX "ERROR-CONDITIONS">>>)>>
+
+\ 
+
+"SCHEDULE -- used to reschedule daemon for future run
+ -- takes fix, number of minutes to next run, 0= never (wait for demsig)"
+
+<DEFINE SCHEDULE (TF "AUX" (DNAME <JNAME>)) 
+	#DECL ((DNAME) STRING (TF) FIX)
+	<SET TF </ <CHTYPE <GETBITS <QTIME .TF> <BITS 18>> FIX> 60>>
+	<COND (<L? ,MUDDLE 100> <FLUSH-DEMON .DNAME>)>
+	<COND (<0? .TF> <SCROUT "Daemon being turned off.">)
+	      (,PENDING
+	       <SCROUT "Queue processing scheduled in " .TF " minutes.">)
+	      (ELSE
+	       <SCROUT "Will awake for new mail and every " .TF " minutes.">)>>
+
+"ILO -- ipc interrupt handler -- does it but prints evidence, too"
+
+<DEFINE ILO (BODY TYPE NM1 NM2 "OPTIONAL" M1 M2 "AUX" P)
+	#DECL ((BODY NM1 NM2 M1 M2) STRING (TYPE) FIX (P) ANY)
+	<COND (<==? .TYPE *400000000000*>
+	       <SCROUT "!!!! Eval Inquiry from " .NM1 " " .NM2 " !!!!">
+	       <SET P <PARSE .BODY>>
+	       <PLO .P>
+	       <INT-LEVEL 0>
+	       <EVAL .P>)>
+	<DISMISS T>>
+
+<DEFINE PLO (F) 
+	#DECL ((F) <PRIMTYPE LIST>)
+	<MAPR <>
+	      <FUNCTION (FF "AUX" (F <1 .FF>)) 
+			#DECL ((FF) LIST (F) ANY)
+			<COND (<AND <TYPE? .F FORM>
+				    <NOT <LENGTH? .F 1>>
+				    <==? <1 .F> PARSE>>
+			       <AND ,SCRCHN <PPRINT <PARSE <2 .F>> ,SCRCHN>>
+			       <SCROUT "!!!! Ends !!!!">)
+			      (<TYPE? .F FORM LIST> <PLO .F>)
+			      (ELSE T)>>
+	      .F>>
+
+"WATCH-PARITY -- die if parity error (real or irrec.)"
+
+<DEFINE WATCH-PARITY (ADR)
+	#DECL ((ADR) WORD)
+	<SCRIPT>
+	<SCROUT ">>>> Parity Error or Irrecoverable Disk Error: " .ADR " <<<<">
+	<LOGOUT>>
+
+"WATCH-GC -- keep track of gc time and count"
+
+<DEFINE WATCH-GC (TIM DUMMY1 DUMMY2)
+	#DECL ((TIM) FLOAT (DUMMY1 DUMMY2) ANY)
+	<SETG GC-COUNT <+ ,GC-COUNT 1>>
+	<SETG GC-TIME <+ ,GC-TIME .TIM>>>
+
+"WATCH-SYSDOWN -- go away if system going down in less than five minutes"
+
+<DEFINE WATCH-SYSDOWN ("TUPLE" GBG "AUX" (SCRCHN ,SCRCHN)) 
+	#DECL ((GBG) <TUPLE FIX> (SCRCHN) <OR CHANNEL FALSE>)
+	<SCRIPT>
+	<COND (<L? <1 .GBG> 0>
+	       <SCROUT "**** System Revived, Resuming Scan ****">
+	       <BSTART>)
+	      (<L? <1 .GBG> <* 5 30 60>>
+	       <SCROUT "**** System-going-down in "
+		       </ <1 .GBG> <* 30 60>>
+		       " minutes, Setting Stop Flag "
+		       !.GBG
+		       " ****">
+	       <BSTOP>)>
+	<COND (<NOT .SCRCHN> <SCRIPT-OFF>)>	;"TURN OFF IF WAS OFF BEFORE"
+	<DISMISS T>>
+
+"WATCH-ERR -- top-level error monitor"
+
+<DEFINE WATCH-ERR (FRM
+		   "TUPLE" STUFF
+		   "AUX" (LERR\ !-INTERRUPTS .LERR\ !-INTERRUPTS)
+		   "ACT" ERRACT) 
+	#DECL ((ERRACT) ACTIVATION (FRM) FRAME (STUFF) TUPLE
+	       (LERR\ !-INTERRUPTS) <SPECIAL FRAME>)
+	<SCRIPT>
+	<SCROUT ">>>> Top Level Error Interrupt, Args -- " .STUFF " <<<<">
+	<SET LERR\ !-INTERRUPTS <CHTYPE .ERRACT FRAME>>
+	<INT-INFO "ERROR">
+	<FR&>
+	<CRLF>
+	<FRATM>
+	<BSTOP>
+	<SCRIPT-OFF>
+	<OFF ,EH>			;"flush ourself"
+	<COND (,DEBUG-RUNNING-DEMON? <VALRET ":DIED">)>>
+
+\
+
+<DEFINE CONTINUE ("OPTIONAL" (CH <>) "AUX" C)
+	#DECL ((C) LOCD (CH) <OR CHANNEL FALSE>)
+	<COND (<AND <GASSIGNED? CHNLOC> <LEGAL? <SET C ,CHNLOC>>>
+	       <SETLOC .C <OR .CH <SCRIPT>>>)>
+	<WATCH EH "ERROR" ,WATCH-ERR>
+	<INIT>
+	"READY">
+
+
+
+<DEFINE SCRIPT ("AUX" (TDY <D6>) SCRFIL (SCRCHN ,SCRCHN) TCHR)
+	#DECL ((TDY SCRFIL) STRING (SCRCHN) <OR CHANNEL FALSE>
+	       (TCHR) CHARACTER)
+	<COND (<AND <=? <UNAME> <DATUM "COMSYS-DAEMON">>
+		    <OR <NOT .SCRCHN> <0? <1 .SCRCHN>>>>
+	       <COND (<==? <SET TCHR <ASCII <+ 1 <ASCII <6 .TDY>>>>> !\:>
+		      <SET TDY
+			   <STRING <SUBSTRUC .TDY 0 5> ":">> ;"Quote the :")
+		     (<PUT .TDY 6 .TCHR> ;"CRASH NAME")>
+	       <SET SCRFIL <STRING <DATUM "COMSYS-SCRIPT-FILE"> " " <D6>>>
+	       <RENAME <STRING <DATUM "COMSYS-SCRIPT-FILE"> .TDY>
+		       TO
+		       .SCRFIL>
+	       <REPEAT ()
+		  <COND (<SETG SCRCHN <TEMPOPEN-APPEND .SCRFIL>> <RETURN>)
+			(<AND <NOT <EMPTY? ,SCRCHN>>
+			      <==? <1 ,SCRCHN> *23000000*> ;"FILE LOCKED">
+			 <SLEEP 60>)
+			(ELSE
+			 <ERROR CANT-OPEN-SCRIPT-FILE SCRIPT ,SCRCHN>)>>)>>
+
+<DEFINE SCRIPT-OFF ()
+	<COND (,SCRCHN
+	       <SCROUT "**** Closing Script, " <NOW> " ****">
+	       <TEMPRENAME ,SCRCHN>
+	       <SETG SCRCHN <>>)>>
+
+"D6 -- returns 6 character date string"
+
+<DEFINE D6 ("AUX" DT) #DECL ((VALUE) STRING (DT) <LIST [3 FIX]>)
+	<SET DT <1 <LTIME>>>
+	<STRING <COND (<L? <2 .DT> 10> !\0) (ELSE "")>
+		<UNPARSE <2 .DT>>
+		<COND (<L? <3 .DT> 10> !\0) (ELSE "")>
+		<UNPARSE <3 .DT>>
+		<UNPARSE <1 .DT>>>>
+
+<ENDPACKAGE>

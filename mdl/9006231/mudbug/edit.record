@@ -1,0 +1,429 @@
+Compilation record for: DSK:MUDBUG;EDIT 52
+Output file:  DSK:MUDBUG;EDIT NBIN
+
+It is now Saturday, 15 Sep 1979 23:57 EDT
+
+File loaded.
+Precompilation loaded.
+Functions ordered.
+COMPILING SCANNER!-IEDIT!-EDIT!-PACKAGE
+===== Variable:  THIS-LEVEL1!-IEDIT!-EDIT!-PACKAGE not DECLed.
+===== Variable:  NUM!-IEDIT!-EDIT!-PACKAGE not DECLed.
+===== Variable:  TF!-IEDIT!-EDIT!-PACKAGE not DECLed.
+===== Computed decl of variable:  ITEM-LNTH!-IEDIT!-EDIT!-PACKAGE is:  <FIX (0 
+34359738367)>
+===== Computed decl of variable:  LST!-IEDIT!-EDIT!-PACKAGE is:  LIST
+===== Computed decl of variable:  NUM!-IEDIT!-EDIT!-PACKAGE is:  FIX
+===== Computed decl of variable:  TF!-IEDIT!-EDIT!-PACKAGE is:  FIX
+===== External variable being referenced:  OUTCHAN
+ **** .OUTCHAN **** 
+===== External variable being referenced:  FINISH!-IEDIT!-EDIT!-PACKAGE
+<OR  **** .FINISH!-IEDIT!-EDIT!-PACKAGE ****  .GETPATH!-IEDIT!-EDIT!-PACKAGE>
+===== External variable being referenced:  GETPATH!-IEDIT!-EDIT!-PACKAGE
+<OR .FINISH!-IEDIT!-EDIT!-PACKAGE  **** .GETPATH!-IEDIT!-EDIT!-PACKAGE **** >
+===== External variable being referenced:  PATH!-IEDIT!-EDIT!-PACKAGE
+ **** .PATH!-IEDIT!-EDIT!-PACKAGE **** 
+===== External variable being SET:  PATH!-IEDIT!-EDIT!-PACKAGE
+ **** <SET PATH!-IEDIT!-EDIT!-PACKAGE <LIST .POS!-IEDIT!-EDIT!-PACKAGE >>
+ **** ...
+===== External variable being referenced:  PATH!-IEDIT!-EDIT!-PACKAGE
+<NOT <EMPTY?  **** .PATH!-IEDIT!-EDIT!-PACKAGE **** >>
+===== External variable being referenced:  PATH!-IEDIT!-EDIT!-PACKAGE
+<SET POS!-IEDIT!-EDIT!-PACKAGE <1  **** .PATH!-IEDIT!-EDIT!-PACKAGE **** >>
+===== External variable being referenced:  PATH!-IEDIT!-EDIT!-PACKAGE
+<REST  **** .PATH!-IEDIT!-EDIT!-PACKAGE ****  1>
+===== External variable being SET:  PATH!-IEDIT!-EDIT!-PACKAGE
+ **** <SET PATH!-IEDIT!-EDIT!-PACKAGE <REST .PATH!-IEDIT!-EDIT!-PACKAGE 1>>
+ ** ...
+===== External reference to LVAL:  SEARCH+!-IEDIT!-EDIT!-PACKAGE
+ **** <ASSIGNED? SEARCH+!-IEDIT!-EDIT!-PACKAGE> **** 
+===== External reference to LVAL:  SEARCH+!-IEDIT!-EDIT!-PACKAGE
+ **** <ASSIGNED? SEARCH+!-IEDIT!-EDIT!-PACKAGE> **** 
+===== External reference to LVAL:  GOTO!-IEDIT!-EDIT!-PACKAGE
+ **** <ASSIGNED? GOTO!-IEDIT!-EDIT!-PACKAGE> **** 
+===== External variable being referenced:  SEARCH+!-IEDIT!-EDIT!-PACKAGE
+ **** .SEARCH+!-IEDIT!-EDIT!-PACKAGE **** 
+===== External variable being referenced:  SEARCH+!-IEDIT!-EDIT!-PACKAGE
+ **** .SEARCH+!-IEDIT!-EDIT!-PACKAGE **** 
+===== External reference to LVAL:  GOTO!-IEDIT!-EDIT!-PACKAGE
+ **** <ASSIGNED? GOTO!-IEDIT!-EDIT!-PACKAGE> **** 
+===== External reference to LVAL:  SEARCH+!-IEDIT!-EDIT!-PACKAGE
+ **** <ASSIGNED? SEARCH+!-IEDIT!-EDIT!-PACKAGE> **** 
+===== External reference to LVAL:  GOTO!-IEDIT!-EDIT!-PACKAGE
+ **** <ASSIGNED? GOTO!-IEDIT!-EDIT!-PACKAGE> **** 
+===== External variable being referenced:  GOTO!-IEDIT!-EDIT!-PACKAGE
+<NTH  **** .GOTO!-IEDIT!-EDIT!-PACKAGE ****  2>
+===== Not open compiled because type is:  ANY
+ **** <NTH .GOTO!-IEDIT!-EDIT!-PACKAGE 2> **** 
+===== Arithmetic can't open compile because:   **** <SET TEMP!-IEDIT!-EDIT!-PACK
+AGE <NTH .GOTO!-IEDIT!-EDIT!-PACKAGE 2>>
+ *** ...
+ is of type:  <OR FIX FLOAT>
+ **** <L=? <SET TEMP!-IEDIT!-EDIT!-PACKAGE <NTH .GOTO!-IEDIT!-EDIT!-PACKAGE 2>
+ ...
+===== Arithmetic can't open compile because:  <G=?  **** .TEMP!-IEDIT!-EDIT!-PAC
+KAGE **** >
+ is of type:  <OR FIX FLOAT>
+ **** <G=? .TEMP!-IEDIT!-EDIT!-PACKAGE> **** 
+===== External variable being referenced:  SPATH!-IEDIT!-EDIT!-PACKAGE
+<SET PATH!-IEDIT!-EDIT!-PACKAGE  **** .SPATH!-IEDIT!-EDIT!-PACKAGE **** >
+===== External variable being SET:  PATH!-IEDIT!-EDIT!-PACKAGE
+ **** <SET PATH!-IEDIT!-EDIT!-PACKAGE .SPATH!-IEDIT!-EDIT!-PACKAGE> **** 
+===== External variable being referenced:  TOP-LEVEL!-IEDIT!-EDIT!-PACKAGE
+<AGAIN  **** .TOP-LEVEL!-IEDIT!-EDIT!-PACKAGE **** >
+===== External reference to LVAL:  SEARCH-!-IEDIT!-EDIT!-PACKAGE
+ **** <ASSIGNED? SEARCH-!-IEDIT!-EDIT!-PACKAGE> **** 
+===== External variable being referenced:  SEARCH-!-IEDIT!-EDIT!-PACKAGE
+ **** .SEARCH-!-IEDIT!-EDIT!-PACKAGE **** 
+===== Not open compiled because type is:  STRUCTURED
+ **** <LENGTH <NTH .EDIT-ITEM!-IEDIT!-EDIT!-PACKAGE <+ 1 .
+POS!-IEDIT!-EDIT!-PA ...
+===== External reference to LVAL:  SEARCH+!-IEDIT!-EDIT!-PACKAGE
+ **** <ASSIGNED? SEARCH+!-IEDIT!-EDIT!-PACKAGE> **** 
+===== External variable being referenced:  GO-UP-LEVEL!-IEDIT!-EDIT!-PACKAGE
+<G?  **** .GO-UP-LEVEL!-IEDIT!-EDIT!-PACKAGE **** >
+===== External variable being referenced:  GO-UP-LEVEL!-IEDIT!-EDIT!-PACKAGE
+<-  **** .GO-UP-LEVEL!-IEDIT!-EDIT!-PACKAGE ****  1>
+===== External variable being SET:  GO-UP-LEVEL!-IEDIT!-EDIT!-PACKAGE
+ **** <SET GO-UP-LEVEL!-IEDIT!-EDIT!-PACKAGE <- .
+GO-UP-LEVEL!-IEDIT!-EDIT!-PAC ...
+===== External variable being referenced:  GO-UP-RIGHT!-IEDIT!-EDIT!-PACKAGE
+<G?  **** .GO-UP-RIGHT!-IEDIT!-EDIT!-PACKAGE **** >
+===== External variable being referenced:  GO-UP-RIGHT!-IEDIT!-EDIT!-PACKAGE
+<-  **** .GO-UP-RIGHT!-IEDIT!-EDIT!-PACKAGE ****  1>
+===== External variable being SET:  GO-UP-RIGHT!-IEDIT!-EDIT!-PACKAGE
+ **** <SET GO-UP-RIGHT!-IEDIT!-EDIT!-PACKAGE <- .
+GO-UP-RIGHT!-IEDIT!-EDIT!-PAC ...
+===== Cond predicate always FALSE:   **** <AND <GET-COM .COMSTR!-IEDIT!-EDIT!-PA
+CKAGE .
+JUNKSTR!-IEDIT!-EDIT!-PACKA ...
+
+ **** <COND (<OR .FINISH!-IEDIT!-EDIT!-PACKAGE .GETPATH!-IEDIT!-EDIT!-PACKAGE>
+ ...
+===== External reference to LVAL:  EDIT-TABLE
+ **** <ASSIGNED? EDIT-TABLE> **** 
+===== External variable being referenced:  EDIT-TABLE
+<MEMBER .COMSTR!-IEDIT!-EDIT!-PACKAGE  **** .EDIT-TABLE **** >
+===== Not open compiled because type is:  STRUCTURED
+ **** <NTH .TEMP!-IEDIT!-EDIT!-PACKAGE 2> **** 
+===== Not open compiled because type is:  STRUCTURED
+ **** <NTH .TEMP!-IEDIT!-EDIT!-PACKAGE 2> **** 
+===== Not open compiled because of defer.
+ **** <PUT .EDIT-ITEM!-IEDIT!-EDIT!-PACKAGE .POS!-IEDIT!-EDIT!-PACKAGE <NTH .
+E ...
+===== Not open compiled because of defer.
+ **** <PUT .EDIT-ITEM!-IEDIT!-EDIT!-PACKAGE <+ .POS!-IEDIT!-EDIT!-PACKAGE 1> .
+ ...
+===== External variable being SET: ITER!-IEDIT!-EDIT!-PACKAGE
+ **** <SET ITER!-IEDIT!-EDIT!-PACKAGE <GET-NUM .JUNKSTR!-IEDIT!-EDIT!-PACKAGE 
+ ...
+===== External variable being SET: ITCOM!-IEDIT!-EDIT!-PACKAGE
+ **** <SET ITCOM!-IEDIT!-EDIT!-PACKAGE 0> **** 
+===== Cond predicate always FALSE:   **** <AND <OR <=? .COMSTR!-IEDIT!-EDIT!-PAC
+KAGE "IT"> <=? .
+COMSTR!-IEDIT!-EDI ...
+
+ **** <COND (<OR .FINISH!-IEDIT!-EDIT!-PACKAGE .GETPATH!-IEDIT!-EDIT!-PACKAGE>
+ ...
+===== External variable being referenced:  INCHAN
+ **** .INCHAN **** 
+===== External variable being referenced:  INCHAN
+<SET MAC <READ  **** .INCHAN **** >>
+===== External variable being SET: MAC
+ **** <SET MAC <READ .INCHAN>> **** 
+===== External variable being referenced:  MAC
+<AND <TYPE?  **** .MAC ****  FORM> <SET MAC <EVAL .MAC>>>
+===== External variable being referenced:  MAC
+<AND <TYPE? .MAC FORM> <SET MAC <EVAL  **** .MAC **** >>>
+===== External variable being SET: MAC
+<AND <TYPE? .MAC FORM>  **** <SET MAC <EVAL .MAC>> **** >
+===== External variable being referenced:  MAC
+<TYPE?  **** .MAC ****  STRING>
+===== External variable being referenced:  INCHAN
+<SET TEMP!-IEDIT!-EDIT!-PACKAGE <INTREAD  **** .INCHAN **** >>
+===== External variable being referenced:  INCHAN
+<SET TEMP2!-IEDIT!-EDIT!-PACKAGE <INTREAD  **** .INCHAN **** >>
+===== External variable being SET: ITCOM!-IEDIT!-EDIT!-PACKAGE
+ **** <SET ITCOM!-IEDIT!-EDIT!-PACKAGE 0> **** 
+===== External variable being SET: ITER!-IEDIT!-EDIT!-PACKAGE
+ **** <SET ITER!-IEDIT!-EDIT!-PACKAGE 100000> **** 
+===== External variable being SET: MAC
+ **** <SET MAC <STRING "S " <UNPARSE .TEMP2!-IEDIT!-EDIT!-PACKAGE 10> "LC "
+  ...
+===== External variable being SET: JUNK!-IEDIT!-EDIT!-PACKAGE
+ **** <SET JUNK!-IEDIT!-EDIT!-PACKAGE <FRM .AMOUNT!-IEDIT!-EDIT!-PACKAGE>>
+ *** ...
+===== External reference to LVAL:  JUNK!-IEDIT!-EDIT!-PACKAGE
+ **** <ASSIGNED? JUNK!-IEDIT!-EDIT!-PACKAGE> **** 
+===== External variable being referenced:  JUNK!-IEDIT!-EDIT!-PACKAGE
+<TYPE?  **** .JUNK!-IEDIT!-EDIT!-PACKAGE ****  FRAME>
+===== External variable being referenced:  JUNK!-IEDIT!-EDIT!-PACKAGE
+<LEGAL?  **** .JUNK!-IEDIT!-EDIT!-PACKAGE **** >
+===== External variable being referenced:  JUNK!-IEDIT!-EDIT!-PACKAGE
+<RETRY  **** .JUNK!-IEDIT!-EDIT!-PACKAGE **** >
+===== External variable being SET:  GO-UP-LEVEL!-IEDIT!-EDIT!-PACKAGE
+ **** <SET GO-UP-LEVEL!-IEDIT!-EDIT!-PACKAGE <SET AMOUNT!-IEDIT!-EDIT!-PACKAGE
+ ...
+===== External variable being referenced:  TOP-LEVEL!-IEDIT!-EDIT!-PACKAGE
+<AGAIN  **** .TOP-LEVEL!-IEDIT!-EDIT!-PACKAGE **** >
+===== External reference to LVAL:  SEARCH+!-IEDIT!-EDIT!-PACKAGE
+ **** <ASSIGNED? SEARCH+!-IEDIT!-EDIT!-PACKAGE> **** 
+===== External variable being referenced:  TOP-LEVEL!-IEDIT!-EDIT!-PACKAGE
+<AGAIN  **** .TOP-LEVEL!-IEDIT!-EDIT!-PACKAGE **** >
+===== External variable being referenced:  INCHAN
+<OR ,E-VERBOSE <==? !\ <NEXTCHR  **** .INCHAN **** >>>
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+ **** .HANDLE!-IEDIT!-EDIT!-PACKAGE **** 
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+<REST  **** .HANDLE!-IEDIT!-EDIT!-PACKAGE ****  .POS!-IEDIT!-EDIT!-PACKAGE>
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+<REST  **** .HANDLE!-IEDIT!-EDIT!-PACKAGE ****  1>
+===== Can't open compile CHTYPE.
+ **** <CHTYPE <REST .HANDLE!-IEDIT!-EDIT!-PACKAGE 1> <TYPE .
+EDIT-ITEM!-IEDIT!- ...
+===== External variable being referenced:  TOP-ITEM!-IEDIT!-EDIT!-PACKAGE
+ **** .TOP-ITEM!-IEDIT!-EDIT!-PACKAGE **** 
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+ **** .HANDLE!-IEDIT!-EDIT!-PACKAGE **** 
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+<REST  **** .HANDLE!-IEDIT!-EDIT!-PACKAGE ****  .POS!-IEDIT!-EDIT!-PACKAGE>
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+ **** .HANDLE!-IEDIT!-EDIT!-PACKAGE **** 
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+<REST  **** .HANDLE!-IEDIT!-EDIT!-PACKAGE ****  1>
+===== Can't open compile CHTYPE.
+ **** <CHTYPE <REST .HANDLE!-IEDIT!-EDIT!-PACKAGE 1> <TYPE .
+EDIT-ITEM!-IEDIT!- ...
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+ **** .HANDLE!-IEDIT!-EDIT!-PACKAGE **** 
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+<REST  **** .HANDLE!-IEDIT!-EDIT!-PACKAGE ****  .POS!-IEDIT!-EDIT!-PACKAGE>
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+ **** .HANDLE!-IEDIT!-EDIT!-PACKAGE **** 
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+<REST  **** .HANDLE!-IEDIT!-EDIT!-PACKAGE ****  1>
+===== Can't open compile CHTYPE.
+ **** <CHTYPE <REST .HANDLE!-IEDIT!-EDIT!-PACKAGE 1> <TYPE .
+EDIT-ITEM!-IEDIT!- ...
+===== External variable being SET: GETPATH!-IEDIT!-EDIT!-PACKAGE
+ **** <SET GETPATH!-IEDIT!-EDIT!-PACKAGE T> **** 
+===== External variable being referenced:  INCHAN
+ **** .INCHAN **** 
+===== External variable being referenced:  INCHAN
+<==? <NEXTCHR  **** .INCHAN **** > !\>
+===== External variable being referenced:  LAST-SEARCH!-IEDIT!-EDIT!-PACKAGE
+ **** .LAST-SEARCH!-IEDIT!-EDIT!-PACKAGE **** 
+===== External variable being SET: SEARCH+!-IEDIT!-EDIT!-PACKAGE
+ **** <SET SEARCH+!-IEDIT!-EDIT!-PACKAGE .LAST-SEARCH!-IEDIT!-EDIT!-PACKAGE>
+ * ...
+===== External variable being referenced:  INCHAN
+<SET LAST-SEARCH!-IEDIT!-EDIT!-PACKAGE <READ  **** .INCHAN **** >>
+===== External variable being SET: LAST-SEARCH!-IEDIT!-EDIT!-PACKAGE
+ **** <SET LAST-SEARCH!-IEDIT!-EDIT!-PACKAGE <READ .INCHAN>> **** 
+===== External variable being SET: SEARCH+!-IEDIT!-EDIT!-PACKAGE
+ **** <SET SEARCH+!-IEDIT!-EDIT!-PACKAGE <SET 
+LAST-SEARCH!-IEDIT!-EDIT!-PACKAG ...
+===== External variable being SET: GETPATH!-IEDIT!-EDIT!-PACKAGE
+ **** <SET GETPATH!-IEDIT!-EDIT!-PACKAGE T> **** 
+===== External variable being referenced:  INCHAN
+ **** .INCHAN **** 
+===== External variable being referenced:  INCHAN
+<==? <NEXTCHR  **** .INCHAN **** > !\>
+===== External variable being referenced:  LAST-SEARCH!-IEDIT!-EDIT!-PACKAGE
+ **** .LAST-SEARCH!-IEDIT!-EDIT!-PACKAGE **** 
+===== External variable being SET: SEARCH-!-IEDIT!-EDIT!-PACKAGE
+ **** <SET SEARCH-!-IEDIT!-EDIT!-PACKAGE .LAST-SEARCH!-IEDIT!-EDIT!-PACKAGE>
+ * ...
+===== External variable being referenced:  INCHAN
+<SET LAST-SEARCH!-IEDIT!-EDIT!-PACKAGE <READ  **** .INCHAN **** >>
+===== External variable being SET: LAST-SEARCH!-IEDIT!-EDIT!-PACKAGE
+ **** <SET LAST-SEARCH!-IEDIT!-EDIT!-PACKAGE <READ .INCHAN>> **** 
+===== External variable being SET: SEARCH-!-IEDIT!-EDIT!-PACKAGE
+ **** <SET SEARCH-!-IEDIT!-EDIT!-PACKAGE <SET 
+LAST-SEARCH!-IEDIT!-EDIT!-PACKAG ...
+===== External variable being SET:  GO-UP-RIGHT!-IEDIT!-EDIT!-PACKAGE
+ **** <SET GO-UP-RIGHT!-IEDIT!-EDIT!-PACKAGE <GET-NUM .
+JUNKSTR!-IEDIT!-EDIT!-P ...
+===== Not open compiled because type is:  STRUCTURED
+ **** <LENGTH <NTH .EDIT-ITEM!-IEDIT!-EDIT!-PACKAGE <+ 1 .
+POS!-IEDIT!-EDIT!-PA ...
+===== External reference to LVAL:  SEARCH+!-IEDIT!-EDIT!-PACKAGE
+ **** <ASSIGNED? SEARCH+!-IEDIT!-EDIT!-PACKAGE> **** 
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+ **** .HANDLE!-IEDIT!-EDIT!-PACKAGE **** 
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+<REST  **** .HANDLE!-IEDIT!-EDIT!-PACKAGE ****  .FROM!-IEDIT!-EDIT!-PACKAGE>
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+<REST  **** .HANDLE!-IEDIT!-EDIT!-PACKAGE ****  <+ .TO 1>>
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+<REST  **** .HANDLE!-IEDIT!-EDIT!-PACKAGE ****  1>
+===== Can't open compile CHTYPE.
+ **** <CHTYPE <REST .HANDLE!-IEDIT!-EDIT!-PACKAGE 1> <TYPE .
+EDIT-ITEM!-IEDIT!- ...
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+ **** .HANDLE!-IEDIT!-EDIT!-PACKAGE **** 
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+<REST  **** .HANDLE!-IEDIT!-EDIT!-PACKAGE ****  .POS!-IEDIT!-EDIT!-PACKAGE>
+===== External variable being referenced:  INCHAN
+ **** .INCHAN **** 
+===== External variable being referenced:  INCHAN
+<==? !\ <NEXTCHR  **** .INCHAN **** >>
+===== External variable being referenced:  INCHAN
+<SET TEMP!-IEDIT!-EDIT!-PACKAGE <READ  **** .INCHAN **** >>
+===== Not open compiled because type is:  STRUCTURED
+<TYPE?  **** <NTH ,.TEMP!-IEDIT!-EDIT!-PACKAGE 1> ****  FUNCTION>
+===== Not open compiled because type is:  STRUCTURED
+ **** <NTH ,.TEMP!-IEDIT!-EDIT!-PACKAGE 1> **** 
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+<REST  **** .HANDLE!-IEDIT!-EDIT!-PACKAGE ****  1>
+===== Can't open compile CHTYPE.
+ **** <CHTYPE <REST .HANDLE!-IEDIT!-EDIT!-PACKAGE 1> <TYPE .
+EDIT-ITEM!-IEDIT!- ...
+===== External variable being referenced:  INCHAN
+<SET LAST-IN!-IEDIT!-EDIT!-PACKAGE <INTREAD  **** .INCHAN **** >>
+===== External variable being SET: LAST-IN!-IEDIT!-EDIT!-PACKAGE
+ **** <SET LAST-IN!-IEDIT!-EDIT!-PACKAGE <INTREAD .INCHAN>> **** 
+===== External variable being referenced:  LAST-IN!-IEDIT!-EDIT!-PACKAGE
+ **** .LAST-IN!-IEDIT!-EDIT!-PACKAGE **** 
+===== External variable being referenced:  LAST-IN!-IEDIT!-EDIT!-PACKAGE
+<PUT .LST!-IEDIT!-EDIT!-PACKAGE 1  **** .LAST-IN!-IEDIT!-EDIT!-PACKAGE **** >
+===== Not open compiled because of defer.
+ **** <PUT .LST!-IEDIT!-EDIT!-PACKAGE 1 .LAST-IN!-IEDIT!-EDIT!-PACKAGE> **** 
+===== External variable being referenced:  LAST-IN!-IEDIT!-EDIT!-PACKAGE
+ **** .LAST-IN!-IEDIT!-EDIT!-PACKAGE **** 
+===== External variable being referenced:  INCHAN
+<SET TEMP!-IEDIT!-EDIT!-PACKAGE <INTREAD  **** .INCHAN **** >>
+===== Can't open compile CHTYPE.
+ **** <CHTYPE <NTH .EDIT-ITEM!-IEDIT!-EDIT!-PACKAGE <+ .
+POS!-IEDIT!-EDIT!-PACK ...
+===== Not open compiled because of defer.
+ **** <PUT .EDIT-ITEM!-IEDIT!-EDIT!-PACKAGE <+ .POS!-IEDIT!-EDIT!-PACKAGE 1> <
+ ...
+===== Can't open compile CHTYPE.
+ **** <CHTYPE <APPLY ,<TYPEPRIM .TEMP!-IEDIT!-EDIT!-PACKAGE> > .
+TEMP!-IEDIT!-E ...
+===== Not open compiled because of defer.
+ **** <PUT .EDIT-ITEM!-IEDIT!-EDIT!-PACKAGE <+ .POS!-IEDIT!-EDIT!-PACKAGE 1> <
+ ...
+===== External variable being referenced:  INCHAN
+<SET TEMP!-IEDIT!-EDIT!-PACKAGE <INTREAD  **** .INCHAN **** >>
+===== External variable being referenced:  INCHAN
+<SET TEMP!-IEDIT!-EDIT!-PACKAGE <INTREAD  **** .INCHAN **** >>
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+ **** .HANDLE!-IEDIT!-EDIT!-PACKAGE **** 
+===== External variable being referenced:  HANDLE2!-IEDIT!-EDIT!-PACKAGE
+ **** .HANDLE2!-IEDIT!-EDIT!-PACKAGE **** 
+===== External variable being referenced:  HANDLE2!-IEDIT!-EDIT!-PACKAGE
+ **** .HANDLE2!-IEDIT!-EDIT!-PACKAGE **** 
+===== External variable being referenced:  HANDLE2!-IEDIT!-EDIT!-PACKAGE
+<- <LENGTH  **** .HANDLE2!-IEDIT!-EDIT!-PACKAGE **** > 1>
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+<REST  **** .HANDLE!-IEDIT!-EDIT!-PACKAGE ****  .POS!-IEDIT!-EDIT!-PACKAGE>
+===== External variable being referenced:  HANDLE2!-IEDIT!-EDIT!-PACKAGE
+<REST  **** .HANDLE2!-IEDIT!-EDIT!-PACKAGE ****  1>
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+<REST  **** .HANDLE!-IEDIT!-EDIT!-PACKAGE ****  1>
+===== Can't open compile CHTYPE.
+ **** <CHTYPE <REST .HANDLE!-IEDIT!-EDIT!-PACKAGE 1> <TYPE .
+EDIT-ITEM!-IEDIT!- ...
+===== Not open compiled because type is:  STRUCTURED
+ **** <LENGTH <NTH .EDIT-ITEM!-IEDIT!-EDIT!-PACKAGE <+ .
+POS!-IEDIT!-EDIT!-PACK ...
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+ **** .HANDLE!-IEDIT!-EDIT!-PACKAGE **** 
+===== External variable being referenced:  HANDLE2!-IEDIT!-EDIT!-PACKAGE
+ **** .HANDLE2!-IEDIT!-EDIT!-PACKAGE **** 
+===== External variable being referenced:  HANDLE2!-IEDIT!-EDIT!-PACKAGE
+ **** .HANDLE2!-IEDIT!-EDIT!-PACKAGE **** 
+===== External variable being referenced:  HANDLE2!-IEDIT!-EDIT!-PACKAGE
+<- <LENGTH  **** .HANDLE2!-IEDIT!-EDIT!-PACKAGE **** > 1>
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+<REST  **** .HANDLE!-IEDIT!-EDIT!-PACKAGE ****  .POS!-IEDIT!-EDIT!-PACKAGE>
+===== External variable being referenced:  HANDLE2!-IEDIT!-EDIT!-PACKAGE
+<REST  **** .HANDLE2!-IEDIT!-EDIT!-PACKAGE ****  1>
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+<REST  **** .HANDLE!-IEDIT!-EDIT!-PACKAGE ****  1>
+===== Can't open compile CHTYPE.
+ **** <CHTYPE <REST .HANDLE!-IEDIT!-EDIT!-PACKAGE 1> <TYPE .
+EDIT-ITEM!-IEDIT!- ...
+===== External variable being referenced:  INCHAN
+ **** .INCHAN **** 
+===== External variable being referenced:  INCHAN
+<==? <NEXTCHR  **** .INCHAN **** > !\>
+===== External variable being referenced:  INCHAN
+<MEMQ <NEXTCHR  **** .INCHAN **** > ,BREAK-CHRS!-IEDIT!-EDIT!-PACKAGE>
+===== External variable being referenced:  INCHAN
+<SET TYP!-IEDIT!-EDIT!-PACKAGE <READ  **** .INCHAN **** >>
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+ **** .HANDLE!-IEDIT!-EDIT!-PACKAGE **** 
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+ **** .HANDLE!-IEDIT!-EDIT!-PACKAGE **** 
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+<REST  **** .HANDLE!-IEDIT!-EDIT!-PACKAGE ****  .POS!-IEDIT!-EDIT!-PACKAGE>
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+ **** .HANDLE!-IEDIT!-EDIT!-PACKAGE **** 
+===== Can't open compile CHTYPE.
+ **** <CHTYPE <REST .HANDLE!-IEDIT!-EDIT!-PACKAGE <+ .
+POS!-IEDIT!-EDIT!-PACKAG ...
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+<REST  **** .HANDLE!-IEDIT!-EDIT!-PACKAGE ****  1>
+===== Can't open compile CHTYPE.
+ **** <CHTYPE <REST .HANDLE!-IEDIT!-EDIT!-PACKAGE 1> <TYPE .
+EDIT-ITEM!-IEDIT!- ...
+===== External variable being referenced:  INCHAN
+<SET TEMP!-IEDIT!-EDIT!-PACKAGE <INTREAD  **** .INCHAN **** >>
+===== External variable being referenced:  INCHAN
+<SET TEMP!-IEDIT!-EDIT!-PACKAGE <INTREAD  **** .INCHAN **** >>
+===== External variable being referenced:  INCHAN
+<AND <==? <NEXTCHR  **** .INCHAN **** > !\> <RETURN T>>
+===== External variable being referenced:  INCHAN
+<SET TEMP!-IEDIT!-EDIT!-PACKAGE <READ  **** .INCHAN **** >>
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+ **** .HANDLE!-IEDIT!-EDIT!-PACKAGE **** 
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+<REST  **** .HANDLE!-IEDIT!-EDIT!-PACKAGE ****  .POS!-IEDIT!-EDIT!-PACKAGE>
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+ **** .HANDLE!-IEDIT!-EDIT!-PACKAGE **** 
+===== External variable being referenced:  HANDLE!-IEDIT!-EDIT!-PACKAGE
+<REST  **** .HANDLE!-IEDIT!-EDIT!-PACKAGE ****  1>
+===== Can't open compile CHTYPE.
+ **** <CHTYPE <REST .HANDLE!-IEDIT!-EDIT!-PACKAGE 1> <TYPE .
+EDIT-ITEM!-IEDIT!- ...
+===== Not open compiled because type is:  STRUCTURED
+ **** <NTH .TEMP!-IEDIT!-EDIT!-PACKAGE 1> **** 
+===== External variable being referenced:  TOP-ITEM!-IEDIT!-EDIT!-PACKAGE
+ **** .TOP-ITEM!-IEDIT!-EDIT!-PACKAGE **** 
+===== External variable being referenced:  TOP-ITEM!-IEDIT!-EDIT!-PACKAGE
+ **** .TOP-ITEM!-IEDIT!-EDIT!-PACKAGE **** 
+===== External variable being referenced:  INCHAN
+ **** .INCHAN **** 
+===== External variable being referenced:  INCHAN
+<==? <NEXTCHR  **** .INCHAN **** > !\>
+===== External variable being referenced:  INCHAN
+<PUTREST .HOLD!-IEDIT!-EDIT!-PACKAGE <LIST <READ  **** .INCHAN **** >>>
+===== Not open compiled because of defer.
+ **** <PUT .EDIT-ITEM!-IEDIT!-EDIT!-PACKAGE <+ .POS!-IEDIT!-EDIT!-PACKAGE 1> <
+ ...
+===== External variable being referenced:  TOP-ITEM!-IEDIT!-EDIT!-PACKAGE
+ **** .TOP-ITEM!-IEDIT!-EDIT!-PACKAGE **** 
+===== External variable being referenced:  TOP-ITEM!-IEDIT!-EDIT!-PACKAGE
+ **** .TOP-ITEM!-IEDIT!-EDIT!-PACKAGE **** 
+===== External variable being referenced:  INCHAN
+<SET JUNK!-IEDIT!-EDIT!-PACKAGE <EVAL <INTREAD  **** .INCHAN **** >>>
+===== External variable being SET: JUNK!-IEDIT!-EDIT!-PACKAGE
+ **** <SET JUNK!-IEDIT!-EDIT!-PACKAGE <EVAL <INTREAD .INCHAN>>> **** 
+===== External variable being SET: JUNK!-IEDIT!-EDIT!-PACKAGE
+ **** <SET JUNK!-IEDIT!-EDIT!-PACKAGE .E!-IEDIT!-EDIT!-PACKAGE> **** 
+===== External variable being SET: JUNK!-IEDIT!-EDIT!-PACKAGE
+ **** <SET JUNK!-IEDIT!-EDIT!-PACKAGE <1 .E!-IEDIT!-EDIT!-PACKAGE>> **** 
+===== External variable being referenced:  TOP-ITEM!-IEDIT!-EDIT!-PACKAGE
+<CHTYPE <IN  **** .TOP-ITEM!-IEDIT!-EDIT!-PACKAGE **** > LIST>
+===== External variable being referenced:  TOP-ITEM!-IEDIT!-EDIT!-PACKAGE
+<GET  **** .TOP-ITEM!-IEDIT!-EDIT!-PACKAGE ****  CURSOR!-IEDIT!-EDIT!-PACKAGE>
+===== External variable being referenced:  NEW-ITEM!-IEDIT!-EDIT!-PACKAGE
+<AGAIN  **** .NEW-ITEM!-IEDIT!-EDIT!-PACKAGE **** >
+===== External variable being referenced:  INCHAN
+<TYPE? <SET TEMP2!-IEDIT!-EDIT!-PACKAGE <INTREAD  **** .INCHAN **** >> ATOM>
+===== External variable being referenced:  TOP-ITEM!-IEDIT!-EDIT!-PACKAGE
+<CHTYPE <IN  **** .TOP-ITEM!-IEDIT!-EDIT!-PACKAGE **** > LIST>
+===== External variable being referenced:  TOP-ITEM!-IEDIT!-EDIT!-PA

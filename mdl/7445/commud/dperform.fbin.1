@@ -1,0 +1,20 @@
+'<PCODE "DPERFO">
+
+<PACKAGE "DPERFORM"> 
+
+<ENTRY PERFORM> 
+
+<USE "DDEFS" "M-DATA" "M-TIME" "M-MSG" "HOSTS"> 
+
+<SETG PERFORM  %<RSUBR!- '[ %<PCODE!- "DPERFO" 0> PERFORM #DECL ("VALUE" ANY 
+DISPATCH) HOME? HOST SENDMSG SCROUT DATUM "SERVICES" "~~~~ " " from " " to " 
+" ~~~~" %<TYPE-W DISPATCH VECTOR> " Service Failure? ~~~~" "Service failure." 
+" Service Unknown? ~~~~" "No such service?" " Non-local service ~~~~" 
+"Non-local service" " Role Unknown ~~~~" "No such role?" 
+"Service request failed." "MAILER" "DISPID" "REASON" T "ROLES"]>> 
+<AND <ASSIGNED? GLUE> .GLUE <PUT ,PERFORM PGLUE ![715128832 0!]>> 
+
+
+<SETG MY-ROLE? %<RSUBR-ENTRY '[PERFORM MY-ROLE? #DECL ("VALUE" ANY LIST)] 215>> 
+
+<ENDPACKAGE> 

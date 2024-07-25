@@ -1,0 +1,281 @@
+<USE-TOTAL "ASYLUM">
+
+<DEFINE DATA-MAPF (ASY FCN "AUX" (MFD <* <MFDPAGE .ASY> 1024>) (NUV ,NAMUV))
+        #DECL ((ASY) ASYLUM (MFD) FIX (NUV) UVECTOR (FCN) APPLICABLE)
+        <REPEAT ((N ,DIRPTRS) (DIR 0) (MFDLOC 0) A)
+		#DECL ((N DIR MFDLOC A) FIX)
+		<COND (<G=? .MFDLOC <- ,PGLOCKS ,DIRPTRS>> <RETURN>)
+		      (<0? <SET A <CHTYPE <1 <GET-LOC <+ .MFD .N> .NUV>> FIX>>>)
+		      (<COND (<==? .MFDLOC <2 <DIRPAGE .ASY>>>)
+			     (<MAP-PAGE <1 .ASY> </ .A 1024> <1 <DIRPAGE .ASY>>>
+			      <PUT <DIRPAGE .ASY> 2 .MFDLOC>)>
+		       <MFD-GROVEL .ASY .FCN <1 <DIRPAGE .ASY>> .DIR>)>
+		<SET N <+ .N 1>>
+		<SET DIR <+ .DIR 1024>>
+		<SET MFDLOC <+ .MFDLOC 1>>>
+	T>
+
+<DEFINE DATA-GC (ASY1 ASY2 "AUX")
+        #DECL ((ASY1 ASY2) ASYLUM)
+        <SETG NEW-ASYLUM .ASY2>
+	<DATA-MAPF .ASY1 ,DATA-COPIER>
+	<NMHACK-GC .ASY2 .ASY1>
+	<ALLOC-MAP .ASY2>
+	<PUT-LOC <+ <* <ALLOCPAGE .ASY2> 1024> ,HIGHID>
+		 <GET-LOC <+ <* <ALLOCPAGE .ASY1> 1024> ,HIGHID>
+			  ,DUV1>>
+	T>
+
+<DEFINE DATA-COPIER (ASY NUM "OPTIONAL" (MAX 5000)
+		      "AUX" (NEWASY ,NEW-ASYLUM) M1 M2 UV MOBYUV LEN)
+	#DECL ((ASY NEWASY) ASYLUM (NUM LEN MAX) FIX (MOBYUV) UVECTOR
+	       (UV) <UVECTOR [4 WORD]> (M1 M2) <OR MANIAC FALSE>)
+	<OR <GASSIGNED? MOBYUV>
+	    <SETG MOBYUV <IUVECTOR .MAX>>>
+	<SET MOBYUV ,MOBYUV>
+	<COND (<AND <SET UV <DATA-FIND .ASY .NUM>>
+		    <SET LEN <CHTYPE <3 .UV> FIX>>
+		    <SET M1 <DATA-OPEN "READ" .ASY .NUM>>
+		    <SET M2 <DATA-OPEN "PRINT" .NEWASY .NUM>>
+	            <DATA-BLOCK .NEWASY .M2 <DATA-READB .ASY .M1 .MOBYUV .LEN>>
+		    <DATA-PRINTB .NEWASY .M2 .MOBYUV .LEN>
+		    <DATA-PRINTW .NEWASY .M2 <DATA-READW .ASY .NUM>>
+		    <DATA-CLOSE .ASY .M1>
+		    <DATA-CLOSE .NEWASY .M2>>
+	       <AND <==? .LEN 5000> <ERROR OBJECT-TOO-BIG!-ERRORS>>)
+	      (<ERROR COPY-FAILED!-ERRORS .NUM>)>>
+	       
+%%<DEFINE NOFFSET (VAR) <- <* <VALUE .VAR> 2> 1>>
+
+<SETG HASHPAGE 4>
+<SETG HASHLOC 7>
+<SETG HASHGCUV <IUVECTOR 50 0>>
+<SETG HASHFREE 4>
+<SETG LOBUCKET <+ ,HASHFREE 40>>
+<SETG HIBUCKET <+ ,LOBUCKET 256 1>>
+
+<TITLE NMHACK-GC>
+	<DECLARE ("VALUE" ATOM ASYLUM ASYLUM)>
+	<DPUSH	TP* (AB)>
+	<DPUSH	TP* 2(AB)>
+	<PUSHJ	P* GN1>
+	<JRST	FINIS>
+
+<INTERNAL-ENTRY GN1 1>
+	<SUBM	M* (P)>
+	<MOVE	A* <MQUOTE '%<RGLOC HASHGCUV T>>>
+	<ADD	A* GLOTOP 1>
+	<PUSH	P* 1(A)>
+	<MOVE	D* (TP)>
+	<SKIPG	B* <NOFFSET HASHPAGE> (D)>
+	 <PUSHJ	P* HASHMP>
+	<LSH	B* 10>
+	<ADDI	B* LOBUCKET>
+	<PUSH	P* B>
+NMAGIN	<MOVE	A* B>
+	<TRZ	A* *777000*>
+	<CAIL	A* HIBUCKET>
+	 <JRST	GETDON>
+	<SKIPN	C* (B)>
+	 <JRST	GETNXT>
+	<PUSH	P* [0]>
+	<PUSH	P* B>
+	<PUSH	P* C>
+NMLOOP	<LDB	A* [<(*340700*) C>]>
+	<PUSH	P* A>
+	<TLZ	C* *776000*>
+	<PUSH	TP* -1(TP)>
+	<PUSH	TP* -1(TP)>
+	<PUSH	TP* <TYPE-WORD FIX>>
+	<PUSH	TP* A>
+	<PUSH	TP* <TYPE-WORD FIX>>
+	<PUSH	TP* C>
+	<PUSH	TP* <TYPE-WORD UVECTOR>>
+	<PUSH	TP* -5(P)>
+	<MCALL	4 DATREAD>
+	<POP	P* A>
+	<SUBI	A* 2>
+	<MOVE	B* -4(P)>
+	<ADD	B* A>
+	<SETZM	2(B)>
+	<MOVE	B* -4(P)>
+	<LDB	C* [<(*3000*) 1(B)>]>
+	<PUSH	TP* <TYPE-WORD FIX>>
+	<PUSH	TP* C>			; "THE ID"
+	<PUSH	TP* -5(TP)>
+	<PUSH	TP* -5(TP)>		; "THE ASYLUM"
+	<ADDI	B* 1>
+	<HRLI	B* *10700*>
+	<PUSH	P* B>
+	<SETZ	D*>
+	<ILDB	C* B>
+	<JUMPE	C* HERE 2>
+	<AOJA	D* HERE -2>
+	<MOVE	B* <TYPE-WORD STRING>>
+	<IMULI	A* 5>
+	<CAMLE	D* A>
+	<MOVE	D* A>
+	<HRR	B* D>
+	<PUSH	TP* B>
+	<POP	P* C>
+	<PUSH	TP* C>			; "THE STRING"
+	<MCALL	3 NAME-FIND-GIVEN>
+	<MOVE	A* -4(P)>
+NMELP	<MOVE	C* (P)>
+	<MOVEM	C* -1(P)>
+	<MOVE	C* 1(A)>
+	<MOVEM	C* -2(P)>
+	<MOVE	C* (A)>
+	<MOVEM	C* (P)>
+	<LDB	D* [<(*3400*) C>]>
+	<JUMPN	D* NMLOOP>
+	<SUB	P* [<3 (3)>]>
+GETNXT	<AOS	B* (P)>
+	<JRST	NMAGIN>
+
+GETDNX	<SUB	P* [<1 (1)>]>
+GETDON	<SUB	P* [<2 (2)>]>
+	<SUB	TP* [<4 (4)>]>
+	<MOVE	A* <TYPE-WORD ATOM>>
+	<MOVE	B* <MQUOTE T>>
+	<JRST	MPOPJ>	
+
+; "CONS UP THE HASH TABLE.  D HAS THE ASYLUM"
+
+HASHMP	<SUBM	M* (P)>
+	<PUSH	P* A>
+	<MOVE	C* <NOFFSET MFDPAGE> (D)>
+	<LSH	C* 10>
+	<SKIPG	A* HASHLOC (C)>
+	 <JRST	GETDNX>
+	<LSH	A* -10>		; "DISK PAGE NUMBER"
+	<PUSH	P* A>
+	<PUSH	P* D>
+	<PUSHJ	P* GHPAGE>
+	<PUSH	P* B>
+	<MOVE	A* -2(P)>
+	<PUSHJ	P* HMAPIN>
+	<POP	P* B>
+	<POP	P* D>
+	<POP	P* A>
+	<MOVE	A* <TYPE-WORD FIX>>
+	<MOVEM	A* <- <NOFFSET HASHPAGE> 1> (D)>
+	<MOVEM	B* <NOFFSET HASHPAGE> (D)>
+	<POP	P* A>
+	<JRST	MPOPJ>
+
+GHPAGE	<SUBM	M* (P)>
+	<PUSH	P* B>
+	<PUSHJ	P* APGFND>
+	<JRST	GHWIN>
+	<PUSH	TP* <TYPE-WORD FIX>>
+	<PUSH	TP* [1]>
+	<PUSH	TP* <TYPE-WORD UVECTOR>>
+	<MOVE	A* -2(P)>
+	<PUSH	TP* <NOFFSET HASHPAGE> (A)>
+	<MCALL	2 ARESERVE>
+	<GETYP	A* A>
+	<CAIN	A* <TYPE-CODE FALSE>>
+	<JRST	NOHPG>
+	<PUSHJ	P* APGFND>
+	<SKIPA>
+	<JRST	NOHPG>
+GHWIN	<SUB	P* [<1 (1)>]>
+	<JRST	MPOPJ>
+
+NOHPG	<ERRUUO* <MQUOTE NO-PAGE-FOR-HASHING!-ERRORS>>
+
+APGFND	<SUBM	M* (P)>
+	<PUSH	TP* <TYPE-WORD FIX>>
+	<PUSH	TP* [-1]>
+	<PUSH	TP* <TYPE-WORD FIX>>
+	<PUSH	TP* [1]>
+	<PUSH	TP* <TYPE-WORD UVECTOR>>
+	<MOVE	A* -3(P)>
+	<PUSH	TP* <NOFFSET HASHPAGE> (A)>
+	<MCALL	3 APGFIND>
+	<GETYP	A* A>
+	<CAIN	A* <TYPE-CODE FALSE>>
+	<SOS	(P)>
+	<JRST	MPOPJ>
+
+HMAPIN	<SUBM	M* (P)>
+	<PUSH	TP* <TYPE-WORD CHANNEL>>
+	<MOVE	C* -1(TP)>
+	<PUSH	TP* 1(C)>
+	<PUSH	TP* <TYPE-WORD FIX>>
+	<PUSH	TP* A>
+	<PUSH	TP* <TYPE-WORD FIX>>
+	<PUSH	TP* B>
+	<MCALL	3 MAP-PAGE>
+	<JRST	MPOPJ>
+
+ ;"Given ASYLUM page number of MFD in core and Low Directory # for that MFD"
+
+<TITLE MFD-GROVEL>
+	<DECLARE ("VALUE" ANY ASYLUM APPLICABLE FIX FIX)>
+	<PUSH	TP* (AB)>
+	<AOBJN	AB* HERE -1>
+	<PUSHJ	P* ISCAN>
+	<JRST	FINIS>
+
+<INTERNAL-ENTRY ISCAN 3>
+	<SUBM	M* (P)>
+	<MOVE	A* (TP)>		; "Directory #"
+	<MOVE	B* -2(TP)>		; "Pointer to MFD"
+	<MOVEI	C* 1024>		; "Count"
+	<LSH	B* 10>			; "Location in core"
+LOOP	<SKIPE	D* (B)>			; "Get a directory here?"
+	<PUSHJ	P* FOUND>		; "Yes. Now hack it."
+	<SOJE	C* DONE>		; "Loop for entire MFD"
+	<ADDI	A* 1>			; "Aos directory number"
+	<AOJA	B* LOOP>		; "And MFD pointer"
+DONE	<MOVE	A* <TYPE-WORD FIX>>
+	<SUB	TP* [<8 (8)>]>
+	<JRST	MPOPJ>
+
+FOUND	<SUBM	M* (P)>
+	<PUSH	P* A>			; "All of these must be saved."
+	<PUSH	P* B>
+	<PUSH	P* C>
+	<PUSH	P* D>
+	<PUSH	TP* -7(TP)>		; "The ASYLUM"
+	<PUSH	TP* -7(TP)>
+	<PUSH	TP* <TYPE-WORD FIX>>	; "The directory number"
+	<LSH	D* -10>
+	<PUSH	TP* D>
+	<MCALL	2 DIRMAP>		; "Map in the directory"
+	<MOVEI	A* DIRSIZE>		; "Counter for SOSing, # of entries/directory"
+	<LSH	B* 10>			; "Get core address"
+	<ADDI	B* OBJSTART>		; "And add offset to start of dir entries"
+	<SETZ	C*>			; "The place in the directory"
+FOUND1	<SKIPE	D* 1(B)>		; "The location pointer if any"
+	 <PUSHJ	P* COPY>		; "Add entry to moby uvector"
+	<ADDI	B* NAMBLKLEN>		; "To next entry"
+	<ADDI	C* 1>
+	<SOJN	A* FOUND1>		; "And loop"
+BIGPOP	<POP	P* D>			; "Return from these calls"
+	<POP	P* C>
+	<POP	P* B>
+	<POP	P* A>
+	<JRST	MPOPJ>
+
+COPY	<SUBM	M* (P)>
+	<PUSH	P* A>
+	<PUSH	P* B>
+	<PUSH	P* C>
+	<PUSH	P* D>
+	<MOVE	C* -8(P)>		; "Directory number"
+	<IMULI	C* DIRSIZE>
+	<ADD	C* -1(P)>		; "File # in C"
+	<PUSH	TP* -5(TP)>		; "APPLICABLE"
+	<PUSH	TP* -5(TP)>
+	<PUSH	TP* -9(TP)>		; "The ASYLUM"
+	<PUSH	TP* -9(TP)>
+	<PUSH	TP* <TYPE-WORD FIX>>	; "The id"
+	<PUSH	TP* C>
+	<MCALL	3 APPLY>
+	<JRST	BIGPOP>
+
+	<END>
+

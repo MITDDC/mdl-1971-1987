@@ -1,0 +1,54 @@
+********NOTE-- USE ATOP NBIN IN MARC FOR DATA-AREAD AND DATA-APRINT*********
+
+***UNIQUE ID IS <1 .MANIAC>
+
+INSANE things to do with ASYLUMs.
+
+1. <OPEN-DATA-FILE <-file name>- "OPTIONAL" T <-data page map size>-
+					<-directory page map size>->
+    (defaults are 4 and 2 for the last optional args)
+   Returns an ASYLUM
+
+2. <CLOSE-DATA-FILE <-ASYLUM>->
+
+3. <DATA-OPEN <-mode "PRINT" or "READ">-
+	      <-unique id, FIX or -1>-
+	      <-ASYLUM>->
+   Returns a MANIAC
+
+4. <DATA-BLOCK <-MANIAC>-
+	       <-ASYLUM>-
+	       <-length, FIX>->
+   Returns an address, IGNORE IT!
+
+5. <DATA-READB <-MANIAC>-
+	       <-ASYLUM>-
+	       <-uvector>-
+	       <-how many, FIX>->
+   Returns the UVECTOR
+
+5. <DATA-PRINTB <-MANIAC>-
+	    	<-ASYLUM>-
+		<-UVECTOR>-
+		<-how many, FIX>->
+   Returns number of words READ
+
+6. <DATA-AREAD <-ASYLUM>-
+	       <-unique id, FIX>-
+	       <-SPACE>-
+	       "OPTIONAL"
+	       <-speed, FIX>-
+	       <-chain, T or FALSE>->
+   Returns the object AREAD
+
+7. <DATA-APRINT <-ASYLUM>-
+	 	<-unique id, FIX>-
+		<-SPACE>-
+		<-object>-
+		"OPTIONAL"
+		<-fixup, T or FALSE>->
+   Returns the SPACE (??)
+
+8. <DATA-CLOSE <-MANIAC>-
+	       <-ASYLUM>->
+

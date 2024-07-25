@@ -1,0 +1,38 @@
+'<PCODE "2NOTGEN">
+
+" Generate NOT code.  This is done in a variety of ways.
+	1) If NOTs arg is a predicate itself and this is a predicate usage
+	    (flagged by BRANCH arg), just pass through setting the NOTF arg.
+	2) If NOTs arg is a predicate but a value is needed,
+	    set up a predicate like situation and return NOT of the normal
+	    value.
+	3) Else just compile and complement result." 
+
+<SETG NOT-GEN  %<RSUBR!- '[ %<PCODE!- "2NOTGEN" 0> NOT-GEN #DECL ("VALUE" ANY 
+NODE ANY "OPTIONAL" ANY ANY ANY) REG? TRUE-FALSE GETREG EMIT ADDR:TYPE IMCHK 
+TOACV DATUM ISTYPE-GOOD? UPDATE-WHERE MESSAGE LABEL:TAG TYPE-OK? ISTYPE? 
+BRANCH:TAG MOVE:ARG REFERENCE RET-TMP-AC MAKE:TAG D:B:TAG VAR-STORE GEN GOODACS 
+PRED? T %<TYPE-W DATUM LIST> %<TYPE-W NODE VECTOR> %<RGLOC GENERATORS T> FLUSHED
+ DONT-CARE FALSE %<RGLOC N==? T> WARNING " ARGS CAN NEVER BE EQUAL " " " %<RGLOC
+SNODES T> %<TYPE-C AC VECTOR> ANY-AC %<TYPE-W AC VECTOR> (`CAMN  `CAIN ) (
+`CAME  `CAIE ) GETYP!-OP %<TYPE-W OPCODE!-OP WORD> TYPE-CODE!-OP <`SKIPA > 
+"TYPE? NEVER TRUE " #FALSE (1) "TYPE? ALWAYS TRUE " #FALSE (2) ATOM]>> 
+<AND <ASSIGNED? GLUE> .GLUE <PUT ,NOT-GEN PGLUE ![715827882 -22906404865 -4 0!]>
+> 
+
+
+" Generate code for ==?.  If types are the same then just compare values,
+otherwise generate a full comparison." 
+
+<SETG ==-GEN %<RSUBR-ENTRY '[NOT-GEN ==-GEN #DECL ("VALUE" ANY NODE ANY 
+"OPTIONAL" ANY ANY ANY)] 373>> 
+
+<SETG GEN-EQTST %<RSUBR-ENTRY '[NOT-GEN GEN-EQTST #DECL ("VALUE" <OR FALSE AC> 
+ANY ANY NODE NODE ANY ANY ANY ANY ANY)] 772>> 
+
+"	Generate TYPE? code for all various cases." 
+
+<SETG TYPE?-GEN %<RSUBR-ENTRY '[NOT-GEN TYPE?-GEN #DECL ("VALUE" ANY NODE ANY 
+"OPTIONAL" ANY ANY ANY)] 1051>> 
+
+<SETG TYPINS %<RSUBR-ENTRY '[NOT-GEN TYPINS #DECL ("VALUE" ANY ANY NODE)] 1792>> 

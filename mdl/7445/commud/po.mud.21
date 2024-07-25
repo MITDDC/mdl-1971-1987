@@ -1,0 +1,91 @@
+<DEFINE PACKORDER ("AUX" POB PLIST PP POBL)
+	#DECL ((POB) <LIST [REST ATOM]> (PLIST) <LIST [REST LIST]>
+	       (POBL) OBLIST
+	       (PP) <LIST ATOM <LIST [REST ATOM]>>)
+	<SET POB
+	     <MAPF ,LIST
+		   <FUNCTION (L)
+			#DECL ((L) <LIST [REST ATOM]>)
+			<MAPRET !.L>>
+		   <SET POBL <GET PACKAGE OBLIST>>>>
+	<SET PLIST (())>
+	<MAPF <>
+	      <FUNCTION (P "AUX" OBL)
+		   #DECL ((P) ATOM (OBL) <LIST [REST OBLIST]>)
+		   <SET PP
+			<LIST .P
+			      <MAPF ,LIST
+				    <FUNCTION (OB)
+					 #DECL ((OB) OBLIST)
+					 <COND (<N==? .OB <ROOT>>
+						<MAPRET <GET .OB OBLIST>>)
+					       (ELSE <MAPRET>)>>
+				    <COND (<GASSIGNED? .P>
+					   <REST <SET OBL ,.P> 2>)
+					  (ELSE ())>>>>
+		   <REPEAT ((PL .PLIST) PQ C PP2 PQ2)
+			   #DECL ((PL) <LIST LIST
+					     [REST <LIST ATOM
+							 <LIST [REST ATOM]>>]>
+				  (PQ) <LIST ATOM <LIST [REST ATOM]>>
+				  (C) FIX (PP2 PQ2) <LIST [REST ATOM]>)
+			   <COND (<EMPTY? <REST .PL>>
+				  <PUTREST .PL (.PP)>
+				  <RETURN>)>
+			   <SET PQ <2 .PL>>
+			   <SET PQ2 <2 .PQ>>
+			   <SET PP2 <2 .PP>>
+			   <COND (<OR <MEMQ <1 .PQ> .PP2>
+				      <AND <0? <IN-COMMON .PP2 .PQ2>>
+					   <G? <LENGTH .PP2> <LENGTH .PQ2>>>>
+				  <PUTREST .PL (.PP !<REST .PL>)>
+				  <RETURN>)
+				 (ELSE
+				  <SET PL <REST .PL>>)>>>
+	      .POB>
+	<REST .PLIST>>
+
+<DEFINE IN-COMMON (L1 L2 "AUX" (C 0))
+	#DECL ((L1 L2) <LIST [REST ATOM]> (C) FIX)
+	<COND (<OR <EMPTY? .L1> <EMPTY? .L2>> 0)
+	      (ELSE
+	       <MAPF <>
+		     <FUNCTION (A)
+			  #DECL ((A) ATOM)
+			  <COND (<MEMQ .A .L2> <SET C <+ .C 1>>)>>
+		     .L1>
+	       .C)>>
+
+<DEFINE PACKP (PL "AUX" (OUTCHAN .OUTCHAN) (X 10)
+	       (OBLIST (<GET PACKAGE OBLIST> <ROOT>)))
+	#DECL ((PL) <LIST [REST <LIST ATOM <LIST [REST ATOM]>>]>
+	       (OUTCHAN) CHANNEL
+	       (X) FIX (OBLIST) <SPECIAL <LIST [REST OBLIST]>>)
+	<MAPF <>
+	      <FUNCTION (P)
+		   #DECL ((P) <LIST ATOM <LIST [REST ATOM]>>)
+		   <SET X <MAX .X <FLATSIZE <1 .P> 70>>>>
+	      .PL>
+	<MAPF <>
+	      <FUNCTION (P)
+		   #DECL ((P) <LIST ATOM <LIST [REST ATOM]>>)
+		   <PRINC <1 .P>>
+		   <PRINC ":">
+		   <INDENT-TO .X>
+		   <MAPF <>
+			 <FUNCTION (A)
+			      #DECL ((A) ATOM)
+			      <COND (<NOT <FLATSIZE .A <- <13 .OUTCHAN>
+							  <14 .OUTCHAN>>>>
+				     <CRLF>
+				     <INDENT-TO .X>)>
+			      <PRINC .A>
+			      <COND (<FLATSIZE !\  <- <13 .OUTCHAN>
+						      <14 .OUTCHAN>>>
+				     <PRINC !\ >)>>
+			 <2 .P>>
+		   <CRLF>>
+	      .PL>>
+
+			      
+		       

@@ -1,0 +1,32 @@
+<USE "CHAOS">
+
+<SETG HOST-VECTOR ["EE" "XX" "OZ" "MC" "AI" "ML" "MC" "DM"]>
+
+<SETG USER-VECTOR ["CYPHER"
+		   "FHSU"
+		   "CWL"]>
+
+<SETG INFO-VECTOR []>
+
+<DEFINE CHECK ()	
+  <MAPF <>
+	<FUNCTION (HOST)
+	  <MAPF <>
+		<FUNCTION (NAME)
+		  <COND (<NOT <SET HANDLE
+				   <CHAOS-OPEN <STRING .HOST ".NAME_" .NAME>>>>
+			 <MAPRET>)
+			(ELSE <SETG INFO-VECTOR <VECTOR <CHAOS-RESP .HANDLE>
+							!,INFO-VECTOR>>)>>
+		,USER-VECTOR>>
+	,HOST-VECTOR>>
+
+<DEFINE RUN ()
+  <REPEAT ()
+    <SLEEP 10>
+    <CHECK>
+    <MAPF <>
+	  <FUNCTION (ENTRY)
+	    <PRINC .ENTRY>>
+	  ,INFO-VECTOR>
+    <AGAIN>>>

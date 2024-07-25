@@ -1,0 +1,271 @@
+
+<USE-TOTAL "ASYLUM">
+
+<FLOAD "MADMAN;ALISTC NBIN">
+
+<DEFINE LISTM (D
+	       "AUX" (MFD <* <MFDPAGE .D> 1024>) (ALLOC <* <ALLOCPAGE .D> 1024>) VAL
+		     (DUV ,DUV1) (OUTCHAN .OUTCHAN))
+	#DECL ((D) ASYLUM (MFD ALLOC VAL) FIX (DUV) <UVECTOR [1 WORD]>
+	       (OUTCHAN) CHANNEL)
+	<ALLOC-MAP .D>
+	<PRINC "
+Allocator Use = ">
+	<COND (<==? <1 <GET-LOC <+ .MFD ,ALLOCLOCK> .DUV>> #WORD *000000000000*>
+	       <PRINC "**  LOCKED **">)>
+	<PRIN1 <SET VAL
+		    </ <- <CHTYPE <ORB <GETBITS <1 <GET-LOC .ALLOC .DUV>> <BITS 18 18>>
+				       #WORD *777777000000*>
+				  FIX>>
+		       2>>>
+	<PRINC "/511 or ">
+	<PRIN1 </ <* .VAL 100> 511>>
+	<PRINC "%">
+	<PRINC "
+Data Area Use = ">
+	<PRIN1 <SET VAL <CHTYPE <1 <GET-LOC <+ .ALLOC 1022> .DUV>> FIX>>>
+	<PRINC " or ">
+	<PRIN1 </ <* .VAL 100> <CHTYPE <1 <GET-LOC <+ .MFD ,MAXADR> .DUV>> FIX>>>
+	<PRINC "%">
+	<PRINC "
+High ID = ">
+	<PRIN1 <CHTYPE <1 <GET-LOC <+ .ALLOC ,HIGHID> .DUV>> FIX>>
+	<DIR-INFO .D .MFD>
+	<LOCKED-PAGES <+ ,PGLOCKS .MFD>>
+	,NULL>  
+ 
+<DEFINE DIR-INFO (D MFD "AUX" (DUV ,DUV1) (CNT 0) (OUTCHAN .OUTCHAN) A) 
+	#DECL ((D) ASYLUM (MFD A) FIX (DUV) <UVECTOR [1 WORD]> (CNT) FIX
+	       (OUTCHAN) CHANNEL)
+	<REPEAT ((N ,DIRPTRS) (DIR 0) (MFDLOC 0))
+		#DECL ((N DIR MFDLOC) FIX)
+		<COND (<G=? .MFDLOC <- ,PGLOCKS ,DIRPTRS>> <RETURN>)
+		      (<0? <SET A <CHTYPE <1 <GET-LOC <+ .MFD .N> .DUV>> FIX>>>)
+		      (<CRLF>
+		       <PRINC "MFD ">
+		       <PRIN1 .MFDLOC>
+		       <PRINC " --> Page ">
+		       <PRIN1 </ .A 1024>>
+		       <COND (<==? .MFDLOC <2 <DIRPAGE .D>>>)
+			     (<MAP-PAGE <1 .D> </ .A 1024> <1 <DIRPAGE .D>>>
+			      <PUT <DIRPAGE .D> 2 .MFDLOC>)>
+		       <SET CNT <+ .CNT <MFD-SCAN <1 <DIRPAGE .D>> .DIR>>>)>
+		<SET N <+ .N 1>>
+		<SET DIR <+ .DIR 1024>>
+		<SET MFDLOC <+ .MFDLOC 1>>>
+	<PRINC "
+Total directories = ">
+	<PRIN1 .CNT>>
+
+<DEFINE LISTB (DC
+	       "OPTIONAL" (VERB <>) (SALV <>) (SALVERB <>) (MINSALV 75)
+	       "AUX" (MFD <* <MFDPAGE .DC> 1024>) (UV1 ,DUV1) (DUV ,NAMUV) ALPTR
+		     ALLEN MOBY)
+	#DECL ((DC) ASYLUM (MFD MINSALV ALPTR ALLEN) FIX
+	       (UV1) <UVECTOR [1 WORD]> (DUV) <UVECTOR [4 WORD]>
+	       (MOBY) <UVECTOR [REST WORD]> (VERB SALV SALVERB) <OR ATOM FALSE>)
+	<ALLOC-MAP .DC>
+	<SET ALPTR
+	     <+ <* 1024 <ALLOCPAGE .DC>>
+		<CHTYPE <ANDB <1 <GET-LOC <* <ALLOCPAGE .DC> 1024> .UV1>>
+			      #WORD *000000001777*>
+			FIX>>>
+	<SET MOBY
+	     <IUVECTOR <+ 100
+			  <* <DIR-INFO .DC .MFD> 253 2>
+			  <SET ALLEN
+			       <- <+ 1023 <* <ALLOCPAGE .DC> 1024>> .ALPTR>>>
+		       #WORD *000000000000*>>
+	<GET-LOC-X .ALPTR <REST .MOBY 2> .ALLEN>
+	<PUT .MOBY 1 #WORD *777777003777*>
+	<PUT .MOBY 2 #WORD *000000000001*>
+	<SET MOBY <REST .MOBY <+ 2 .ALLEN>>>
+	<COND (<N==? <1 <GET-LOC <+ .MFD 7> .UV1>> #WORD *000000000000*>
+	       <PUT .MOBY 1 #WORD *777775002000*>
+	       <PUT .MOBY 2 <1 .UV1>>
+	       <SET MOBY <REST .MOBY 2>>)>
+	<SETG LISTB-HIGHID 0>
+	<SETG LISTB-COUNT 0>
+	<REPEAT ((N ,DIRPTRS) (DIR 0) (MFDLOC 0) A)
+		#DECL ((N DIR MFDLOC A) FIX)
+		<COND (<G=? .MFDLOC <- ,PGLOCKS ,DIRPTRS>> <RETURN>)
+		      (<0? <SET A <CHTYPE <1 <GET-LOC <+ .MFD .N> .DUV>> FIX>>>)
+		      (<COND (<==? .MFDLOC <2 <DIRPAGE .DC>>>)
+			     (<MAP-PAGE <1 .DC> </ .A 1024> <1 <DIRPAGE .DC>>>
+			      <PUT <DIRPAGE .DC> 2 .MFDLOC>)>
+		       <PUT .MOBY 1 #WORD *777774002000*>
+		       <PUT .MOBY 2 <CHTYPE .A WORD>>
+		       <SET MOBY
+			    <MFD-LISTB .DC
+				       <REST .MOBY 2>
+				       <1 <DIRPAGE .DC>>
+				       .DIR>>)>
+		<SET N <+ .N 1>>
+		<SET DIR <+ .DIR 1024>>
+		<SET MFDLOC <+ .MFDLOC 1>>>
+	<SET MOBY <SORT <> <TOP .MOBY> 2 1>>
+	<PRINT-LISTB .DC .MOBY .VERB .SALV .SALVERB .MINSALV>
+	T>
+
+<DEFINE PRINT-LISTB (DC MOBY
+		     "OPTIONAL" (VERB <>) (SALV <>) (SALVERB <>) (MINSALV 75)
+		     "AUX" (TOTFREE 0) (OUTCHAN .OUTCHAN))
+	#DECL ((DC) ASYLUM (MOBY) UVECTOR (VERB SALV SALVERB) <OR ATOM FALSE>
+	       (MINSALV TOTFREE) FIX (OUTCHAN) CHANNEL)
+	<COND (.VERB
+	       <PRINC "
+Total files = ">
+	       <PRIN1 ,LISTB-COUNT>
+	       <PRINC "   Highest Id found = ">
+	       <PRIN1 ,LISTB-HIGHID>
+	       <PRINC 
+"
+     Asylum File Map
+
+From     To     Length    Use">)>
+	<REPEAT ((M .MOBY) LO HI (LSTLO -1) (LSTHI -1) (LSTM -1) (WHR -1))
+		#DECL ((WHR LO HI LSTLO LSTHI LSTM) FIX (M) UVECTOR)
+		<AND <EMPTY? .M> <RETURN>>
+		<AND <==? <1 .M> #WORD *000000000000*>
+		     <SET M <REST .M 2>>
+		     <AGAIN>>
+		<SET LO <CHTYPE <2 .M> FIX>>
+		<SET HI
+		     <+ <CHTYPE <2 .M> FIX>
+			<CHTYPE <GETBITS <1 .M> <BITS 18>> FIX>>>
+		<COND (<==? .LO .LSTLO>
+		       <SALVERR "**SHARED BLOCK**"
+				.LSTLO
+				.LSTHI
+				.LSTM
+				.LO
+				.HI
+				<1 .M>>)
+		      (<L? .LO .LSTHI>
+		       <SALVERR "**BLOCKS OVERLAP**"
+				.LSTLO
+				.LSTHI
+				.LSTM
+				.LO
+				.HI
+				<1 .M>>)
+		      (<AND <G? .WHR 0> <L? .LO .WHR>>
+		       <SALVERR "**MUNGED LOSSAGE**"
+				.LSTLO
+				.LSTHI
+				.LSTM
+				.LO
+				.HI
+				<1 .M>>)
+		      (<AND .SALV
+			    <G? .LO .LSTHI>
+			    <0? <CHTYPE <GETBITS <1 .M> <BITS 18 18>> FIX>>
+			    <0? <CHTYPE <GETBITS .LSTM <BITS 18 18>> FIX>>>
+		       <CRLF>
+		       <PRINC "ADJACENT FREE BLOCK - Length = ">
+		       <PRIN1 <- .LO .LSTHI>>
+		       <PRINC "  Location = ">
+		       <PRIN1 .LSTHI>
+		       <SALVDEALLOC .DC <- .LO .LSTHI> .LSTHI>)
+		      (<AND .SALVERB <G? .WHR 0> <G? .LO .WHR>>
+		       <COND (<AND <G? <- .LO .LSTHI> .MINSALV> .SALV>
+			      <CRLF>
+			      <PRINC "LARGE FREE BLOCK - Length = ">
+			      <PRIN1 <- .LO .LSTHI>>
+			      <PRINC "  Location = ">
+			      <PRIN1 .LSTHI>
+			      <SALVDEALLOC .DC <- .LO .LSTHI> .LSTHI>)
+			     (<SET TOTFREE <+ .TOTFREE <- .LO .LSTHI>>>)>)>
+		<SET WHR
+		     <COND (.VERB <PBLOCK .LO .HI <1 .M>>)
+			   (<PMUNG? .LO <1 .M>>)>>
+		<SET LSTLO .LO>
+		<SET LSTHI .HI>
+		<SET LSTM <CHTYPE <1 .M> FIX>>
+		<SET M <REST .M 2>>>
+	<AND .SALVERB <CRLF> <PRINC "TOTAL LOST WORDS = "> <PRIN1 .TOTFREE>>
+	<CRLF>>
+
+<DEFINE PMUNG? (LO TYP "AUX" HOW) 
+	#DECL ((LO) FIX (TYP) WORD (HOW) FIX)
+	<COND (<OR <0? <SET HOW <CHTYPE <GETBITS .TYP <BITS 18 18>> FIX>>>
+		   <==? <CHTYPE .HOW WORD> #WORD *000000777777*>>
+	       -1)
+	      (<+ .LO <CHTYPE <GETBITS .TYP <BITS 18>> FIX>>)>>
+
+<DEFINE PRTYPE (WD LO "AUX" HOW LEN (OUTCHAN .OUTCHAN)) 
+	#DECL ((HOW LO LEN) FIX (WD) <PRIMTYPE WORD> (OUTCHAN) CHANNEL)
+	<COND (<0? <SET HOW <CHTYPE <GETBITS .WD <BITS 18 18>> FIX>>>
+	       <PRINC "Unallocated">
+	       <+ .LO <CHTYPE .WD FIX>>)
+	      (<==? <CHTYPE .HOW WORD> #WORD *000000777776*>
+	       <PRINC "Directory Page">
+	       -1)
+	      (<==? <CHTYPE .HOW WORD> #WORD *000000777775*>
+	       <PRINC "Hash Table Page">
+	       -1)
+	      (<==? <CHTYPE .HOW WORD> #WORD *000000777774*>
+	       <PRINC "MFD Page">
+	       -1)
+	      (<==? <CHTYPE .HOW WORD> #WORD *000000777777*>
+	       <PRINC "Master MFD/Allocator">
+	       -1)
+	      (<PRINC "Object #">
+	       <PRIN1 .HOW>
+	       <SET LEN <CHTYPE <GETBITS .WD <BITS 18>> FIX>>
+	       <INDENT-TO 45>
+	       <PRINC "Top = ">
+	       <PRIN1 <+ .LO .LEN>>)>>
+
+<DEFINE SALVERR (ERR LLO LHI LM LO HI M "AUX" (OUTCHAN .OUTCHAN)) 
+	#DECL ((ERR) STRING (LLO LHI LO HI) FIX (LM M) <PRIMTYPE WORD>
+	       (OUTCHAN) CHANNEL)
+	<PRINC "
+ERROR -- ">
+	<PRINC .ERR>
+	<PBLOCK .LLO .LHI .LM>
+	<PBLOCK .LO .HI .M>
+	<CRLF>>
+
+<DEFINE PBLOCK (LO HI M "AUX" (OUTCHAN .OUTCHAN)) 
+	#DECL ((LO HI) FIX (M) <PRIMTYPE WORD> (OUTCHAN) CHANNEL)
+	<CRLF>
+	<COND (<1? .LO> <PRIN1 0>)
+	      (<PRIN1 .LO>)>
+	<INDENT-TO 9>
+	<PRIN1 <- .HI 1>>
+	<INDENT-TO 16>
+	<PRIN1 <CHTYPE <GETBITS .M <BITS 18>> FIX>>
+	<INDENT-TO 26>
+	<PRTYPE .M .LO>>
+
+<DEFINE LISTA (D
+	       "AUX" (ALLOC <* <ALLOCPAGE .D> 1024>) HIGH LO CNT ALOC ALPTR
+	       	     (OUTCHAN .OUTCHAN))
+	#DECL ((D) ASYLUM (ALLOC CNT ALOC LO HIGH) FIX (ALPTR) WORD (OUTCHAN) CHANNEL)
+	<ALLOC-MAP .D>
+	<PRINC "
+Database Allocator Statistics">
+	<SET ALPTR <1 <GET-LOC .ALLOC ,DUV1>>>
+	<SET CNT
+	     <CHTYPE <ORB <GETBITS .ALPTR <BITS 18 18>> #WORD *777777000000*>
+		     FIX>>
+	<CRLF>
+	<SET ALOC
+	     <+ <CHTYPE <ANDB <GETBITS .ALPTR <BITS 18 0>> #WORD *000000001777*>
+			FIX>
+		.ALLOC>>
+	<CRLF>
+	<PRINC "From     To     Length">
+	<REPEAT ((UV <IUVECTOR 2 #WORD 0>))
+		#DECL ((UV) <UVECTOR [2 WORD]>)
+		<GET-LOC .ALOC .UV>
+		<CRLF>
+		<PRIN1 <SET LO <CHTYPE <2 .UV> FIX>>>
+		<PRINC "	 ">
+		<PRIN1 <SET HIGH <+ .LO <CHTYPE <1 .UV> FIX>>>>
+		<PRINC "	">
+		<PRIN1 <- .HIGH .LO>>
+		<SET ALOC <+ .ALOC 2>>
+		<SET CNT <+ .CNT 2>>
+		<AND <0? .CNT> <RETURN <CRLF>>>>>

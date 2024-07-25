@@ -1,0 +1,78 @@
+'<PCODE "M-DOUT">
+
+<PACKAGE "M-DOUT"> 
+
+<ENTRY DO-OUTPUT DO-APPLY ADR> 
+
+<USE "M-READ" "PRTUTI" "AP" "M-DEFS" "MADMAN"> 
+
+<GDECL (IH EH) HANDLER> 
+
+<SETG DO-OUTPUT-IHAND  %<RSUBR!- '[ %<PCODE!- "M-DOUT" 0> DO-OUTPUT-IHAND #DECL 
+("VALUE" ANY "TUPLE" TUPLE) ALLIST P-FORWARD NET-FROM P-ENCLOSURES P-NOTES 
+NET-P-LINE NET-P-DATE P-ADDR P-TIME P-SPLIT P-SLIST P-ADDRL PPRINT AP? DRDA 
+WATCH AFALSE %<RGLOC MSG-SPACE T> %<TYPE-W SPACE VECTOR> OUT 
+"IOC DURING OUTPUT: " %<INTERNAL-RSUBR ASTRING 262143> "ERROR IN OUTPUT: " (
+ACTIVATION) IH "IOC" %<RGLOC DO-OUTPUT-IHAND T> EH "ERROR" %<RGLOC 
+DO-OUTPUT-EHAND T> %<RGLOC EH T> %<RGLOC IH T> T "Bad Output Function Type: " 
+"Illegal Function Specification: " "Improper Field Format Element: " 
+"Bad Format Element: " CURSPACE (SPACE)]>> 
+<AND <ASSIGNED? GLUE> .GLUE <PUT ,DO-OUTPUT-IHAND PGLUE ![715827882 -21474836481
+-16777216!]>> 
+
+
+<SETG DO-OUTPUT-EHAND %<RSUBR-ENTRY '[DO-OUTPUT-IHAND DO-OUTPUT-EHAND #DECL (
+"VALUE" ANY "TUPLE" TUPLE)] 60>> 
+
+\ 
+
+<SETG DO-APPLY %<RSUBR-ENTRY '[DO-OUTPUT-IHAND DO-APPLY #DECL ("VALUE" <OR FALSE
+ATOM> STRING ANY CHANNEL)] 120>> 
+
+\ 
+
+"DO-OUTPUT -- format-driven message output routine
+	adr -- addressee whose message is being printed
+	flist -- format control
+	outchan -- output channel
+
+-- returns t if winning, false(reason:string) if loss in format.
+   attempt to print empty field is not a reason for lossage.
+
+Formats, such as are passed as the second arg to DO-OUTPUT, look like
+lists.  Each element specifies how to treat a specific field:
+
+	field-name:string		print the field value
+	felement:list
+	   (prefix:string-or-false
+	    field
+	    suffix:string
+	    printer)
+
+	'prefix', if non-false, is print before the field value
+	'field' may be:
+
+	fix		field number
+	string		field name
+	vector		print only if fields given are different
+	list		pass list of all these fields
+
+	'suffix', if present, is printed after the field value
+" 
+
+<SETG DO-OUTPUT %<RSUBR-ENTRY '[DO-OUTPUT-IHAND DO-OUTPUT #DECL ("VALUE" <OR 
+FALSE ATOM> STRING LIST CHANNEL)] 200>> 
+
+\ 
+
+"DATVECT -- takes a vector naming two fields.  returns the contents of
+the first field only if it is different from those of the second field.
+this is used (for example) to show the SENDER field only if it is
+different from the FROM field.  Note that it takes into account that
+one field may be a LIST of a STRING while the other may be just a
+STRING." 
+
+"DATLIST -- used to return a list of the contents of several fields.
+Returns FALSE if the first field specified doesn't exist." 
+
+<ENDPACKAGE> 

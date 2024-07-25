@@ -1,0 +1,137 @@
+<PACKAGE "JCL"> 
+
+<ENTRY JCL? READJCL IREADJCL WRITEJCL> 
+
+<DEFINE READJCL ("OPTIONAL" (TERM? 0) "AUX" (JCL <IREADJCL>) NJCL)
+	#DECL ((TERM?) <OR FIX FALSE> (JCL NJCL) <OR STRING FALSE>)
+	<COND (.JCL
+	       <COND (<==? .JCL <SET NJCL <MEMBER "RUN " .JCL>>>
+		      <SET JCL <REST .NJCL 4>>
+		      <COND (<AND <NOT <EMPTY? .JCL>> <==? <1 .JCL> !\(>>
+			     <COND (<SET NJCL <MEMQ !\) .JCL>>
+				    <SET JCL <REST .NJCL>>
+				    <COND (<AND <NOT <EMPTY? .JCL>>
+						<==? <1 .JCL> !\ >>
+					   <SET JCL <REST .JCL>>)>)>)>)>
+	       <COND (<SET NJCL <OR <MEMQ !\  .JCL> <MEMQ <ASCII 10> .JCL>>>
+		      <SET JCL .NJCL>)>
+	       <COND (<NOT .TERM?>
+		      <REPEAT (LJCL)
+			      #DECL ((LJCL) FIX)
+			      <SET LJCL <LENGTH .JCL>>
+			      <COND (<EMPTY? .JCL> <RETURN>)
+				    (<MEMQ <NTH .JCL .LJCL> ,BLANKS>
+				     <SET JCL
+					  <SUBSTRUC .JCL
+						    0
+						    <- .LJCL 1>
+						    <REST .JCL>>>)
+				    (ELSE <RETURN>)>>)>
+	       <REPEAT ()
+		       <COND (<EMPTY? .JCL>
+			      <SET JCL <>>
+			      <RETURN>)
+			     (<MEMQ <1 .JCL> ,BLANKS>
+			      <SET JCL <REST .JCL>>)
+			     (ELSE <RETURN>)>>
+	       .JCL)>> 
+
+<SETG BLANKS " 	
+"> 
+
+<GDECL (BLANKS) STRING>
+
+<TITLE	JCL?>
+	<DECLARE ("VALUE" <OR FALSE FIX>)>
+	<PUSHJ	P* IJCLQ0>
+	<JRST	FINIS>
+
+<INTERNAL-ENTRY IJCLQ0 0>
+	<SUBM	M* (P)>
+	<MOVEI	A* 1>			; ".RSCNT"
+	<RSCAN>				; "CONS COUNT OF JCL"
+	 <JRST	NOJCL>
+	<JUMPE	A* NOJCL>
+	<MOVE	B* A>
+	<MOVSI	A* <TYPE-CODE FIX>>
+	<JRST	MPOPJ>
+
+NOJCL	<MOVSI	A* <TYPE-CODE FALSE>>
+	<MOVEI	B*>
+	<JRST	MPOPJ>
+
+<SUB-ENTRY IREADJCL #DECL ("VALUE" <OR STRING FALSE>)>
+	<PUSHJ	P* READJCL0>
+	<JRST	FINIS>
+
+<INTERNAL-ENTRY READJCL0 0>
+	<SUBM	M* (P)>
+	<MOVEI	A* 0>
+	<RSCAN>				; "MAKE IT AVAILABLE"
+	 <JRST	NOJCL>
+	<PUSHJ	P* IJCLQ0>
+	<GETYP	O* A>
+	<CAIE	O* <TYPE-CODE FIX>>
+	 <JRST	MPOPJ>
+	<PUSH	TP* A>
+	<PUSH	TP* B>
+	<MOVE	A* (TP)>
+	<PUSH	P* A>
+	<ADDI	A* 4>
+	<IDIVI	A* 5>
+	<MOVEI	O* IBLOCK>
+	<PUSHJ	P* RCALL>
+	<POP	P* E>
+	<HRLI	E* <TYPE-CODE STRING>>
+	<HRLI	B* 4544>
+	<SUBI	B* 1>
+	<MOVE	D* B>
+	<MOVN	C* (TP)>
+	<MOVEI	A* -1>
+	<SIN-JSYS>			; "READ JCL"
+	<MOVE	A* E>
+	<MOVE	B* D>
+	<SUB	TP* [<2(2)>]>
+	<JRST	MPOPJ>
+
+<SUB-ENTRY WRITEJCL #DECL ("VALUE" <OR STRING FALSE> STRING)>
+	<PUSH	TP* (AB)>
+	<PUSH	TP* 1(AB)>
+	<PUSHJ	P* IWRITEJCL>
+	<JRST	FINIS>
+
+<INTERNAL-ENTRY IWRITEJCL 1>
+	<SUBM	M* (P)>
+	<HRRZ	C* -1(TP)>		; "SIZE OF STRING"
+	<ADDI	C* 5>
+	<IDIVI	C* 5>
+	<MOVE	D* C>
+	<HRL	D* D>
+	<HRROI	B* 1(P)>
+	<ADD	P* D>
+	<MOVE	A* (TP)>
+	<MOVE	C* B>
+	<HRLI	C* *440700*>
+	<HRRZ	E* -1(TP)>
+	<ILDB	A>
+	<IDPB	C>
+	<SOJG	E* HERE -2>
+	<MOVEI	O* 0>
+	<IDPB	C>			; "MAKE SURE ASCIZ"
+	<MOVE	A* B>
+	<RSCAN>				; "PUT JCL IN BUFFER"
+	 <JRST JCLOSE>
+	<SUB	P* D>
+	<MOVE	A* -1(TP)>
+	<MOVE	B* (TP)>
+WJEXIT 	<SUB	TP* [<2(2)>]>
+	<JRST	MPOPJ>
+
+JCLOSE	<SUB	P* D>
+	<MOVSI	A* <TYPE-CODE FALSE>>
+	<SETZ	B*>
+	<JRST WJEXIT>
+
+<END>
+
+<ENDPACKAGE>

@@ -1,0 +1,213 @@
+Compilation record for: DSK:MUDDLE;ELMER UBT107
+Output file:  DSK:MUDDLE;ELMER NBIN
+
+It is now FRIDAY, 27 JAN 1978 19:14 EST
+
+File loaded.
+Functions ordered.
+MUDDLE COMPILER
+COMPILING SLOT!-IGLUE!-GLUE!-PACKAGE
+Compilation done in 3 seconds cpu time, 
+16 seconds  real time. 
+Peephole optimization reduced code by 0%.     26 -> 26
+Starting assembler
+Job done in:  5 seconds cpu time, 21 seconds real time.
+MUDDLE COMPILER
+COMPILING SPLOUT!-IGLUE!-GLUE!-PACKAGE
+Compilation done in 14 seconds cpu time, 
+27 seconds  real time. 
+Peephole optimization reduced code by 0%.     50 -> 50
+Starting assembler
+Job done in:  16 seconds cpu time, 32 seconds real time.
+ MUDDLE COMPILER
+COMPILING UPINT!-IGLUE!-GLUE!-PACKAGE
+Compilation done in 3 seconds cpu time, 
+18 seconds  real time. 
+Peephole optimization reduced code by 0%.     53 -> 53
+Starting assembler
+Job done in:  13 seconds cpu time, 21 seconds real time.
+   MUDDLE COMPILER
+COMPILING SPLOUTN!-IGLUE!-GLUE!-PACKAGE
+Compilation done in 15 seconds cpu time, 
+24 seconds  real time. 
+Peephole optimization reduced code by 2%.     41 -> 40
+Starting assembler
+Job done in:  17 seconds cpu time, 27 seconds real time.
+MUDDLE COMPILER
+COMPILING OUT-INFO!-IGLUE!-GLUE!-PACKAGE
+Compilation done in 2 seconds cpu time, 
+4 seconds  real time. 
+Peephole optimization reduced code by 0%.     48 -> 48
+Starting assembler
+Job done in:  4 seconds cpu time, 5 seconds real time.
+   MUDDLE COMPILER
+COMPILING ZEROBIT!-IGLUE!-GLUE!-PACKAGE
+Compilation done in 4 seconds cpu time, 
+5 seconds  real time. 
+Peephole optimization reduced code by 0%.     60 -> 60
+Starting assembler
+Job done in:  13 seconds cpu time, 23 seconds real time.
+  MUDDLE COMPILER
+COMPILING CM!-IGLUE!-GLUE!-PACKAGE
+Compilation done in 17 seconds cpu time, 
+34 seconds  real time. 
+Peephole optimization reduced code by 0%.     77 -> 77
+Starting assembler
+Job done in:  19 seconds cpu time, 39 seconds real time.
+MUDDLE COMPILER
+COMPILING CODUP!-IGLUE!-GLUE!-PACKAGE
+Compilation done in 4 seconds cpu time, 
+7 seconds  real time. 
+Peephole optimization reduced code by 0%.     42 -> 42
+Starting assembler
+Job done in:  14 seconds cpu time, 25 seconds real time.
+    MUDDLE COMPILER
+COMPILING GET-SURV!-IGLUE!-GLUE!-PACKAGE
+Compilation done in 18 seconds cpu time, 
+28 seconds  real time. 
+Peephole optimization reduced code by 0%.     141 -> 141
+Starting assembler
+Job done in:  21 seconds cpu time, 32 seconds real time.
+  MUDDLE COMPILER
+COMPILING FIXZER!-IGLUE!-GLUE!-PACKAGE
+Compilation done in 1 minute and 30 seconds cpu time, 
+3 minutes and 51 seconds  real time. 
+Peephole optimization reduced code by 4%.     292 -> 279
+Starting assembler
+Job done in:  1 minute and 48 seconds cpu time, 4 minutes and 55 seconds real time.
+MUDDLE COMPILER
+COMPILING CREATE!-IGLUE!-GLUE!-PACKAGE
+Compilation done in 2 seconds cpu time, 
+9 seconds  real time. 
+Peephole optimization reduced code by 0%.     58 -> 58
+Starting assembler
+Job done in:  4 seconds cpu time, 18 seconds real time.
+    MUDDLE COMPILER
+COMPILING HASH!-IGLUE!-GLUE!-PACKAGE
+Compilation done in 21 seconds cpu time, 
+2 minutes and 4 seconds  real time. 
+Peephole optimization reduced code by 1%.     200 -> 198
+Starting assembler
+Job done in:  36 seconds cpu time, 3 minutes and 37 seconds real time.
+    MUDDLE COMPILER
+COMPILING INSERT-ASSOC!-IGLUE!-GLUE!-PACKAGE
+Compilation done in 14 seconds cpu time, 
+1 minute and 14 seconds  real time. 
+Peephole optimization reduced code by 4%.     130 -> 124
+Starting assembler
+Job done in:  18 seconds cpu time, 1 minute and 22 seconds real time.
+  MUDDLE COMPILER
+COMPILING LOOKUP-ASSOC!-IGLUE!-GLUE!-PACKAGE
+Compilation done in 4 seconds cpu time, 
+30 seconds  real time. 
+Peephole optimization reduced code by 0%.     64 -> 64
+Starting assembler
+Job done in:  6 seconds cpu time, 42 seconds real time.
+  MUDDLE COMPILER
+COMPILING MINIMIZE!-IGLUE!-GLUE!-PACKAGE
+Compilation done in 13 seconds cpu time, 
+1 minute and 32 seconds  real time. 
+Peephole optimization reduced code by 0%.     51 -> 51
+Starting assembler
+Job done in:  15 seconds cpu time, 1 minute and 37 seconds real time.
+   MUDDLE COMPILER
+COMPILING GVALABLE!-IGLUE!-GLUE!-PACKAGE
+Compilation done in 14 seconds cpu time, 
+1 minute and 10 seconds  real time. 
+Peephole optimization reduced code by 2%.     113 -> 110
+Starting assembler
+Job done in:  18 seconds cpu time, 1 minute and 19 seconds real time.
+ MUDDLE COMPILER
+COMPILING CODE-TO-DISK!-IGLUE!-GLUE!-PACKAGE
+*** WARNING	VARIABLE NEVER USED: LNT 
+Compilation done in 18 seconds cpu time, 
+1 minute and 42 seconds  real time. 
+Peephole optimization reduced code by 0%.     144 -> 144
+Starting assembler
+Job done in:  21 seconds cpu time, 1 minute and 51 seconds real time.
+   MUDDLE COMPILER
+COMPILING READ-IN-CODE!-IGLUE!-GLUE!-PACKAGE
+Compilation done in 2 seconds cpu time, 
+6 seconds  real time. 
+Peephole optimization reduced code by 0%.     38 -> 38
+Starting assembler
+Job done in:  3 seconds cpu time, 10 seconds real time.
+   MUDDLE COMPILER
+COMPILING GLUE?!-IGLUE!-GLUE!-PACKAGE
+Compilation done in 15 seconds cpu time, 
+54 seconds  real time. 
+Peephole optimization reduced code by 10%.     131 -> 117
+Starting assembler
+Job done in:  29 seconds cpu time, 1 minute and 40 seconds real time.
+ MUDDLE COMPILER
+COMPILING GVAL?!-IGLUE!-GLUE!-PACKAGE
+Compilation done in 20 seconds cpu time, 
+1 minute and 12 seconds  real time. 
+Peephole optimization reduced code by 0%.     141 -> 141
+Starting assembler
+Job done in:  24 seconds cpu time, 1 minute and 31 seconds real time.
+    MUDDLE COMPILER
+COMPILING RSUBR-ENTRY?!-IGLUE!-GLUE!-PACKAGE
+Compilation done in 49 seconds cpu time, 
+2 minutes and 28 seconds  real time. 
+Peephole optimization reduced code by 3%.     374 -> 361
+Starting assembler
+Job done in:  1 minute and 9 seconds cpu time, 3 minutes and 20 seconds real time.
+   MUDDLE COMPILER
+COMPILING FINAL-RSUBR-ENTRYS!-IGLUE!-GLUE!-PACKAGE
+Compilation done in 26 seconds cpu time, 
+1 minute and 17 seconds  real time. 
+Peephole optimization reduced code by 0%.     152 -> 151
+Starting assembler
+Job done in:  30 seconds cpu time, 1 minute and 26 seconds real time.
+ MUDDLE COMPILER
+COMPILING FIXUP-COPY!-IGLUE!-GLUE!-PACKAGE
+Compilation done in 15 seconds cpu time, 
+31 seconds  real time. 
+Peephole optimization reduced code by 0%.     138 -> 138
+Starting assembler
+Job done in:  18 seconds cpu time, 37 seconds real time.
+MUDDLE COMPILER
+COMPILING FINAL-GROUP-CLEANUP!-IGLUE!-GLUE!-PACKAGE
+Compilation done in 45 seconds cpu time, 
+2 minutes and 24 seconds  real time. 
+Peephole optimization reduced code by 2%.     309 -> 302
+Starting assembler
+Job done in:  53 seconds cpu time, 2 minutes and 35 seconds real time.
+   MUDDLE COMPILER
+COMPILING MCALL-RESOLVE!-IGLUE!-GLUE!-PACKAGE
+Compilation done in 44 seconds cpu time, 
+1 minute and 40 seconds  real time. 
+Peephole optimization reduced code by 1%.     172 -> 170
+Starting assembler
+Job done in:  57 seconds cpu time, 2 minutes and 1 second real time.
+  MUDDLE COMPILER
+COMPILING CONS-SYMBOLS!-IGLUE!-GLUE!-PACKAGE
+Compilation done in 5 seconds cpu time, 
+8 seconds  real time. 
+Peephole optimization reduced code by 0%.     57 -> 57
+Starting assembler
+Job done in:  7 seconds cpu time, 11 seconds real time.
+   MUDDLE COMPILER
+COMPILING PASS-1!-IGLUE!-GLUE!-PACKAGE
+*** ERROR	BAD AUX/OPT INIT IENTIND 
+ **** ('()) **** 
+
+ 
+ COMPILATION ABORTED 
+    MUDDLE COMPILER
+COMPILING GROUP-GLUE!-GLUE!-PACKAGE
+*** WARNING	VARIABLE NEVER USED: RSBE 
+Compilation done in 3 minutes and 19 seconds cpu time, 
+6 minutes and 56 seconds  real time. 
+Peephole optimization reduced code by 0%.     1134 -> 1126
+Starting assembler
+Job done in:  4 minutes and 23 seconds cpu time, 10 minutes and 5 seconds real time.
+    
+
+Total time used is
+	17 min. 10 sec. CPU time,
+	8 min. 15 sec. garbage collector CPU time,
+	48 min. 55 sec. real time.
+CPU utilization is 35.093696%.
+Number of garbage collects = 56

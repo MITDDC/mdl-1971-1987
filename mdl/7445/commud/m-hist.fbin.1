@@ -1,0 +1,94 @@
+'<PCODE "1M-HIS">
+
+<PACKAGE "M-HIST"> 
+
+<ENTRY HISTORY PROCESSES> 
+
+<USE "M-READ" "M-DEFS" "ITIME" "FIELDS"> 
+
+<SETG HISTORY  %<RSUBR!- '[ %<PCODE!- "1M-HIS" 0> HISTORY #DECL ("VALUE" <OR 
+FALSE FIX> FIX "OPTIONAL" STRING) LTIME DRDMSG DUSERS MRD "DELIVERY" OUTCHAN "*"
+ "" "[Author]" %<RGLOC PROCESSES T> ["DELIVERY" "RECEIVER-PROCESSING"] T "  >> "
+ " -- " " scheduled." "     " " completed." "  ** " " is in Error Hold; " "  " 
+"     <>" "(ditto)" "ASAP" 
+"A user-specified function returned a failure value of:  " 
+"The DELIVERY-SPECIFICATIONS field was not in the correct format." 
+"
+The unusable specification was:
+
+" 
+"The format to use for outputting the message was ill-formed in the way
+described below:
+
+" "The format to use for " " output was ill-formed.
+The format was:
+
+" "The format of the " " field was ill-formed.  The format was:
+
+" "The MAIL output file could not be opened.  The error code returned was:
+
+" "The user specified for output did not exist: " 
+"The datum specified to contain the output format for " 
+" was not a valid format:
+
+" 
+"The foreign host refused the message.  I.e., the FTP connection was
+made, but no 350 reply was received on attempting to transfer the mail." 
+"An MDL error occurred during the network transfer procedure.  This
+indicates a bug in the mailer demon code, and has been reported.  The
+error arguments were:
+
+" "It was applied to the author area of the message." 
+"The ICP attempt was unsuccessful." 
+"An I/O channel error occurred during the network transfer.  Generally
+this occurs when the foreign host or net crashes.  The reason given was:
+" "An IO-channel error occured as the mail was being output:
+
+" 
+"A MDL error occured while the mail was being output.  This indicates
+a bug in one of the mail printing routines and has been reported.  The
+error was:
+
+" "The transfer was terminated by a (supposedly) transient error.
+" "The FTP error reply was:" 
+"The probable cause is overloading of the recipient site." 
+"The transfer was not acknowledged by the foreign site.  I.e., the
+message was transferred, but no 256 reply was received." 
+"The foreign site refused the message.  " "The FTP error reply was:
+
+" 
+"The probable cause is that
+the specified user does not have a mailbox at the site." 
+"The destination host was known to be down." 
+"An FTP connection was established but no herald was ever received.
+This indicates a problem with the remote site's FTP server." "Unknown error: "]>
+> 
+<AND <ASSIGNED? GLUE> .GLUE <PUT ,HISTORY PGLUE ![713031680 0 0 0!]>> 
+
+
+<SETG PROCESSES ["SENDING" "PARSING" "EXPANSION" "TRANSMISSION" 
+"PERSONAL-PROCESSING" "AUTHOR-PROCESSING" "RECEIVER-PROCESSING" "FILE-OUTPUT" 
+"DELIVERY" "ACKNOWLEDGMENT" "CORRECTION"]> 
+
+<GDECL (PROCESSES) <VECTOR [REST STRING]>> 
+
+<SETG PRC-INFO %<RSUBR-ENTRY '[HISTORY PRC-INFO #DECL ("VALUE" <OR ATOM FALSE> 
+STRING STRING "OPTIONAL" <OR ATOM FALSE>)] 170>> 
+
+<SETG PRC-HISTORY %<RSUBR-ENTRY '[HISTORY PRC-HISTORY #DECL ("VALUE" <OR ATOM 
+FALSE> STRING STRING)] 415>> 
+
+<SETG FP %<RSUBR-ENTRY '[HISTORY FP #DECL ("VALUE" <OR FALSE LIST> STRING LIST)]
+543>> 
+
+<SETG DPRT %<RSUBR-ENTRY '[HISTORY DPRT #DECL ("VALUE" <OR FIX STRING> <OR FALSE
+FIX LIST UVECTOR>)] 606>> 
+
+<SETG PNUM %<RSUBR-ENTRY '[HISTORY PNUM #DECL ("VALUE" FIX FIX)] 681>> 
+
+"DLV-ERR -- delivery error handler" 
+
+<SETG DLV-EXPLAIN %<RSUBR-ENTRY '[HISTORY DLV-EXPLAIN #DECL ("VALUE" ANY <FALSE 
+FIX>)] 708>> 
+
+<ENDPACKAGE> 

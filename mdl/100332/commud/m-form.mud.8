@@ -1,0 +1,174 @@
+<PACKAGE "M-FORM">
+
+<ENTRY DDT-FORMAT TEXT-ONLY ONLINE-SUMMARY>
+
+<USE "M-DEFS" "M-READ" "FIELDS" "PRTUTI" "PRTEXT">
+
+<DEFINE TEXT-ONLY (ADR CC "AUX" TXT)
+	#DECL ((ADR) STRING (CC) CHANNEL (TXT) ANY)
+	<COND (<SET TXT <DRDA .ADR <GETFIX "TEXT">>>
+	       <PRINT-TEXT .TXT .CC>)>
+	T>
+
+; "DDT-FORMAT-1 -- DDT FORMAT MESSAGE OUTPUT FOR RECEIVERS"
+
+<DEFINE FIELDS-N=? (V1 V2)
+	#DECL ((V1 V2) ANY)
+	<COND (<AND <TYPE? .V1 LIST> <1? <LENGTH .V1>>>
+	       <SET V1 <1 .V1>>)>
+	<COND (<AND <TYPE? .V2 LIST> <1? <LENGTH .V2>>>
+	       <SET V2 <1 .V2>>)>
+	<AND <N=? .V1 .V2> .V1>>
+
+<DEFINE DDT-FORMAT (ADR CC "AUX" F S AT RP (AUTH? <EMPTY? .ADR>) LCL?)
+	#DECL ((ADR) STRING (AT S) <OR FALSE STRING LIST FIX> (CC) CHANNEL
+	       (F) ANY
+	       (RP) <OR FALSE <LIST FIX FIX>> (LCL? AUTH?) <OR ATOM FALSE>)
+	<COND (<SET RP <DRDA .ADR <GETFIX "REPLIED-TO">>>
+	       <CRLF .CC>
+	       <DDT-REPLIED-TO .RP .CC>)>
+	<COND (<SET LCL?
+		    <HOME? <DRDA .ADR <GETFIX "RECEIVED-FROM-HOST">>>>
+	       <CRLF .CC>
+	       <COND (<SET F <DRDA .ADR <GETFIX "FROM">>>
+		      <DDT-ADRL .F .CC <>>
+		      <COND (<SET S <DRDA .ADR <GETFIX "FULL-NAME">>>
+			     <PRINC " (" .CC>
+			     <PRINC .S .CC>
+			     <PRINC ")" .CC>)>)>
+	       <COND (<AND <SET S <DRDA .ADR <GETFIX "SENDER">>>
+			   <FIELDS-N=? .S .F>>
+		      <PRINC " (Sent by " .CC>
+		      <DDT-ADRL .S .CC <>>
+		      <PRINC ")" .CC>)>
+	       <COND (<SET F <DRDA .ADR <GETFIX "WHEN-ORIGINATED">>>
+		      <PRINC " " .CC>
+		      <QUICK-DATE .F .CC>)>
+	       <COND (<AND <SET F <DRDA .ADR <GETFIX "SUBJECT">>>
+			   <TYPE? .F STRING>>
+		      <COND (<G? <+ <LENGTH .F> <14 .CC>> 70> <CRLF .CC>)
+			    (ELSE <PRINC !\  .CC>)>
+		      <PRINC "Re: " .CC>
+		      <PRINC .F .CC>)>
+	       <COND (<SET F <DRDA .ADR <GETFIX "IN-REPLY-TO">>>
+		      <CRLF .CC>
+		      <PRINC "In reply to: " .CC>
+		      <PRINC .F .CC>)>)>
+	<COND (<SET F <DRDA .ADR <GETFIX "FORWARDING">>>
+	       <CRLF .CC>
+	       <COND (.AUTH? <DDT-AUTHOR-FORWARD .F .CC>)
+		     (ELSE <DDT-FORWARD .F .CC>)>)>
+	<COND (.LCL?
+	       <COND (<SET F <DRDA .ADR <GETFIX "REPLY-TO">>>
+		      <CRLF .CC>
+		      <PRINC "Reply to: " .CC>
+		      <DDT-ADRL .F .CC <>>)>
+	       <SET AT <OR <DRDA .ADR <GETFIX "ADDRESSED-TO">> ()>>
+	       <COND (<AND <SET S <DRDA .ADR <GETFIX "ACTION-TO">>>
+			   <FIELDS-N=? .AT .S>>
+		      <CRLF .CC>
+		      <PRINC "To: " .CC>
+		      <DDT-ADRL .S .CC <>>)>
+	       <COND (<SET F <DRDA .ADR <GETFIX "CARBON-COPY-TO">>>
+		      <CRLF .CC>
+		      <PRINC "CC To: " .CC>
+		      <DDT-ADRL .F .CC <>>)>
+	       <COND (<SET F <DRDA .ADR <GETFIX "BLIND">>>
+		      <CRLF .CC>
+		      <PRINC "Blind CC To: " .CC>
+		      <COND (.AUTH? <DDT-SPLIT .F .CC <>>)
+			    (ELSE <DDT-ADRL .F .CC <>>)>)>)>
+	<COND (<SET F <DRDA .ADR <GETFIX "NOTES">>>
+	       <CRLF .CC>
+	       <PRINC "--Notes--" .CC>
+	       <COND (.AUTH? <DDT-TEXT-SPLIT .F .CC <>>)
+		     (ELSE <DDT-TEXT-LIST .F .CC>)>)>
+	<COND (<SET F <DRDA .ADR <GETFIX "TEXT">>>
+	       <CRLF .CC>
+	       <PRINT-TEXT .F .CC>)>
+	<COND (.LCL?
+	       <COND (<SET F <DRDA .ADR <GETFIX "ENCLOSURES">>>
+		      <CRLF .CC>
+		      <P-ENCLOSURES .F .CC>)>
+	       <COND (<SET F <DRDA .ADR <GETFIX "KEYWORDS">>>
+		      <CRLF .CC>
+		      <PRINC "Keywords: " .CC>
+		      <DDT-LIST .F .CC>)>)>
+	<CRLF .CC>
+	<PRINC "" .CC>
+	<CRLF .CC>>
+
+<DEFINE ONLINE-SUMMARY (ADR OUTCHAN "AUX" S (ST 2) A TXT) 
+	#DECL ((S) <OR FALSE STRING> (OUTCHAN) CHANNEL (ST) FIX
+	       (TXT) ANY (A) <OR FALSE LIST>)
+	<COND (<SET S <DRDA .ADR <GETFIX "FROM">>>
+	       <PRINC .S>)
+	      (ELSE <PRINC "??">)>
+	<COND (<AND <SET A <DRDA .ADR <GETFIX "ACTION-TO">>>
+		    <==? <LENGTH .A> 1>
+		    <=? .ADR <1 .A>>>
+	       <PRINC !\ >)
+	      (ELSE
+	       <PRINC " => ">
+	       <SET ST <14 .OUTCHAN>>
+	       <APRT .A .ST .OUTCHAN>)>
+	<COND (<SET S <DRDA .ADR <GETFIX "SUBJECT">>> <SPRT .S .ST T .OUTCHAN>)
+	      (<AND <SET TXT
+			 <OR <DRDA .ADR <GETFIX "MESSAGE">>
+			     <DRDA .ADR <GETFIX "TEXT">>>>
+		    <TYPE? .TXT STRING>>
+	       <SPRT .TXT .ST <> .OUTCHAN>)>
+	T>
+
+<DEFINE SPRT (S ST S? OUTCHAN "AUX" (R <- <13 .OUTCHAN> <14 .OUTCHAN>>) SX SL)
+	#DECL ((S SX) <OR STRING FALSE> (R SL ST) FIX (OUTCHAN) CHANNEL
+	       (S?) <OR ATOM FALSE>)
+	<COND (<SET S <ANY? .S>>
+	       <COND (<AND .S? <=? <MEMBER "Re: " .S> .S>>
+		      <SET S <REST .S 4>>)>
+	       <COND (<SET SX <MEMQ <ASCII 13> .S>>
+		      <SET SL <- <LENGTH .S> <LENGTH .SX>>>)
+		     (<SET SL <LENGTH .S>>)>
+	       <COND (<AND .S? <G? <+ .SL 6> .R>>
+		      <CRLF>
+		      <INDENT-TO .ST .OUTCHAN>)
+		     (<PRINC "  ">)>
+	       <SET R <- <13 .OUTCHAN> <14 .OUTCHAN> 4>>
+	       <COND (.S? <PRINC "Re: ">)
+		     (ELSE <PRINC !\"> <SET R <- .R 1>>)>
+	       <SET R <PRINTSTRING .S
+				   .OUTCHAN
+				   <MIN .R .SL>>>
+	       <COND (<NOT .S?>
+		      <COND (<G? <LENGTH .S> .R>
+			     <PRINC "...">)>
+		      <PRINC "\"">)>)>>
+
+<DEFINE ANY? (S)
+	#DECL ((S) STRING (VALUE) <OR STRING FALSE>)
+	<MAPR <>
+	      <FUNCTION (S)
+		#DECL ((S) STRING)
+		<AND <NOT <MEMQ <1 .S> " 	
+">>
+		     <MAPLEAVE .S>>>
+	      .S>>
+
+<DEFINE APRT (L ST OUTCHAN "AUX" R S SX SL)
+	#DECL ((L) <OR FALSE <LIST [REST STRING]>> (OUTCHAN) CHANNEL
+	       (S SX) <OR STRING FALSE> (R SL ST) FIX)
+	<COND (.L
+	       <REPEAT ()
+		       <COND (<EMPTY? .L> <RETURN>)>
+		       <SET R <- <13 .OUTCHAN> <14 .OUTCHAN>>>
+		       <SET S <1 .L>>
+		       <COND (<SET SX <MEMQ <ASCII 13> .S>>
+			      <SET SL <- <LENGTH .S> <LENGTH .SX>>>)
+			     (<SET SL <LENGTH .S>>)>
+		       <COND (<G? <+ .SL 3> .R> <CRLF> <INDENT-TO .ST .OUTCHAN>)>
+		       <PRINTSTRING .S .OUTCHAN .SL>
+		       <COND (<NOT <LENGTH? .L 1>> <PRINC ", ">)>
+		       <SET L <REST .L>>>)
+	      (ELSE <PRINC "??">)>>
+
+<ENDPACKAGE>

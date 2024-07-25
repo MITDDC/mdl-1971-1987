@@ -1,0 +1,78 @@
+<DEFINE COPY-AN (NOD RTYP
+		 "AUX" (ARGS 0) (RT <ISTYPE? <RESULT-TYPE .NOD>>) (K <KIDS .NOD>) N
+		       (LWIN <==? .RT LIST>) NN COD) 
+   #DECL ((NOD N) NODE (ARGS) FIX (K) <LIST [REST NODE]>)
+   <COND
+    (<NOT <EMPTY? .K>>
+     <REPEAT (DC STY PTY TEM TT (SG <>) (FRM <FORM .RT>)
+	      (FRME <CHTYPE .FRM LIST>) (GOTDC <>))
+	     #DECL ((FRM) FORM (FRME) <LIST ANY>)
+	     <COND (<EMPTY? .K>
+		    <COND (<==? .RT LIST>
+			   <RETURN <SET RT
+					<COND (<EMPTY? <REST .FRM>> <1 .FRM>)
+					      (ELSE .FRM)>>>)>
+		    <COND (.DC <PUTREST .FRME ([REST .DC])>)
+			  (.STY <PUTREST .FRME ([REST .STY])>)
+			  (.PTY <PUTREST .FRME ([REST <FORM PRIMTYPE .PTY>])>)>
+		    <RETURN <SET RT .FRM>>)
+		   (<OR <==? <SET COD <NODE-TYPE <SET N <1 .K>>>> ,SEGMENT-CODE>
+			<==? .COD ,SEG-CODE>>
+		    <SET TEM
+			 <GET-ELE-TYPE <EANA <1 <KIDS .N>> STRUCTURED SEGMENT>
+				       ALL>>
+		    <PUT .NOD ,SEGS T>
+		    <COND (<NOT .SG> <SET GOTDC <>>)>
+		    <SET SG T>
+		    <COND (<AND .LWIN
+				<MEMQ <STRUCTYP <RESULT-TYPE <1 <KIDS .N>>>>
+				      '![LIST VECTOR UVECTOR TUPLE!]>>)
+			  (ELSE <SET LWIN <>>)>)
+		   (ELSE <SET ARGS <+ .ARGS 2>> <SET TEM <ANA .N ANY>>)>
+	     <COND (<NOT .GOTDC>
+		    <SET GOTDC T>
+		    <SET PTY
+			 <COND (<SET STY <ISTYPE? <SET DC .TEM>>>
+				<TYPEPRIM .STY>)>>)
+		   (<OR <NOT .DC> <N==? .DC .TEM>>
+		    <SET DC <>>
+		    <COND (<OR <N==? <SET TT <ISTYPE? .TEM>> .STY> <NOT .STY>>
+			   <SET STY <>>
+			   <COND (<AND .PTY
+				       <==? .PTY <AND .TT <TYPEPRIM .TT>>>>)
+				 (ELSE <SET PTY <>>)>)>)>
+	     <COND (<NOT .SG> <SET FRME <REST <PUTREST .FRME (.TEM)>>>)>
+	     <SET K <REST .K>>>)>
+   <PUT .NOD ,RESULT-TYPE .RT>
+   <PUT .NOD ,STACKS .ARGS>
+   <COND
+    (<AND <GASSIGNED? COPY-LIST-CODE> .LWIN>
+     <MAPF <>
+	   <FUNCTION (N) 
+		   #DECL ((N) NODE)
+		   <COND (<==? <NODE-TYPE .N> ,SEGMENT-CODE>
+			  <PUT .N ,NODE-TYPE ,SEG-CODE>)>>
+	   <KIDS .NOD>>
+     <COND (<AND <==? <LENGTH <SET K <KIDS .NOD>>> 1>
+		 <==? <NODE-TYPE <1 .K>> ,SEG-CODE>
+		 <==? <STRUCTYP <RESULT-TYPE <SET NN <1 <KIDS <1 .K>>>>>> LIST>>
+	    <COND (<NOT <EMPTY? <PARENT .NOD>>>
+		   <MAPR <>
+			 <FUNCTION (L "AUX" (N <1 .L>)) 
+				 #DECL ((N) NODE (L) <LIST [REST NODE]>)
+				 <COND (<==? .NOD .N>
+					<PUT .L 1 .NN>
+					<MAPLEAVE>)>>
+			 <KIDS <CHTYPE <PARENT .NOD> NODE>>>)>
+	    <PUT .NN ,PARENT <CHTYPE <PARENT .NOD> NODE>>
+	    <SET RT <RESULT-TYPE .NN>>)
+	   (ELSE <PUT .NOD ,NODE-TYPE ,COPY-LIST-CODE>)>)
+    (ELSE
+     <MAPF <>
+	   <FUNCTION (N) 
+		   #DECL ((N) NODE)
+		   <COND (<==? <NODE-TYPE .N> ,SEG-CODE>
+			  <PUT .N ,NODE-TYPE ,SEGMENT-CODE>)>>
+	   <KIDS .NOD>>
+    <PUT .NOD ,NODE-TYPE ,COPY-CODE>)>
+   <TYPE-OK? .RT .RTYP>>

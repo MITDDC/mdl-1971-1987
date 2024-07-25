@@ -1,0 +1,18 @@
+<PACKAGE "DDEFS">
+
+<ENTRY DISPATCH DID DTIME DTO DFROM DSERVICE DPRIORITY DTRAIL DDATA>
+
+<USE "NEWSTRUC">
+
+<NEWSTRUC
+  DISPATCH VECTOR
+   DID		<UVECTOR FIX FIX>;"unique id of dispatch"
+   DTIME	<OR FIX UVECTOR>;"time created"
+   DTO		LIST		;"addressee"
+   DFROM	LIST		;"originator"
+   DSERVICE	STRING		;"service requested"
+   DPRIORITY	STRING		;"importance"
+   DTRAIL	LIST		;"who's touched it, when, & DTO at the time"
+   DDATA	ANY		;"data to supply to service">
+
+<ENDPACKAGE>

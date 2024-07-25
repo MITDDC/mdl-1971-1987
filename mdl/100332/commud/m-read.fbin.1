@@ -1,0 +1,134 @@
+'<PCODE "M-READ">
+
+<PACKAGE "M-READ"> 
+
+<ENTRY SOPEN DOPEN DCLOSE LOSING-DATA INIT-SPACES> 
+
+<ENTRY MDB MRD MSG-LOC MSG-GET COMSYS-ASYLUM-MAP SPLITS?> 
+
+<ENTRY DRD DRDA DUSERS DRDMSG GETDAT DUSERS GET-TAILOR READ-WRITE?> 
+
+<USE "M-DEFS" "M-TIME" "MADMAN" "ASYLUM" "M-DATA" "FIELDS" "M-TAI" "USRUTI" 
+"OPSYS"> 
+
+<SETG LOSING-DATA <>> 
+
+<SETG READ-WRITE? <>> 
+
+<GDECL (MDB) MDBVEC (LOSING-DATA) ANY (READ-WRITE?) <OR ATOM FALSE>> 
+
+<OR <GASSIGNED? MDB> <SETG MDB <VECTOR 0 <> [] () <>>>> 
+
+"message data base -- for current message:
+	  1/ message number
+	  2/ t ==> data has been modified
+	  3/ actual data, vector, [adr data adr data ...]
+	  4/ list, users who have had process scheduling done -- look at these
+	     when updating daemon queue
+	  5/ false or asylum to data base" 
+
+\ 
+
+<SETG SOPEN  %<RSUBR!- '[ %<PCODE!- "M-READ" 0> SOPEN #DECL ("VALUE" ANY) DRDT 
+GETSTRING MEMF DRDFLT F==? FGETFIX SCROUT KEYGET DATUM %<RGLOC SYSTEM-ASYLUM T> 
+%<INTERNAL-RSUBR RESET-DATA-FILE 1> "COMSYS-SYSTEM-ASYLUM" %<INTERNAL-RSUBR 
+OPEN-DATA-FILE 4> CANT-OPEN-SYSTEM-ASYLUM!-ERRORS "COMSYS-MSG-ASYLUM" %<RGLOC 
+MDB T> %<RGLOC COMSYS-OPEN-MSG-ASYLUM T> %<INTERNAL-RSUBR OPEN-DATA-FILE 2> 
+"FILE NOT FOUND" "COMSYS-LONGTERM" T %<TYPE-W ASYLUM VECTOR> %<INTERNAL-RSUBR 
+CLOSE-DATA-FILE 1> MESSAGE-NOT-WRITTEN!-ERRORS DCLOSE %<RGLOC MSG-SPACE T> %<
+TYPE-C SPACE VECTOR> %<INTERNAL-RSUBR AFIND 3> %<RGLOC SCRATCH-SPACE T> %<RGLOC 
+QUEUE-SPACE T> NO-MESSAGE-OPEN!-ERRORS %<TYPE-W SPACE VECTOR> %<INTERNAL-RSUBR 
+AVECTOR 262143> %<INTERNAL-RSUBR DATA-AREAD 3> %<RGLOC READ-WRITE? T> "Read: " <
+VECTOR [REST STRING VECTOR]> %<RGLOC LOSING-DATA T> #FALSE (
+"BAD MESSAGE DATA -- ,LOSING-DATA") %<RGLOC COMSYS-ASYLUM-MAP T> "Read Msg Map" 
+MAP-DISAPPEARED!-ERRORS MSG-LOC "" "LINK-TO-ADDRESSEE-AREA" 
+"COPY-TO-ADDRESSEE-AREA" "MISCELLANEOUS" %<INTERNAL-RSUBR ACOPY 2> "TAILOR" 
+NO-MSG-OPEN!-ERRORS %<INTERNAL-RSUBR ACONS 3>]>> 
+<AND <ASSIGNED? GLUE> .GLUE <PUT ,SOPEN PGLUE ![715825152 0 0 0!]>> 
+
+
+<SETG DOPEN %<RSUBR-ENTRY '[SOPEN DOPEN #DECL ("VALUE" <OR FALSE FIX> "OPTIONAL"
+STRING <OR ATOM FALSE>)] 45>> 
+
+"DCLOSE -- function to deactivate data base, flushing any
+  current message" 
+
+<SETG DCLOSE %<RSUBR-ENTRY '[SOPEN DCLOSE #DECL ("VALUE" <OR ATOM CHANNEL FALSE>
+"OPTIONAL" <OR ATOM FALSE>)] 204>> 
+
+"DOPEN? -- is an asylum open?" 
+
+\ 
+
+"INIT-SPACES -- here to build initial spaces" 
+
+<SETG INIT-SPACES %<RSUBR-ENTRY '[SOPEN INIT-SPACES #DECL ("VALUE" ATOM)] 289>> 
+
+\ 
+
+"GETDAT -- finds data area for a specific addressee of the current msg
+ returns false, or the specified data area vector" 
+
+<SETG GETDAT %<RSUBR-ENTRY '[SOPEN GETDAT #DECL ("VALUE" <OR FALSE VECTOR> 
+STRING)] 362>> 
+
+\ 
+
+"FUNCTIONS ASSOCIATED WITH VARIOUS STORAGE LOCATIONS OF MESSAGES" 
+
+<SETG MRD %<RSUBR-ENTRY '[SOPEN MRD #DECL ("VALUE" <OR FALSE FIX> FIX "OPTIONAL"
+<OR ATOM FALSE>)] 434>> 
+
+<SETG MSG-GET %<RSUBR-ENTRY '[SOPEN MSG-GET #DECL ("VALUE" <OR FALSE VECTOR> FIX
+"OPTIONAL" <OR ATOM FALSE>)] 503>> 
+
+"MAP BETWEEN MESSAGE NUMBER AND ASYLUM CONTAINING IT" 
+
+<SETG COMSYS-ASYLUM-MAP <>> 
+
+<GDECL (COMSYS-ASYLUM-MAP) <OR FALSE <VECTOR [REST FIX STRING]>>> 
+
+<SETG MSG-LOC %<RSUBR-ENTRY '[SOPEN MSG-LOC #DECL ("VALUE" ANY "OPTIONAL" FIX)] 
+604>> 
+
+\ 
+
+"DRD -- read a specified field.  also implements search rules for
+  finding default values from tailor data bases as well as other
+  areas of the message, for split fields, for example." 
+
+<SETG DRD %<RSUBR-ENTRY '[SOPEN DRD #DECL ("VALUE" ANY STRING <OR FIX STRING> 
+"OPTIONAL" <OR ATOM FALSE> <OR ATOM FALSE>)] 746>> 
+
+"DRDA -- read only from message itself, don't fall into tailor or system
+default." 
+
+<SETG DRDA %<RSUBR-ENTRY '[SOPEN DRDA #DECL ("VALUE" ANY STRING <OR FIX STRING>)
+] 1014>> 
+
+\ 
+
+"DRDMSG -- read a field from an area of the actual message data" 
+
+<SETG DRDMSG %<RSUBR-ENTRY '[SOPEN DRDMSG #DECL ("VALUE" ANY STRING <OR FIX 
+STRING>)] 1034>> 
+
+\ 
+
+"GET-TAILOR -- return a string, name of tailor data area to be used
+  for current message, or false, if none" 
+
+<SETG GET-TAILOR %<RSUBR-ENTRY '[SOPEN GET-TAILOR #DECL ("VALUE" <OR FALSE 
+STRING> STRING)] 1119>> 
+
+"DUSERS -- return list of user areas for this message" 
+
+<SETG DUSERS %<RSUBR-ENTRY '[SOPEN DUSERS #DECL ("VALUE" <OR FALSE LIST>)] 1185>
+> 
+
+"SPLITS? -- returns T if there are any split fields for this addressee" 
+
+<SETG SPLITS? %<RSUBR-ENTRY '[SOPEN SPLITS? #DECL ("VALUE" <OR ATOM FALSE> 
+STRING)] 1241>> 
+
+<ENDPACKAGE> 

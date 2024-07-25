@@ -1,0 +1,376 @@
+
+<PACKAGE "USRUTI">
+
+"utilities for use with user specifications, addressees, etc."
+
+<ENTRY UNIQUIFY
+       EXTRACT-HOST
+       EXTRACT-RCVR
+       BEDRIDDEN?
+       KEYGET
+       HSNAME
+       FILE-DIR
+       GOOD-BAD
+       NUMBER?
+       ATSIGN?
+       FILE?
+       STRUC?
+       SIXBIT?
+       ALLOW-TOURISTS>
+
+<USE "M-DATA" "VCTSRC" "HOSTS" "LSRTNS" "M-DEFS" "MADMAN" "M-DIR" "NSTR">
+
+<SETG ALLOW-TOURISTS <>> ;"T to allow tourists mailboxes (for testing...)"
+
+<GDECL (ALLOW-TOURISTS) <OR ATOM FALSE>>
+
+\
+
+"HSNAME -- quick and dirty until a better one comes along."
+
+<SETG HSTABLE <>>
+<SETG JUNKUV <IUVECTOR 10 0>>
+<GDECL (HSTABLE) <OR FALSE VECTOR>
+       (JUNKUV) <UVECTOR [10 FIX]>>
+
+<DEFINE HSNAME (STR "AUX" (HS <GET-HSTABLE>) (H <>))
+	#DECL ((STR) STRING (HS) <OR FALSE <VECTOR [REST STRING]>>
+	       (H) <OR STRING FALSE>)
+	<COND (<EMPTY? .STR> "USERS1")
+	      (<FILE-DIR .STR>)
+	      (<FILE-EXISTS? ".FILE." "(DIR)" "DSK" .STR> .STR)
+	      (.HS
+	       <REPEAT ()
+		       <COND (<EMPTY? .HS> <RETURN .H>)
+			     (<G=? <STRCOMP .STR <1 .HS>> 0>
+			      <SET H <2 .HS>>
+			      <SET HS <REST .HS 2>>)
+			     (ELSE <RETURN .H>)>>)>>
+
+<DEFINE GET-HSTABLE ("AUX" C UV SIZ CNT)
+	#DECL ((C) <OR CHANNEL FALSE> (UV) <UVECTOR [REST FIX]>
+	       (SIZ CNT) FIX)
+	<COND (,HSTABLE)
+	      (<SET C <OPEN "READB" "INQUIR;DIRS BIN">>
+	       <READB <SET UV <REST ,JUNKUV <- <LENGTH ,JUNKUV> 1>>> .C>
+	       <SET SIZ <CHTYPE <ANDB <1 .UV> *777777*> FIX>>
+	       <SET CNT <- <CHTYPE <ORB <GETBITS <1 .UV> <BITS 18 18>>
+					*777777000000*>
+				   FIX>>>
+	       <SET UV <REST ,JUNKUV <- <LENGTH ,JUNKUV> .SIZ>>>
+	       <REPEAT ((HH <HOST <HOME?>>))
+		       <READB .UV .C>
+		       <COND (<=? <HOST <2 .UV>> .HH>
+			      <ACCESS .C <3 .UV>>
+			      <READB <SET UV
+					  <REST ,JUNKUV
+						<- <LENGTH ,JUNKUV> 1>>>
+				     .C>
+			      <SET SIZ <CHTYPE <ANDB <1 .UV> *777777*> FIX>>
+			      <SET CNT
+				   <- <CHTYPE <ORB <GETBITS <1 .UV>
+							    <BITS 18 18>>
+						   *777777000000*>
+					      FIX>>>
+			      <SET UV <REST ,JUNKUV <- <LENGTH ,JUNKUV> .SIZ>>>
+			      <RETURN <SETG HSTABLE
+			      <MAPF ,VECTOR
+				    <FUNCTION ()
+				      <COND (<0? .CNT>
+					     <CLOSE .C>
+					     <MAPSTOP>)>
+				      <READB .UV .C>
+				      <SET CNT <- .CNT 1>>
+				      <MAPRET <SIXTOS
+					        <CHTYPE
+						  <ORB <1 .UV> *400000000000*>
+						  FIX>>
+					      <SIXTOS <2 .UV>>>>>>>)>
+		       <COND (<0? <SET CNT <- .CNT 1>>>
+			      <RETURN <>>)>>)>>
+
+\
+
+<DEFINE FILE-DIR (UU "AUX" D)
+	<COND (<SET D <LSR-EXTRACT <LSR-ENTRY .UU> ,$DIR>>
+	       <MAPF ,VECTOR
+		     <FUNCTION ("AUX" S Q)
+			  #DECL ((S) <OR STRING FALSE> (Q) STRING)
+			  <COND (<EMPTY? .D> <MAPLEAVE <>>)
+				(<SET S
+				      <OR <MEMQ !\, .D>
+					  <MEMQ !\  .D>>>
+				 <SET Q
+				      <SUBSTRUC .D
+						0
+						<- <LENGTH .D>
+						   <LENGTH .S>>>>
+				 <SET D <REST .S>>)
+				(ELSE
+				 <SET Q .D>
+				 <SET D "">)>
+			  <COND (<HOME? <EXTRACT-HOST .Q>>
+				 <MAPLEAVE <EXTRACT-RCVR .Q>>)>>>)>>
+
+"EXTRACT-HOST -- given string usr@host, returns fix, host number, or
+ string, if host unknown in tables.  for simple usr type key, returns
+ ,HOSTNUMBER"
+
+<DEFINE EXTRACT-HOST EH (KEY "AUX" TT DD) 
+	#DECL ((KEY) STRING (VALUE) <OR FIX STRING> (TT) <OR FALSE STRING>
+	       (EH) ACTIVATION)
+	<COND (<SET TT <ATSIGN? .KEY>>
+	       <SET TT <REST .TT>>
+	       <REPEAT ()
+		       <COND (<EMPTY? .TT> <RETURN <HOME?> .EH>)
+			     (<MEMQ <1 .TT> " 	"> <SET TT <REST .TT>>)
+			     (<RETURN>)>>
+	       <COND (<SET DD <HOST .TT>>)
+		     (<AND <SET DD <NUMBER? .TT>> <HOST .DD>>
+		      .DD)
+		     (ELSE .TT)>)
+	      (ELSE <HOME?>)>>
+
+<DEFINE ATSIGN? (KEY "AUX" C (SKIP <>) (BEST <>)) 
+	#DECL ((KEY) STRING (C) CHARACTER (SKIP) <OR ATOM FALSE>)
+	<MAPR <>
+	      <FUNCTION (S) 
+		      #DECL ((S) STRING)
+		      <COND (.SKIP <SET SKIP <>>)
+			    (<==? <SET C <1 .S>> !\@>
+			     <SET BEST .S>)
+			    (<==? .C !\> <SET SKIP T>)
+			    (ELSE <SET SKIP <>>)>>
+	      .KEY>
+	.BEST>
+
+<DEFINE NUMBER? (S "AUX" (N 0)) 
+	#DECL ((S) STRING (N) <OR FIX FALSE>)
+	<MAPF <>
+	      <FUNCTION (C) 
+		      #DECL ((C) <OR FIX CHARACTER>)
+		      <SET C <ASCII .C>>
+		      <COND (<OR <L? .C <ASCII !\0>> <G? .C <ASCII !\9>>>
+			     <MAPLEAVE <SET N <>>>)
+			    (ELSE <SET N <+ <- .C <ASCII !\0>> <* .N 10>>>)>>
+	      .S>
+	.N>
+
+"BEDRIDDEN? -- determine if a host is really dead as a doornail but expected
+back up someday - this is for wonderful chomping XX, which dies for several
+days every so often."
+
+<DEFINE BEDRIDDEN? (H "AUX" (B <DATUM "DEAD-HOSTS">))
+	#DECL ((B) <VECTOR [REST FIX]> (H) FIX)
+	<COND (<MEMQ .H .B> T)>>
+
+"EXTRACT-RCVR -- given usr key, returns user string (i.e. all but @host)"
+
+<SETG RCVR-STRING <REST <ISTRING 30 !\ > 30>>
+
+<GDECL (RCVR-STRING) STRING>
+
+<DEFINE EXTRACT-RCVR (KEY "AUX" TT L) 
+	#DECL ((VALUE KEY) STRING (TT) <OR FALSE STRING> (L) FIX)
+	<COND (<SET TT <ATSIGN? .KEY>>
+	       <SET L <- <LENGTH .KEY> <LENGTH .TT>>>
+	       <COND (<G? .L 30> <SUBSTRUC .KEY 0 .L>)
+		     (ELSE
+		      <SUBSTRUC .KEY 0 .L <BACK ,RCVR-STRING .L>>)>)
+	      (ELSE .KEY)>>
+
+\ 
+
+"KEYGET -- mailbox validator
+ -- returns string, mailbox name if acceptable.
+    for net addressees, returns same string iff user part
+    is non-empty, and host is known in tables
+    for local addressees, returns terminal mailbox name
+    from mailbox data base
+ -- if name not in data base, checks if directory exists
+ -- returns false if unacceptable"
+
+<DEFINE KEYGET (S
+		"OPTIONAL" (LC-UCL? T) (LNM? T)
+		"AUX" (MS ,MSG-SPACE) IV (DD 0) U H (KDB <DATUM "COMSYS-KEY-DATA">)
+		LNM NA HS)
+        #DECL ((U S) STRING (IV) <OR VECTOR FALSE> (DD) <OR FALSE FIX STRING ATOM>
+	       (LC-UCL? LNM?) <OR ATOM FALSE> (NA VALUE) <OR FALSE STRING>
+	       (KDB) VECTOR (LNM) <OR FALSE VECTOR> (H) <OR FIX STRING>
+	       (HS) <OR STRING FALSE> (MS) SPACE)
+	<COND (<SET HS <ATSIGN? .S>>
+	       <SET HS <REST .HS>>
+	       <SET H <EXTRACT-HOST .S>>
+	       <SET U <EXTRACT-RCVR .S>>
+	       <COND (<EMPTY? .U>
+		      <COND (.LC-UCL? #FALSE ("Empty Addressee Name"))
+			    (ELSE #FALSE ("Empty Addressee in Forwarding Address"))>)
+		     (<NOT <TYPE? .H FIX>>
+		      <COND (.LC-UCL? #FALSE ("Invalid Host Address"))
+			    (ELSE ,BADHOST)>)
+		     (<HOME? .H>
+		      <COND (.LC-UCL? <KEYGET .U>)
+			    (<AND <SIXBIT? .U> <DIR? .U>> .U)
+			    (,ALLOW-TOURISTS .U)
+			    (ELSE #FALSE ("Invalid Local Addressee"))>)
+		     (ELSE .S)>)
+	      (<=? .S "UNKNOWN"> #FALSE ("Addressee was UNKNOWN"))
+	      (ELSE			        ;"CONVERT ALL LC-UC CHARS TO UC"
+	       <SET S <LC-UC <ASTRING .MS .S>>>
+	       <COND (<AND <SET IV <VCTSRC .KDB .S>> <SET DD <2 .IV>>>
+		      <COND (<==? .DD 0>		     ;"TERMINAL MAILBOX"
+			     .S)
+			    (<TYPE? .DD STRING>			 ;"LINK TO NEXT"
+			     <ACOPY .MS <KEYGET .DD>>)
+			    (<TYPE? .DD ATOM>	       ;"TERMINAL ALSO, NO LINK"
+			     <ACOPY .MS <SPNAME .DD>>)>)
+		     (ELSE
+		      <COND (<AND .DD
+				  <OR <FILE? .S>
+				      <STRUC? .S>
+				      <==? .S <MEMBER "BUG-" .S>>
+				      <==? .S <MEMBER "FEATURE-" .S>>>>
+			     .S)
+			    (<SET NA <LSR-EXTRACT <KEY-ENTRY .S> ,$NETA>>
+			     <COND (<EMPTY? .NA> ,BADHOST)
+				   (<SET NA <CHECK-NET-ADDRESS .S .NA>>
+				    <ASTRING .MS .NA>)>)
+			    (<AND .LNM? <SET LNM <LAST-NAME <LC-UC .S>>>>
+			     <COND (<SET NA <CHECK-LAST-NAME .LNM>>
+				    <ASTRING .MS .NA>)
+				   (ELSE ,NOBOX)>)
+			    (ELSE ,NOBOX)>)>)>>
+
+<DEFINE KEY-ENTRY (S "AUX" R)
+	#DECL ((S) STRING (R) <OR STRING FALSE>)
+	<REPEAT ()
+		<COND (<AND <NOT <SET R <LSR-ENTRY .S>>>
+			    <NOT <LENGTH? .R 2>>
+			    <==? <3 .R> 1048576>>
+		       <SLEEP 5>)
+		      (ELSE <RETURN .R>)>>>
+
+<SETG BADHOST #FALSE ("Invalid Host in Forwarding Address")>
+<SETG NOBOX #FALSE ("No Mailbox for that name")>
+
+<GDECL (BADHOST NOBOX) <FALSE STRING>>
+
+<DEFINE CHECK-NET-ADDRESS (S NA "AUX" HS) 
+	#DECL ((S NA) STRING (HS) <OR STRING FALSE>)
+	<COND (<ATSIGN? .NA>)
+	      (<OR <FILE? .S> <STRUC? .S>>)
+	      (ELSE <SET NA <STRING .S !\@ .NA>>)>
+	<KEYGET .NA <>>>
+
+<DEFINE CHECK-LAST-NAME (KDB "AUX" (K .KDB) (UU <>)) 
+   #DECL ((KDB K) <VECTOR [REST STRING]> (UU) <OR FALSE VECTOR>)
+   <COND (<G? <LENGTH .KDB> 2>
+	  <REPEAT ()
+		  <COND (<LENGTH? .K 1>
+			 <COND (.UU <RETURN <KEYGET <1 .UU> T <>>>)
+			       (ELSE
+				<RETURN <CHTYPE ("Ambiguous Last Name" .KDB) FALSE>>)>)
+			(<HOME? <HOST <LC-UC <2 .K>>>>
+			 <COND (.UU
+				<RETURN <CHTYPE ("Ambiguous Local Name" .KDB) FALSE>>)
+			       (ELSE <SET UU .K>)>)>
+		  <SET K <REST .K 2>>>)
+	 (<==? <LENGTH .KDB> 2> <KEYGET <1 .KDB> T <>>)>>
+
+<DEFINE SIXBIT? (S)
+	#DECL ((S) STRING)
+	<COND (<AND <LENGTH? .S 6>
+		    <MAPF <>
+			  <FUNCTION (C "AUX" (A <ASCII .C>))
+				    #DECL ((C) CHARACTER (A) FIX)
+				    <COND (<OR <AND <G? .A *40*>
+						    <L? .A *140*>>
+					       <AND <G=? .A <ASCII !\a>>
+						    <L=? .A <ASCII !\z>>>>
+					   .S)
+					  (ELSE <MAPLEAVE <>>)>>
+			  .S>>
+	       .S)>>
+
+\ 
+
+"GOOD-BAD -- function to split a list of addressees into acceptable
+  and unacceptable ones
+ -- returns list of two lists, winners and losers
+    winners list will be all strings, which are guaranteed to be
+     acceptable to keyget, for local addressees, all lower case
+     chars are converted.  winners list is uniquified to remove
+     duplicate occurrences
+    losers list will be all other bad items
+"
+
+<DEFINE GOOD-BAD (L "AUX" (WIN ()) (LOS ()) E (MS ,MSG-SPACE)) 
+   #DECL ((L LOS WIN) LIST (VALUE) <LIST LIST LIST> (E) ANY
+	  (MS) SPACE)
+   <REPEAT ()
+	   <COND (<EMPTY? .L>			   ;"SCAN DONE, RETURN RESULTS"
+		  <RETURN <ALIST
+			   .MS <UNIQUIFY .WIN> <UNIQUIFY .LOS>>>)>
+	   <SET E <1 .L>>
+	   <COND (<TYPE? .E STRING>
+		  <COND (<NOT <ATSIGN? .E>>
+			 <LC-UC <SET E <ASTRING .MS .E>>>)
+			(ELSE
+			 <SET E <ASTRING .MS .E>>)>)>
+	   <COND (<AND <TYPE? .E STRING> <KEYGET .E>>
+		  <SET WIN <ACONS .MS .E .WIN>>)
+		 (<AND <TYPE? .E ATOM>
+		       <SET E <LC-UC <ACOPY .MS <PNAME .E>>>>
+		       <KEYGET .E>>
+		  <SET WIN <ACONS .MS .E .WIN>>)
+		 (ELSE
+		  <SET LOS <ACONS .MS .E .LOS>>)>
+	   <SET L <REST .L>>>>
+
+\ 
+
+"UNIQUIFY -- given list of strings and atoms, returns same
+  list with duplicates removed."
+
+<DEFINE UNIQUIFY (L "AUX" (M .L)) 
+	#DECL ((M L VALUE) <LIST [REST <OR STRING ATOM>]>)
+	<COND (<LENGTH? .M 1> .M)
+	      (ELSE
+	       <REPEAT ()
+		       <COND (<LENGTH? .M 1> <RETURN>)
+			     (<MEMBER <1 .M> <REST .M>>
+			      <SET L <SET M <REST .M>>>)
+			     (ELSE <RETURN>)>>
+	       <REPEAT ()
+		       <COND (<LENGTH? .M 2> <RETURN .L>)
+			     (<MEMBER <2 .M> <REST .M 2>>
+			      <PUTREST .M <REST .M 2>>)
+			     (ELSE <SET M <REST .M>>)>>)>>
+
+"FILE? -- given string, returns string of file spec if a file addressee"
+
+<DEFINE FILE? (SS "AUX" FF) 
+	#DECL ((SS) STRING (FF) <OR STRING FALSE>)
+	<COND (<AND <SET FF <OR <MEMBER !\[ .SS> <MEMBER !\{ .SS>>>
+		    <MAPR ,STRING
+			  <FUNCTION (S) 
+				  #DECL ((S) STRING)
+				  <COND (<OR <=? <1 .S> !\]> <=? <1 .S> !\}>>
+					 <MAPSTOP>)
+					(<LENGTH? .S 1> <MAPLEAVE #FALSE ()>)
+					(<G=? <ASCII <1 .S>> 32>
+					 <MAPRET <1 .S>>)
+					(<AND <==? <1 .S> !\>
+					      <MEMQ <2 .S> ":; []{}">>
+					 <MAPRET <1 .S>>)
+					(ELSE <MAPRET>)>>
+			  <REST .FF>>>)>>
+
+"STRUC? -- tests for structured addressee -- if possible structured local addressee,
+  returns it"
+
+<DEFINE STRUC? (SS) 
+	#DECL ((SS) STRING (VALUE) <OR FALSE STRING>)
+	<COND (<AND <MEMBER !\( .SS> <MEMBER !\) .SS>>)>>
+
+<ENDPACKAGE>

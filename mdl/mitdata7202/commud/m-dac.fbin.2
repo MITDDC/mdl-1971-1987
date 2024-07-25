@@ -1,0 +1,316 @@
+'<PCODE "3M-DAC">
+
+<PACKAGE "M-DAC"> 
+
+<ENTRY INIT DB-SETUP> 
+
+<ENTRY MREAD HIGH-MESSAGE-ID SET-NEXT-MESSAGE NEW-MESSAGE-ID NEWMESSAGE MID> 
+
+<ENTRY MAXOFFSET DADD DAPP DRMV DRDC DWT DADDMSG DAPPMSG DRMVMSG A?> 
+
+<ENTRY UPDMSG DMPMSG SHRINK> 
+
+<ENTRY ADDPNQ RMVPNQ NXTPNQ MSGPNQ TIMPNQ EMERGENCY PRCADD PRCRMV PRCGET PRCERR?
+FINDPRC> 
+
+<USE "FILINF" "M-DEFS" "M-READ" "M-TIME" "ITIME" "M-DB" "MADMAN" "ASYLUM" 
+"M-DATA" "FIELDS" "M-TAI" "USRUTI" "HOSTS"> 
+
+<SETG PNQDECL '<LIST FIX [REST <VECTOR FIX ADDRESS <OR FALSE FIX>>]>> 
+
+"message data base -- for current message:
+	  1/ message number
+	  2/ t ==> data has been modified
+	  3/ actual data, vector, [adr data adr data ...]
+	  4/ list, users who have had process scheduling done -- look at these
+	     when updating daemon queue
+	  5/ false or asylum to data base" 
+
+<SETG MAXOFFSET 32> 
+
+<GDECL (MAXOFFSET) FIX> 
+
+"vector size for fix offset type data, for new messages" 
+
+\ 
+
+"HIGH-MESSAGE-ID -- returns fix of highest id allocated + 1" 
+
+<SETG HIGH-MESSAGE-ID  %<RSUBR!- '[ %<PCODE!- "3M-DAC" 0> HIGH-MESSAGE-ID #DECL 
+("VALUE" FIX) ARLIST HOST HOME? DRD GETDAT OK? AMEMBER DRDFLT GETSTRING FGETFIX 
+MRD DRDMSG DUMPED? ITIME MAKE-DATA-BASE DATUM SCROUT DOPEN SOPEN INIT-SPACES %<
+RGLOC SYSTEM-ASYLUM T> %<TYPE-W ASYLUM VECTOR> %<INTERNAL-RSUBR DATA-READW 2> 
+%<INTERNAL-RSUBR DATA-PRINTW 3> CANT-ALLOCATE-NEW-ID!-ERRORS %<INTERNAL-RSUBR 
+DATA-UNLOCK 2> %<RGLOC QUEUE-SPACE T> %<TYPE-W SPACE VECTOR> %<INTERNAL-RSUBR 
+DATA-AREAD 3> %<RGLOC PENDING-QUEUE T> PENDING-QUEUE-MISSING!-ERRORS %<RGLOC 
+READ-WRITE? T> "Read Pending Queue" T "COMSYS-SYSTEM-ASYLUM" "COMSYS-MSG-ASYLUM"
+ %<INTERNAL-RSUBR OPEN-DATA-FILE 1> %<RGLOC SCRATCH-SPACE T> %<INTERNAL-RSUBR 
+ASTRING 262143> %<RGLOC DATA-WRITE-WORD T> %<INTERNAL-RSUBR ALIST 262143> 
+%<INTERNAL-RSUBR DATA-APRINT 4> %<INTERNAL-RSUBR AVECTOR 262143> 
+%<INTERNAL-RSUBR CLOSE-DATA-FILE 1> "CLOBBERING DATA" %<RGLOC MDB T> %<RGLOC 
+MSG-SPACE T> %<RGLOC MDEBUG? T> UPDMSG-BEFORE <VECTOR [REST ADDRESS VECTOR]> 
+"Write: " MESSAGE-PRINT-LOST!-ERRORS %<RGLOC DATA-ERRORS T> %<INTERNAL-RSUBR 
+ARELEASE 3> UPDMSG-AFTER %<RGLOC PNQDECL T> "Write Pending Queue" 
+PENDING-QUEUE-PRINT-LOST!-ERRORS [] "Resetting Msg, Scratch spaces" 
+%<INTERNAL-RSUBR ARESET 3> "Compacting message" %<INTERNAL-RSUBR AGC 2> 
+AGC-TO-TEMP-DECL-VIOLATION!-ERRORS AGC-TO-SOURCE-DECL-VIOLATION!-ERRORS 
+AGC-TO-SOURCE-FAILED!-ERRORS AGC-TO-TEMP-FAILED!-ERRORS "Dump: " 
+MESSAGE-DUMP-LOST!-ERRORS APPEND!-ERRORS %<INTERNAL-RSUBR ARELEASE 2> 
+TYPE-MISMATCH!-ERRORS APPEND "COPY-TO-ADDRESSEE-AREA" %<INTERNAL-RSUBR ACONS 3> 
+ADD RMV OUTCHAN %<INTERNAL-RSUBR ALEGAL? 2> 
+ATTEMPT-TO-POINT-OUTSIDE-SPACE!-ERRORS DECL-VIOLATION!-ERRORS "DECL violation" 
+%<RGLOC MAXOFFSET T> %<INTERNAL-RSUBR AIVECTOR 3> %<INTERNAL-RSUBR ACOPY 2> 
+FIELD-OFFSET-TOO-LARGE!-ERRORS NEW ": New message" ": Old lost message?" 
+">>>> Error <<<< " ": " %<RGLOC VER T> "<[" "]." ">" %<RGLOC DEMON? T> 
+NOT-IN-DEMON!-ERRORS "ADDPNQ" "RMVPNQ" ": Queued message" 
+"COMSYS-PROCESS-INTERVAL" DEQUEUE-BEFORE DEQUEUE-AFTER QUEUE 
+PENDING-QUEUE-CLOBBERED!-ERRORS %<INTERNAL-RSUBR BOUNDS-CHECK 1> 
+OUT-OF-BOUNDS!-ERRORS MSG-SPACE QUEUE-SPACE]>> 
+<AND <ASSIGNED? GLUE> .GLUE <PUT ,HIGH-MESSAGE-ID PGLUE ![715827882 -22951231488
+0 0 0 0 0 0!]>> 
+
+
+"NEW-MESSAGE-ID -- function for allocating unique message ids." 
+
+<SETG NEW-MESSAGE-ID %<RSUBR-ENTRY '[HIGH-MESSAGE-ID NEW-MESSAGE-ID #DECL (
+"VALUE" FIX)] 15>> 
+
+\ 
+
+"INIT -- initialize spaces and open system asylum" 
+
+<SETG INIT %<RSUBR-ENTRY '[HIGH-MESSAGE-ID INIT #DECL ("VALUE" <OR ATOM FALSE>)]
+50>> 
+
+"DB-SETUP -- make new system and msg data base" 
+
+<SETG DB-SETUP %<RSUBR-ENTRY '[HIGH-MESSAGE-ID DB-SETUP #DECL ("VALUE" ATOM 
+"OPTIONAL" FIX)] 117>> 
+
+<SETG SET-NEXT-MESSAGE %<RSUBR-ENTRY '[HIGH-MESSAGE-ID SET-NEXT-MESSAGE #DECL (
+"VALUE" <OR FALSE FIX> FIX)] 242>> 
+
+\ 
+
+"UPDMSG -- used to remove current message, outputting updated
+  copy if necessary -- resets mdb to contain no message
+ -- also outputs request files to change pending queue
+ -- if optional arg supplied as t, will acopy msg and queue before
+    writing them" 
+
+<SETG UPDMSG %<RSUBR-ENTRY '[HIGH-MESSAGE-ID UPDMSG #DECL ("VALUE" ATOM 
+"OPTIONAL" <OR ATOM FALSE> <OR ATOM FALSE>)] 293>> 
+
+"SHRINK -- flushes extraneous junk from space before updating to disk" 
+
+<SETG SHRINK %<RSUBR-ENTRY '[HIGH-MESSAGE-ID SHRINK #DECL ("VALUE" ANY ANY SPACE
+SPACE "OPTIONAL" <OR FALSE FORM>)] 638>> 
+
+\ 
+
+<SETG DMPMSG %<RSUBR-ENTRY '[HIGH-MESSAGE-ID DMPMSG #DECL ("VALUE" ATOM)] 759>> 
+
+\ 
+
+"FUNCTIONS ASSOCIATED WITH VARIOUS STORAGE LOCATIONS OF MESSAGES" 
+
+<SETG MREAD %<RSUBR-ENTRY '[HIGH-MESSAGE-ID MREAD #DECL ("VALUE" <OR FALSE FIX> 
+FIX "OPTIONAL" <OR ATOM FALSE>)] 840>> 
+
+\ 
+
+"MAIN DATA ACCESS FUNCTIONS" 
+
+<SETG APPEND %<RSUBR-ENTRY '[HIGH-MESSAGE-ID APPEND #DECL ("VALUE" <OR LIST 
+STRING VECTOR> ANY ANY)] 888>> 
+
+<SETG DAPP %<RSUBR-ENTRY '[HIGH-MESSAGE-ID DAPP #DECL ("VALUE" <OR ATOM FALSE> 
+ANY ADDRESS <OR FIX STRING>)] 996>> 
+
+"DAPPMSG -- same as dapp, but only looks at msg data itself" 
+
+<SETG DAPPMSG %<RSUBR-ENTRY '[HIGH-MESSAGE-ID DAPPMSG #DECL ("VALUE" <OR ATOM 
+FALSE> ANY ADDRESS <OR FIX STRING>)] 1072>> 
+
+<SETG SPLIT-MERGE %<RSUBR-ENTRY '[HIGH-MESSAGE-ID SPLIT-MERGE #DECL ("VALUE" <OR
+FALSE LIST> <OR FALSE LIST> LIST)] 1148>> 
+
+<SETG SPLIT-VALUE %<RSUBR-ENTRY '[HIGH-MESSAGE-ID SPLIT-VALUE #DECL ("VALUE" <OR
+FALSE LIST> ADDRESS <LIST [REST <LIST LIST LIST>]>)] 1275>> 
+
+\ 
+
+"DADD -- adds a datum to a list or vector, iff it is not already
+  there (by =? test).  if field is initially false, puts datum into
+  field, contained in a list" 
+
+<SETG ADD %<RSUBR-ENTRY '[HIGH-MESSAGE-ID ADD #DECL ("VALUE" ANY ANY ANY)] 1399>
+> 
+
+<SETG DADD %<RSUBR-ENTRY '[HIGH-MESSAGE-ID DADD #DECL ("VALUE" <OR ATOM FALSE> 
+ANY ADDRESS <OR FIX STRING>)] 1466>> 
+
+"DADDMSG -- same as dadd, but only reads msg itself" 
+
+<SETG DADDMSG %<RSUBR-ENTRY '[HIGH-MESSAGE-ID DADDMSG #DECL ("VALUE" <OR ATOM 
+FALSE> ANY ADDRESS <OR FIX STRING>)] 1522>> 
+
+\ 
+
+"DRMV -- inverse of DADD --- removes an item from a list" 
+
+<SETG RMV %<RSUBR-ENTRY '[HIGH-MESSAGE-ID RMV #DECL ("VALUE" ANY ANY ANY)] 1578>
+> 
+
+<SETG DRMV %<RSUBR-ENTRY '[HIGH-MESSAGE-ID DRMV #DECL ("VALUE" <OR ATOM FALSE> 
+ANY ADDRESS <OR FIX STRING>)] 1678>> 
+
+"DRMVMSG -- SAME AS DRMV, BUT LOOKS ONLY AT MSG ITSELF" 
+
+<SETG DRMVMSG %<RSUBR-ENTRY '[HIGH-MESSAGE-ID DRMVMSG #DECL ("VALUE" <OR ATOM 
+FALSE> ANY ADDRESS <OR FIX STRING>)] 1728>> 
+
+\ 
+
+"A? -- check legality of objects being stuffed into space.  Used for
+debugging only, as is very slow" 
+
+<SETG A? %<RSUBR-ENTRY '[HIGH-MESSAGE-ID A? #DECL ("VALUE" <OR ATOM FALSE> SPACE
+ANY)] 1785>> 
+
+\ 
+
+"DWT -- WRITE A DATUM INTO A SPECIFIED FIELD
+
+ -- IF GIVEN OPTIONAL DATA VECTOR TO USE INSTEAD OF ONE FROM ,MDB
+    WILL RETURN IT AFTER CHANGING -- MAY BE A NEW VECTOR, IF NEW ADDRESSEE
+    HAD TO BE ADDED" 
+
+<SETG DWT %<RSUBR-ENTRY '[HIGH-MESSAGE-ID DWT #DECL ("VALUE" ANY ANY ADDRESS <OR
+STRING FIX>)] 1887>> 
+
+\ 
+
+"DRDC -- like DRD, but copy if read from tailor or system default." 
+
+<SETG DRDC %<RSUBR-ENTRY '[HIGH-MESSAGE-ID DRDC #DECL ("VALUE" ANY ADDRESS <OR 
+FIX STRING>)] 2130>> 
+
+\ 
+
+"MISCELLANEOUS UTILITIES" 
+
+"NEWMESSAGE -- utility to allocate a new message number and id" 
+
+<SETG NEWMESSAGE %<RSUBR-ENTRY '[HIGH-MESSAGE-ID NEWMESSAGE #DECL ("VALUE" FIX)]
+2152>> 
+
+"MID -- GIVEN FIX, ID NUMBER, RETURNS A STRING, OUR FORM OF MSGID" 
+
+<SETG MID %<RSUBR-ENTRY '[HIGH-MESSAGE-ID MID #DECL ("VALUE" STRING FIX)] 2269>> 
+
+\ 
+
+"SUBTITLE Queue Utilities, for Daemon Use Only" 
+
+<SETG MSGPNQ %<RSUBR-ENTRY '[HIGH-MESSAGE-ID MSGPNQ #DECL ("VALUE" <OR ATOM 
+FALSE>)] 2303>> 
+
+\ 
+
+"ADDPNQ -- used to add a request to look at a message/addressee
+  if time not specified, asap assumed
+  will only schedule an earlier run.  if postponement of run
+  is desired, entry must be removed and readded." 
+
+<SETG ADDPNQ %<RSUBR-ENTRY '[HIGH-MESSAGE-ID ADDPNQ #DECL ("VALUE" ATOM FIX 
+ADDRESS "OPTIONAL" <OR FALSE FIX>)] 2385>> 
+
+\ 
+
+"RMVPNQ -- used to remove an entry from the queue" 
+
+<SETG RMVPNQ %<RSUBR-ENTRY '[HIGH-MESSAGE-ID RMVPNQ #DECL ("VALUE" ATOM FIX 
+ADDRESS)] 2609>> 
+
+\ 
+
+"NXTPNQ -- used to return an element from the queue for the daemon to work on" 
+
+<SETG NXTPNQ %<RSUBR-ENTRY '[HIGH-MESSAGE-ID NXTPNQ #DECL ("VALUE" <OR FALSE <
+VECTOR FIX ADDRESS <OR FALSE FIX>>>)] 2675>> 
+
+\ 
+
+"SUBTITLE Pending Queue Utilities for General Use" 
+
+"TIMPNQ -- used to obtain earliest time for which any process is scheduled
+ to run
+ -- returns t if asap, false if never, else time spec" 
+
+<SETG TIMPNQ %<RSUBR-ENTRY '[HIGH-MESSAGE-ID TIMPNQ #DECL ("VALUE" <OR ATOM 
+FALSE FIX>)] 2840>> 
+
+\ 
+
+"SUBTITLE Processing-needed Utilities" 
+
+"EMERGENCY -- clears the P-N queue and then schedules a process" 
+
+<SETG EMERGENCY %<RSUBR-ENTRY '[HIGH-MESSAGE-ID EMERGENCY #DECL ("VALUE" ATOM 
+ADDRESS STRING)] 2878>> 
+
+"PRCADD -- schedule a process" 
+
+<SETG PRCADD %<RSUBR-ENTRY '[HIGH-MESSAGE-ID PRCADD #DECL ("VALUE" ATOM ADDRESS 
+STRING "OPTIONAL" <OR FALSE FIX> <OR FALSE FIX> <OR FIX LIST FALSE> <OR FIX 
+FALSE>)] 2913>> 
+
+\ 
+
+"DEQUEUE -- remove an element from a queue list" 
+
+<SETG DEQUEUE %<RSUBR-ENTRY '[HIGH-MESSAGE-ID DEQUEUE #DECL ("VALUE" ANY SPACE 
+LIST "OPTIONAL" <OR ATOM FALSE>)] 3254>> 
+
+"QUEUE -- add an addressee to the message queue" 
+
+<SETG QUEUE %<RSUBR-ENTRY '[HIGH-MESSAGE-ID QUEUE #DECL ("VALUE" ANY ADDRESS)] 
+3322>> 
+
+<SETG CHECKEM %<RSUBR-ENTRY '[HIGH-MESSAGE-ID CHECKEM #DECL ("VALUE" ANY ANY)] 
+3383>> 
+
+\ 
+
+"PRCRMV -- used to remove a process' entry in a p-n list." 
+
+<SETG PRCRMV %<RSUBR-ENTRY '[HIGH-MESSAGE-ID PRCRMV #DECL ("VALUE" ATOM ADDRESS 
+STRING)] 3448>> 
+
+"PRCGET -- used to get next runnable process from msgs p-n field
+  -- returns #false() if none
+             #false(time) if none until time
+             #false(-1) if error stop
+             process element (list) if one found, also splices
+             it out of the field" 
+
+<SETG PRCGET %<RSUBR-ENTRY '[HIGH-MESSAGE-ID PRCGET #DECL ("VALUE" <OR FALSE <
+LIST STRING <OR FALSE FIX> FIX <OR FIX LIST FALSE> FIX>> ADDRESS)] 3510>> 
+
+\ 
+
+"PRCERR? -- used to decide if a message is in error state, by examining
+  the processing-needed data, returns t or false" 
+
+<SETG PRCERR? %<RSUBR-ENTRY '[HIGH-MESSAGE-ID PRCERR? #DECL ("VALUE" <OR ATOM 
+FALSE> <LIST ANY [REST PRCSTATE]>)] 3610>> 
+
+"FINDPRC -- given pn data list, returns list whose el 2 is element
+  for specified process.  if optional arg = t, will not pass beyond
+  any process in error-hold state.  returns false if no entry found" 
+
+<SETG FINDPRC %<RSUBR-ENTRY '[HIGH-MESSAGE-ID FINDPRC #DECL ("VALUE" <OR FALSE 
+LIST> STRING LIST "OPTIONAL" <OR ATOM FALSE>)] 3647>> 
+
+<ENDPACKAGE> 

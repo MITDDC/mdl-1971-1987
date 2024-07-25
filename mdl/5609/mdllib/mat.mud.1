@@ -1,0 +1,1660 @@
+;"*****************************************************************************
+                 MAT: Muddle ATsign (historical name)
+                      A portable cross reference listing program
+                      for the MDL programming language.
+
+              Written at the MIT Laboratory for Computer Science
+               
+               VERSION 1.4       4/6/82        K. Shane Hartman
+ *****************************************************************************"
+
+<PACKAGE "MAT">
+
+<ENTRY MAT>
+
+
+"SUBTITLE Gvals, etc."
+
+<NEWTYPE SYMBOL VECTOR '<VECTOR STRING
+                         <LIST [REST STRING FIX FIX]>
+                         <LIST [REST STRING]>
+                         <LIST [REST SYMBOL <LIST [REST FIX]>]>>>
+
+;"The structure above is used to represent an atom to be creffed by MAT.
+  The first element (string) is the symbol's pname. The second element is
+  a list containing the file, page and line of the symbol's definition
+  (DEFMAC DEFINE, SETG, OR NEWTYPE). The third element is a list containing 
+  the atom's type(s): Gdecl, Gval, Manifest, Macro, or Type. The fourth
+  element contains crefs of the form: 
+  <function in which reference occurred> (<page> <line> <page> <line> ...).
+  Note that function in which reference occurred is a SYMBOL."
+
+<NEWTYPE TABLE VECTOR '<VECTOR FIX FIX <UVECTOR SYMBOL [REST SYMBOL]>>>
+
+;"The structure above defines the symbol table used by MAT. The first element
+  is the number of symbols the table contains. The second element is the size
+  of the table. The third element contains the symbols themselves. Unfilled
+  slots are filled with dummy symbols."
+
+<NEWTYPE STRING-BUFFER VECTOR '<VECTOR FIX FIX STRING>> 
+                                                       
+;"The structure above is employed by EXECUTE-JCL and SPECIAL-ACTIONS.
+  The first element (fix) serves as a string pointer (points to next unread
+  character). The second  element (fix) is the size of the string in the
+  buffer. The third element (string) is the string to be parsed."
+
+<NEWTYPE FILE-BUFFER VECTOR
+	 '<VECTOR FIX FIX STRING FIX FIX <OR ATOM FALSE> CHANNEL>>
+
+;"The structure above is employed during the first pass. Elements 1, 2, 3
+  are the same as in STRING-BUFFER. The fourth element (fix) is the number
+  of times the buffer has been filled (effectively a line counter, since
+  buffer is refilled via READSTRING using linefeed as as stop character).
+  The fifth element (fix) is the relative page counter (incremented every
+  time a newpage character is seen in file). The sixth element is T if the
+  end of file has been read, FALSE otherwise. The seventh element is a 
+  channel to the file being processed."
+
+
+<GDECL (CROSS-REFERENCE? PRINT-MESSAGE? SYMBOL-TABLE-ONLY?
+        SEPARATE-FILES? SEPARATE-TABLES?) <OR ATOM FALSE>
+
+       (PAGE-WIDTH PAGE-LENGTH) FIX
+       
+       (SUBTITLES) <LIST [REST STRING FIX STRING]> 
+       
+       (SUBTITLES-TAIL) <LIST STRING FIX STRING>
+
+       (CREFS) <LIST [REST STRING FIX FIX SYMBOL]>
+
+       (CREFS-TAIL) <LIST STRING FIX FIX SYMBOL>
+
+       (UNDEFINED-CHARACTER-TEMPLATE) <VECTOR [7 STRING]>
+       
+       (CHARACTER-TEMPLATES) <VECTOR [REST <VECTOR [8 STRING]>]>
+
+       (TITLE1 TITLE2 MESSAGE BREAK-CHARS1 BACKSLASH&DOUBLE-QUOTE
+	BREAK-CHARS3 LINEFEED SEPARATORS BREAK-CHARS2 LINEFEED&NEWPAGE) STRING
+
+       (GET-PNAME GET-DFN GET-TYPE GET-CREFS) FIX
+
+       (TOPLEVEL DUMMY-SYMBOL) SYMBOL (BACKSLASH NEWPAGE) CHARACTER 
+       
+       (FILE-LIST) <LIST [REST STRING]> (SYMBOL-TABLE) TABLE>
+       
+<SETG GET-PNAME 1>        
+                                    
+<SETG GET-DFN 2>                    ;"Selectors for symbols."
+
+<SETG GET-TYPE 3>
+
+<SETG GET-CREFS 4>
+
+<MANIFEST GET-PNAME GET-DFN GET-TYPE GET-CREFS>
+
+<SETG TITLE1 "FOO">    ;"Default fn1 used by MAT."
+
+<SETG TITLE2 "MAT">    ;"Default fn2 used by MAT."
+
+<SETG DUMMY-SYMBOL     ;"Place holder for unfilled slots in symbol table"
+      <CHTYPE [<STRING <ASCII 124> <ASCII 123> <ASCII 122>> '() '() '()]
+              SYMBOL>>
+
+<SETG CREFS <SETG CREFS-TAIL ("FOO" -1 -1 ,DUMMY-SYMBOL)>>
+ ;"Contains crefs that will be printed at the beginning of a line in which a
+   a symbol is referenced. If more than one symbol occurs in line, leftmost
+   symbol is chosen."
+
+<SETG SUBTITLES <SETG SUBTITLES-TAIL ("FOO" -1 "FOO")>>
+ ;"Contains triplets of form <file> <page> <subtitle text>."
+
+<SETG CROSS-REFERENCE? <>>
+
+<SETG PRINT-MESSAGE? <>>
+
+<SETG SYMBOL-TABLE-ONLY? <>>           ;"Switches."
+                                       
+<SETG SEPARATE-TABLES? <>>
+
+<SETG SEPARATE-FILES? <>>
+
+<SETG PAGE-LENGTH 66>  
+                            ;"Default page width and length."
+<SETG PAGE-WIDTH 90>  
+
+<SETG CHARACTER-TEMPLATES  ;"used by BIGPRINT"
+      [[" " "     " "     " "     " "     " "     " "     " "     "]
+	   
+       ["!" "  !  " "  !  " "  !  " "  !  " "  !  " "     " "  !  "]
+
+       ["#" " # # " " # # " "#####" " # # " "#####" " # # " " # # "]
+
+       ["$" "  $  " " $$$$" "$ $  " " $$$ " "  $ $" "$$$$ " "  $  "]
+
+       ["&" "  &  " " & & " "  &  " " &   " "& & &" "&  & " " && &"]
+
+       ["'" "   ' " " '   " "     " "     " "     " "     " "     "]
+
+       ["-" "     " "     " "     " "-----" "     " "     " "     "]
+
+       ["_" "     " "     " "     " "     " "     " "     " "_____"]
+
+       ["/" "    /" "    /" "   / " "  /  " " /   " "/    " "/    "]
+
+       ["0" " 000 " "0   0" "0  00" "0 0 0" "00  0" "0   0" " 000 "]
+
+       ["1" "  1  " " 11  " "  1  " "  1  " "  1  " "  1  " " 111 "]
+
+       ["2" " 222 " "2   2" "    2" "   2 " "  2  " " 2   " "22222"]
+
+       ["3" " 333 " "3   3" "    3" " 333 " "    3" "3   3" " 333 "]
+
+       ["4" "   4 " "  44 " " 4 4 " "4  4 " "44444" "   4 " "   4 "]
+
+       ["5" "55555" "5    " "5    " "5555 " "    5" "5   5" " 555 "]
+
+       ["6" " 666 " "6   6" "6    " "6666 " "6   6" "6   6" " 666 "]
+
+       ["7" "77777" "    7" "   7 " " 7777" "  7  " " 7   " "7    "]
+
+       ["8" " 888 " "8   8" "8   8" " 888 " "8   8" "8   8" " 888 "]
+
+       ["9" " 999 " "9   9" "9   9" " 9999" "    9" "   9 " "999  "]
+
+       ["<" "   <" "  < " " <  " "<   " " <  " "  < " "   <"]
+
+       ["=" "     " "     " "=====" "     " "=====" "     " "     "]
+
+       [">" " >   " "  >  " "   > " "    >" "   > " "  >  " " >   "]
+
+       ["?" " ??? " "?   ?" "   ? " "  ?  " "  ?  " "     " "  ?  "]
+
+       ["@" " @@@ " "@   @" "@ @@@" "@ @ @" "@ @@@" "@    " " @@@@"]
+
+       ["Aa" "  A  " " A A " "A   A" "A   A" "AAAAA" "A   A" "A   A"]
+
+       ["Bb" "BBBB " "B   B" "B   B" "BBBB " "B   B" "B   B" "BBBB "]
+
+       ["Cc" " CCC " "C   C" "C    " "C    " "C    " "C   C" " CCC "]
+
+       ["Dd" "DDD  " "D  D " "D   D" "D   D" "D   D" "D  D " "DDD  "]
+
+       ["Ee" "EEEEE" "E    " "E    " "EEEE " "E    " "E    " "EEEEE"]
+
+       ["Ff" "FFFFF" "F    " "F    " "FFFF " "F    " "F    " "F    "]
+
+       ["Gg" " GGG " "G   G" "G    " "G GGG" "G   G" "G   G" " GGG "]
+
+       ["Hh" "H   H" "H   H" "H   H" "HHHHH" "H   H" "H   H" "H   H"]
+
+       ["Ii" " III " "  I  " "  I  " "  I  " "  I  " "  I  " " III "]
+
+       ["Jj" "  JJJ" "   J " "   J " "   J " "   J " "J  J " " JJ  "]
+
+       ["Kk" "K   K" "K  K " "K K  " "KK   " "K K  " "K  K " "K   K"]
+
+       ["Ll" "L    " "L    " "L    " "L    " "L    " "L    " "LLLLL"]
+
+       ["Mm" "M   M" "MM MM" "M M M" "M M M" "M   M" "M   M" "M   M"]
+
+       ["Nn" "N   N" "NN  N" "N N N" "N  NN" "N   N" "N   N" "N   N"]
+
+       ["Oo" " OOO " "O   O" "O   O" "O   O" "O   O" "O   O" " OOO "]
+
+       ["Pp" "PPPP " "P   P" "P   P" "PPPP " "P    " "P    " "P    "]
+
+       ["Qq" " QQQ " "Q   Q" "Q   Q" "Q   Q" "Q Q Q" "Q  Q " " QQ Q"]
+
+       ["Rr" "RRRR " "R   R" "R   R" "RRRR " "R R  " "R  R " "R   R"]
+
+       ["Ss" " SSS " "S   S" "S    " " SSS " "    S" "S   S" " SSS "]
+
+       ["Tt" "TTTTT" "  T  " "  T  " "  T  " "  T  " "  T  " "  T  "]
+
+       ["Uu" "U   U" "U   U" "U   U" "U   U" "U   U" "U   U" " UUU "]
+
+       ["Vv" "V   V" "V   V" "V   V" "V   V" "V   V" " V V " "  V  "]
+
+       ["Ww" "W   W" "W   W" "W   W" "W W W" "W W W" "WW WW" "W   W"]
+
+       ["Xx" "X   X" "X   X" " X X " "  X  " " X X " "X   X" "X   X"]
+
+       ["Yy" "Y   Y" "Y   Y" " Y Y " "  Y  " "  Y  " "  Y  " "  Y  "]
+
+       ["Zz" "ZZZZZ" "    Z" "   Z " "ZZZZZ" " Z   " "Z    " "ZZZZZ"]
+
+       ["]" " ]]] " " ]   " " ]   " " ]   " " ]   " " ]   " " ]]] "]
+
+       ["[" " [[[ " "   [ " "   [ " "   [ " "   [ " "   [ " " [[[ "]
+
+       ["^" "  ^  " " ^^^ " "^ ^ ^" "  ^  " "  ^  " "  ^  " "  ^  "]]>
+
+<SETG UNDEFINED-CHARACTER-TEMPLATE  ;"If char is not above BIGPRINT this"
+      ["|||||" "|||||" "|||||" "|||||" "|||||" "|||||" "|||||" ]>
+
+;"Remaining Gvals are special characters MAT needs to know."
+
+<SETG BACKSLASH <ASCII 92>>
+                            
+<SETG BACKSLASH&DOUBLE-QUOTE <STRING <ASCII 92> <ASCII 34>>>
+                                    
+<SETG LINEFEED <STRING <ASCII 10>>>      
+                        
+<SETG NEWPAGE <ASCII 12>>  
+
+<SETG LINEFEED&NEWPAGE <STRING <ASCII 12> <ASCII 10>>>
+
+<SETG SEPARATORS  
+      <STRING <ASCII 32> <ASCII 13> <ASCII 10> <ASCII 9>>>
+
+<SETG
+ BREAK-CHARS1  
+ <STRING ,SEPARATORS !\<!\> !\[ !\] !\{ !\} !\( !\) !\, !\; !\' !\" !\# >>
+
+<SETG BREAK-CHARS2  
+      <STRING !\<!\> !\, !\" !\; !\! ,NEWPAGE ,BACKSLASH>>
+
+<SETG BREAK-CHARS3  
+      <STRING !\<!\> !\, !\' !\# !\! !\. !\; >>
+
+
+"SUBTITLE Functions and macros for buffer manipulation."
+
+<DEFMAC MAKE-STRING-BUFFER ('STRNG)  
+  <FORM CHTYPE <FORM VECTOR 1 <FORM LENGTH .STRNG> .STRNG> STRING-BUFFER>>
+
+<DEFMAC MAKE-FILE-BUFFER ('STRNG 'CHAN)
+  <FORM CHTYPE
+        <FORM VECTOR 1 <FORM LENGTH .STRNG> .STRNG 0 1 <> .CHAN> 
+        FILE-BUFFER>>
+
+<DEFMAC NEXTCHR-BUFFER ('BUF) 
+  ;"Return next unread character in buffer wo/ incrementing string pointer."
+  <FORM NTH <FORM 3 .BUF> <FORM 1 .BUF>>>
+
+<DEFMAC READCHR-BUFFER ('BUF)
+  ;"Return next unread character in buffer and increment string pointer."
+  <FORM NTH
+	<FORM 3 <FORM PUT .BUF 1 <FORM + <FORM 1 .BUF> 1>>>
+	<FORM - <FORM 1 .BUF> 1>>>
+
+<DEFMAC EOF? ('BUF)
+  ;"Returns T if end of file has been read from channel, FALSE otherwise."
+  <FORM 6 .BUF>>
+
+<DEFMAC GET-FN1-FROM-BUF ('BUF)
+  ;"Return first file name from channel in FILE-BUFFER."
+  <FORM 3 <FORM 7 .BUF>>>
+
+<DEFMAC GET-FN2-FROM-BUF ('BUF)
+  ;"Return second file name from channel in FILE-BUFFER."
+  <FORM 4 <FORM 7 .BUF>>>
+
+<DEFMAC BUFFER-EMPTY? ('BUF)
+  ;"Return non-false if string pointer is greater than string length."
+  <FORM G? <FORM 1 .BUF> <FORM 2 .BUF>>>
+
+
+<DEFINE FILL-BUFFER (BUF)
+  ;"Read a string from file into FILE-BUFFER and increment line counter."
+  #DECL ((BUF) FILE-BUFFER)
+  <PUT <PUT <PUT .BUF 4 <+ <4 .BUF> 1>> 1 1>
+       2
+       <READSTRING <3 .BUF> <7 .BUF> ,LINEFEED '<PUT .BUF 6 T>>>
+  <OR <EOF? .BUF> ;"Flush trailing linefeed if not eof."
+      <READCHR <7 .BUF> '<PUT .BUF 6 T>>>>
+
+<DEFINE SKIP-STRING-SEPARATORS (BUF)
+  ;"Increment string pointer until non-separator is found or buffer is empty."
+  #DECL ((BUF) STRING-BUFFER)
+  <REPEAT ()
+    <COND (<OR <BUFFER-EMPTY? .BUF>
+               <NOT <MEMQ <NEXTCHR-BUFFER .BUF> ,SEPARATORS>>>
+           <RETURN>)
+          (<PUT .BUF 1 <+ <1 .BUF> 1>>)>>>
+
+<DEFINE SKIP-FILE-SEPARATORS (BUF)
+  ;"Increment string pointer until a non-separator is found or eof."
+  ;"Buffer is refilled if necessary."
+ #DECL ((BUF) FILE-BUFFER)
+  <REPEAT ()
+    <COND (<AND <EOF? .BUF> <BUFFER-EMPTY? .BUF>>
+           <RETURN>)  
+          (<BUFFER-EMPTY? .BUF>
+           <FILL-BUFFER .BUF>)
+          (<MEMQ <NEXTCHR-BUFFER .BUF> ,SEPARATORS>
+           <PUT .BUF 1 <+ <1 .BUF> 1>>)
+          (<RETURN>)>>>
+
+<DEFINE SKIP-TO-NEXT-IN-FILE (BUF STOP-CHARS)
+  #DECL ((BUF) FILE-BUFFER (STOP-CHARS) STRING)
+  ;"Increment string pointer until a stop character is found or eof."
+  ;"Buffer is refilled if necessary."
+  <REPEAT ()
+    <COND (<AND <EOF? .BUF> <BUFFER-EMPTY? .BUF>>
+           <RETURN>)
+          (<BUFFER-EMPTY? .BUF>
+           <FILL-BUFFER .BUF>)
+          (<MEMQ <NEXTCHR-BUFFER .BUF> .STOP-CHARS>
+           <RETURN>)
+          (<PUT .BUF 1 <+ <1 .BUF> 1>>)>>>
+
+
+<DEFINE SKIP-TO-NEXT-IN-STRING (BUF STOP-CHARS)
+  ;"Increment string pointer until a stop character is found or empty buffer."
+  #DECL ((BUF) STRING-BUFFER (STOP-CHARS) STRING)
+  <REPEAT ()
+    <COND (<OR <BUFFER-EMPTY? .BUF> <MEMQ <NEXTCHR-BUFFER .BUF> .STOP-CHARS>>
+           <RETURN>)
+          (<PUT .BUF 1 <+ <1 .BUF> 1>>)>>>
+
+<DEFINE GET-STRING-FROM-F-BUFFER (BUF STOP-CHARS)
+  ;"Return string from current buffer position up to a stop character"
+  ;"or end of file. Buffer is refilled if necessary."
+  #DECL ((BUF) FILE-BUFFER (STOP-CHARS) STRING)
+  <MAPF ,STRING <FUNCTION ()
+                  <COND (<AND <EOF? .BUF> <BUFFER-EMPTY? .BUF>>
+                         <ERROR "Syntax Error In File"
+                                <GET-FN1-FROM-BUF .BUF>
+                                <GET-FN2-FROM-BUF .BUF>>)
+                        (<BUFFER-EMPTY? .BUF> <FILL-BUFFER .BUF>)
+                        (<MEMQ <NEXTCHR-BUFFER .BUF> .STOP-CHARS> <MAPSTOP>)
+                        (<READCHR-BUFFER .BUF>)>>>>
+
+<DEFINE GET-STRING-FROM-S-BUFFER (BUF STOP-CHARS)
+  ;"Return string from current buffer position up to a stop character"
+  ;"or end of buffer."
+  #DECL ((BUF) STRING-BUFFER (STOP-CHARS) STRING)
+  <MAPF ,STRING 
+        <FUNCTION ()
+          <COND (<OR <BUFFER-EMPTY? .BUF>
+                     <MEMQ <NEXTCHR-BUFFER .BUF> .STOP-CHARS>>
+                 <MAPSTOP>)
+                (<READCHR-BUFFER .BUF>)>>>>
+
+<DEFINE GET-SYMBOL-NAME (BUF)
+  ;"Return string from current buffer position up to a MDL pname break."
+  ;"Knows about trailers and backslash. Buffer is refilled if necessary."
+  #DECL ((BUF) FILE-BUFFER)
+  <MAPF ,STRING <FUNCTION () 
+                  <COND (<AND <EOF? .BUF> <BUFFER-EMPTY? .BUF>>
+                         <ERROR "Syntax Error In File"
+                                <GET-FN1-FROM-BUF .BUF>
+                                <GET-FN2-FROM-BUF .BUF>>)
+                        (<BUFFER-EMPTY? .BUF>
+                        ;"Don't fill buffer if pname break is first character"
+                        ;"in next line in file, so line count will be correct."
+			 <COND (<MEMQ <NEXTCHR <7 .BUF>> ,BREAK-CHARS1>
+                                <MAPSTOP>) 
+                               (<FILL-BUFFER .BUF> <MAPRET>)>)
+                        (<MEMQ <NEXTCHR-BUFFER .BUF> ,BREAK-CHARS1>
+                         <MAPSTOP>)
+                        (<==? <NEXTCHR-BUFFER .BUF> !\! >
+                         ;"If trailer is implied ROOT (i.e. !-), then stop."
+                         ;"Else return !- and continue."
+                         <PUT .BUF 1 <+ <1 .BUF> 2>>
+                         <COND (<AND <==? <NTH <3 .BUF> <- <1 .BUF> 1>> !\- >
+                                     <N==? <NEXTCHR-BUFFER .BUF> <ASCII 32>>>
+                                <MAPRET !\! !\->)  
+                               (<MAPSTOP>)>)  
+                        (<==? <NEXTCHR-BUFFER .BUF> ,BACKSLASH>
+                         ;"Skip backslash and return next char in buffer."
+                         <PUT .BUF 1 <+ <1 .BUF> 1>>
+                         <READCHR-BUFFER .BUF>)
+                        (<READCHR-BUFFER .BUF>)>>>>
+
+
+"SUBTITLE Functions and macros for symbol manipulation."
+
+<DEFMAC MAKE-SYMBOL ('PNAME)  
+  <FORM CHTYPE <FORM VECTOR .PNAME ''() ''() ''()> SYMBOL>>
+
+<DEFINE PUT-TYPE (SYM $TYPE "AUX" (CURRENT-TYPE <GET-TYPE .SYM>))
+  ;"Store type information in symbol. Returns modified symbol."
+  #DECL ((SYM) SYMBOL ($TYPE) STRING (CURRENT-TYPE) <LIST [REST STRING]>)
+  <COND (<MEMBER .$TYPE "ManifestGval">
+         ;"If $TYPE is either Manifest or Gval, type information needs special
+           handling, since a GVAL can be Gval, Manifest, Gdecl, or combination
+           of these."
+         <COND (<EMPTY? .CURRENT-TYPE>  
+                <PUT .SYM 3 (.$TYPE)>)  
+               (<LENGTH? .CURRENT-TYPE 1>
+                <COND (<=? <1 .CURRENT-TYPE> .$TYPE>)  
+                      (<=? <1 .CURRENT-TYPE> "Gdecl">
+                       <PUTREST .CURRENT-TYPE (.$TYPE)>)
+                      (<PUT .CURRENT-TYPE 1 "ManifestGval">)>)
+               (<MEMBER .$TYPE <2 .CURRENT-TYPE>>)
+               (<PUT .CURRENT-TYPE 2 "ManifestGval">)>)
+        (<EMPTY? .CURRENT-TYPE>
+         ;"If type list is empty, put list containing $TYPE in sym. If not
+           empty, do nothing (since $TYPE is already there unless an error
+           exists in file (i.e. same atom used as, say, Macro and Function.))"
+         <PUT .SYM 3 (.$TYPE)>)>
+  .SYM>
+
+<DEFINE PUT-DFN (SYM FILE PAGE LINE)
+  ;"Store file, page, and line of symbol's definition in symbol."
+  #DECL ((SYM) SYMBOL (PAGE LINE) FIX)
+  <PUT .SYM 2 (.FILE .PAGE .LINE)>>             
+
+
+<DEFINE PUT-CREF (SYM1 FILE SYM2 PAGE LINE "AUX" SEARCH-RESULT)
+  ;"Store cross reference in symbol. Returns modified symbol."
+  #DECL ((SYM1 SYM2) SYMBOL (FILE) STRING (PAGE LINE) FIX 
+         (SEARCH-RESULT) 
+         <OR FALSE <LIST [REST SYMBOL <LIST FIX FIX>]>>)
+  <COND (<EMPTY? <GET-CREFS .SYM1>>
+         <PUT .SYM1 4 (.SYM2 (.PAGE .LINE))>)
+        (<SET SEARCH-RESULT <MEMQ .SYM2 <GET-CREFS .SYM1>>>
+         <PUTREST <REST <2 .SEARCH-RESULT> <- <LENGTH <2 .SEARCH-RESULT>> 1>>
+                  (.PAGE .LINE)>)
+        (<PUTREST <REST <GET-CREFS .SYM1> <- <LENGTH <GET-CREFS .SYM1>> 1>>
+		  (.SYM2 (.PAGE .LINE))>)>
+  <COND (<OR ,SYMBOL-TABLE-ONLY?   ;"If symbol table only or if current line"
+             <AND <==? <3 ,CREFS-TAIL> .LINE>  ;"already has a leading cref"
+                  <==? <2 ,CREFS-TAIL> .PAGE>   ;"do nothing. Else, putrest"
+                  <=? <1 ,CREFS-TAIL> .FILE>>>)   ;"cref info onto CREFS list."
+        (<PUTREST <REST ,CREFS-TAIL 3>
+                  <SETG CREFS-TAIL (.FILE .PAGE .LINE .SYM1)>>)>
+  .SYM1>
+
+
+"SUBTITLE Functions and macros for table manipulation."
+
+<DEFMAC MAKE-TABLE ('SIZE)
+  <FORM CHTYPE
+        <FORM VECTOR 0 .SIZE <FORM IUVECTOR .SIZE ',DUMMY-SYMBOL>>
+        TABLE>>
+
+<DEFINE TABLE-INSERT ($PNAME "AUX" (TAB ,SYMBOL-TABLE))
+  ;"PERFORM a binary search of alphabetically ordered (by pname) table for
+    symbol with pname $PNAME. If symbol is found, return it, else make symbol
+    for $PNAME and insert it in proper position. Can grow symbol table if
+    space is exhausted."
+  #DECL (($PNAME) STRING (TAB) TABLE)
+  <COND (<==? <1 .TAB> <2 .TAB>>
+         ;"If table space is exhausted, put a new uvector into symbol table
+           and put new symbol table size."
+         <PUT <PUT .TAB 3 <SUBSTRUC <3 .TAB> ;"copy symbols from old uvector"
+                                    0        ;"into new uvector."
+                                    <2 .TAB>                
+                                    <IUVECTOR <+ 500 <2 .TAB>> ,DUMMY-SYMBOL>>>
+              2
+              <+ 500 <2 .TAB>>>)>
+   <REPEAT ((HIGH <1 .TAB>) (LOW 1) RESULT     
+            (FINGER <+ </ <- .HIGH .LOW> 2> 1>))
+     #DECL ((HIGH LOW RESULT FINGER) FIX)
+     <COND (<0? <SET RESULT
+                     <STRCOMP .$PNAME <GET-PNAME <NTH <3 .TAB> .FINGER>>>>>
+            <RETURN <NTH <3 .TAB> .FINGER>>) ;"found"
+           (<1? .RESULT>
+            <SET FINGER <+ <SET LOW .FINGER> </ <- .HIGH .LOW> 2>>>) ;"low"
+           (<SET FINGER <- <SET HIGH .FINGER> </ <- .HIGH .LOW> 2>>>)> ;"high"
+      <COND (<L? <- .HIGH .LOW> 2>
+             ;"If search interval is less than two, make final comparison
+               and insert symbol into table if necessary."
+             <COND 
+               (<==? .FINGER .HIGH> ;"Last seen high?"
+                <SET FINGER .LOW>)  ;"Then look low."
+               (<SET FINGER .HIGH>)>   ;"Else look high."
+             <COND 
+               (<0? <SET RESULT
+                         <STRCOMP .$PNAME <GET-PNAME <NTH <3 .TAB> .FINGER>>>>>
+                <RETURN <NTH <3 .TAB> .FINGER>>) ;"Found."
+               (<1? .RESULT>  
+                <SET FINGER <+ .FINGER 1>>)> 
+              ;"Make room for new symbol"
+              <SUBSTRUC <3 .TAB> 
+                        <- .FINGER 1> 
+                        <- <1 .TAB> .FINGER -1>
+                        <REST <3 .TAB> .FINGER>>
+               ;"Put new sym in table, increment sym counter, and return sym."
+               <RETURN <NTH <PUT 
+                              <3 <PUT .TAB 
+                                      1 
+                                      <+ <1 .TAB> 1>>>
+                               .FINGER     
+                               <MAKE-SYMBOL .$PNAME>>
+                             .FINGER>>)>>>
+
+
+"SUBTITLE Main code."
+
+<DEFINE MAT (JCL "OPT" (SIZE 1000))
+  #DECL ((JCL) STRING (SIZE) FIX)
+  <COND (<EMPTY? .JCL> <ERROR "No JCL??" MAT>)>
+  <SETG SYMBOL-TABLE <MAKE-TABLE .SIZE>>
+  <EXECUTE-JCL <MAKE-STRING-BUFFER .JCL>>
+  <COND (<EMPTY? ,FILE-LIST> <ERROR "No Files??" MAT>)>
+  <FIRST-PASS ,FILE-LIST>
+  <SECOND-PASS ,FILE-LIST>
+  "DONE">
+
+
+<DEFINE EXECUTE-JCL (BUF)
+  #DECL ((BUF) STRING-BUFFER)
+  ;"Parses a string of form: fn1, fn2, ... /switches. SETGs various atoms
+    according to options selected by user."
+  <SKIP-STRING-SEPARATORS .BUF>
+  <SETG FILE-LIST  ;"Get leading filenames, if any."
+        <MAPF ,LIST <FUNCTION ()
+                      <SKIP-STRING-SEPARATORS .BUF>
+                      <COND (<OR <BUFFER-EMPTY? .BUF>
+                                 <==? <NEXTCHR-BUFFER .BUF> !\/ >>
+                             <MAPSTOP>)
+                            (<==? <NEXTCHR-BUFFER .BUF> !\,>
+                             <PUT .BUF 1 <+ <1 .BUF> 1>>
+                             <MAPRET>)
+                            (<GET-STRING-FROM-S-BUFFER .BUF ",/">)>>>>
+  <REPEAT (CURRENT-CHARACTER)   ;"Process switches, if any."
+    #DECL ((CURRENT-CHARACTER) CHARACTER)
+    <SKIP-STRING-SEPARATORS .BUF>
+    <COND (<BUFFER-EMPTY? .BUF> <RETURN>)
+          (<==? <SET CURRENT-CHARACTER <READCHR-BUFFER .BUF>> !\/ >)
+          (<MEMQ .CURRENT-CHARACTER "Cc"> <SETG CROSS-REFERENCE? T>)
+	  (<MEMQ .CURRENT-CHARACTER "Uu"> <SETG SEPARATE-TABLES? T>)
+	  (<MEMQ .CURRENT-CHARACTER "Ss"> <SETG SEPARATE-FILES? T>)
+	  (<MEMQ .CURRENT-CHARACTER "Nn"> <SETG SYMBOL-TABLE-ONLY? T>)
+          (<MEMQ .CURRENT-CHARACTER "Pp">
+           <SKIP-TO-NEXT-IN-STRING .BUF "[/">
+	   <COND (<OR <BUFFER-EMPTY? .BUF> <==? <NEXTCHR-BUFFER .BUF> !\/ >>
+		  <ERROR "Syntax Error For Switch: /P">)
+		 (<PUT .BUF 1 <+ <1 .BUF> 1>>)>
+           <SETG PAGE-WIDTH
+		 <PARSE
+                   <GET-STRING-FROM-S-BUFFER .BUF
+                                             <STRING ,SEPARATORS !\/ !\] >>>>
+           <SKIP-STRING-SEPARATORS .BUF>
+	   <COND (<OR <BUFFER-EMPTY? .BUF> <==? <NEXTCHR-BUFFER .BUF> !\/ >>
+		  <ERROR "Syntax Error For Switch: /P">)>
+           <SETG PAGE-LENGTH <PARSE <GET-STRING-FROM-S-BUFFER .BUF "/]">>>
+	   <COND (<OR <BUFFER-EMPTY? .BUF> <==? <NEXTCHR-BUFFER .BUF> !\/ >>
+		  <ERROR "Syntax Error For Switch: /P">)
+		 (<PUT .BUF 1 <+ <1 .BUF> 1>>)>)
+          (<MEMQ .CURRENT-CHARACTER "Ii">
+           <SKIP-TO-NEXT-IN-STRING .BUF "[/">
+	   <COND (<OR <BUFFER-EMPTY? .BUF> <==? <NEXTCHR-BUFFER .BUF> !\/ >>
+		  <ERROR "Syntax Error For Switch: /I">)
+		 (<PUT .BUF 1 <+ <1 .BUF> 1>>)>
+           <COND
+            (<EMPTY? ,FILE-LIST>
+             <SETG FILE-LIST
+                   <GET-FILENAMES-FROM-FILE
+                        <GET-STRING-FROM-S-BUFFER .BUF "]/">>>)
+            (<PUTREST <REST ,FILE-LIST <- <LENGTH ,FILE-LIST> 1>>
+                      <GET-FILENAMES-FROM-FILE
+                           <GET-STRING-FROM-S-BUFFER .BUF "]/">>>)>
+	   <PUT .BUF 1 <+ <1 .BUF> 1>>)
+          (<MEMQ .CURRENT-CHARACTER "Qq">
+           <SETG PRINT-MESSAGE? T>
+           <SKIP-TO-NEXT-IN-STRING .BUF "[/">
+	   <COND (<OR <BUFFER-EMPTY? .BUF> <==? <NEXTCHR-BUFFER .BUF> !\/ >>
+		  <ERROR "Syntax Error For Switch: /Q">)
+		 (<PUT .BUF 1 <+ <1 .BUF> 1>>)>
+           <SETG MESSAGE <GET-STRING-FROM-S-BUFFER .BUF "]/">>
+	   <COND (<OR <BUFFER-EMPTY? .BUF>
+                      <==? <NEXTCHR-BUFFER .BUF> !\/ >
+                      <NOT <LENGTH? ,MESSAGE ,PAGE-WIDTH>>>
+		  <ERROR "Syntax Error For Switch: /Q">)
+		 (<PUT .BUF 1 <+ <1 .BUF> 1>>)>)
+          (<MEMQ .CURRENT-CHARACTER "Tt">
+           <SKIP-TO-NEXT-IN-STRING .BUF "[/">
+	   <COND (<OR <BUFFER-EMPTY? .BUF> <==? <NEXTCHR-BUFFER .BUF> !\/ >>
+		  <ERROR "Syntax Error For Switch: /T">)
+		 (<PUT .BUF 1 <+ <1 .BUF> 1>>)>
+           <SKIP-STRING-SEPARATORS .BUF>
+           <SETG TITLE1 <GET-STRING-FROM-S-BUFFER .BUF
+                                                  <STRING !\/ ,SEPARATORS>>>
+           <SKIP-STRING-SEPARATORS .BUF>
+	   <COND (<OR <BUFFER-EMPTY? .BUF> <==? <NEXTCHR-BUFFER .BUF> !\/ >>
+		  <ERROR "Syntax Error For Switch: /T">)>
+           <SETG TITLE2 <GET-STRING-FROM-S-BUFFER .BUF "]/">>
+	   <COND (<OR <BUFFER-EMPTY? .BUF> <==? <NEXTCHR-BUFFER .BUF> !\/ >>
+		  <ERROR "Syntax Error For Switch: /T">)
+		 (<PUT .BUF 1 <+ <1 .BUF> 1>>)>)
+          (<ERROR "Unrecognized Switch" <STRING !\/ .CURRENT-CHARACTER>>)>>
+  "DONE">
+
+
+
+<DEFINE FIRST-PASS (FILES "AUX" (OUTCHAN .OUTCHAN))
+  #DECL ((FILES) <LIST [REST STRING]> (OUTCHAN) CHANNEL)
+  ;"Builds the symbol table, leading crefs list (CREFS and CREFS-TAIL),
+    and subtitles list (SUBTITLES and SUBTITLES-TAIL)."
+  <REPEAT ((BUF <MAKE-FILE-BUFFER <ISTRING 160 !\@ >
+		                  <OR <OPEN "READ" <1 .FILES>>
+			              <ERROR "File Not Found" <1 .FILES>>>>))
+    #DECL ((BUF) FILE-BUFFER)
+    <SET FILES <REST .FILES>>
+    <SETG TOPLEVEL  ;"Dummy symbol for storing toplevel references."
+          <CHTYPE ["Toplevel" (<GET-FN1-FROM-BUF .BUF> 0 0) () ()]
+                  SYMBOL>>
+    <FILL-BUFFER .BUF>
+    <REPEAT ((CURRENT-FUNCTION ,TOPLEVEL) (NESTING 0) CURRENT-CHARACTER
+              CURRENT-STRING)
+      #DECL ((CURRENT-STRING) STRING (NESTING) FIX
+             (CURRENT-CHARACTER) CHARACTER (CURRENT-FUNCTION) SYMBOL)
+      <SKIP-TO-NEXT-IN-FILE .BUF ,BREAK-CHARS2>
+      <COND (<BUFFER-EMPTY? .BUF> ;"If buffer is empty, eof has been read."
+	     <RETURN <COND (<NOT <0? .NESTING>>
+			    <PRINT "Brackets unbalanced in file ?">
+			    <PRINT <GET-FN1-FROM-BUF .BUF>>
+			    <PRINT <GET-FN2-FROM-BUF .BUF>>)>>)
+            (<==? <SET CURRENT-CHARACTER <READCHR-BUFFER .BUF>> !\> >
+             ;"If current-character is close angle bracket,then decrement
+               nesting. Then if nesting is 0, then set current-function
+               to toplevel."
+	     <COND (<0? <SET NESTING <- .NESTING 1>>> 
+                    <SET CURRENT-FUNCTION ,TOPLEVEL>)>)
+	    (<==? .CURRENT-CHARACTER !\; >  ;"If semicolon, skip comment."
+             <SKIP-COMMENT .BUF>)
+            (<==? .CURRENT-CHARACTER ,NEWPAGE>
+             ;"If current-character is newpage, and  buffer
+               is empty, fill buffer. Increment page count, and set line
+               count to 1."
+             <COND (<BUFFER-EMPTY? .BUF> <FILL-BUFFER .BUF>)>
+ 	     <PUT <PUT .BUF 5 <+ <5 .BUF> 1>> 4 1>)             
+            (<==? .CURRENT-CHARACTER !\! >
+             ;"If current-character is exclamation point, look at next
+               character. If next is backslash or doublequote, then skip next
+               and character following next (but take note of page breaks).
+               If next is neither of these, do nothing."
+             <COND
+	      (<MEMQ <NEXTCHR-BUFFER .BUF> ,BACKSLASH&DOUBLE-QUOTE>
+	       <PUT .BUF 1 <+ <1 .BUF> 1>> 
+	       <COND (<==? <READCHR-BUFFER .BUF> ,NEWPAGE> 
+		      <COND (<BUFFER-EMPTY? .BUF> <FILL-BUFFER .BUF>)>
+		      <PUT <PUT .BUF 5 <+ <5 .BUF> 1>> 4 1>)>)>)
+	    (<==? .CURRENT-CHARACTER !\" >  ;"If doublequote, skip string"
+             <SKIP-STRING .BUF>)
+            (<==? .CURRENT-CHARACTER ,BACKSLASH> 
+             ;"If current-character is backslash, skip following character
+               (but check page breaks)."
+             <COND (<==? <READCHR-BUFFER .BUF> ,NEWPAGE>  
+	            <COND (<BUFFER-EMPTY? .BUF> <FILL-BUFFER .BUF>)>
+		    <PUT <PUT .BUF 5 <+ <5 .BUF> 1>> 4 1>)>)
+            (<==? .CURRENT-CHARACTER !\, >
+             ;"If current-character is comma, we have a gval. If character
+               following comma is a break-character (as in ,.FOO or ,<FOO>)
+               or if the string is the pname of a MDL subr or fsubr, do 
+               nothing. Else insert string into symbol table, and put cref
+               into symbol if cref listing called for."
+	     <COND (<OR <MEMQ <NEXTCHR-BUFFER .BUF> ,BREAK-CHARS3>
+                        <BUILT-IN-OR-NUMBER?    
+	  	           <SET CURRENT-STRING
+			        <GET-SYMBOL-NAME .BUF>>>>)
+		   (,CROSS-REFERENCE?
+		    <PUT-CREF
+		       <TABLE-INSERT .CURRENT-STRING>
+                       <GET-FN1-FROM-BUF .BUF>
+		       .CURRENT-FUNCTION
+		       <5 .BUF>
+		       <4 .BUF>>)
+		   (<TABLE-INSERT .CURRENT-STRING>)>)
+	    (<SET NESTING <+ .NESTING 1>>
+             ;"We have an open angle bracket, increment nesting."
+	     <SKIP-FILE-SEPARATORS .BUF>
+	     <COND
+               ;"If next char is a break-char, do nothing."
+	      (<MEMQ <NEXTCHR-BUFFER .BUF> ,BREAK-CHARS3>) 
+               ;"Else, look at string up to next pname break."
+              (<COND
+		(<=? <SET CURRENT-STRING <GET-SYMBOL-NAME .BUF>> "DEFINE">
+                 ;"If current string is DEFINE, get function name, insert name
+                   into symbol table, put definition location and type Function
+                   into name's symbol, and set current function to name."
+		 <SKIP-FILE-SEPARATORS .BUF>
+		 <SET CURRENT-FUNCTION
+  		      <PUT-DFN
+			 <PUT-TYPE
+			    <TABLE-INSERT
+			       <GET-SYMBOL-NAME .BUF>>
+			    "Function">
+                         <GET-FN1-FROM-BUF .BUF>
+			 <5 .BUF>
+			 <4 .BUF>>>)
+		(<=? .CURRENT-STRING "SETG">
+                 ;"If current string is SETG, look at next following non-
+                   separator. If it is a break character (as in <SETG ,A 2>),
+                   then do nothing. Else get name of gval, insert name into
+                   table, put setg location and type Gval into name's symbol."
+		 <SKIP-FILE-SEPARATORS .BUF>
+		 <COND (<MEMQ <NEXTCHR-BUFFER .BUF> ,BREAK-CHARS3>)
+		       (<PUT-DFN
+			   <PUT-TYPE
+			      <TABLE-INSERT
+			         <GET-SYMBOL-NAME .BUF>>
+			       "Gval">
+                           <GET-FN1-FROM-BUF .BUF>
+			   <5 .BUF>
+			   <4 .BUF>>)>)
+		(<=? .CURRENT-STRING "DEFMAC">
+                 ;"If current string is DEFMAC, get macro name, insert name
+                   into symbol table, put definition location and type Macro
+                   into name's symbol, and set current-function to name."
+		 <SKIP-FILE-SEPARATORS .BUF>
+		 <SET CURRENT-FUNCTION
+  		      <PUT-DFN
+			 <PUT-TYPE
+			    <TABLE-INSERT
+			       <GET-SYMBOL-NAME .BUF>>
+			    "Macro">
+                         <GET-FN1-FROM-BUF .BUF>
+			 <5 .BUF>
+			 <4 .BUF>>>)
+		(<=? .CURRENT-STRING "NEWTYPE">
+                 ;"If current string is NEWTYPE, look at next non-separator.
+                   If it's a break character (as in <NEWTYPE .TYP LIST>) then
+                   flush rest of NEWTYPE form. Else get type name, insert name
+                   into table, put location of newtype statement and put type
+                   Type into name's symbol, then flush remainder of NEWTYPE
+                   form."
+		 <SKIP-FILE-SEPARATORS .BUF>
+                 <COND
+                  (<MEMQ <NEXTCHR-BUFFER .BUF> ,BREAK-CHARS3>) ;"do nothing."
+                  (<PUT-DFN
+                      <PUT-TYPE
+                         <TABLE-INSERT
+                            <GET-SYMBOL-NAME .BUF>>
+                         "Type">
+                      <GET-FN1-FROM-BUF .BUF>
+                      <5 .BUF>
+                      <4 .BUF>>)>
+		 <REPEAT ((NEWTYPE-NESTING 1))
+		   #DECL ((NEWTYPE-NESTING) FIX)
+                   ;"Flush rest of chars up to angle bracket which closes 
+                     NEWTYPE form. Comments are treated as usual. For each
+                     open angle bracket, increment newtype nesting. Decrement
+                     for each close angle bracket. Exit when newtype nesting
+                     is 0."
+		   <SKIP-TO-NEXT-IN-FILE .BUF "<;>">
+		   <COND
+		    (<==? <SET CURRENT-CHARACTER <READCHR-BUFFER .BUF>> !\;>
+		     <SKIP-COMMENT .BUF>)
+		    (<==? .CURRENT-CHARACTER !\> >
+		     <SET NEWTYPE-NESTING <- .NEWTYPE-NESTING 1>>)
+		    (<SET NEWTYPE-NESTING <+ .NEWTYPE-NESTING 1>>)>
+		   <COND
+		    (<0? .NEWTYPE-NESTING>
+		     <RETURN <SET NESTING <- .NESTING 1>>>)>>)
+		(<=? .CURRENT-STRING "GDECL">
+                 ;"If current string is GDECL, get pnames from GDECL lists,
+                   insert names into table, and put type Gdecl into names'
+                   symbols."
+		 <REPEAT ((GDECL-NESTING 1))
+		   #DECL ((GDECL-NESTING) FIX)
+                   ;"Comments are treated as usual. Keep track of angle bracket
+                     nesting, and look for open parens. Exit on 0 nesting."
+		   <SKIP-TO-NEXT-IN-FILE .BUF "(;<>" >
+                   <COND
+		    (<==? <SET CURRENT-CHARACTER <READCHR-BUFFER .BUF>> !\; >
+		     <SKIP-COMMENT .BUF>)
+		    (<==? .CURRENT-CHARACTER !\<>
+		     <SET GDECL-NESTING <+ .GDECL-NESTING 1>>)
+		    (<==? .CURRENT-CHARACTER !\> >
+		     <SET GDECL-NESTING <- .GDECL-NESTING 1>>)
+		    (<REPEAT ()
+                      ;"We have open paren. Get names from GDECL list, insert,
+                        and put type Gdecl. Exit to outer loop on close paren."
+		       <SKIP-FILE-SEPARATORS .BUF>
+		       <COND (<==? <NEXTCHR-BUFFER .BUF> !\) >
+                              <RETURN>)
+			     (<==? <NEXTCHR-BUFFER .BUF> !\; >
+			      <SKIP-COMMENT .BUF>)
+			     (<PUT-TYPE
+			         <TABLE-INSERT
+			            <GET-SYMBOL-NAME .BUF>>
+			         "Gdecl">)>>)>
+                   <COND (<0? .GDECL-NESTING>
+		          <RETURN <SET NESTING <- .NESTING 1>>>)>>)
+                (<=? .CURRENT-STRING "MANIFEST">
+                 ;"If current string is MANIFEST, get names being manifested,
+                   insert them into table, and put type Manifest into their
+                   symbols. Comments are treated as usual. Exit when close 
+                   angle bracket."
+                 <REPEAT ()
+		   <SKIP-FILE-SEPARATORS .BUF>
+		   <COND (<==? <NEXTCHR-BUFFER .BUF> !\> >
+			  <RETURN>) ;"End of manifest."
+                         (<MEMQ <NEXTCHR-BUFFER .BUF> ,BREAK-CHARS3>
+                          ;"If next in buffer is break char, skip."
+                          <PUT .BUF 1 <+ <1 .BUF> 1>> 
+                          <SKIP-TO-NEXT-IN-FILE .BUF ,BREAK-CHARS1>)
+                         (<==? <NEXTCHR-BUFFER .BUF> !\; > ;"Comment."
+                          <SKIP-COMMENT .BUF>)
+			 (<PUT-TYPE ;"Next char is beginning of symbol name."
+			     <TABLE-INSERT  ;"Get the pname, insert, put type."
+				<GET-SYMBOL-NAME .BUF>>
+				    "Manifest">)>>)
+		(<OR <=? .CURRENT-STRING "GVAL"> <=? .CURRENT-STRING "FORM">>
+                 ;"If current string is FORM or GVAL, and first non-separator
+                   following is not break char, then look at string up to next
+                   break char. If string is not pname of MDL subr or fsubr,
+                   then insert string and cross-reference if called for."
+		 <SKIP-FILE-SEPARATORS .BUF>
+		 <COND (<OR <MEMQ <NEXTCHR-BUFFER .BUF> ,BREAK-CHARS3>
+			    <BUILT-IN-OR-NUMBER?     
+			       <SET CURRENT-STRING
+				  <GET-SYMBOL-NAME .BUF>>>>)
+		       (,CROSS-REFERENCE?
+			<PUT-CREF
+			   <TABLE-INSERT .CURRENT-STRING>
+                           <GET-FN1-FROM-BUF .BUF>
+			   .CURRENT-FUNCTION
+			   <5 .BUF>
+			   <4 .BUF>>)
+		       (<TABLE-INSERT .CURRENT-STRING>)>)
+	        (<COND (<BUILT-IN-OR-NUMBER? .CURRENT-STRING>)
+                       (,CROSS-REFERENCE?
+		        <PUT-CREF
+			   <TABLE-INSERT .CURRENT-STRING>
+                           <GET-FN1-FROM-BUF .BUF>
+			   .CURRENT-FUNCTION
+			   <5 .BUF>
+			   <4 .BUF>>)
+         	       (<TABLE-INSERT .CURRENT-STRING>)>)>)>)>>
+    <CLOSE <7 .BUF>>  ;"Close input file."
+    <COND (<EMPTY? .FILES> ;"If no more files, strip dummy first elements"
+	   <SETG CREFS <REST ,CREFS 4>>  ;"from global lists."
+	   <SETG SUBTITLES <REST ,SUBTITLES 3>>    
+	   <RETURN>)
+	  (<PUT    ;"Otherwise, set up for next file."
+             <PUT
+               <PUT <PUT .BUF 7 <OR <OPEN "READ" <1 .FILES>>
+				    <ERROR "File Not Found" <1 .FILES>>>>
+		    6 <>>
+  	       4 0>
+             5 1>)>>>
+
+
+
+<DEFINE SECOND-PASS
+  (FILES "AUX" (BLANKSPACE <ISTRING ,PAGE-WIDTH <ASCII 32>>) OUTCHAN
+               (LINE-BUFFER <ISTRING 200>) FILENAME
+	       (INCHAN <OPEN "READ" <1 .FILES>>) PRINT-FNS?)
+  ;"Print the record file(s) table(s) and cref listing."
+  #DECL ((FILES) <LIST [REST STRING]> (PRINT-FNS?) <OR ATOM FALSE>
+	 (INCHAN OUTCHAN) CHANNEL (LINE-BUFFER FILENAME BLANKSPACE) STRING)
+  <SET OUTCHAN <COND (<N==? ,TITLE1 "FOO"> <MY-OPEN ,TITLE1 ,TITLE2>)
+		     (<MY-OPEN <GET-FN1-FROM-CHAN .INCHAN> ,TITLE2>)>>
+  ;"If more than one file, fns must be used to specify a location in addition
+    to page line numbers. PRINT-FNS? remembers if fns should be printed."
+  <SET PRINT-FNS? <N==? <LENGTH .FILES> 1>> 
+  <SET FILENAME <MAKE-FILENAME .INCHAN>> ;"Filename printed at top of page."
+  <COND (<NOT ,SYMBOL-TABLE-ONLY?> ;"If not symbol table only, a record file"
+	      <REPEAT ()              ;"is printed for each file in file list."
+		<SET FILES <REST .FILES>>
+		<PRINT-RECORD-FILE .INCHAN
+				   .OUTCHAN
+				   .FILENAME
+				   .BLANKSPACE
+                                   .LINE-BUFFER
+				   .PRINT-FNS?>
+		<CLOSE .INCHAN>
+		<COND (<EMPTY? .FILES> <RETURN>)
+		      (<SET INCHAN <OPEN "READ" <1 .FILES>>>
+                       <SET FILENAME <MAKE-FILENAME .INCHAN>>)>
+                <COND (,SEPARATE-FILES?
+                       <CLOSE .OUTCHAN>
+                       <SET OUTCHAN
+                            <MY-OPEN <GET-FN1-FROM-CHAN .INCHAN> ,TITLE2>>)
+                      (<PRINC ,NEWPAGE .OUTCHAN>)>>)>
+  ;"Always print the symbol table."
+  <PRINT-SYMBOL-TABLE .OUTCHAN
+                      <COND (.PRINT-FNS? "All Files") (.FILENAME)>
+                      .BLANKSPACE
+                      .PRINT-FNS?
+                      <3 ,SYMBOL-TABLE>>
+  <COND
+   (,SEPARATE-TABLES? ;"Then print table for each type of symbol."
+    <REPEAT ((TYPES ["GdeclManifestGval" "Function" "Macro" "Type"])
+              CURRENT-TYPE)
+      #DECL ((TYPES) <VECTOR [REST STRING]> (CURRENT-TYPE) STRING)
+      <COND
+       (<EMPTY? .TYPES> <RETURN>) ;"If no more types left, exit."
+       (<SET CURRENT-TYPE <1 .TYPES>>
+	<SET TYPES <REST .TYPES>>
+	<PRINT-SYMBOL-TABLE
+              .OUTCHAN
+              <COND (.PRINT-FNS? "All Files") (.FILENAME)>
+	      .BLANKSPACE
+	      .PRINT-FNS?
+	      <MAPF ,UVECTOR   ;"Copy all symbols of type current-type out of"
+		    <FUNCTION (SYM)  ;"symbol table, and put them in uvector"
+		      #DECL ((SYM) SYMBOL)   ;"for PRINT-SYMBOL-TABLE."
+		      <COND
+		       (<==? .SYM ,DUMMY-SYMBOL> <MAPSTOP>)
+                       (<OR <EMPTY? <GET-TYPE .SYM>>
+                            <NOT <MEMBER <1 <GET-TYPE .SYM>> .CURRENT-TYPE>>>
+                        <MAPRET>)
+                       (.SYM)>>
+		      <3 ,SYMBOL-TABLE>>>)>>)>
+  <COND (,CROSS-REFERENCE? ;"Then print a cref listing."
+	 <MAPF <> ;"Sort crefs for each symbol (alphabetically by pname)."
+	       <FUNCTION (SYM) ;"Destructively alters the symbol table."
+		 #DECL ((SYM) SYMBOL)
+		 <COND (<==? .SYM ,DUMMY-SYMBOL>
+			<MAPLEAVE>)
+		       (<SORT-CREFS <GET-CREFS .SYM>
+				    !<GET-CREFS .SYM>>)>>
+	       <3 ,SYMBOL-TABLE>>
+  <PRINT-CREF-LISTING .OUTCHAN 
+                      <COND (.PRINT-FNS? "All Files") (.FILENAME)>
+                      .BLANKSPACE
+                      .PRINT-FNS?>)>
+  <CLOSE .OUTCHAN>>
+
+
+<DEFINE PRINT-RECORD-FILE
+  (INCHAN OUTCHAN FILENAME BLANKSPACE LINE-BUFFER PRINT-FNS?
+   "AUX" FN1 FN2 CURRENT-SUBTITLE MINIBUFFER RELATIVE-PAGE ABSOLUTE-PAGE
+   ABSOLUTE-LINE (PAGE-LENGTH ,PAGE-LENGTH) (PAGE-WIDTH ,PAGE-WIDTH)
+   NEXT-CREF EOF? CURRENT-LINE-LENGTH RELATIVE-LINE INDENT)
+  #DECL ((FN1 FN2 MINIBUFFER CURRENT-SUBTITLE BLANKSPACE FILENAME) STRING
+	 (RELATIVE-PAGE ABSOLUTE-PAGE RELATIVE-LINE ABSOLUTE-LINE PAGE-LENGTH
+          INDENT PAGE-WIDTH CURRENT-LINE-LENGTH NEXT-CREF) FIX
+	 (INCHAN OUTCHAN) CHANNEL (EOF? PRINT-FNS?) <OR ATOM FALSE>)
+  <SET FN1 <GET-FN1-FROM-CHAN .INCHAN>>
+  <SET FN2 <GET-FN2-FROM-CHAN .INCHAN>>
+  ;"INDENT is number of leading spaces to print for lines /wo leading crefs."
+  <SET INDENT <COND (.PRINT-FNS? 19) (11)>>  
+  <CRLF .OUTCHAN>                            
+  <CRLF .OUTCHAN>
+  ;"Print the title page."
+  <PRINTSTRING "Muddle Atsign Listing for " .OUTCHAN>
+  <PRINTSTRING <UNAME> .OUTCHAN>
+  <CRLF .OUTCHAN>
+  <CRLF .OUTCHAN>
+  <COND (<N=? ,TITLE1 "FOO"> ;"If titles given, use them."
+	 <BIGPRINT ,TITLE1
+                   <COND (<AND <LENGTH? ,TITLE1 4> <LENGTH? ,TITLE2 4>> 3) (2)>
+                   .OUTCHAN>  
+         <CRLF .OUTCHAN>           
+	 <CRLF .OUTCHAN>           
+	 <BIGPRINT ,TITLE2 
+                   <COND (<AND <LENGTH? ,TITLE1 4> <LENGTH? ,TITLE2 4>> 3) (2)>
+                   .OUTCHAN>)
+        (<BIGPRINT .FN1 ;"Otherwise bigprint fn1 and fn2."
+                   <COND (<AND <LENGTH? .FN1 4> <LENGTH? .FN2 4>> 3) (2)>
+                   .OUTCHAN>
+         <CRLF .OUTCHAN>           
+	 <CRLF .OUTCHAN>
+	 <BIGPRINT .FN2 
+                   <COND (<AND <LENGTH? .FN1 4> <LENGTH? .FN2 4>> 3) (2)>
+                   .OUTCHAN>)>
+  <CRLF .OUTCHAN>
+  <CRLF .OUTCHAN>
+  <PRINTSTRING "Switch settings: " .OUTCHAN>
+  <COND (,CROSS-REFERENCE? <PRINTSTRING "/C" .OUTCHAN>)>
+  <COND (,SEPARATE-TABLES? <PRINTSTRING "/U" .OUTCHAN>)>
+  <COND (,SYMBOL-TABLE-ONLY? <PRINTSTRING "/N" .OUTCHAN>)>
+  <COND (<GASSIGNED? TITLE1> <PRINTSTRING "/T" .OUTCHAN>)>
+  <COND (,SEPARATE-FILES? <PRINTSTRING "/S" .OUTCHAN>)>
+  <COND (,PRINT-MESSAGE? <PRINTSTRING "/Q" .OUTCHAN>)>
+  <COND (<N==? .PAGE-WIDTH 90> <PRINTSTRING "/P" .OUTCHAN>)>
+  <CRLF .OUTCHAN>
+  <COND (.PRINT-FNS?
+	 <SET CURRENT-LINE-LENGTH 0>
+	 <PRINTSTRING "Input Files: " .OUTCHAN>
+	 <REPEAT ((FILE-LIST ,FILE-LIST))
+	   #DECL ((FILE-LIST) <LIST [REST STRING]>)
+	   <COND (<EMPTY? .FILE-LIST> <RETURN>)
+		 (<==? .CURRENT-LINE-LENGTH 4>
+		  <CRLF .OUTCHAN>
+		  <PRINTSTRING "             " .OUTCHAN>
+                  <SET CURRENT-LINE-LENGTH 0>)
+		 (<SET CURRENT-LINE-LENGTH <+ .CURRENT-LINE-LENGTH 1>>
+		  <PRINTSTRING <1 .FILE-LIST>
+			       .OUTCHAN
+			       <OR <LENGTH? <1 .FILE-LIST> 16> 16>>
+                  <PRINTSTRING .BLANKSPACE .OUTCHAN 4>
+                  <SET FILE-LIST <REST .FILE-LIST>>)>>)>
+  <PRINC ,NEWPAGE .OUTCHAN>
+  ;"If subtitles given, print table of contents."
+  <COND
+   (<NOT <EMPTY? ,SUBTITLES>>
+    <CRLF .OUTCHAN>
+    <PRINTSTRING "Table of Contents" .OUTCHAN>
+    <PRINTSTRING .BLANKSPACE .OUTCHAN <- .PAGE-WIDTH 14 <LENGTH .FILENAME>>>
+    <PRINTSTRING .FILENAME .OUTCHAN>
+    <CRLF .OUTCHAN>
+    <CRLF .OUTCHAN>
+    <SET RELATIVE-LINE 1>
+    <REPEAT ((SUBTITLES ,SUBTITLES))
+      #DECL ((SUBTITLES) <LIST [REST STRING FIX STRING]>)
+      <COND (<EMPTY? .SUBTITLES> <RETURN>)
+	    (<G? .RELATIVE-LINE .PAGE-LENGTH>
+	     <PRINC ,NEWPAGE .OUTCHAN>
+	     <CRLF .OUTCHAN>
+	     <PRINTSTRING .BLANKSPACE
+			  .OUTCHAN
+			  <- </ .PAGE-WIDTH 2> 9>>
+	     <PRINTSTRING "Table of Contents" .OUTCHAN>
+	     <CRLF .OUTCHAN>
+	     <CRLF .OUTCHAN>
+	     <SET RELATIVE-LINE 1>)>
+      <PRINTSTRING <3 .SUBTITLES> .OUTCHAN>
+      <PRINTSTRING <ISTRING <- .PAGE-WIDTH
+			       <LENGTH <3 .SUBTITLES>>
+			       <LENGTH <1 .SUBTITLES>>
+			       10>
+			    !\. >
+		   .OUTCHAN>
+      <COND (.PRINT-FNS?
+	     <COND (<LENGTH? <1 .SUBTITLES> 6>
+		    <SET CURRENT-LINE-LENGTH
+			 <LENGTH <SET MINIBUFFER <1 .SUBTITLES>>>>
+                    <PRINTSTRING .MINIBUFFER .OUTCHAN>
+		    <PRINTSTRING .BLANKSPACE
+				 .OUTCHAN
+				 <+ .CURRENT-LINE-LENGTH 1>>)
+		    (<PRINTSTRING <1 .SUBTITLES> .OUTCHAN>
+		     <PRINTSTRING .BLANKSPACE .OUTCHAN 1>)>)>
+      <PRINC <2 .SUBTITLES> .OUTCHAN>
+      <CRLF .OUTCHAN>
+      <SET RELATIVE-LINE <+ .RELATIVE-LINE 1>>
+      <SET SUBTITLES <REST .SUBTITLES 3>>>
+      <PRINC ,NEWPAGE .OUTCHAN>)>
+      ;"Initialize for repeat loop below."
+      <SET ABSOLUTE-LINE 1>   
+      <SET RELATIVE-LINE 1>
+      <SET ABSOLUTE-PAGE 1>
+      <SET RELATIVE-PAGE 0>
+      <SET EOF? <>>
+      <COND (<AND <NOT <EMPTY? ,SUBTITLES>>
+		  <==? <2 ,SUBTITLES> .ABSOLUTE-PAGE>
+		  <=? <1 ,SUBTITLES> .FN1>>
+	     <SET CURRENT-SUBTITLE <3 ,SUBTITLES>>
+	     <SETG SUBTITLES <REST ,SUBTITLES 3>>)
+	    (<SET CURRENT-SUBTITLE "">)>
+      <COND (<AND <NOT <EMPTY? ,CREFS>>
+		  <==? <2 ,CREFS> .ABSOLUTE-PAGE>
+		  <=? <1 ,CREFS> .FN1>>
+	     <SET NEXT-CREF <3 ,CREFS>>)
+	    (<SET NEXT-CREF -1>)>
+      <CRLF .OUTCHAN>
+      <PRINTSTRING .FILENAME .OUTCHAN>
+      <PRINTSTRING .BLANKSPACE .OUTCHAN <- .PAGE-WIDTH <LENGTH .FILENAME> 4>>
+      <PRINTSTRING "Page " .OUTCHAN>
+      <PRINT-PAGE-NUMBER 1 0 .OUTCHAN>
+      <CRLF .OUTCHAN>
+      <REPEAT ()  ;"Print the body of the record file."
+        <COND (.EOF? <PRINC ,NEWPAGE .OUTCHAN> <RETURN>)>
+	<PRINT-NUMBER-WITH-ZEROES .ABSOLUTE-LINE .OUTCHAN>  ;"Print line nmbr."
+	<PRINTSTRING .BLANKSPACE .OUTCHAN 1>
+        ;"If there's a leading cref for this line, print it. Else print spaces"
+	<COND (<==? .NEXT-CREF .ABSOLUTE-LINE>  
+	       <COND (<EMPTY? <GET-DFN <4 ,CREFS>>>
+                      ;"If cref is undefined, print spaces."
+		      <PRINTSTRING .BLANKSPACE .OUTCHAN .INDENT>)
+		     (ELSE
+		      <COND (.PRINT-FNS?  ;"Print fn if appropriate."
+			     <PRINTSTRING .BLANKSPACE .OUTCHAN 1>
+			     <COND ;"Fn must be 6 chars or less."
+			      (<LENGTH? <1 <GET-DFN <4 ,CREFS>>> 6>
+                               <SET CURRENT-LINE-LENGTH
+                                    <LENGTH <SET MINIBUFFER
+						 <1 <GET-DFN <4 ,CREFS>>>>>>
+                	       <PRINTSTRING .MINIBUFFER .OUTCHAN>
+	                       <PRINTSTRING .BLANKSPACE
+                                            .OUTCHAN
+                                            <- 7 .CURRENT-LINE-LENGTH>>)
+                	      (<PRINTSTRING .MINIBUFFER .OUTCHAN 6>
+	                       <PRINTSTRING .BLANKSPACE .OUTCHAN 1>)>)>
+                      ;"Print page and line of cref's definition."
+	              <PRINT-NUMBER-WITH-ZEROES <2 <GET-DFN <4 ,CREFS>>>
+                                                .OUTCHAN>
+		      <PRINTSTRING .BLANKSPACE .OUTCHAN 1>
+		      <PRINT-NUMBER-WITH-ZEROES <3 <GET-DFN <4 ,CREFS>>>
+                                                .OUTCHAN>
+		      <PRINTSTRING .BLANKSPACE .OUTCHAN 2>)>
+                      ;"Set up for next leading cref."
+		      <SETG CREFS <REST ,CREFS 4>>
+		      <COND (<AND <NOT <EMPTY? ,CREFS>>
+				  <==? <2 ,CREFS> .ABSOLUTE-PAGE>
+				  <=? <1 ,CREFS> .FN1>>
+			     <SET NEXT-CREF <3 ,CREFS>>)
+			    (<SET NEXT-CREF -1>)>)
+            (<PRINTSTRING .BLANKSPACE .OUTCHAN .INDENT>)>
+      <SET CURRENT-LINE-LENGTH  ;"Read a line from file."
+	   <READSTRING .LINE-BUFFER
+		       .INCHAN
+		       ,LINEFEED&NEWPAGE
+		       '<SET EOF? T>>>
+      <PRINTSTRING .LINE-BUFFER .OUTCHAN .CURRENT-LINE-LENGTH> ;"Print line."
+      <PRINC ,LINEFEED .OUTCHAN>
+        ;"If number of lines exceeds page length or if newpage char was printed
+        this line, then print newpage heading and set counters accordingly."
+      <COND (<==? <OR .EOF? <READCHR .INCHAN '<SET EOF? T>>> ,NEWPAGE>
+	     <CRLF .OUTCHAN>
+	     <COND (,PRINT-MESSAGE? <PRINTSTRING ,MESSAGE .OUTCHAN>)>
+	     <PRINC ,NEWPAGE .OUTCHAN>
+	     <SET RELATIVE-LINE 1>
+	     <SET ABSOLUTE-LINE 1>
+	     <SET RELATIVE-PAGE 0>
+	     <SET ABSOLUTE-PAGE <+ .ABSOLUTE-PAGE 1>>
+	     <COND (<AND <NOT <EMPTY? ,SUBTITLES>>
+			 <==? <2 ,SUBTITLES> .ABSOLUTE-PAGE>
+			 <=? <1 ,SUBTITLES> .FN1>>
+		    <SET CURRENT-SUBTITLE <3 ,SUBTITLES>>
+		    <SETG SUBTITLES <REST ,SUBTITLES 3>>)>
+	     <COND (<AND <NOT <EMPTY? ,CREFS>>
+			 <==? <2 ,CREFS> .ABSOLUTE-PAGE>
+			 <=? <1 ,CREFS> .FN1>>
+		    <SET NEXT-CREF <3 ,CREFS>>)
+		   (<SET NEXT-CREF -1>)>
+	     <CRLF .OUTCHAN>
+	     <PRINTSTRING .FILENAME .OUTCHAN>
+	     <PRINTSTRING .BLANKSPACE
+			  .OUTCHAN
+			  <- .PAGE-WIDTH <LENGTH .FILENAME> 4>>
+	     <PRINTSTRING "Page " .OUTCHAN>
+	     <PRINT-PAGE-NUMBER .ABSOLUTE-PAGE 0 .OUTCHAN>
+	     <CRLF .OUTCHAN>
+	     <PRINTSTRING .CURRENT-SUBTITLE .OUTCHAN>
+	     <CRLF .OUTCHAN>)
+            (<==? .RELATIVE-LINE .PAGE-LENGTH>  
+             <CRLF .OUTCHAN>
+             <COND (,PRINT-MESSAGE? <PRINTSTRING ,MESSAGE .OUTCHAN>)>
+	     <PRINC ,NEWPAGE .OUTCHAN>
+	     <SET RELATIVE-LINE 1>
+	     <SET ABSOLUTE-LINE <+ .ABSOLUTE-LINE 1>>
+	     <SET RELATIVE-PAGE <+ .RELATIVE-PAGE 1>>
+	     <CRLF .OUTCHAN>
+	     <PRINTSTRING .FILENAME .OUTCHAN>
+	     <PRINTSTRING .BLANKSPACE
+			  .OUTCHAN
+			  <- .PAGE-WIDTH <LENGTH .FILENAME> 4>>
+	     <PRINTSTRING "Page " .OUTCHAN>
+	     <PRINT-PAGE-NUMBER .ABSOLUTE-PAGE .RELATIVE-PAGE .OUTCHAN>
+	     <CRLF .OUTCHAN>
+	     <PRINTSTRING .CURRENT-SUBTITLE .OUTCHAN>
+	     <CRLF .OUTCHAN>)
+	    (<SET RELATIVE-LINE <+ .RELATIVE-LINE 1>>
+	     <SET ABSOLUTE-LINE <+ .ABSOLUTE-LINE 1>>)>>
+      ;"Print a symbol table of all symbols defined in this file."
+      <PRINT-SYMBOL-TABLE
+                  .OUTCHAN
+                  .FILENAME
+		  .BLANKSPACE
+		  .PRINT-FNS?
+                  ;"Copy symbols defined in this file from symbol table into
+                    uvector for PRINT-SYMBOL-TABLE."
+		  <MAPF ,UVECTOR
+			<FUNCTION (SYM "AUX" (DFN <GET-DFN .SYM>))
+			  #DECL ((SYM) SYMBOL
+				 (DFN) <LIST [REST STRING FIX FIX]>)
+			  <COND (<==? .SYM ,DUMMY-SYMBOL> <MAPSTOP>)
+				(<OR <EMPTY? .DFN> <N=? <1 .DFN> .FN1>>
+				 <MAPRET>)
+				(.SYM)>>
+			<3 ,SYMBOL-TABLE>>>>
+
+<DEFINE PRINT-SYMBOL-TABLE
+  (OUTCHAN FILENAME BLANKSPACE PRINT-FNS? SYMBOLS
+	   "AUX" MINIBUFFER CURRENT-LINE-LENGTH RELATIVE-LINE
+	         (1/2PAGE-WIDTH </ ,PAGE-WIDTH 2>)
+                 (PAGE-WIDTH ,PAGE-WIDTH)
+		 (PAGE-LENGTH ,PAGE-LENGTH))
+  #DECL ((OUTCHAN) CHANNEL (FILENAME MINIBUFFER BLANKSPACE) STRING
+	 (PRINT-FNS?) <OR ATOM FALSE> (SYMBOLS) <UVECTOR [REST SYMBOL]>
+	 (PAGE-LENGTH 1/2PAGE-WIDTH CURRENT-LINE-LENGTH PAGE-WIDTH
+		     RELATIVE-LINE) FIX)
+<COND
+ (<EMPTY? .SYMBOLS>)
+ (<CRLF .OUTCHAN>
+  <PRINTSTRING "Symbol Table" .OUTCHAN>
+  <PRINTSTRING .BLANKSPACE .OUTCHAN <- .PAGE-WIDTH 12 <LENGTH .FILENAME>>>
+  <PRINTSTRING .FILENAME .OUTCHAN>
+  <CRLF .OUTCHAN>
+  <CRLF .OUTCHAN>
+  <SET RELATIVE-LINE 1>
+  ;"Print symbol information in double columns. The following format is used:
+    <symbol1 name> <dfn location> <type>  <symbol2 name> <dfn location> <type>.
+    Dfn location is either <fn page line> or <page line> depending on
+    PRINT-FNS?. Symbol names are alloted as much space as possible and 
+    truncated if necessary."
+  <REPEAT (SYM  (EOL? <>)
+		(PNAME-WIDTH <COND (.PRINT-FNS? <- .1/2PAGE-WIDTH 39>)
+				   (<- .1/2PAGE-WIDTH 32>)>))
+    #DECL ((SYM) SYMBOL (PNAME-WIDTH) FIX
+		 (EOL?) <OR ATOM FALSE>)
+    <COND (<OR <EMPTY? .SYMBOLS> <==? <SET SYM <1 .SYMBOLS>> ,DUMMY-SYMBOL>>
+	   <PRINC ,NEWPAGE .OUTCHAN>
+	   <RETURN>)
+	  (<G? .RELATIVE-LINE .PAGE-LENGTH> ;"Then print newpage heading,"
+	   <CRLF .OUTCHAN>                     ;"and reset counter."
+	   <PRINC ,NEWPAGE .OUTCHAN>
+           <CRLF .OUTCHAN>
+	   <PRINTSTRING "Symbol Table" .OUTCHAN>
+           <PRINTSTRING .BLANKSPACE
+                        .OUTCHAN
+                        <- .PAGE-WIDTH 12 <LENGTH .FILENAME>>>
+           <PRINTSTRING .FILENAME .OUTCHAN>
+	   <CRLF .OUTCHAN>
+	   <CRLF .OUTCHAN>
+	   <SET EOL? <>>
+	   <SET RELATIVE-LINE 1>)>
+    <SET CURRENT-LINE-LENGTH <LENGTH <SET MINIBUFFER <GET-PNAME .SYM>>>>
+    ;"Print symbol name."
+    <COND (<L=? .CURRENT-LINE-LENGTH .PNAME-WIDTH> 
+	   <PRINTSTRING .MINIBUFFER .OUTCHAN>
+	   <PRINTSTRING .BLANKSPACE
+			.OUTCHAN
+			<- .PNAME-WIDTH .CURRENT-LINE-LENGTH -2>>)
+	  (<PRINTSTRING .MINIBUFFER .OUTCHAN .PNAME-WIDTH>
+	   <PRINTSTRING .BLANKSPACE .OUTCHAN 2>)>
+    ;"Print location of symbol dfn."
+    <COND (<EMPTY? <GET-DFN .SYM>>  ;"If undefined, print zeroes for dfn."
+	   <COND (.PRINT-FNS?
+		  <PRINTSTRING "       0000 0000 " .OUTCHAN>)
+		 (<PRINTSTRING "0000 0000 " .OUTCHAN>)>)
+	  (ELSE
+	   <COND
+	    (.PRINT-FNS?     ;"Print fn of sym dfn if appropriate: =<6 chars."
+	     <SET CURRENT-LINE-LENGTH
+		  <LENGTH <SET MINIBUFFER <1 <GET-DFN .SYM>>>>>
+	     <COND (<L=? .CURRENT-LINE-LENGTH 6>
+		    <PRINTSTRING .MINIBUFFER .OUTCHAN>
+		    <PRINTSTRING .BLANKSPACE
+				 .OUTCHAN
+				 <- 7 .CURRENT-LINE-LENGTH>>)
+		   (<PRINTSTRING .MINIBUFFER .OUTCHAN 6>
+		    <PRINTSTRING .BLANKSPACE .OUTCHAN 1>)>)>
+	   <PRINT-NUMBER-WITH-ZEROES <2 <GET-DFN .SYM>>  ;"Print page of dfn."
+                                     .OUTCHAN>
+ 	   <PRINTSTRING .BLANKSPACE .OUTCHAN 1>
+	   <PRINT-NUMBER-WITH-ZEROES <3 <GET-DFN .SYM>>  ;"Print line of dfn."
+                                     .OUTCHAN>
+	   <PRINTSTRING .BLANKSPACE .OUTCHAN 2>)>
+    ;"Print symbol's type. Type list can contain 0, 1, or 2 elements."
+    <COND (<EMPTY? <GET-TYPE .SYM>> 
+	   <PRINTSTRING "Undefined" .OUTCHAN>
+	   <PRINTSTRING .BLANKSPACE .OUTCHAN 11>)
+	  (<LENGTH? <GET-TYPE .SYM> 1>
+	   <SET CURRENT-LINE-LENGTH
+		<LENGTH <SET MINIBUFFER <1 <GET-TYPE .SYM>>>>>
+	   <PRINTSTRING .MINIBUFFER .OUTCHAN>
+	   <PRINTSTRING .BLANKSPACE .OUTCHAN <- 19 .CURRENT-LINE-LENGTH>>)
+	  (<SET CURRENT-LINE-LENGTH
+		<LENGTH <SET MINIBUFFER <1 <GET-TYPE .SYM>>>>>
+	   <PRINTSTRING  .MINIBUFFER .OUTCHAN>
+	   <PRINTSTRING .BLANKSPACE .OUTCHAN 1>
+	   <SET CURRENT-LINE-LENGTH
+		<+ .CURRENT-LINE-LENGTH
+		   <LENGTH <SET MINIBUFFER <2 <GET-TYPE .SYM>>>>
+		   1>>
+	   <PRINTSTRING .MINIBUFFER .OUTCHAN>
+	   <PRINTSTRING .BLANKSPACE .OUTCHAN <- 19 .CURRENT-LINE-LENGTH>>)>
+    <SET SYMBOLS <REST .SYMBOLS>>
+    <COND (.EOL?   ;"If we have done two symbols, crlf, and set eol false."
+	   <SET EOL? <>>  ;"Else set eol true."
+	   <CRLF .OUTCHAN>
+	   <SET RELATIVE-LINE <+ .RELATIVE-LINE 1>>)
+	  (<SET EOL? T>)>>)>> 
+
+
+<DEFINE PRINT-CREF-LISTING
+  (OUTCHAN FILENAME BLANKSPACE PRINT-FNS?
+           "AUX" (SYMBOLS <3 ,SYMBOL-TABLE>) MINIBUFFER CURRENT-LINE-LENGTH
+                 RELATIVE-LINE (PAGE-WIDTH ,PAGE-WIDTH)
+                 (PAGE-LENGTH ,PAGE-LENGTH)
+                 (TYPES <VECTOR "Function" "F " "Gdecl" "D " "Gval" "G " 
+                                 "ManifestGval" "MG" "Macro" "M " "Type" "T "
+                                 "Manifest" "M ">))
+  #DECL ((OUTCHAN) CHANNEL (FILENAME BLANKSPACE MINIBUFFER) STRING
+	 (SYMBOLS) <UVECTOR [REST SYMBOL]> (TYPES) <VECTOR [REST STRING]>
+         (CURRENT-LINE-LENGTH PAGE-WIDTH PAGE-LENGTH RELATIVE-LINE) FIX)
+  ;"Cref listing has following format:
+    <symbol name> <type> <dfn location>
+       <r1> <refname1> <where> <where> <where> ...
+       <r2> <refname2> <where> <where> <where> ...
+                    .......
+       <rn> <refnamen> <where> <where> <where> ...
+   
+     The first line contains information related to creffed symbol. The
+     remaining lines specify where references to symbol name occurred.
+     Symbol name is printed in full. r1...rn are abbreviations (0, 1, 2 chars)
+     for types of refname1...refnamen. Refname1...refnamen are names of
+     of forms in which reference to symbol name occurred. Refnames are limited
+     to fifteen chars.These are followed by the location of the references to 
+     symbol name (fn if appropriate, page, and line)."
+  <CRLF .OUTCHAN>
+  <PRINTSTRING "Cross Reference Listing" .OUTCHAN>
+  <PRINTSTRING .BLANKSPACE .OUTCHAN <- .PAGE-WIDTH 23 <LENGTH .FILENAME>>>
+  <PRINTSTRING .FILENAME .OUTCHAN>
+  <CRLF .OUTCHAN>
+  <CRLF .OUTCHAN>
+  <SET RELATIVE-LINE 1>
+  <REPEAT (SYM)
+    #DECL ((SYM) SYMBOL)
+    <COND (<OR <EMPTY? .SYMBOLS>
+	       <==? <SET SYM <1 .SYMBOLS>> ,DUMMY-SYMBOL>>
+	   <PRINC ,NEWPAGE .OUTCHAN>
+	   <RETURN>)>
+    <SET SYMBOLS <REST .SYMBOLS>>
+    <COND (<G? .RELATIVE-LINE .PAGE-LENGTH> ;"If line cnt exceeds page length,"
+	   <PRINC ,NEWPAGE .OUTCHAN>        ;"then print new page heading."
+	   <CRLF .OUTCHAN>
+	   <PRINTSTRING "Cross Reference Listing" .OUTCHAN>
+           <PRINTSTRING .BLANKSPACE
+                        .OUTCHAN
+                        <- .PAGE-WIDTH 23 <LENGTH .FILENAME>>>
+           <PRINTSTRING .FILENAME .OUTCHAN>
+	   <CRLF .OUTCHAN>
+	   <CRLF .OUTCHAN>
+	   <SET RELATIVE-LINE 1>)>
+    <PRINTSTRING <GET-PNAME .SYM> .OUTCHAN> ;"Print current symbol's pname."
+    <PRINTSTRING .BLANKSPACE .OUTCHAN 4>
+    <COND (<EMPTY? <GET-TYPE .SYM>>)        ;"Print its type."
+	  (<LENGTH? <GET-TYPE .SYM> 1>
+	   <PRINTSTRING <1 <GET-TYPE .SYM>> .OUTCHAN>)
+	  (<PRINTSTRING <1 <GET-TYPE .SYM>> .OUTCHAN>
+	   <PRINTSTRING .BLANKSPACE .OUTCHAN 1>
+	   <PRINTSTRING <2 <GET-TYPE .SYM>> .OUTCHAN>)>
+    <PRINTSTRING .BLANKSPACE .OUTCHAN 1>
+    <COND (<EMPTY? <GET-DFN .SYM>>          ;"And print location of its dfn."
+	   <PRINTSTRING  "Undefined   0000 0000" .OUTCHAN>)
+	  (ELSE
+	   <COND (.PRINT-FNS?
+		  <PRINTSTRING <1 <GET-DFN .SYM>> .OUTCHAN>
+		  <PRINTSTRING .BLANKSPACE .OUTCHAN 1>)>
+	   <PRINT-NUMBER-WITH-ZEROES <2 <GET-DFN .SYM>> .OUTCHAN>
+	   <PRINTSTRING .BLANKSPACE .OUTCHAN 1>
+	   <PRINT-NUMBER-WITH-ZEROES <3 <GET-DFN .SYM>> .OUTCHAN>)>
+    <CRLF .OUTCHAN>
+    <SET RELATIVE-LINE <+ .RELATIVE-LINE 1>>
+    ;"Print current symbol's references."
+    <REPEAT ((CREFS <GET-CREFS .SYM>) CURRENT-CREF PAGES&LINES)
+      #DECL ((CREFS) <LIST [REST SYMBOL <LIST [REST FIX]>]>
+	     (CURRENT-CREF) SYMBOL (PAGES&LINES) <LIST [REST FIX]>)
+      <COND (<EMPTY? .CREFS> <RETURN>)
+	    (<SET CURRENT-CREF <1 .CREFS>>
+	     <SET PAGES&LINES <2 .CREFS>>
+	     <SET CREFS <REST .CREFS 2>>)>
+      <COND (<G? .RELATIVE-LINE .PAGE-LENGTH>
+             <PRINC ,NEWPAGE .OUTCHAN>
+             <CRLF .OUTCHAN>
+             <PRINTSTRING "Cross Reference Listing" .OUTCHAN>
+             <PRINTSTRING .BLANKSPACE
+                          .OUTCHAN
+                          <- .PAGE-WIDTH 23 <LENGTH .FILENAME>>>
+             <PRINTSTRING .FILENAME .OUTCHAN>
+             <CRLF .OUTCHAN>
+             <CRLF .OUTCHAN>
+             <SET RELATIVE-LINE 1>)>
+      <PRINTSTRING .BLANKSPACE .OUTCHAN 5>
+      ;"Print current cref's type abbreviation and name."
+      <COND (<EMPTY? <GET-TYPE .CURRENT-CREF>>
+	     <PRINTSTRING .BLANKSPACE .OUTCHAN 3>)
+	    (<==? <LENGTH <GET-TYPE .CURRENT-CREF>> 2>
+	     <PRINTSTRING "GG" .OUTCHAN>)
+	    (<PRINTSTRING <2 <MEMBER <1 <GET-TYPE .CURRENT-CREF>> .TYPES>>
+			  .OUTCHAN>
+	     <PRINTSTRING .BLANKSPACE .OUTCHAN 1>)>     
+      <PRINTSTRING .BLANKSPACE .OUTCHAN 3>
+      <COND (<L=? <SET CURRENT-LINE-LENGTH
+		       <LENGTH <SET MINIBUFFER
+				    <GET-PNAME .CURRENT-CREF>>>> 15>
+	     <PRINTSTRING .MINIBUFFER .OUTCHAN>
+	     <PRINTSTRING .BLANKSPACE .OUTCHAN <- 17 .CURRENT-LINE-LENGTH>>)
+	    (<PRINTSTRING .MINIBUFFER .OUTCHAN 15>
+	     <PRINTSTRING .BLANKSPACE .OUTCHAN 2>)>
+      <COND
+       (.PRINT-FNS?
+	<COND   ;"Set up for printing references."
+	 (<L=? <SET CURRENT-LINE-LENGTH
+		    <LENGTH <SET MINIBUFFER <1 <GET-DFN .CURRENT-CREF>>>>> 6>
+          <PRINTSTRING .MINIBUFFER .OUTCHAN>
+	  <PRINTSTRING .BLANKSPACE .OUTCHAN <- 8 .CURRENT-LINE-LENGTH>>)
+	 (<PRINTSTRING .MINIBUFFER .OUTCHAN 6>
+	  <PRINTSTRING .BLANKSPACE .OUTCHAN 2>)>
+        <SET CURRENT-LINE-LENGTH 36>)
+       (<SET CURRENT-LINE-LENGTH 28>)>
+      ;"Print references, don't overflow page, and print new page if necessary"
+      <REPEAT () 
+        <COND (<EMPTY? .PAGES&LINES>
+               <SET RELATIVE-LINE <+ .RELATIVE-LINE 1>>
+               <CRLF .OUTCHAN>
+               <RETURN>)
+              (<G? .RELATIVE-LINE .PAGE-LENGTH>
+               ;"Print new page heading and indent for continuation."
+               <PRINC ,NEWPAGE .OUTCHAN>
+               <CRLF .OUTCHAN>
+               <PRINTSTRING "Cross Reference Listing" .OUTCHAN>
+               <PRINTSTRING .BLANKSPACE
+                            .OUTCHAN
+                            <- .PAGE-WIDTH 23 <LENGTH .FILENAME>>>
+               <PRINTSTRING .FILENAME .OUTCHAN>
+               <CRLF .OUTCHAN>
+               <CRLF .OUTCHAN>
+               <COND (.PRINT-FNS?
+                      <PRINTSTRING .BLANKSPACE
+                                   .OUTCHAN
+                                   <SET CURRENT-LINE-LENGTH 36>>)
+                     (<PRINTSTRING .BLANKSPACE
+                                   .OUTCHAN
+                                   <SET CURRENT-LINE-LENGTH 28>>)>
+               <SET RELATIVE-LINE 1>)
+              (<G=? .CURRENT-LINE-LENGTH .PAGE-WIDTH>
+               ;"If page-width exceeded, crlf and indent for continuation."
+               <CRLF .OUTCHAN>
+               <SET RELATIVE-LINE <+ .RELATIVE-LINE 1>>
+               <COND (.PRINT-FNS?  ;"Print fn of reference if appropriate."
+                      <PRINTSTRING .BLANKSPACE
+                                   .OUTCHAN
+                                   <SET CURRENT-LINE-LENGTH 36>>)
+                     (<PRINTSTRING .BLANKSPACE
+                                   .OUTCHAN
+                                   <SET CURRENT-LINE-LENGTH 28>>)>)>
+        <PRINT-NUMBER-WITH-ZEROES <1 .PAGES&LINES>   ;"Print page of ref."
+                                  .OUTCHAN>
+        <PRINTSTRING .BLANKSPACE .OUTCHAN 1>
+        <PRINT-NUMBER-WITH-ZEROES <2 .PAGES&LINES>   ;"Print line of ref."
+                                  .OUTCHAN>
+        <PRINTSTRING .BLANKSPACE .OUTCHAN 3>
+        <SET PAGES&LINES <REST .PAGES&LINES 2>>
+        <SET CURRENT-LINE-LENGTH
+             <+ .CURRENT-LINE-LENGTH 12>>>>>>
+	 
+
+"SUBTITLE Miscellaneous Hacks - First Pass"
+
+<DEFINE GET-FILENAMES-FROM-FILE (FILENAME "AUX" FILE-LIST BUF)
+ ;"Reads a file containing filenames of files to be creffed. Fns are
+   separated by commas or carriage returns. Fns are added to global file list."
+  #DECL ((FILE-LIST) LIST (FILENAME) STRING (BUF) FILE-BUFFER)
+ <COND (<FILE-EXISTS? .FILENAME>
+        <SET BUF <MAKE-FILE-BUFFER <ISTRING 80 !\@ > <OPEN "READ" .FILENAME>>>)
+       (<ERROR "Input filenames file not found." .FILENAME>)>
+  <FILL-BUFFER .BUF>
+  <SET FILE-LIST       
+       <MAPF ,LIST     
+	     <FUNCTION ("AUX" (STOP-CHARS <STRING !\, <ASCII 13>>))
+               #DECL ((STOP-CHARS) STRING)
+               <SKIP-FILE-SEPARATORS .BUF>
+               <COND (<AND <EOF? .BUF> <BUFFER-EMPTY? .BUF>>
+                      <MAPSTOP>)
+                     (<MAPF ,STRING
+                            <FUNCTION (CHAR)
+                              #DECL ((CHAR) CHARACTER)
+                              <AND <BUFFER-EMPTY? .BUF> <MAPSTOP>>
+                              <PUT .BUF 1 <+ <1 .BUF> 1>>
+                              <AND <MEMQ .CHAR .STOP-CHARS>
+                                   <MAPSTOP>>
+                              .CHAR>
+                            <REST <3 .BUF> <- <1 .BUF> 1>>>)>>>>
+  <COND (<EMPTY? ,FILE-LIST>
+         <SETG FILE-LIST .FILE-LIST>)
+        (<PUTREST <REST ,FILE-LIST <- <LENGTH ,FILE-LIST> 1>>
+                  .FILE-LIST>)>>
+
+<DEFINE SKIP-COMMENT (BUF "AUX" OPEN-CHARACTER CLOSE-CHARACTER)
+  ;"If comment is single word, skips to next pname break. If comment starts
+    with bracket, skips to matching bracket. If comment starts with double
+    quote, then skip string."
+  #DECL ((BUF) FILE-BUFFER (OPEN-CHARACTER CLOSE-CHARACTER) CHARACTER)
+  <SKIP-FILE-SEPARATORS .BUF>
+  <SET OPEN-CHARACTER <READCHR-BUFFER .BUF>>
+  <SET CLOSE-CHARACTER <GET-MATCHING-BRACKET .OPEN-CHARACTER>>
+  <COND
+    (<==? .CLOSE-CHARACTER !\  > <SKIP-TO-NEXT-IN-FILE .BUF ,BREAK-CHARS1>)
+    (<==? .OPEN-CHARACTER !\" > <SKIP-STRING .BUF>)
+    ;"Find matching close bracket by incrementing/decrementing comment
+      nesting when open/close char seen. Exit on 0 nesting. Watch out
+      for backslash (skip following char if backslash seen.)."
+    (<REPEAT
+       ((COMMENT-NESTING 1) CURRENT-CHARACTER
+        (STOP-CHARS <STRING .CLOSE-CHARACTER .OPEN-CHARACTER !\" ,BACKSLASH>))
+       #DECL ((COMMENT-NESTING) FIX (CURRENT-CHARACTER) CHARACTER
+              (STOP-CHARS) STRING)
+      <SKIP-TO-NEXT-IN-FILE .BUF .STOP-CHARS>
+      <COND (<==? <SET CURRENT-CHARACTER <READCHR-BUFFER .BUF>>
+                  .CLOSE-CHARACTER>
+	     <SET COMMENT-NESTING <- .COMMENT-NESTING 1>>)
+            (<==? .CURRENT-CHARACTER .OPEN-CHARACTER>      
+             <SET COMMENT-NESTING <+ .COMMENT-NESTING 1>>)
+	    (<==? .CURRENT-CHARACTER ,BACKSLASH>
+	     <PUT .BUF 1 <+ <1 .BUF> 1>>)
+            (<SKIP-STRING .BUF>)>
+      <COND (<0? .COMMENT-NESTING> <RETURN>)>>)>>
+
+
+<DEFINE GET-MATCHING-BRACKET (OPEN-BRACKET)
+  ;"Returns close bracket (char) which matches argument or blank if
+    argument is not an open bracket."
+  #DECL ((OPEN-BRACKET) CHARACTER)
+  <COND (<==? .OPEN-BRACKET !\" > !\" )
+        (<==? .OPEN-BRACKET !\<> !\> )
+        (<==? .OPEN-BRACKET !\( > !\) ) 
+        (<==? .OPEN-BRACKET !\[ > !\] )
+        (<==? .OPEN-BRACKET !\{ > !\} )
+        (!\  )>>
+
+
+
+<DEFINE SKIP-STRING (BUF)
+  ;"Skips to next double quote. Looks for newpage char and subtitles."
+  #DECL ((BUF) FILE-BUFFER)
+  <SKIP-FILE-SEPARATORS .BUF>
+  <COND (<==? <NEXTCHR-BUFFER .BUF> ,NEWPAGE>
+	 <PUT .BUF 1 <+ <1 .BUF> 1>>
+	 <AND <BUFFER-EMPTY? .BUF> <FILL-BUFFER .BUF>>
+	 <PUT <PUT .BUF 5 <+ <5 .BUF> 1>> 4 1>)             
+        (<MEMBER <GET-STRING-FROM-F-BUFFER .BUF <STRING ,SEPARATORS !\" >>
+			("SUBTITLE" "Subtitle" "subtitle")>
+	 <SKIP-FILE-SEPARATORS .BUF>
+         <COND (<AND <==? <1 ,SUBTITLES-TAIL> <GET-FN1-FROM-BUF .BUF>>
+		     <==? <2 ,SUBTITLES-TAIL> <5 .BUF>>>)
+	       (<PUTREST <REST ,SUBTITLES-TAIL 2>
+			 <SETG SUBTITLES-TAIL
+			       (<GET-FN1-FROM-BUF .BUF>
+			        <5 .BUF>
+			        <GET-STRING-FROM-F-BUFFER .BUF
+                                                          <STRING !\" >>)>>
+                <COND (<G? <LENGTH <3 ,SUBTITLES-TAIL>> ,PAGE-WIDTH>
+                       <ERROR "SUBTITLE too long?"
+                              <1 ,SUBTITLES-TAIL>
+                              <3 ,SUBTITLES-TAIL>>)>)>)>
+  <REPEAT () ;"Find double quote ending string."
+	   <SKIP-TO-NEXT-IN-FILE .BUF <STRING ,BACKSLASH !\" >>
+	   <COND (<==? <READCHR-BUFFER .BUF> !\" > <RETURN>)
+		 (<PUT .BUF 1 <+ <1 .BUF> 1>>)>>>
+
+<DEFINE BUILT-IN-OR-NUMBER? ($PNAME)
+  ;"Returns non-false if $PNAME is either number or name of MDL primitive."
+  #DECL (($PNAME) STRING)
+  <OR <MAPF <> <FUNCTION (CHAR)
+		 #DECL ((CHAR) CHARACTER)
+		 <COND (<MEMQ .CHAR "1234567890">)
+		       (<MAPLEAVE <>>)>>
+	    .$PNAME>
+      <LOOKUP .$PNAME <ROOT>>>>
+
+
+"SUBTITLE Miscellaneous Hacks - Second Pass"
+
+<DEFINE PRINT-NUMBER-WITH-ZEROES (NUMBER OUTCHAN)
+  ;"Prints 0001, 0002, etc."
+  #DECL ((NUMBER) FIX (OUTCHAN) CHANNEL)
+  <COND (<L? .NUMBER 10> <PRINTSTRING "000" .OUTCHAN>)
+        (<L? .NUMBER 100> <PRINTSTRING "00" .OUTCHAN>)
+        (<L? .NUMBER 1000> <PRINTSTRING "0" .OUTCHAN>)>
+  <PRINC .NUMBER .OUTCHAN>>
+
+<DEFINE PRINT-PAGE-NUMBER (ABSOLUTE RELATIVE OUTCHAN)
+  ;"Prints 1.10 instead of 1.9999999."
+  #DECL ((ABSOLUTE RELATIVE) FIX (OUTCHAN) CHANNEL)
+  <COND (<0? .RELATIVE>
+         <PRINC .ABSOLUTE .OUTCHAN>)
+        (<PRINC .ABSOLUTE .OUTCHAN>
+         <PRINC !\. .OUTCHAN>
+         <PRINC .RELATIVE .OUTCHAN>)>>
+
+<DEFMAC GET-FN1-FROM-CHAN ('CHAN) <FORM 3 .CHAN>> 
+
+<DEFMAC GET-FN2-FROM-CHAN ('CHAN) <FORM 4 .CHAN>>
+
+<DEFMAC MAKE-FILENAME ('CHAN)
+  ;"Builds filename string from channel information. Site dependent."
+  <FORM STRING <FORM 9 .CHAN> !\: !\<<FORM 10 .CHAN> !\> <FORM 3 .CHAN> !\.
+               <FORM 4 .CHAN>>>
+
+<DEFINE MY-OPEN (FN1 FN2 "AUX" (CHAN <OPEN "PRINT" .FN1 .FN2>))
+  ;"OPENs and returns channel with large width, so I don't have to worry
+    about PRINC formatting."
+  #DECL ((FN1 FN2) STRING (CHAN) <OR FALSE CHANNEL>)
+  <COND (.CHAN <PUT .CHAN 13 500>)
+        (<ERROR "Cannot write record file" .CHAN>)>>
+
+<DEFINE SORT-CREFS (CREFS-LIST "TUPLE" CREFS-TUPLE)
+ ;"Sorts a list of (<sym1> <crefs> <sym2> <crefs>...). Uses sym pnames
+   as keys. Record is 2 elements long (symbol and corresponding location list)"
+  #DECL ((CREFS-LIST) <LIST [REST SYMBOL <LIST [REST FIX]>]>
+	 (CREFS-TUPLE) <TUPLE [REST SYMBOL <LIST [REST FIX]>]>)
+  <SORT <FUNCTION (SYM1 SYM2)   
+	  #DECL ((SYM1 SYM2) SYMBOL)
+	  <G? <STRCOMP <GET-PNAME .SYM1> <GET-PNAME .SYM2>> 0>>
+	.CREFS-TUPLE
+	2>
+  <MAPR <>  ;"Take sorted syms out of tuple and put them into list."
+	<FUNCTION (CLIST CTUPLE)
+          #DECL ((CLIST) <LIST [REST <OR SYMBOL <LIST [REST FIX]>>]>
+                 (CTUPLE) <TUPLE [REST <OR SYMBOL <LIST [REST FIX]>>]>)
+          <PUT .CLIST 1 <1 .CTUPLE>>>
+        .CREFS-LIST
+        .CREFS-TUPLE>>
+
+
+<DEFINE BIGPRINT ;"Prints large letters of variable size."
+  (MESSAGE "OPT" (SIZE 1) (OUTCHAN .OUTCHAN)
+           "AUX" (MESSAGE-TEMPLATE <IVECTOR 7 "">))
+  #DECL ((MESSAGE) STRING (SIZE) FIX (MESSAGE-TEMPLATE) <VECTOR [7 STRING]>
+         (OUTCHAN) CHANNEL)
+  <MAPF <> <FUNCTION (CHAR)
+             #DECL ((CHAR) CHARACTER)
+             <MAPR <> <FUNCTION (M-T C-T)
+			#DECL ((M-T C-T) <VECTOR [REST STRING]>)
+                        <PUT .M-T 1 <STRING <1 .M-T> <ASCII 32> <1 .C-T>>>>
+                   .MESSAGE-TEMPLATE
+                   <COND (<MAPF <> <FUNCTION (L+C-T)
+				     #DECL ((L+C-T) <VECTOR [REST STRING]>)
+                                     <COND (<MEMQ .CHAR <1 .L+C-T>>
+                                            <MAPLEAVE <REST .L+C-T>>)>>
+                                ,CHARACTER-TEMPLATES>)
+			 (,UNDEFINED-CHARACTER-TEMPLATE)>>>
+         .MESSAGE>
+   <MAPF <> <FUNCTION (LINE-TEMPLATE)
+              #DECL ((LINE-TEMPLATE) STRING)
+              <REPEAT ((COUNT 1))
+                #DECL ((COUNT) FIX)
+                <COND (<G? .COUNT .SIZE> <RETURN>)
+                      (<MAPF <> <FUNCTION (CHAR)
+                                  #DECL ((CHAR) CHARACTER)
+                                  <PRINTSTRING <ISTRING .SIZE .CHAR> .OUTCHAN>>
+                             .LINE-TEMPLATE>
+                       <CRLF .OUTCHAN>
+                       <SET COUNT <+ .COUNT 1>>)>>>
+           .MESSAGE-TEMPLATE>>
+
+<ENDPACKAGE>

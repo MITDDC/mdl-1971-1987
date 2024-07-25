@@ -1,0 +1,336 @@
+<PACKAGE "SMMS">    
+
+<USE "BIGPRINT">		       ;"Must USE because .OBLIST is funny when needed."
+ 
+<USE-DEFER "TIMFCN" "ITS" "NOW" "CHARAP">
+ 
+<ENTRY ABSENT?
+       BASE-DATE
+       SM
+       SM-LIST-POST
+       SM-MAIL
+       SM-S
+       SM-TALK
+       STYI-DRY>    
+ 
+<GDECL (SM-S)
+       <UVECTOR [REST ATOM]>
+       (NUM-SM-S BASE-DATE)
+       FIX>
+ 
+<SETG SM-S '![CLR MSB SWG MB PDL ERB EHB JFH AV!]> 
+ 
+<SETG NUM-SM-S <LENGTH ,SM-S>>
+ 
+<SETG BASE-DATE <DAYS 76 8 25>>				       ;"Must remain CLR's day!"
+ 
+<DEFINE SM ("OPTIONAL" (DT <DTNOW>)			      ;"Who is SM at this time?"
+	    "AUX" (D <- <DAYS !<1 <SET DT <DTNORM .DT>>>> ,BASE-DATE>))
+	#DECL ((VALUE) <OR ATOM FALSE> (DT) <LIST LIST> (D) FIX)
+	<NTH ,SM-S <+ 1 <MOD .D ,NUM-SM-S>>>>
+ 
+<DEFINE SM-MAIL ("OPTIONAL"		    ;"COMSYS-mail MSG to SM of given date/time."
+		 (MSG "You are System Manager today.  Please do the tape dump.")
+		 (DT <DTNOW>)
+		 "AUX" (TO <SM .DT>) (C <OPEN "PRINT" "COMSYS;M">)
+			(L (.C)) (O <PUTREST .L .L>))
+	<COND (.TO
+		<AND .C <MAPF <> ,PRINT
+			 ("TO" (<SPNAME .TO>) "FROM" <UNAME> "ACTION-TO" (<SPNAME .TO>)
+			  "TEXT" .MSG "SCHEDULE" '("SENDING" #FALSE ()))
+			 .O>
+			<CLOSE .C>>)>>
+
+'<SETG BASE-DATE <DAYS 75 5 4>						    ;"a Sunday">
+
+'<DEFINE SM ("OPTIONAL" (DT <DTNOW>)			      ;"Who is SM at this time?"
+	    "AUX" (D <- <DAYS !<1 <SET DT <DTNORM .DT>>>> ,BASE-DATE>)
+		  (W <DATE-DOW <1 .DT>>))
+	#DECL ((VALUE) <OR ATOM FALSE> (DT) <LIST LIST> (D W) FIX)
+	<COND (<OR <0? .W> <==? 6 .W>> <>)			 ;"No duty on weekends."
+	      (T
+	       <NTH ,SM-S
+		    <+ 1 <MOD <+ .D -1 </ .D 14> <* -2 </ .D 7>>> ,NUM-SM-S>>>)>> 
+
+'<DEFINE SM-MAIL ("OPTIONAL"		       ;"DDT-mail MSG to SM of given date/time."
+		 (MSG " You are System Manager today.  Please do the tape dump.")
+		 (DT <DTNOW>)
+		 "AUX" (TO <SM .DT>))
+	<COND (.TO
+		<CHARAPPEND!-CHARAP!-PACKAGE <STRING "COM:" <PNAME .TO> " MAIL"> 0 T
+		 .CR!-CHARAP!-PACKAGE "FROM " <UNAME> " ON " <NOW>
+		 .CR!-CHARAP!-PACKAGE .MSG .CR!-CHARAP!-PACKAGE>)>>
+
+<DEFINE SM-LIST-POST ("OPTIONAL" (C <OPEN "PRINT" ".LPTR.;PLEASE POST">) (DT <DTNOW>)
+		      "AUX" S M W Y OUTCHAN (CR <STRING <ASCII 13> <ASCII 10>>)
+			(OBLIST <GET ISMMS OBLIST>))
+	#DECL ((VALUE) <OR LIST FALSE> (C) <OR CHANNEL FALSE> (OBLIST) <SPECIAL OBLIST>
+	       (OUTCHAN) <SPECIAL CHANNEL> (DT) <LIST LIST> (S CR) STRING (M W Y) FIX)
+	<COND (<NOT .C> .C)
+	      (T
+	       <SET OUTCHAN <PUT .C 13 120>>
+	       <SET DT <DTNORM .DT>>
+	       <SET DT <DTNORM ((<1 <1 .DT>> <+ 1 <2 <1 .DT>>> 0) '())>> ;"last of month"
+	       <SET M <+ 2 <2 <1 .DT>>>>	;"month following listing"
+	       <SET Y <1 <1 .DT>>>
+	       <COND (<G? .M 12> <SET M <- .M 12>> <SET Y <+ 1 .Y>>)>
+	       <SET S
+		    <MAPF ,STRING
+			  <FUNCTION ()
+			   <COND (<N==? .M <2 <1 <SET DT <DTADD .DT '((1) (0))>>>>>
+				  <COND (T
+				      <STRING .CR
+					      <NTH '[" SUN" "MON" "TUE" "WED" "THU" "FRI" " SAT"]
+						   <SET W <+ 1 <DATE-DOW <1 .DT>>>>>
+					      !" 
+					      <UNPARSE <3 <1 .DT>>>
+					      !" 
+					      <UNPARSE <SM .DT>>
+					      !" 
+					      <OR <HOLIDAY? <1 .DT>> "">>)
+				     ;(<1? .W> .CR)
+				     ;(<==? 7 .W> "")>)
+				 (T <MAPSTOP>)>>>>
+	       <PRINC <ASCII 12>>
+	       <MAPF <>
+		     #FUNCTION ((TIT) 
+				#DECL ((TIT) STRING)
+				<BIGPRINT <STRING <NTH '["DEC"
+							 "JAN"
+							 "FEB"
+							 "MAR"
+							 "APR"
+							 "MAY"
+							 "JUN"
+							 "JUL"
+							 "AUG"
+							 "SEP"
+							 "OCT"
+							 "NOV"]
+							.M>
+						<ASCII 32>
+						<UNPARSE <COND (<1? .M> <- .Y 1>) (.Y)>>>
+					  2>
+				<TERPRI>
+				<TERPRI>
+				<PRINC "SYSTEM MANAGER LIST FOR ">
+				<PRINC .TIT>
+				<TERPRI>
+				<PRINC .S>
+				<TERPRI>
+				<TERPRI>
+				<TERPRI>
+				<PRINC "
+AV	3-1450	489-2097	
+CLR	3-1439	232-6202	MB	3-1429	646-4229
+EHB	3-1408	275-6496	MSB	3-1420
+ERB	3-1428	663-4358*	PDL	3-1440	646-3063
+JFH	3-1419	933-3490	SWG	3-1418	646-4256
+			* COLLECTî">
+				<PRINC <ASCII 12>>)
+		     '["SECOND-FLOOR ENTRY" "ROOM 214B" "ROOM 221" "ROOM 930"]>
+	       <OR <==? .OUTCHAN ,OUTCHAN> <CLOSE .OUTCHAN>>
+	       .DT)>>   
+
+<DEFINE ABSENT? (SM					       ;"Is this person absent "
+		 DAY							 ;"on this day?"
+		 "AUX" (DT (.DAY '(12)))) 
+	#DECL ((VALUE) <OR 'T FALSE> (SM) ATOM (DAY) <LIST FIX FIX FIX>
+	       (DT) <LIST LIST LIST> (ABSENT-LIST) <LIST [REST VECTOR]>)
+	<COND
+	 (<NOT <ASSIGNED? ABSENT-LIST>>		        ;"If ABSENT-LIST doesn't exist,"
+	  <SET ABSENT-LIST '()>					       ;"initialize it."
+	  <REPEAT (V
+		   AB
+		   (ICH <OPEN "READ" "COM:ABSENT >">)
+		   (OB <GET ISMMS OBLIST>))
+		  #DECL ((V) <OR FALSE <VECTOR LIST [REST ATOM]>>
+			 (AB) <LIST [REST LIST]> (ICH) <OR CHANNEL FALSE> (OB) OBLIST)
+		  <OR .ICH <RETURN>>	  ;"If the ABSENT file isn't there, we're done."
+		  <OR <SET V <READ .ICH <> .OB>> <RETURN>>
+							  ;"At end of file, we're done."
+		  <OR <DECL? .V '<VECTOR LIST [REST ATOM]>> <AGAIN>> ;"Ignore mistakes."
+		  <OR <MAPF <>
+			    #FUNCTION ((EL) 
+				       #DECL ((EL) <OR LIST ATOM>)
+				       <AND <MEMQ .EL ,SM-S> <MAPLEAVE T>>)
+			    .V>
+		      <AGAIN>>
+		       ;"If nobody mentioned in the current object is an SM, forget it."
+		  <SET AB <1 .V>>				    ;"period of absence"
+		  <COND (<EMPTY? .AB>)				     ;"No period is OK."
+			(<LENGTH? .AB 1> <PUT .V 1 <EXPAND-PERIOD <1 .AB>>>)
+				 ;"If it's one day/month/year, expand it to its limits."
+			(<EMPTY? <1 .AB>> <PUT .V 1 <EXPAND-PERIOD <2 .AB>>>)
+			(<EMPTY? <2 .AB>> <PUT .V 1 <EXPAND-PERIOD <1 .AB>>>)
+				      ;"If either limit is empty, expand the other one."
+			(ELSE
+			 <PROG ()
+			       <AND <LENGTH? <1 .AB> 2>
+				    <PUT .AB 1 <1 <EXPAND-PERIOD <1 .AB>>>>>
+			       <AND <LENGTH? <2 .AB> 2>
+				    <PUT .AB 2 <2 <EXPAND-PERIOD <2 .AB>>>>>>)>
+		  <SET ABSENT-LIST (.V !.ABSENT-LIST)>>	   ;"Now CONS it onto the list."
+	  <ABSENT? .SM .DAY>)		        ;"Now ABSENT-LIST is OK; call me again."
+	 (<EMPTY? .ABSENT-LIST> <>)		      ;"If nobody absent, return false."
+	 (<MAPF <>
+		#FUNCTION ((V "AUX" (AB <1 .V>))	     ;"Else look thru the list."
+			   #DECL ((V) <VECTOR LIST [REST ATOM]> (AB) <LIST [REST LIST]>)
+			   <COND (<NOT <MEMQ .SM .V>> <>)
+					      ;"If person not in this element, skip it."
+				 (<EMPTY? .AB> <>)	 ;"If absence is null, skip it."
+				 (<AND <BEFORE? (<1 .AB> '(0)) .DT>
+				       <BEFORE? .DT (<2 .AB> '(24))>>
+					 ;"If the day falls in the period, return true."
+				  <MAPLEAVE T>)>)
+		.ABSENT-LIST>)>>  
+
+<DEFINE EXPAND-PERIOD (P)			       ;"Expand a period to full specs."
+	#DECL ((VALUE P) LIST)
+	<COND (<EMPTY? .P> '())
+	      (<LENGTH? .P 1> ((<1 .P> 1 1) (<1 .P> 12 31)))
+						     ;"Expand a year to 1/1 thru 12/31."
+	      (<LENGTH? .P 2>
+	       ((!.P 1) <1 <DTNORM ((<1 .P> <+ 1 <2 .P>> 0) '(0))>>)) ;"Expand a month."
+	      (ELSE (.P .P))					   ;"Double up a day.">>    
+ 
+<DEFINE STYI-DRY ("OPTIONAL" (C .INCHAN))		     ;"Suck dry a STYI channel."
+	#DECL ((C) CHANNEL)
+	<REPEAT ()
+		<AND <==? -1 <READCHR .C>> <RETURN>>>>   
+
+<DEFINE SM-TALK ("AUX" L SM CH (TRASH <ISTRING 99>) (UN <UNAME>)
+		       (MSG <STRING "(SMTALK) " .UN " needs help.">) INCHAN OUTCHAN
+		       (OC <OPEN "PRINT" "STY:">) (IC <OPEN "READ" "STY:">)
+		       (N-SM-S <LENGTH ,SM-S>)
+		       (OUT "
+We hope we have been of help.
+"))
+   #DECL ((CH) <OR FIX CHARACTER> (L) <UVECTOR [REST ATOM]> (SM TRASH MSG OUT UN) STRING
+	  (INCHAN OUTCHAN) <SPECIAL CHANNEL> (OC IC) <OR FALSE CHANNEL>)
+   <COND
+    (<OR <NOT .IC> <NOT .OC>>			      ;"Check goodness of STY channels."
+     <PRINC "I'm sorry, but my communication facility is busy.
+"
+	    ,OUTCHAN>
+     <AND .IC <CLOSE .IC>>
+     <AND .OC <CLOSE .OC>>
+     <AND .IC .OC>)					      ;"Return the non-channel."
+    (ELSE
+     <SET INCHAN .IC>
+     <SET OUTCHAN .OC>
+     <PRINC "I will try to find a Staff Member with whom you can consult.
+"
+	    ,OUTCHAN>					        ;"Tell user we're here."
+     <SET L
+	  <COND (<MEMQ <SM> ,SM-S>)		       ;"Set search list to current SM "
+		(<REST ,SM-S <MOD <RANDOM> .N-SM-S>>)>>		  ;"or to a random one."
+     <TERPRI>					      ;"Avoid ITS !CRLF's on STY input."
+     <PROG ACT3 ((IL <INT-LEVEL>))
+       #DECL ((IL) FIX)
+       <REPEAT ACT1 ((N .N-SM-S))
+	       #DECL ((N) FIX)
+	       <AND <EMPTY? .L> <SET L <TOP .L>>>		   ;"Loop thru SM list "
+	       <AND <G? 0 <SET N <- .N 1>>>		   ;"until all have been tried."
+		    <SET OUT "I'm sorry, but no Staff Member is on-line.
+">
+		    <RETURN T .ACT3>>
+	       <REPEAT ((SMS (<PNAME <1 .L>> <STRING <PNAME <1 .L>> ".SM">)))
+		       #DECL ((SMS) <LIST [REST STRING]>)
+		       <AND <=? .UN <1 .SMS>>
+			    <EMPTY? <SET SMS <REST .SMS>>>
+			    <RETURN>>				    ;"Don't try myself."
+		       <STYI-DRY>
+		       <PRINC <STRING "C" <SET SM <1 .SMS>> <ASCII 13>>>
+								    ;"Try to make link."
+		       <READSTRING .TRASH .INCHAN <+ 5 <LENGTH .SM>>>
+								   ;"Suck out the echo."
+		       <COND (<==? !"W <SET CH <READCHR>>>	 ;"SM is in query mode."
+			      <READCHR>					        ;"SPACE"
+			      <AND <==? -1 <SET CH <READCHR>>>
+				   <INT-LEVEL <+ 2 .IL>>
+					    ;"Be sure we'll get intrpt when char comes."
+				   <ON "CHAR"
+				       #FUNCTION ((CHAN "AUX" (CHAR <READCHR .CHAN>)) 
+						  #DECL ((CHAN) CHANNEL
+							 (CHAR) CHARACTER)
+						  <AND <OR <==? !"G .CHAR>
+							   <==? !"N .CHAR>>
+								  ;"On G or N, wake up."
+						       <RETURN .CHAR .ACT2>>)
+				       <+ 1 .IL>
+				       <ME>
+				       .INCHAN>
+				   <==? -1 <SET CH <READCHR>>>
+						 ;"If char is there, don't go to sleep."
+				   <SET CH
+					<PROG ACT2 ()
+					      #DECL ((ACT2) <SPECIAL ACTIVATION>)
+					      <INT-LEVEL .IL>
+					      <SLEEP 10>
+					      !"T>>
+				   <OFF "CHAR" .INCHAN>>
+			      <INT-LEVEL .IL>
+			      <COND (<==? !"N .CH>)		  ;"If N, try next guy."
+				    (<==? !"G .CH>
+				     <PRINT .MSG>
+				     <TERPRI>
+				     <RETURN T .ACT1>)				 ;"Win!"
+				    (ELSE <PRINC "N">)>)	  ;"Give up on timeout."
+			     (<==? !"G .CH>			     ;"SM is logged in."
+			      <READCHR>					        ;"SPACE"
+			      <PRINC !">
+			      <SLEEP 1>
+			      <PRINC !">
+			      <SLEEP 1>
+			      <PRINC !">			       ;"Alert the guy."
+			      <PRINT .MSG>
+			      <TERPRI>
+			      <READSTRING .TRASH .INCHAN <+ 13 <LENGTH .MSG>>>
+								   ;"Suck out the echo."
+			      <OR <==? -1 <READCHR>> <RETURN T .ACT1>>
+		    ;"Look for any char to be typed.  (Should wait for a certain char?)"
+			      <READSTRING .TRASH .INCHAN <LENGTH <PRINC "--MORE--">>>
+							       ;"Tell SM we're waiting."
+			      <OR <==? -1 <READCHR>> <RETURN T .ACT1>>
+							        ;"Return if char there."
+			      <INT-LEVEL <+ 2 .IL>>
+			      <ON "CHAR"
+				  #FUNCTION ((CHAN) 
+					     #DECL ((CHAN) CHANNEL)
+					     <OFF "CHAR" .CHAN>
+					     <RETURN 1 .ACT2>)
+				  <+ 1 .IL>
+				  <ME>
+				  .INCHAN>
+			      <OR <==? -1 <READCHR>>
+				  <AND <OFF "CHAR" .INCHAN> <RETURN T .ACT1>>>
+						 ;"If char is there, don't go to sleep."
+			      <AND <1? <PROG ACT2 ()
+					     #DECL ((ACT2) <SPECIAL ACTIVATION>)
+					     <INT-LEVEL .IL>
+					     <SLEEP 10>
+					     0>>
+				   <RETURN T .ACT1>>	    ;"If a char came, go ahead."
+			      <OFF "CHAR" .INCHAN>
+			      <PRINC "N">)>		      ;"Else go on to next guy."
+		       <AND <EMPTY? <SET SMS <REST .SMS>>> <RETURN>>>
+	       <SET L <REST .L>>>
+       <INT-LEVEL .IL>
+       <PRINC <STRING "You are being linked to "
+		      .SM
+		      ".
+The following two lines come from our operating system:">
+	      ,OUTCHAN>				     ;"Let user know what is happening."
+       <ITS-CALL "LISTEN" '![!] ,INCHAN>       ;"Make sure previous msg has been typed."
+       <PRINC <STRING "C" <UNAME> <ASCII 13> "N">>>
+						   ;"Connect to myself and release STY."
+     <STYI-DRY>						  ;"Play it safe for next time."
+     <CLOSE .OUTCHAN>
+     <CLOSE .INCHAN>
+     <PRINC .OUT ,OUTCHAN>			      ;"Print this when link is broken."
+     "DONE")>>   
+
+<ENDPACKAGE>   
+ 
+

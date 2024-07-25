@@ -1,0 +1,600 @@
+<PACKAGE "READER">
+
+<ENTRY SAVE-READER READER READER-LOOP>
+
+<USE "MADMAN" "M-DEFS" "NSTR" "BUF" "SYMBOLS" "MAIL">
+
+<USE "R-DEFS" "R-UTIL" "R-IO" "R-GC" "R-INP" "R-FOLD" "R-MAIL"
+     "R-SHOW" "R-WHICH" "R-HELP">
+
+<USE "CTABLE">		;"command dispatch macros"
+
+\
+
+"SUBTITLE Globals and Data Definitions"
+
+<SETG VERNUM 0>				;"reader version"
+
+<GDECL (VERNUM) FIX (USER) STRING>
+
+\ 
+
+"SUBTITLE Basic Reader Top-level Functions"
+
+"SAVE-READER -- takes version number, creates save file, etc."
+
+<SETG READER-DIR "LIBRDR"> 
+
+<DEFINE SAVE-READER (V)
+	#DECL ((V) <OR FIX FALSE>)
+	<READER-MAILER-INIT>
+	<COND (<NOT .V>)
+	      (<AND <SETG VERNUM .V>
+		    <RESET .INCHAN>
+		    <SNAME "">
+		    <=? <SAVE <STRING "READ" <UNPARSE .V>>
+			      "SAVE"
+			      "DSK"
+			      ,READER-DIR>
+			"SAVED">>)
+	      (<N=? <JNAME> "MUDSUB"> <READER>)
+	      (<SNAME "COMMUD"> <ERRET>)>>
+
+"READER -- startup Reader"
+
+<DEFINE READER ("OPTIONAL" (U <XUNAME>) "AUX" (OUTCHAN .OUTCHAN))
+	#DECL ((OUTCHAN) CHANNEL (U) STRING)
+	<SETG IN-READER? T>
+	<MY-TTY-OFF>
+	<PRINC "Reader-Composer.">
+	<PRINC ,VERNUM>
+	<CRLF>
+	<OR ,RDEBUG? <ON "CHAR" ,MORE 2 <MAIN> ,OUTCHAN>>
+	<READER-INIT .U>
+	<INPUT-READER-FILE ,USER <>>
+	<SETG OPEN-INV ,I-RECENT>
+	<WORRY>
+	<READER-LOOP T>>
+
+<DEFINE CHECK-MAILBOX ()
+	<COND (<N==? <INPUT-READER-FILE ,USER T> 0>
+	       <USERS-INIT T>)>>
+
+"USERS-INIT"
+
+<DEFINE USERS-INIT ("OPTIONAL" (RDS? <>) "AUX" ST N C)
+	#DECL ((ST N) <OR FALSE FIX> (C) CHARACTER (RDS?) <OR ATOM FALSE>)
+	<COND (<SET ST <T-STARTUP <GET-READER-TAILOR>>>
+	       <COND (<NOT <0? <CHTYPE <ANDB .ST ,T-SUMMARIZE> FIX>>>
+		      <SET N
+			   <READER-SUMMARIZE <COND (.RDS? ,I-NEW)
+						   (ELSE ,I-RECENT)>
+					     .ST>>
+		      <COND (<AND .N
+				  <G? .N 0>
+				  <NOT <0? <CHTYPE <ANDB .ST ,T-SCAN> FIX>>>>
+			     <COND (<NOT ,SCANNING?>
+				    <SET C <MORE-MSG "A--Show?--">>
+				    <COND (<N==? .C <ASCII 32>>
+					   <SET ST 0>)>)>)>)>
+	       <COND (<AND <NOT ,SCANNING?>
+			   <NOT <0? <CHTYPE <ANDB .ST ,T-SCAN> FIX>>>>
+		      <OPEN-BIN <COND (.RDS? ,I-NEW)
+				      (ELSE ,I-RECENT)>
+				1>)>)>>
+
+"READER-LOOP -- Basic Reader Command Loop"
+
+<SETG SCANNING? <>>
+<SETG OSCANNING? <>>
+<GDECL (SCANNING? OSCANNING?) <OR FALSE FIX>>
+
+<DEFINE READER-LOOP ("OPTIONAL" (INIT? <>) "AUX" (OUTCHAN .OUTCHAN)) 
+	#DECL ((OUTCHAN) CHANNEL (N) FIX (INIT?) <OR ATOM FALSE>)
+	<REPEAT LERR\ !-INTERRUPTS ()
+		#DECL ((LERR\ !-INTERRUPTS) <SPECIAL ACTIVATION>)
+		<COND (<NOT <0? <14 .OUTCHAN>>> <CRLF>)>
+		<PROG COMMAND-LOOP-ACTIVATION ()
+		      #DECL ((COMMAND-LOOP-ACTIVATION) <SPECIAL ACTIVATION>)
+		      <COND (.INIT? <SET INIT? <>> <USERS-INIT>)>
+		      <READER-COMMANDS>>
+		<COND (,OSCANNING?
+		       <SETG SCANNING? ,OSCANNING?>
+		       <SETG OSCANNING? <>>)>
+		<WORRY>
+		<UPDATE-TABLE>>>
+
+<DEFINE READER-PUSH ("AUX" (O ,OPEN-INV) (S ,SCANNING?))
+	#DECL ((O) <OR FALSE INVERSION> (S) <OR FALSE FIX>)
+	<COND (.O
+	       <SETG OPEN-INV
+		     <INVERSION <I-NAME .O> <I-KEY .O>>>
+	       <PUT ,OPEN-INV ,I-TUPLE <I-TUPLE .O>>)>
+	<SETG SCANNING? <>>
+	<PROG PUSH-ACT ()
+	      #DECL ((PUSH-ACT) <SPECIAL ACTIVATION>)
+	      <READER-LOOP>>
+	<SETG SCANNING? .S>
+	<SETG OPEN-INV .O>>
+
+<DEFINE READER-POP ("AUX" P (OUTCHAN .OUTCHAN))
+	#DECL ((P) ACTIVATION (OUTCHAN) CHANNEL)
+	<COND (<AND <ASSIGNED? PUSH-ACT>
+		    <SET P .PUSH-ACT>
+		    <LEGAL? .P>>
+	       <RETURN T .P>)
+	      (ELSE
+	       <PRINC "There is no 'push' to 'pop'.">)>>
+
+<DEFINE WHICH-ESCAPE (BUF CHR)
+	#DECL ((CHR) CHARACTER (BUF) BUFFER)
+	<COND (<AND ,SCANNING? <0? <BUFLENGTH .BUF>>>
+	       <SETG OSCANNING? ,SCANNING?>
+	       <SETG SCANNING? <>>
+	       <PUT .BUF ,BPRMPT1 "@">
+	       <PRINC "X">)>>
+
+"QUIT-READER -- byebye"
+
+<DEFINE QUIT-READER ()
+	<UPDATE-TABLE T>
+	<QUIT>>
+
+"EXIT-READER -- quit and expunge"
+
+<DEFINE EXIT-READER ()
+	<READER-EXPUNGE <>>
+	<QUIT-READER>>
+\
+
+"SET-READER-TAILOR -- setup tailor info"
+
+<DEFINE SET-READER-TAILOR ("AUX" (NEW-VALUE T) (OLD-VALUE T))
+	#DECL ((NEW-VALUE OLD-VALUE) <OR ATOM FALSE>)
+	<REPEAT ()
+		<CTABLE <COND (<NOT .NEW-VALUE> "")
+			      (ELSE "what ")>
+			""
+
+"Tailoring commands:
+
+	'show'		shows current state of tailoring
+
+Tailorable things:
+
+	'formats'	set up output formats for 'show' command
+	'editor'	set up default editor (e.g., RMODE, EMACS)
+
+Toggles: (turn them off by saying 'no' or 'don't' first)
+
+	'renumber-after-expunge'
+	'clear-screen-between-messages'
+	'update-after-each-command'
+
+Things to do on startup: (turn off with 'no' or 'don't')
+
+	'scan-recently-received'
+	'summarize-recently-received'"
+
+	"show" <SHOW-TAILOR>
+	"no" <SET NEW-VALUE <>>
+	"don't" <SET NEW-VALUE <>>
+	"formats" <SET-FORMATS>
+	"editor" <SET-EDITOR>
+	"renumber-after-expunge" <BIT-TAILOR ,T-TAILOR ,T-RENUMBER .NEW-VALUE>
+	"clear-screen-between-messages" <BIT-TAILOR ,T-TAILOR ,T-CLEAR .NEW-VALUE>
+	"update-after-each-command" <BIT-TAILOR ,T-TAILOR ,T-UPDATE .NEW-VALUE>
+	"scan-recently-received" <BIT-TAILOR ,T-STARTUP ,T-SCAN .NEW-VALUE>
+	"summarize-recently-received" <BIT-TAILOR ,T-STARTUP ,T-SUMMARIZE .NEW-VALUE>>
+	<COND (<==? .NEW-VALUE .OLD-VALUE> <RETURN>)
+	      (ELSE <SET OLD-VALUE .NEW-VALUE>)>>>
+
+<DEFINE SHOW-TAILOR ("AUX" (TAIL <GET-READER-TAILOR>) (OUTCHAN .OUTCHAN))
+	#DECL ((TAILOR) ANY (OUTCHAN) CHANNEL)
+	<COND (<OR <NOT .TAIL> <NOT <TYPE? .TAIL VECTOR>>>
+	       <SET TAIL <VECTOR <> <> <> 0 0 <> <> <> <> <>>>)
+	      (ELSE
+	       <COND (<NOT <0? <14 .OUTCHAN>>> <CRLF>)>
+	       <PRINC "Formats ">
+	       <COND (<NOT <1 .TAIL>> <PRINC "Default">)
+		     (ELSE <PRINC <1 .TAIL>>)>
+	       <PRINC " (for Local messages), ">
+	       <COND (<NOT <2 .TAIL>> <PRINC "Default">)
+		     (ELSE <PRINC <2 .TAIL>>)>
+	       <PRINC " (for Foreign messages).
+Editor ">
+	       <COND (<NOT <3 .TAIL>> <PRINC "Default">)
+		     (ELSE <PRINC <3 .TAIL>>)>
+	       <PRINC ".
+">
+	       <COND (<0? <CHTYPE <ANDB <T-TAILOR .TAIL> ,T-RENUMBER> FIX>>
+		      <PRINC "Don't ">)>
+	       <PRINC "Renumber-after-Expunge.
+">
+	       <COND (<0? <CHTYPE <ANDB <T-TAILOR .TAIL> ,T-CLEAR> FIX>>
+		      <PRINC "Don't ">)>
+	       <PRINC "Clear-screen-between-messages.
+">
+	       <COND (<0? <CHTYPE <ANDB <T-TAILOR .TAIL> ,T-UPDATE> FIX>>
+		      <PRINC "Don't ">)>
+	       <PRINC "Update-after-each-command.
+">
+	       <COND (<0? <CHTYPE <ANDB <T-STARTUP .TAIL> ,T-SCAN> FIX>>
+		      <PRINC "Don't ">)>
+	       <PRINC "Scan-Recently-Received.
+">
+	       <COND (<0? <CHTYPE <ANDB <T-STARTUP .TAIL> ,T-SUMMARIZE> FIX>>
+		      <PRINC "Don't ">)>
+	       <PRINC "Summarize-Recently-Received.
+">)>>
+
+<DEFINE SET-FORMATS ("AUX" (TAIL <GET-READER-TAILOR <>>) (SS ,SCRATCH-SPACE)
+		     L (S <>) (N <>))
+	#DECL ((TAIL) <VECTOR [2 ANY] [REST ANY]> (L) LIST
+	       (S N) <OR FALSE STRING> (SS) SPACE)
+	<SET L <GET-TEMP "Formats for output">>
+	<COND (<NOT <EMPTY? .L>>
+	       <SET S <1 .L>>
+	       <COND (<SUBSNC .S "DEFAULT"> <SET S <>>)
+		     (ELSE <SET S <ASTRING .SS .S>>)>)>
+	<COND (<NOT <EMPTY? <SET L <REST .L>>>>
+	       <SET N <1 .L>>
+	       <COND (<SUBSNC .S "DEFAULT"> <SET N <>>)
+		     (ELSE <SET N <ASTRING .SS .N>>)>)>
+	<ARELEASE .SS <T-LOCAL-FORMAT .TAIL>>
+	<ARELEASE .SS <T-NET-FORMAT .TAIL>>
+	<PUT .TAIL ,T-LOCAL-FORMAT .S>
+	<PUT .TAIL ,T-NET-FORMAT .N>
+	<RWRITE ,M-TAILOR .SS .TAIL>
+	<SETG READER-TAILOR <>>>
+
+<DEFINE SET-EDITOR ("AUX" (TAIL <GET-READER-TAILOR <>>) (SS ,SCRATCH-SPACE))
+	#DECL ((TAIL) <VECTOR [2 ANY] [REST ANY]> (SS) SPACE)
+	<FLIP-EDITOR>
+	<ARELEASE .SS <T-EDITOR .TAIL>>
+	<PUT .TAIL ,T-EDITOR <ASTRING .SS ,TECO-PROGRAM>>
+	<RWRITE ,M-TAILOR .SS .TAIL>
+	<SETG READER-TAILOR <>>>
+
+<DEFINE BIT-TAILOR (WHICH BIT VAL "AUX" (TAIL <GET-READER-TAILOR <>>) TMP)
+	#DECL ((TAIL) <VECTOR [3 <OR STRING FALSE>] [REST <OR FIX FALSE>]>
+	       (VAL) <OR ATOM FALSE> (TMP) <PRIMTYPE WORD> (WHICH) FIX)
+	<SET TMP <ANDB <NTH .TAIL .WHICH> <XORB -1 .BIT>>>
+	<COND (.VAL <SET TMP <ORB .TMP .BIT>>)>
+	<SET-TAILOR .WHICH <CHTYPE .TMP FIX>>>
+
+<DEFINE SET-TAILOR (WHICH VAL "AUX" (TAIL <GET-READER-TAILOR <>>))
+	#DECL ((TAIL) <VECTOR [3 STRING] [REST <OR FIX FALSE>]>
+	       (VAL) <OR FIX FALSE> (WHICH) FIX)
+	<PUT .TAIL .WHICH .VAL>
+	<RWRITE ,M-TAILOR ,SCRATCH-SPACE .TAIL>
+	<SETG READER-TAILOR <>>>
+
+\
+
+"SUBTITLE Status display: Bins and Tags"
+
+"BIN-INFO -- Summarize Bin and Tag contents"
+
+<DEFINE BIN-INFO ("AUX" (UV ,MESSAGE-TABLE) (L <R-TUPLE .UV>) (ALL 0)
+		  (IN-BOX 0) (OUT-BOX 0) (PENDING 0) (DISCARDED 0)
+		  (UNSUMM 0) (UNREAD 0) (RECENT 0) (NEW 0) (SENT 0)
+		  (IN-ASYLUM 0) (ACTION 0) WS (OUTCHAN .OUTCHAN))
+	#DECL ((UV) UVECTOR (L ALL IN-BOX OUT-BOX PENDING DISCARDED UNSUMM
+			     UNREAD RECENT NEW SENT IN-ASYLUM ACTION WS) FIX
+	       (OUTCHAN) CHANNEL)
+	<SET UV <REST .UV <R-HEADER .UV>>>
+	<REPEAT ()
+		<COND (<OR <EMPTY? .UV> <0? <1 .UV>>> <RETURN>)>
+		<SET ALL <+ .ALL 1>>
+		<COND (<ON? .UV ,R-IN-BOX> <SET IN-BOX <+ .IN-BOX 1>>)>
+		<COND (<ON? .UV ,R-OUT-BOX> <SET OUT-BOX <+ .OUT-BOX 1>>)>
+		<COND (<ON? .UV ,R-PENDING> <SET PENDING <+ .PENDING 1>>)>
+		<COND (<ON? .UV ,R-DISCARDED>
+		       <SET DISCARDED <+ .DISCARDED 1>>)>
+		<COND (<ON? .UV ,R-UNSUMMARIZED>
+		       <SET UNSUMM <+ .UNSUMM 1>>)>
+		<COND (<ON? .UV ,R-UNREAD> <SET UNREAD <+ .UNREAD 1>>)>
+		<COND (<ON? .UV ,R-SENT> <SET SENT <+ .SENT 1>>)>
+		<COND (<ON? .UV ,R-RECENT> <SET RECENT <+ .RECENT 1>>)>
+		<COND (<ON? .UV ,R-NEW> <SET NEW <+ .NEW 1>>)>
+		<COND (<ON? .UV ,R-ASYLUM> <SET IN-ASYLUM <+ .IN-ASYLUM 1>>)>
+		<COND (<ON? .UV ,R-ACTION> <SET ACTION <+ .ACTION 1>>)>
+		<SET UV <REST .UV .L>>>
+	<CRLF>
+	<BINTAG "         BINS" -1 "            TAGS" -1>
+	<CRLF>
+	<SET WS <+ .IN-BOX .OUT-BOX .PENDING>>
+	<BINTAG "All" .ALL "Summary-not-seen" .UNSUMM>
+	<BINTAG "  File" <- .ALL .WS .DISCARDED> "Text-not-seen" .UNREAD>
+	<BINTAG "  Workspace" .WS "Recently-received" .RECENT>
+	<BINTAG "    In-Box" .IN-BOX "Received-during-session" .NEW>
+	<COND (<NOT <0? .SENT>>
+	       <BINTAG "    Out-Box" .OUT-BOX "Sent" .SENT>)>
+	<BINTAG "    Pending" .PENDING "Action-completed" .ACTION>
+	<BINTAG "  Discarded" .DISCARDED> 
+	<CRLF>>
+
+"BINTAG -- print a line of summary"
+
+<DEFINE BINTAG (BS BO "OPTIONAL" TS TO "AUX" (OUTCHAN .OUTCHAN))
+	#DECL ((BS TS) STRING (BO TO) FIX (MT) MTABLE (OUTCHAN) CHANNEL)
+	<INDENT-TO 8>
+	<PRINC .BS>
+	<COND (<G=? .BO 0>
+	       <INDENT-TO 28>
+	       <CPRINC .BO>)>
+	<COND (<ASSIGNED? TS>
+	       <INDENT-TO 40>
+	       <PRINC .TS>
+	       <COND (<G=? .TO 0>
+		      <INDENT-TO 66>
+		      <CPRINC .TO>)>)>
+	<CRLF>>
+
+\
+
+<DEFINE RSHRINK ("AUX" M (SS ,SCRATCH-SPACE) (RS ,READER-SPACE)
+		 (N <CHTYPE <GETBITS <ALENGTH .RS> <BITS 18>> FIX>))
+	#DECL ((M) MTABLE (SS RS) SPACE (N) FIX)
+	<SET M <AGC <ARESET .SS> ,MESSAGE-TABLE>>
+	<SET M <AGC <ARESET .RS> .M>>
+	<ARESET .SS>
+	<SETG UPDATE? T>
+	<UPDATE-TABLE T>
+	<- .N <CHTYPE <GETBITS <ALENGTH .RS> <BITS 18>> FIX>>>
+
+\
+
+"SUBTITLE Discard, Expunge, Hold, File"
+
+"READER-DISCARD -- move messages to discard bin"
+
+<DEFINE READER-DISCARD (N)
+	#DECL ((N) <OR FALSE INVERSION>)
+	<COND (.N
+	       <ITERATE (M .N)
+			<ONBITS .M ,R-DISCARDED>
+			<OFFBITS .M <ORB ,R-IN-BOX ,R-OUT-BOX ,R-PENDING>>>)>>
+
+"READER-EXPUNGE -- flush discarded messages"
+
+<DEFINE READER-EXPUNGE ("OPTIONAL" (V? T) "AUX" N (OUTCHAN .OUTCHAN) EX L)
+	#DECL ((N EX) FIX (OUTCHAN) CHANNEL (MT) MTABLE (L) <OR FIX FALSE>
+	       (V?) <OR ATOM FALSE>)
+	<SET EX
+	     <ITERATE (M ,I-DISCARDED) <>
+		 <SET N <MSG .M>>
+		 <COND (<OR <NOT <ON? .M ,R-UNREAD>>
+			    <AND <PRINC "A">
+				 <PMID .N>
+				 <CONFIRM " has not been read, expunge anyway?">>>
+			<PUT .OUTCHAN 14 0>
+			<PUT .M 1 0>
+			<PUT .M 2 0>
+			<PUT .M 3 0>
+			<AND <SET L <LOOKUP-LOCAL .N>>
+			     <RDELETE .L>>)>>>
+	<COMPACT-TABLE>
+	<COND (<NOT <0? .EX>>
+	       <UPDATE-TABLE T>
+	       <COND (,RENUMBER? <ADD-TABLE>)>
+	       <NMSGS .EX 0 " expunged">)
+	      (.V? <PRINC "There are no discarded messages."> <CRLF>)>>
+
+<DEFINE COMPACT-TABLE ("AUX" (MT ,MESSAGE-TABLE) (T <R-TUPLE .MT>)
+		       (BEG <>) (END <>))
+	#DECL ((MT) MTABLE (T) FIX (BEG END) <OR FALSE UVECTOR>)
+	<SET MT <REST .MT <R-HEADER .MT>>>
+	<REPEAT ()
+		<COND (<EMPTY? .MT> <RETURN>)
+		      (<AND .END <==? .MT .END>>
+		       <MAPR <>
+			     <FUNCTION (U)
+				  #DECL ((U) <UVECTOR [REST FIX]>)
+				  <PUT .U 1 0>>
+			     .END>
+		       <RETURN>)
+		      (<AND <NOT .BEG> <0? <MSG .MT>>>
+		       <SET BEG .MT>)
+		      (<AND .BEG <NOT <0? <MSG .MT>>>>
+		       <SETG UPDATE? T>
+		       <SUBSTRUC .MT 0 <LENGTH .MT> .BEG>
+		       <SET END <REST .BEG <LENGTH .MT>>> 
+		       <SET MT .BEG>
+		       <SET BEG <>>)>
+		<SET MT <REST .MT .T>>>>
+
+\
+
+"READER-FILE -- move messages to file bin"
+
+<DEFINE READER-FILE (N "AUX" F K O B)
+	#DECL ((N) <OR FALSE INVERSION> (F) <OR FALSE INVERSION>
+	       (K) VECTOR (O) FIX (B) WORD)
+	<COND (.N
+	       <SET F <READ-FOLDER-NAME "in folder " <>>>
+	       <COND (<N==? .F ,ABORTED>
+		      <COND (.F
+			     <SET K <I-KEY .F>>
+			     <SET O <+ 1 <1 .K>>> ;"offset in message"
+			     <SET B <2 .K>>	  ;"bit")>
+		      <ITERATE (M .N)
+			       <AND .F <ONBITS .M .B .O>>
+			       <OFFBITS .M
+					<ORB ,R-IN-BOX
+					     ,R-OUT-BOX
+					     ,R-PENDING
+					     ,R-DISCARDED
+					     ,R-ACTION>>>)>)>>
+
+"READER-HOLD -- move messages to pending bin"
+
+<DEFINE READER-HOLD (N "AUX" F K B O)
+	#DECL ((N) <OR FALSE INVERSION> (F) <OR FALSE INVERSION>
+	       (K) VECTOR (B) WORD (O) FIX)
+	<COND (.N
+	       <SET F <READ-FOLDER-NAME "in folder " <>>>
+	       <COND (<N==? .F ,ABORTED>
+		      <COND (.F
+			     <SET K <I-KEY .F>>
+			     <SET O <+ 1 <1 .K>>>
+			     <SET B <2 .K>>)>
+		      <ITERATE (M .N)
+			       <AND .F <ONBITS .M .B .O>>
+			       <ONBITS .M ,R-PENDING>
+			       <OFFBITS .M
+					<ORB ,R-ACTION
+					     ,R-IN-BOX
+					     ,R-OUT-BOX
+					     ,R-DISCARDED
+					     ,R-ACTION>>>)>)>>
+
+<DEFINE READER-COUNT (I "AUX" N (OUTCHAN .OUTCHAN))
+	#DECL ((N) FIX (I) INVERSION (OUTCHAN) CHANNEL)
+	<PRINC "A">
+	<COND (<0? <SET N <ITERATE (M .I) <> T>>>
+	       <PRINC "None.">)
+	      (<1? .N> <PRINC "1 message.">)
+	      (ELSE <PRINC .N> <PRINC " messages.">)>>
+
+\
+
+<DEFINE READER-ATTACH (TAG I "AUX" (T <I-KEY .TAG>))
+	#DECL ((I TAG) INVERSION (T) WORD)
+	<ITERATE (M .I)
+		 <ONBITS .M .T>>>
+
+<DEFINE READER-DETACH (TAG I "AUX" (T <I-KEY .TAG>))
+	#DECL ((I TAG) INVERSION (T) WORD)
+	<ITERATE (M .I)
+		 <OFFBITS .M .T>>>
+
+\
+
+"SUBTITLE 'Reader' mode Dispatch Tables"
+
+"Dispatch for 'Reader:' mode"
+
+<SETG READER-CHRS
+      [!\
+       ,RETURN-TO-MAILER
+       !\
+       ,WHICH-ESCAPE]>
+
+<SETG READER-CHRTABLE <LIST ,READER-CHRS ,SYMBOL-CHRS>>
+
+<GDECL (READER-CHRS) VECTOR>
+
+<DEFINE READER-COMMANDS ("AUX" I)
+	<SETG SYMBOL-CHRTABLE ,READER-CHRTABLE>
+	<COND (<SET I <CTABLE <COND (,SCANNING? "@@") (ELSE "@")>
+		"" 
+
+"Reader commands:
+	'Help' to ask for help on a topic
+	^C to reenter the mailer
+	'Status' to give situation report
+	'Summarize' to summarize messages
+	'Show' to read messages
+
+	'Next' (default) to move to next message
+	'Previous' to move to previous message
+	'Top' to move to the first message
+
+	'Open' to select a bin or folder to scan
+	'Scan' to move sequentially through a set
+	'Push' to go to a lower level of the command loop
+	'Pop' to return to a higher level
+	'Briefly-scan' is similar put shows summaries only
+	'End-scan' stops scanning
+	'Peek' to summarize remaining messages in a scan
+
+	'Discard' to get rid of messages
+	'Expunge' to empty the discarded bin
+	'File' to file messages
+	'Hold' to put a message aside
+	'Count' to count messages
+
+	'Answer' to answer messages
+	'Forward' and 'Inform' to forward messages
+	'Send' to send a message (in general)
+	  (also 'Bug', 'Msg', 'Remind', and 'Correct' exist,
+	   analogous to the programs of the same names)
+
+	'Print' to TPL messages (or copy them to any file)
+	'Append' to append messages to a file
+
+	'Add' to add messages to a folder
+	'Remove' to remove messages from a folder
+	'Create' to create a folder
+	'Destroy' to destroy a folder
+	'Folders' to show folder names
+	'Where' to show which folders messages are in
+
+	'Attach' a tag to a folder
+	'Detach' a tag from a folder
+
+	'Build' to build the initial Reader Asylum
+	'Asylum-info' for status of your Reader Asylum
+	'Compact-asylum' to shrink your Reader Asylum if possible
+	'Tailor' to set up your own output tailoring
+	'Check' to check mailbox for new messages
+	'Renumber' to renumber the workspace
+	'Update' will update the table once regardless of the mode
+	'Quit' to quit the reader
+	'Exit' expunges and then quits"
+
+	"Help"		<READER-HELP>
+	"Status"	<BIN-INFO>
+	"Summarize"	<READER-SUMMARIZE <WHICH>>
+	"Show"		<READER-READ <WHICH>>
+	"Peek"		<READER-SUMMARIZE <REST-BIN>>
+      * "Next"		<MOVE-NEXT>
+	"Previous"	<MOVE-PREVIOUS>
+	"Top"		<MOVE-TOP>
+	"Discard"	<READER-DISCARD <WHICH>>
+	"Expunge"	<READER-EXPUNGE>
+	"File"		<READER-FILE <WHICH>>
+	"Hold"		<READER-HOLD <WHICH>>
+	"Count"		<READER-COUNT <WHICH>>
+	"Answer"	<READER-REPLY <WHICH>>
+	"Forward"	<READER-FORWARD <WHICH>>
+	"Inform"	<READER-FORWARD <WHICH> <>>
+	"Send"		<READER-MAILER>
+	"Bug"		<READER-MAILER "BUG">
+	"Feature"	<READER-MAILER "FEATUR">
+	"Msg"		<READER-MAILER "MSG">
+	"Remind"	<READER-MAILER "REMIND">
+	"Correct"	<READER-MAILER "CORREC">
+	"Print"		<READER-PRINT <WHICH>>
+	"Append"	<READER-APPEND <WHICH>>
+	"Scan"		<OPEN-BIN <WHICH> 1>
+	"Push"		<READER-PUSH>
+	"Pop"		<READER-POP>
+	"Briefly-scan"	<OPEN-BIN <WHICH> 0>
+	"End-scan"	<SETG SCANNING? <>>
+	"Open"		<OPEN-BIN <WHICH>>
+	"Create"	<CREATE-FOLDER>
+	"Destroy"	<DESTROY-FOLDER>
+	"Add"		<ADD-TO-FOLDER <WHICH>>
+	"Remove"	<REMOVE-FROM-FOLDER <WHICH>>
+	"Folders"	<LIST-FOLDERS>
+	"Attach"	<READER-ATTACH <WHICH-TAG> <WHICH "to which ">>
+	"Detach"	<READER-DETACH <WHICH-TAG> <WHICH "from which ">>
+	"Where"		<WHICH-FOLDERS>
+	"Build"		<CREATE-READER-ASYLUM>
+	"History"	<READER-HISTORY <WHICH>>
+	"Asylum-info"	<DB-INFO ,READER-ASYLUM>
+	"Compact-asylum" <READER-GC>
+	"Tailor"	<SET-READER-TAILOR>
+	"Check"		<CHECK-MAILBOX>
+	"Renumber"	<ADD-TABLE>
+	"Update"	<UPDATE-TABLE T>
+	"Muddle"	<MUDDLE-ESCAPE>
+	"Quit"		<QUIT-READER>
+	"Exit"		<EXIT-READER>>>)
+	       (<AND <==? .I ,EMPTY-LINE> ,SCANNING?>
+		<MOVE-NEXT>)>>
+
+<ENDPACKAGE>

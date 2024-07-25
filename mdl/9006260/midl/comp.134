@@ -1,0 +1,447 @@
+;"GLOBALS FOR EVERYTHING."
+
+<USE "MACROS">
+
+<USE "TABLES">	;"on DLD's directory"
+
+<SETG COMPILABLE
+      ![+ - * / MOD 0? 1? G=? G? L=? L? MAX MIN ATAN SIN COS EXP LOG FIX FLOAT
+	ABS RANDOM OVERFLOW
+	NTH GET PUT REST LENGTH BACK SUBSTRUC TOP
+	FORM LIST STRING TUPLE UVECTOR VECTOR BYTES
+	IFORM ILIST ISTRING ITUPLE IUVECTOR IVECTOR IBYTES
+	CONS PUTREST STRCOMP UTYPE CHUTYPE BYTESIZE
+	EMPTY? LENGTH? MEMBER MEMQ MONAD? STRUCTURED?
+	BITS GETBITS PUTBITS ORB ANDB EQVB XORB
+	PROG REPEAT BIND RETURN AGAIN GO TAG
+	MAPF MAPR MAPRET MAPSTOP MAPLEAVE
+	COND AND OR
+	==? =? N==? N=? NOT AND? OR?
+	TYPE PRIMTYPE CHTYPE NEWTYPE EVALTYPE APPLYTYPE PRINTTYPE
+	TYPE? VALIDTYPE? TYPEPRIM ALLTYPES
+	LVAL GVAL VALUE SET SETG UNASSIGN GUNASSIGN
+	ASSIGNED? GASSIGNED? BOUND? GBOUND?
+	EVAL APPLY QUOTE PARSE LPARSE UNPARSE APPLICABLE?
+	DEFINE FUNCTION CLOSURE DEFMAC EXPAND
+	MOBLIST LOOKUP INSERT REMOVE ROOT BLOCK ENDBLOCK OBLIST?
+	ATOM PNAME SPNAME
+	GDECL MANIFEST UNMANIFEST MANIFEST? GET-DECL PUT-DECL
+	SPECIAL-CHECK SPECIAL-MODE !]>
+
+<SETG COMPILABLE-TABLE <MOBLIST COMPILABLE-TABLE 17>>
+
+<PROG ((INDEX 0))
+      ;"give all the compilable things successive FIX values"
+      ;"and insert them in COMPILABLE-TABLE."
+      <MAPF <>
+	    <FUNCTION (ATM)
+		      #DECL ((ATM) ATOM)
+		       <SET ATM <INSERT <SPNAME .ATM> ,COMPILABLE-TABLE>>
+		       <SETG .ATM <SET INDEX <+ .INDEX 1>>>
+		       <MANIFEST .ATM>>
+	    ,COMPILABLE>>
+
+;"END OF GLOBALS"
+
+
+<DEFINE TRANSLATE-CLAUSE (LST RETVAR REF NXT ACT-LIST DEF-ACT
+			  MAP-LIST SYMBOLS NLEVEL)
+	#DECL ((VALUE) ANY (LST) LIST (RETVAR) <OR VARIABLE FALSE>
+	       (REF NXT) FORWRD (ACT-LIST DEF-ACT MAP-LIST) LIST
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]>)
+	;"a 'clause' is a LIST of MUDDLE objects to be evaluated"
+	;"sequentially, such as the body of a PROG or REST of a COND"
+	;"clause. LST is the clause, NXT is a name for the next MCODE"
+	;"in the natural flow of control, REF is the name that this MCODE"
+	;"was referred to by in previous MCODEs, ACT-LST is a list of"
+	;"possible return points and the variables for holding return values."
+	;"It has the form (return-var act-var next-mcode ...)."
+	<MAPR <>
+	      <FUNCTION (RLST "AUX" (MOBJ <1 .RLST>))
+			#DECL ((RLST) LIST (MOBJ) ANY)
+			<COND (<LENGTH? .RLST 1>
+			       ;"This is the last thing in the clause, and"
+			       ;"thus, the thing whose value is returned."
+			       ;"Control also goes to a different NXT."
+			       <MCODE-DISPATCH
+				.MOBJ .RETVAR
+				.REF .NXT
+				.ACT-LIST .DEF-ACT .MAP-LIST
+				.SYMBOLS .NLEVEL>
+			       ;"value of last MCODE-DISPATCH is returned.")
+			      (ELSE
+			       <MCODE-DISPATCH
+				.MOBJ #VARIABLE 0 ;"no return value needed."
+				.REF <SET REF <GENREF>>
+				.ACT-LIST .DEF-ACT .MAP-LIST
+				.SYMBOLS .NLEVEL>)>>
+	      .LST>>
+
+<DEFINE MCODE-DISPATCH ACT (MOBJ RETVAR REF NXT ACT-LIST DEF-ACT MAP-LIST
+			    SYMBOLS NLEVEL "AUX" COBJ) 
+	#DECL ((VALUE) ANY (MOBJ COBJ) ANY (RETVAR) <OR VARIABLE FALSE>
+	       (REF NXT) FORWRD (ACT-LIST DEF-ACT MAP-LIST) LIST
+	       (NLEVEL) FIX)
+	;"***this function can only compile SUBRs in FORMs and self-evaluating"
+	;"***objects currently. Needs to be able to do structures and"
+	;"***all applicable objects. also, EVAL and APPLYTYPEs."
+	<COND (<AND <TYPE? .MOBJ FORM>
+		    <EMPTY? .MOBJ>>
+	       ;"FALSE"
+	       <SET MOBJ #FALSE ()>
+	       <AGAIN .ACT>) 
+	      (<AND <TYPE? .MOBJ FORM>
+		    <TYPE? <1 .MOBJ> ATOM>
+		    <SET COBJ <LOOKUP <SPNAME <1 .MOBJ>> ,COMPILABLE-TABLE>>>
+	       ;"*** THIS WHOLE THING SHOULD BECOME 'COMPILE:FORM'***"
+	       ;"known compilable object?"
+	       <SET NLEVEL <+ .NLEVEL 1>> ;"want to do this whenever its a FORM."
+	       <PROG AG ((TEMPS ()))
+		     #DECL ((TEMPS) LIST)
+		     <CASE ,==? <GVAL .COBJ>
+
+			   ;"ARITHMETIC FUNCTIONS"
+			   (,+!-COMPILABLE-TABLE
+			    <SCG + '<G? <LENGTH .MOBJ> 1>>)
+			   (,-!-COMPILABLE-TABLE
+			    <SCG - '<G? <LENGTH .MOBJ> 1>>)
+			   (,*!-COMPILABLE-TABLE
+			    <SCG * '<G? <LENGTH .MOBJ> 1>>)  
+			   (,/!-COMPILABLE-TABLE
+			    <SCG / '<G? <LENGTH .MOBJ> 1>>)
+			   (,MOD!-COMPILABLE-TABLE
+			    <SCG MOD 3>)
+			   (,0?!-COMPILABLE-TABLE
+			    <SCG 0? 2>)
+			   (,1?!-COMPILABLE-TABLE
+			    <SCG 1? 2>)
+			   (,G=?!-COMPILABLE-TABLE
+			    <SCG G=? 3>)
+			   (,G?!-COMPILABLE-TABLE
+			    <SCG G? 3>)
+			   (,L=?!-COMPILABLE-TABLE
+			    <SCG L=? 3>)
+			   (,L?!-COMPILABLE-TABLE
+			    <SCG L? 3>)
+			   (,MAX!-COMPILABLE-TABLE
+			    <SCG MAX ANY>)
+			   (,MIN!-COMPILABLE-TABLE
+			    <SCG MIN ANY>)
+			   (,ATAN!-COMPILABLE-TABLE
+			    <SCG ATAN 2>)
+			   (,SIN!-COMPILABLE-TABLE
+			    <SCG SIN 2>)
+			   (,COS!-COMPILABLE-TABLE
+			    <SCG COS 2>)
+			   (,EXP!-COMPILABLE-TABLE
+			    <SCG EXP 2>)
+			   (,LOG!-COMPILABLE-TABLE
+			    <SCG LOG 2>)
+			   (,FIX!-COMPILABLE-TABLE
+			    <SCG FIX 2>)
+			   (,FLOAT!-COMPILABLE-TABLE
+			    <SCG FLOAT 2>)
+			   (,ABS!-COMPILABLE-TABLE
+			    <SCG ABS 2>)
+			   (,RANDOM!-COMPILABLE-TABLE
+			    <SCG RANDOM (2 3 4)>)
+			   (,OVERFLOW!-COMPILABLE-TABLE
+			    <SCG OVERFLOW (1 2)>)
+
+			   ;"structure handlers"
+			   (,NTH!-COMPILABLE-TABLE
+			    <SCG NTH (2 3)>)
+			   (,GET!-COMPILABLE-TABLE
+			    ;"GET is a crock")
+			   (,PUT!-COMPILABLE-TABLE
+			    <SCG PUT 3>)
+			   (,REST!-COMPILABLE-TABLE
+			    <SCG REST (2 3)>)
+			   (,LENGTH!-COMPILABLE-TABLE
+			    <SCG LENGTH 2>)
+			   (,BACK!-COMPILABLE-TABLE
+			    <SCG BACK (2 3)>)
+			   (,SUBSTRUC!-COMPILABLE-TABLE
+			    <SCG SUBSTRUC (2 3 4 5)>)
+			   (,TOP!-COMPILABLE-TABLE
+			    <SCG TOP 2>)
+			   (,FORM!-COMPILABLE-TABLE
+			    <SCG FORM ANY>)
+			   (,LIST!-COMPILABLE-TABLE
+			    <SCG LIST ANY>)
+			   (,STRING!-COMPILABLE-TABLE
+			    <SCG STRING ANY>)
+			   (,TUPLE!-COMPILABLE-TABLE
+			    ;"CAUTION!"
+			    <SCG TUPLE ANY>)
+			   (,UVECTOR!-COMPILABLE-TABLE
+			    <SCG UVECTOR ANY>)
+			   (,VECTOR!-COMPILABLE-TABLE
+			    <SCG VECTOR ANY>)
+			   (,BYTES!-COMPILABLE-TABLE
+			    <SCG BYTES '<G? <LENGTH .MOBJ> 1>>)
+			   (,IFORM!-COMPILABLE-TABLE
+			    ;"SHOULD COMPILE LIKE A MAPF"
+			    <COMPILE:IFORM .MOBJ .RETVAR .REF .NXT .ACT-LIST
+					   .DEF-ACT .MAP-LIST .SYMBOLS
+					   .NLEVEL>)
+			   (,ILIST!-COMPILABLE-TABLE
+			    <COMPILE:ILIST .MOBJ .RETVAR .REF .NXT .ACT-LIST
+					   .DEF-ACT .MAP-LIST .SYMBOLS
+					   .NLEVEL>)
+			   (,ISTRING!-COMPILABLE-TABLE
+			    <COMPILE:ISTRING .MOBJ .RETVAR .REF .NXT .ACT-LIST
+					     .DEF-ACT .MAP-LIST .SYMBOLS
+					     .NLEVEL>)
+			   (,ITUPLE!-COMPILABLE-TABLE)
+			   (,IUVECTOR!-COMPILABLE-TABLE
+			    <COMPILE:IUVECTOR .MOBJ .RETVAR
+					      .REF .NXT
+					      .ACT-LIST .DEF-ACT .MAP-LIST
+					      .SYMBOLS .NLEVEL>)
+			   (,IVECTOR!-COMPILABLE-TABLE
+			    <COMPILE:IVECTOR .MOBJ .RETVAR .REF .NXT .ACT-LIST
+					     .DEF-ACT .MAP-LIST .SYMBOLS
+					     .NLEVEL>)
+			   (,IBYTES!-COMPILABLE-TABLE
+			    ;"TEMPORARILY PUNTING IBYTES DUE TO BOREDOM.")
+			   (,CONS!-COMPILABLE-TABLE
+			    <SCG CONS 3>)
+			   (,PUTREST!-COMPILABLE-TABLE
+			    <SCG PUTREST 3>)
+			   (,STRCOMP!-COMPILABLE-TABLE
+			    <SCG STRCOMP 3>)
+			   (,UTYPE!-COMPILABLE-TABLE
+			    <SCG UTYPE 2>)
+			   (,CHUTYPE!-COMPILABLE-TABLE
+			    <SCG CHUTYPE 3>)
+			   (,BYTESIZE!-COMPILABLE-TABLE
+			    <SCG BYTESIZE 2>)
+			   (,EMPTY?!-COMPILABLE-TABLE
+			    <SCG EMPTY 2>)
+			   (,LENGTH?!-COMPILABLE-TABLE
+			    <SCG LENGTH? 3>)
+			   (,MEMBER!-COMPILABLE-TABLE
+			    <COMPILE:MEMBER .MOBJ .RETVAR .REF .NXT .ACT-LIST
+					    .DEF-ACT .MAP-LIST .SYMBOLS
+					    .NLEVEL>)
+			   (,MEMQ!-COMPILABLE-TABLE
+			    <COMPILE:MEMQ .MOBJ .RETVAR .REF .NXT .ACT-LIST
+					  .DEF-ACT .MAP-LIST .SYMBOLS
+					  .NLEVEL>)
+			   (,MONAD?!-COMPILABLE-TABLE
+			    <SCG MONAD? 2>)
+			   (,STRUCTURED?!-COMPILABLE-TABLE
+			    <SCG STRUCTURED? 2>)
+
+			   ;"bit hacking"
+			   (,BITS!-COMPILABLE-TABLE
+			    <SCG BITS ANY>)
+			   (,GETBITS!-COMPILABLE-TABLE
+			    <SCG GETBITS 3>)
+			   (,PUTBITS!-COMPILABLE-TABLE
+			    <SCG PUTBITS (3 4)>)
+			   (,ORB!-COMPILABLE-TABLE
+			    <SCG ORB ANY>)
+			   (,ANDB!-COMPILABLE-TABLE
+			    <SCG ANDB ANY>)
+			   (,EQVB!-COMPILABLE-TABLE
+			    <SCG EQVB ANY>)
+			   (,XORB!-COMPILABLE-TABLE
+			    <SCG XORB ANY>)
+
+			   ;"control structures (looping)"
+			   (,PROG!-COMPILABLE-TABLE
+			    <COMPILE:PROG .MOBJ .RETVAR .REF .NXT .ACT-LIST
+					  .DEF-ACT .MAP-LIST .SYMBOLS
+					  .NLEVEL>)
+			   (,REPEAT!-COMPILABLE-TABLE
+			    <COMPILE:PROG .MOBJ .RETVAR .REF .NXT .ACT-LIST
+					  .DEF-ACT .MAP-LIST .SYMBOLS
+					  .NLEVEL>)
+			   (,BIND!-COMPILABLE-TABLE
+			    <COMPILE:PROG .MOBJ .RETVAR .REF .NXT .ACT-LIST
+					  .DEF-ACT .MAP-LIST .SYMBOLS
+					  .NLEVEL>)
+			   (,RETURN!-COMPILABLE-TABLE
+			    <COMPILE:RETURN .MOBJ .RETVAR .REF .NXT .ACT-LIST
+					    .DEF-ACT .MAP-LIST .SYMBOLS
+					    .NLEVEL>)
+			   (,AGAIN!-COMPILABLE-TABLE
+			    <COMPILE:AGAIN .MOBJ .RETVAR .REF .NXT .ACT-LIST
+					   .DEF-ACT .MAP-LIST .SYMBOLS
+					   .NLEVEL>)
+			   (,GO!-COMPILABLE-TABLE
+			    ;"SORRY, GO'S ARE BANNED.")
+			   (,TAG!-COMPILABLE-TABLE
+			    ;"TAGS TOO.")
+			   (,MAPF!-COMPILABLE-TABLE
+			    <COMPILE:MAPF .MOBJ .RETVAR .REF .NXT .ACT-LIST
+					  .DEF-ACT .MAP-LIST .SYMBOLS
+					  .NLEVEL>)
+			   (,MAPR!-COMPILABLE-TABLE
+			    <COMPILE:MAPR .MOBJ .RETVAR .REF .NXT .ACT-LIST
+					  .DEF-ACT .MAP-LIST .SYMBOLS
+					  .NLEVEL>)
+			   (,MAPRET!-COMPILABLE-TABLE)
+			   (,MAPSTOP!-COMPILABLE-TABLE)
+			   (,MAPLEAVE!-COMPILABLE-TABLE)
+
+			   ;"conditionals"
+			   (,COND!-COMPILABLE-TABLE
+			    <COMPILE:COND .MOBJ .RETVAR .REF .NXT .ACT-LIST
+					  .DEF-ACT .MAP-LIST .SYMBOLS
+					  .NLEVEL>)
+			   (,AND!-COMPILABLE-TABLE
+			    <COMPILE:AND .MOBJ .RETVAR .REF .NXT .ACT-LIST
+					 .DEF-ACT .MAP-LIST .SYMBOLS
+					 .NLEVEL>)
+			   (,OR!-COMPILABLE-TABLE
+			    <COMPILE:OR .MOBJ .RETVAR .REF .NXT .ACT-LIST
+					.DEF-ACT .MAP-LIST .SYMBOLS
+					.NLEVEL>)
+
+			   ;"random predicates"
+			   (,==?!-COMPILABLE-TABLE
+			    <SCG ==? 3>)
+			   (,=?!-COMPILABLE-TABLE
+			    <SCG =? 3>) 
+			   (,N==?!-COMPILABLE-TABLE
+			    <SCG N==? 3>)
+			   (,N=?!-COMPILABLE-TABLE
+			    <SCG N=? 3>)
+			   (,NOT!-COMPILABLE-TABLE
+			    <SCG NOT 2>)
+			   (,AND?!-COMPILABLE-TABLE
+			    <SCG AND? ANY>)
+			   (,OR?!-COMPILABLE-TABLE
+			    <SCG OR? ANY>)
+
+			   ;"type handling"
+			   (,TYPE!-COMPILABLE-TABLE
+			    <SCG TYPE 2>)
+			   (,PRIMTYPE!-COMPILABLE-TABLE
+			    <SCG PRIMTYPE 2>)
+			   (,CHTYPE!-COMPILABLE-TABLE
+			    <SCG CHTYPE 3>)
+			   (,NEWTYPE!-COMPILABLE-TABLE
+			    <SCG NEWTYPE (3 4)>)
+			   (,EVALTYPE!-COMPILABLE-TABLE)
+			   (,APPLYTYPE!-COMPILABLE-TABLE)
+			   (,PRINTTYPE!-COMPILABLE-TABLE)
+			   (,TYPE?!-COMPILABLE-TABLE
+			    <SCG PRINTTYPE 3>)
+			   (,VALIDTYPE?!-COMPILABLE-TABLE
+			    <SCG VALIDTYPE? 2>)
+			   (,TYPEPRIM!-COMPILABLE-TABLE
+			    <SCG TYPEPRIM 2>)
+			   (,ALLTYPES!-COMPILABLE-TABLE
+			    <SCG ALLTYPES 1>)
+
+			   ;"values"
+			   (,LVAL!-COMPILABLE-TABLE
+			    <COMPILE:LVAL .MOBJ .RETVAR .REF .NXT .ACT-LIST
+					  .DEF-ACT .MAP-LIST .SYMBOLS
+					  .NLEVEL>)
+			   (,GVAL!-COMPILABLE-TABLE
+			    <SCG GVAL 2>)
+			   (,VALUE!-COMPILABLE-TABLE
+			    <SCG VALUE 2>)
+			   (,SET!-COMPILABLE-TABLE
+			    <COMPILE:SET .MOBJ .RETVAR .REF .NXT .ACT-LIST
+					 .DEF-ACT .MAP-LIST .SYMBOLS
+					 .NLEVEL>)
+			   (,SETG!-COMPILABLE-TABLE
+			    <SCG SETG 3>)
+			   (,UNASSIGN!-COMPILABLE-TABLE
+			    <SCG UNASSIGN 2>)
+			   (,GUNASSIGN!-COMPILABLE-TABLE
+			    <SCG GUNASSIGN 2>)
+			   (,ASSIGNED?!-COMPILABLE-TABLE
+			    ;"maybe include in successors later?"
+			    <SCG ASSIGNED? 2>)
+			   (,GASSIGNED?!-COMPILABLE-TABLE
+			    <SCG GASSIGNED? 2>)
+			   (,BOUND?!-COMPILABLE-TABLE)
+			   (,GBOUND?!-COMPILABLE-TABLE)
+
+			   ;"interpreter functions"
+			   (,EVAL!-COMPILABLE-TABLE)
+			   (,APPLY!-COMPILABLE-TABLE)
+			   (,QUOTE!-COMPILABLE-TABLE)
+			   (,PARSE!-COMPILABLE-TABLE)
+			   (,LPARSE!-COMPILABLE-TABLE)
+			   (,UNPARSE!-COMPILABLE-TABLE)
+
+			   ;"application"
+			   (,APPLICABLE?!-COMPILABLE-TABLE)
+			   (,DEFINE!-COMPILABLE-TABLE)
+			   (,FUNCTION!-COMPILABLE-TABLE)
+			   (,CLOSURE!-COMPILABLE-TABLE)
+			   (,DEFMAC!-COMPILABLE-TABLE)
+			   (,EXPAND!-COMPILABLE-TABLE)
+
+			   ;"lexical blocking"
+			   (,MOBLIST!-COMPILABLE-TABLE)
+			   (,LOOKUP!-COMPILABLE-TABLE)
+			   (,INSERT!-COMPILABLE-TABLE)
+			   (,REMOVE!-COMPILABLE-TABLE)
+			   (,ROOT!-COMPILABLE-TABLE)
+			   (,BLOCK!-COMPILABLE-TABLE)
+			   (,ENDBLOCK!-COMPILABLE-TABLE)
+			   (,OBLIST?!-COMPILABLE-TABLE)
+
+			   ;"ATOM frobbing"
+			   (,ATOM!-COMPILABLE-TABLE)
+			   (,PNAME!-COMPILABLE-TABLE)
+			   (,SPNAME!-COMPILABLE-TABLE)
+
+			   ;"declarations"
+			   (,GDECL!-COMPILABLE-TABLE)
+			   (,MANIFEST!-COMPILABLE-TABLE)
+			   (,UNMANIFEST!-COMPILABLE-TABLE)
+			   (,MANIFEST?!-COMPILABLE-TABLE)
+			   (,GET-DECL!-COMPILABLE-TABLE)
+			   (,PUT-DECL!-COMPILABLE-TABLE)
+			   (,SPECIAL-CHECK!-COMPILABLE-TABLE)
+			   (,SPECIAL-MODE!-COMPILABLE-TABLE)>>)
+	      (<AND <TYPE? .MOBJ FORM>
+		    <TYPE? <1 .MOBJ> ATOM>
+		    <GASSIGNED? <1 .MOBJ>>
+		    <TYPE? <GVAL <1 .MOBJ>> FIX>>
+	       <OR <==? <LENGTH .MOBJ> 2>
+		   <ERROR TOO-MANY-ARGS-TO-NTH MCODE-DISPATCH>>
+	       <SET MOBJ <FORM NTH <2 .MOBJ> <1 .MOBJ>>>
+	       <AGAIN .ACT>)  
+	      (ELSE
+	       ;"assume it's self-evaluating"
+	       <COND (<NOT .RETVAR>
+		      <SYNONYMIZE .REF .NXT>
+		      ;"return any convenient value."		      
+		      .MOBJ)
+		     (<0? <CHTYPE .RETVAR FIX>>
+		      ;"of course, self-evaluation has no side-effects,"
+		      ;"so don't bother to compile anything for it."
+		      <SYNONYMIZE .REF .NXT>
+		      <WARNING CODE-HAS-NO-EFFECT MCODE-DISPATCH>)
+		     (ELSE
+		      <MCODIFY <FORM MSET .RETVAR .MOBJ>
+			       .REF .NXT>)>)>>
+
+;"*** SYMBOL-HACKING STUFF ***"
+
+<DEFINE NEW-SYMBOL (SYM VAR DCL SYMBOLS)
+	#DECL ((VALUE) <OR ATOM VARIABLE FALSE> (SYM) STRING
+	       (VAR) <OR VARIABLE ATOM> (DCL) <OR ATOM FORM>
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]>)
+	<INSERT-SYMBOL .SYM .VAR .DCL <1 .SYMBOLS>>>
+
+<DEFINE FIND-SYMBOL (SYM SYMBOLS "AUX" RET)
+	#DECL ((VALUE) <OR ATOM VARIABLE FALSE> (SYM) STRING
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]> (RET) <OR LIST FALSE>)
+	<MAPF <>
+	      <FUNCTION (ST)
+			#DECL ((ST) SYMBOL-TABLE)
+			<COND (<SET RET <LOOKUP-SYMBOL .SYM .ST>>
+			       <MAPLEAVE <1 .RET>>)>>
+	      .SYMBOLS>>

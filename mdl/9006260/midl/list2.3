@@ -1,0 +1,60 @@
+<PACKAGE "LIST2">
+
+<ENTRY MEM2 MEMBER2 DEL2 DELETE2>
+
+<DEFINE MEM2 (X L)
+	;"MEMQ ON EVERY OTHER ELEMENT. RETURNS REST OF LIST STARTING WITH FOUND"
+	;"ELEMENT, OR FALSE."
+	#DECL ((X) ANY (L) LIST)
+	<REPEAT ((RL .L))
+		#DECL ((RL) LIST)
+		<COND (<LENGTH? .RL 1><RETURN <>>)
+		      (<==? <1 .RL> .X>
+		       <RETURN .RL>)
+		      (ELSE <SET RL <REST .RL 2>>)>>>
+
+<DEFINE MEMBER2 (X L)
+	;"MEMBER ON EVERY OTHER ELEMENT. RETURNS REST OF LIST STARTING WITH FOUND"
+	;"ELEMENT, OR FALSE."
+	#DECL ((X) ANY (L) LIST)
+	<REPEAT ((RL .L))
+		#DECL ((X) ANY (L) LIST)
+		<COND (<LENGTH? .RL 1><RETURN <>>)
+		      (<=? <1 .RL> .X>
+		       <RETURN .RL>)
+		      (ELSE <SET RL <REST .RL 2>>)>>>
+
+<DEFINE DEL2 (X L)
+	;"DELETES A PAIR OF ELEMENTS FROM A LIST, USING MEM2 TO FIND FIRST"
+	;"ELEMENT."
+	#DECL ((X) ANY (L) LIST)
+	<COND (<LENGTH? .L 1> .L)
+	      (<==? <NTH .L 1> .X>
+	       <REST .L 2>)
+	      (<REPEAT ((RL <REST .L>))
+		       #DECL ((RL) LIST)
+		       <COND (<LENGTH? .RL 2><RETURN>)
+			     (<==? <NTH .RL 2> .X>
+			      <PUTREST .RL <REST .RL 3>>
+			      <RETURN>)
+			     (ELSE <SET RL <REST .RL 2>>)>>
+	       .L)>>
+
+<DEFINE DELETE2 (X L)
+	;"DELETES A PAIR OF ELEMENTS FROM A LIST, USING MEMBER2 TO FIND FIRST"
+	;"ELEMENT."
+	#DECL ((X) ANY (L) LIST)
+	<COND (<LENGTH? .L 1> .L)
+	      (<=? <NTH .L 1> .X>
+	       <REST .L 2>)
+	      (<REPEAT ((RL <REST .L>))
+		       #DECL ((RL) LIST)
+		       <COND (<LENGTH? .RL 2><RETURN>)
+			     (<=? <NTH .RL 2> .X>
+			      <PUTREST .RL <REST .RL 3>>
+			      <RETURN>)
+			     (ELSE <SET RL <REST .RL 2>>)>>
+	       .L)>>
+
+<ENDPACKAGE>
+

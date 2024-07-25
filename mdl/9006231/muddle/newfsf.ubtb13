@@ -1,0 +1,252 @@
+
+<USE "MFD" "DIR" "GC" "SORTX">
+
+<SETG 54PURVEC *1367*>
+
+<SETG 55PURVEC *1567*>
+
+<SETG DIVERT-MAX 25>
+
+<DIVERT>
+
+<SET ARC-LOOK <>>
+
+<SETG STRBUF <ISTRING 8>>
+
+<SETG 1WRD ![0!]>
+
+<SETG BUFLNT 500>
+
+<SETG BUF <IUVECTOR ,BUFLNT 0>>
+
+<SETG DIRBUF <IUVECTOR 1024 0>>
+
+<SETG RCL ![0!]>
+
+<SETG MNDIR "MUDSAV">
+
+<SETG WRKDIR "MUDTMP">
+
+<SETG ERRDIR "BTB">
+
+<SETG VERSION-FD <BITS 10 18>>
+
+<DEFINE MOBY-GC ("TUPLE" FLS "AUX" 
+		 (ERRCHAN <OPEN "PRINT" "ERROR" "FILE" "DSK" ,ERRDIR>)
+		 CH CH1 FILES (DELS ()))
+	#DECL ((ERRCHAN) <SPECIAL <OR FALSE CHANNEL>>)
+	<COND (<NOT .ERRCHAN> <ERROR CANT-OPEN-ERRCHAN!-ERRORS>)>
+	<SETG SAFETY <SET FILES <FIND-SAVES !.FLS>>>
+	<SET CH <OPEN "READB" "SAV" "FILE" "DSK" ,MNDIR>>
+	<COND (<NOT .CH> <ERROR CHANNEL-CLOSED!-ERRORS>)>
+	<READB ,RCL .CH>
+	<REPEAT ((NUM <1 ,RCL>) (CNT 1))
+		<ACCESS .CH .CNT>
+		<READB ,RCL .CH>
+		<ACCESS .CH <* <1 ,RCL> 1024>>
+		<READB ,DIRBUF .CH>
+		<REPEAT ((ZCNT </ <1 ,DIRBUF> 2>) (LN <LENGTH .FILES>)
+			 (DP <REST ,DIRBUF>) ITEM)
+			<SET ITEM <1 .DP>>
+			<COND (<NOT <BINSRCH .ITEM .FILES .LN>>
+			       <SET DELS
+				    (.ITEM
+				     <CHTYPE <GETBITS <2 .DP> ,VERSION-FD> FIX>
+				     !.DELS)>)>
+			<COND (<0? <SET ZCNT <- .ZCNT 1>>> <RETURN>)>
+			<SET DP <REST .DP 2>>>
+		<COND (<0? <SET NUM <- .NUM 1>>> <RETURN>)>
+		<SET CNT <+ .CNT 1>>>
+	<CLOSE .CH>
+	<SET CH <OPEN "PRINT" "DELETE" "SAVS" "DSK" ,WRKDIR>>
+	<SET CH1 <OPEN "PRINT" "DELETE" "FIXUPS" "DSK" ,WRKDIR>>
+	<REPEAT ()
+		<COND (<EMPTY? .DELS> <RETURN>)>
+		<PRINT-6BIT <1 .DELS> .CH>
+		<PRINT-6BIT <1 .DELS> .CH1>
+		<PRINC !"  .CH>
+		<PRINC !"  .CH1>
+		<PRINC "SAV" .CH>
+		<PRINC "FIX" .CH1>
+		<PRIN1 <2 .DELS> .CH>
+		<PRIN1 <2 .DELS> .CH1>
+		<CRLF .CH>
+		<CRLF .CH1>
+		<SET DELS <REST .DELS 2>>>
+	<CLOSE .CH>
+	<CLOSE .CH1>
+	"DONE">
+
+"A ROUTINE TO PRINT A 6BIT WORD OUT. ASSUMES WORD IS LEFT JUSTIFIED"
+
+<DEFINE PRINT-6BIT (WD CH) 
+	#DECL ((WD) <PRIMTYPE WORD>)
+	<REPEAT ((CNT 0) (BTS <BITS 6 30>) CHR)
+		#DECL ((CHR) FIX)
+		<SET CHR <CHTYPE <GETBITS .WD .BTS> FIX>>
+		<AND <0? .CHR> <RETURN>>
+		<PRINC <ASCII <+ .CHR 32>> .CH>
+		<AND <==? <SET CNT <+ .CNT 1>> 6> <RETURN>>
+		<SET BTS <CHTYPE <- <CHTYPE .BTS FIX> 6442450944> BITS>>>>
+
+"ROUTINE TO DO A BINARY SEARCH ON A DIRECTORY FOR THE FIRST NAME AND RETURN A FALSE
+ IF NOT FOUND OR THE RESTED DOWN DIRECTORY IF FOUND."
+
+<DEFINE BINSRCH (D_NM1 DIR LNT "AUX" (EXIT .LNT)) 
+	#DECL ((D_NM1) FIX (LNT) FIX (DIR) <UVECTOR [REST <PRIMTYPE WORD>]>)
+	<REPEAT UP ()
+		<COND (<0? <SET LNT </ .LNT 2>>>
+		       <REPEAT ()
+			       <COND (<L=? .EXIT 0> <RETURN <> .UP>)
+				     (<SET EXIT <- .EXIT 1>>
+				      <AND <==? .D_NM1 <1 .DIR>>
+					   <RETURN .DIR .UP>>
+				      <SET DIR <REST .DIR 1>>)>>)
+		      (<==? .D_NM1 <1 .DIR>> <RETURN .DIR>)
+		      (<G=? .D_NM1 <NTH .DIR <+ .LNT 1>>>
+		       <SET DIR <REST .DIR .LNT>>)>
+		<SET EXIT <- .EXIT .LNT>>>>
+
+<DEFINE SAVE-FILE? EXS (X X1 DEVI
+			"OPTIONAL" (SNM <SNAME>)
+			"AUX" (Y <OPEN-NR "READB" .X .X1 .DEVI .SNM>) PURVEC Z LNT UV V)
+	#DECL ((LNT) FIX (UV) <UVECTOR [REST FIX]> (SNM) <SPECIAL ANY>)
+	<REPEAT ()
+		<COND (<NOT .Y>
+		       <COND (<SPEC-ERROR .Y [.X .X1 .DEVI .SNM]>)
+			     (<RETURN T .EXS>)>
+		       <SET Y <OPEN-NR "READ" .X .X1 .DEVI .SNM>>)
+		      (<RETURN>)>>
+	<SET Z <READ1 .Y>>
+	<COND
+	 (<AND <TYPE? .Z FIX> <G=? .Z 53> <L? .Z 200>>
+	  <ACCESS .Y 2>			      ;"Prepare to see if FSAVE or SAVE"
+	  <READB ,1WRD .Y>
+	  <COND (<0? <1 ,1WRD>>
+		 <COND (<==? .Z 54> <SET PURVEC ,54PURVEC>)
+		       (<==? .Z 55> <SET PURVEC ,55PURVEC>)> 
+		 <ACCESS .Y .PURVEC>
+		 <READB ,1WRD .Y>
+		 <SET LNT
+		      <- <CHTYPE <PUTBITS -1
+					  <BITS 18>
+					  <GETBITS <1 ,1WRD> <BITS 18 18>>>
+				 FIX>>>
+		 <ACCESS .Y <CHTYPE <GETBITS <1 ,1WRD> <BITS 18>> FIX>>
+		 <READB <SET UV <REST ,BUF <- ,BUFLNT .LNT>>> .Y>
+		 <REPEAT ((UV .UV))
+			 #DECL ((UV) UVECTOR)
+			 <COND (<EMPTY? .UV> <RETURN>)>
+			 <COND (<AND <NOT <0? <1 .UV>>>
+				     <NOT <MEMQ <1 .UV> .SAVS>>>
+				<SET SAVS (<1 .UV> !.SAVS)>)>
+			 <SET UV <REST .UV 4>>>)>
+	  .Z)>
+	<CLOSE .Y>
+	.Z>
+
+<DEFINE FIND-SAVES ("TUPLE" M "AUX" D (SAVS ()) NSAVS) 
+   #DECL ((DL SAVS) <SPECIAL LIST>)
+   <COND (<EMPTY? .M> <SET M <GET-MFD>>)>
+   <MAPF <>
+	 <FUNCTION (UFD) 
+		 <AND <SET D <PARSE-DIRECTORY <GET-DIRECTORY .UFD ,UFDVCT>>>
+		      <MAPDIREC .D .UFD>>>
+	 .M>
+   <SET NSAVS <UVECTOR !.SAVS>>
+   <CHUTYPE .NSAVS FIX>
+   <SORT <> .NSAVS>
+   .NSAVS>
+
+<DEFINE MAPDIREC (D UFD "OPTIONAL" (DEVICE "DSK") (LEV2 T) "AUX" NCH NT) 
+   #DECL ((D) VECTOR)
+   <MAPF <>
+    <FUNCTION (IT) 
+	    #DECL ((IT "AUX" NT) <VECTOR [6 ANY]> (NT) STRING)
+	    <COND
+	     (<AND .ARC-LOOK
+		   .LEV2
+		   <=? <SUBSTRUC <SET NT <1 .IT>> 0 2> "AR">
+		   <OR <=? <SUBSTRUC .NT 2 4> "C   ">
+		       <TYPE? <PARSE <REST .NT 2>> FIX>>
+		   <TYPE? <6 .IT> FIX>>
+	      <PROG ()
+		    <SET NCH <OPEN "READB" ".FILE." "(DIR)" .NT .UFD>>
+		    <COND (<NOT .NCH> <COND (<SPEC-ERROR .NCH .NT> <AGAIN>)>)
+			  (<READB ,UFDVCT .NCH>
+			   <CLOSE .NCH>
+			   <MAPDIREC <PARSE-DIRECTORY ,UFDVCT> .UFD .NT <>>)>>)
+	     (<HACK-DIREC .IT .DEVICE .UFD>)>>
+    .D>>
+
+<DEFINE HACK-DIREC (F DEVI UFD) 
+	#DECL ((F) VECTOR)
+	<COND (<TYPE? <6 .F> FIX>
+	       <OR <AND <G? <6 .F> 9216>
+			<SAVE-FILE? <1 .F> <2 .F> .DEVI .UFD>>
+		   <FBIN-FILE? <1 .F> <2 .F> .DEVI .UFD>>)>>
+
+<DEFINE SIXCOMP (A B) #DECL ((A B) FIX)
+	<COND (<AND <L? .A 0><G? .B 0>> <>)
+	      (<AND <G? .A 0><L? .B 0>> T)
+	      (ELSE <L? .A .B>)>>
+
+<SETG UFDVCT <IUVECTOR 1024 0>>
+
+<SETG FOO [0 0 0 0 0]>
+
+<DEFINE READ1 (C "AUX" X (V ,FOO)) 
+   <REPEAT ()
+     <COND
+      (<SET X <READCHR .C '<>>>
+       <PUT .V 1 .X>
+       <COND
+	(<EMPTY? <SET V <REST .V>>>
+	 <RETURN <AND <MEMQ <1 ,FOO> "123456789">
+		      <NOT <EMPTY? <SET V <LPARSE <STRING !,FOO>>>>>
+		      <1 .V>>>)>)
+      (ELSE <RETURN <>>)>>>
+
+<DEFINE FBIN-FILE? EXS (X X1 DEVI
+			"OPTIONAL" (SNM <SNAME>)
+			"AUX" (Y <OPEN-NR "READ" .X .X1 .DEVI .SNM>))
+	#DECL ((SNM) <SPECIAL ANY>)
+	<REPEAT ()
+		<COND (<NOT .Y>
+		       <COND (<SPEC-ERROR .Y [.X .X1 .DEVI .SNM]>)
+			     (<RETURN T .EXS>)>
+		       <SET Y <OPEN-NR "READ" .X .X1 .DEVI .SNM>>)
+		      (<RETURN>)>>
+	<REPEAT (NUM)
+		<READSTRING ,STRBUF .Y>
+		<COND (<=? ,STRBUF "'<PCODE ">
+		       <SET NUM <READ .Y '<ERROR EOF!-ERRORS>>>
+		       <SET NUM <SIXBIT .NUM>>
+		       <COND (<NOT <MEMQ .NUM .SAVS>> <SET SAVS (.NUM !.SAVS)>)>
+		       <READCHR .Y>)
+		      (<RETURN>)>>
+	<CLOSE .Y>>
+
+"ROUTINE TO CONVERT A STRING TO SIXBIT"
+
+<DEFINE SIXBIT (STR "AUX" (WORD 0) (POS 30) (CHR 0))
+	#DECL ((STR) STRING (WORD POS CHR) FIX)
+	<REPEAT ()
+		<COND (<OR <EMPTY? .STR> <L? .POS 0>>
+		       <RETURN <CHTYPE .WORD FIX>>)
+		      (<OR <L? <SET CHR <CHTYPE <1 .STR> FIX>> 32>
+			   <G? .CHR 122>>
+		       <ERROR "BAD CHAR IN SIXBIT" <1 .STR>>
+		       <RETURN 0>)
+		      (<G=? .CHR 96> <SET CHR <- .CHR 64>>)
+		      (<SET CHR <- .CHR 32>>)>
+		<SET WORD <PUTBITS .WORD <BITS 6 .POS> .CHR>>
+		<SET STR <REST .STR>>
+		<SET POS <- .POS 6>>>>
+
+<DEFINE SPEC-ERROR ("TUPLE" TERR) 
+	<PROG ((OUTCHAN .ERRCHAN))
+	      #DECL ((OUTCHAN) <SPECIAL CHANNEL>)
+	      <MAPF <> ,PRINT .TERR>
+	      <TERPRI>>>
+

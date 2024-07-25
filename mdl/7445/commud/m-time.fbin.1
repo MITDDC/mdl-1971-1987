@@ -1,0 +1,26 @@
+'<PCODE "1M-TIM">
+
+<PACKAGE "M-TIME"> 
+
+<ENTRY SCROUT PFL> 
+
+<USE "CLOCK" "ITIME"> 
+
+<SETG ZAP T> 
+
+<GDECL (ZAP) <OR ATOM FALSE>> 
+
+"SCROUT -- script outputter, intersperses with time identifications" 
+
+<SETG SCROUT  %<RSUBR!- '[ %<PCODE!- "1M-TIM" 0> SCROUT #DECL ("VALUE" ATOM 
+"TUPLE" TUPLE) LTIME ALARM OUTCHAN %<RGLOC ZAP T>  %<RSUBR!- '[ %<PCODE!- 
+"1M-TIM" 246> ANONF2!-TMP!-  #DECL ("VALUE" ATOM ANY) T %<RGLOC PRINTTIME T>]> 
+%<RGLOC PRINTTIME T> "***** " " " " *****" "" T CRLF]>> 
+<AND <ASSIGNED? GLUE> .GLUE <PUT ,SCROUT PGLUE ![671088640!]>> 
+
+
+"PFL -- print a float" 
+
+<SETG PFL %<RSUBR-ENTRY '[SCROUT PFL #DECL ("VALUE" FIX FLOAT)] 184>> 
+
+<ENDPACKAGE> 

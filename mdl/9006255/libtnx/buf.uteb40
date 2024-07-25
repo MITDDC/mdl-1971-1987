@@ -1,0 +1,897 @@
+<BLOCK (<ROOT>)>
+ BUFFER
+<ENDBLOCK>
+
+<NEWTYPE BUFFER VECTOR '<VECTOR STRING STRING>>
+
+<PACKAGE "BUF">
+
+;" a buffer is defined as a vector of two strings.
+   the first string is the 'top' of the buffer.
+   the second string points to the first unused
+   location in the buffer."
+
+<ENTRY
+
+ADDCHR
+	;"takes buffer, character, adds the character"
+ADDFILE
+	;"takes buffer, channel, optional count, inserts
+	'count' characters from file, or whole thing"
+ADDSTRING
+	;"takes buffer, string, optional count
+	inserts 'count' characters or the whole string"
+BUFCLEAR
+	;"clears buffer"
+BUFGROW
+	;"grows buffer (arg1) by (arg2) characters"
+BUFLENGTH
+	;"takes a buffer, returns number of characters in it"
+BUFMAKE
+	;"Makes a buffer of length (ARG1)"
+BUFPRINT
+	;"efficient buffer printer (arg1) is buffer
+	(arg2) is an optional channel.  The characters in the
+	buffer are printed, without regard to
+	MUDDLE escape characteristics (i.e., double-quote will
+	not be preceded by a back-slash).  For printing
+	as a string, see 'BUFSPRINT'	"
+BUFSIZE	;"free variable, amount to grow by if not given"
+BUFSPRINT ;"Prints a buffer (arg1) on an optional (arg2) channel
+	(default .OUTCHAN).  The function prints
+	the buffer as a string, 'escaping' the characters
+	double-quote and back-slash so that the the string may
+	be read correctly as a MUDDLE object."
+BUFTECO	;"function which applies TECO to a buffer.
+	May be used in CHRTABLE, and is default control-E function"
+BUFTOS
+	;"uses EXTRACT to generate a string whose length
+	is the number of characters in the buffer"
+CHRTABLE
+	;"initial table,
+	ESC___	Returns from GETSTR (via GETSTRACT)
+	^Q	Quotes the next character
+	^X	Deletes current line
+	^W	Deletes word back to separator
+	^@	Clears buffer
+	^E	Imedit the buffer
+	^F	Inserts a file into the buffer
+	^D	Displays the buffer on next line
+	^L	Clears the screen and displays the buffer"
+XCRLF
+	;"Takes buffer (ARG1) and character (ARG2)
+	adds a line-feed to the buffer after the character.
+	(used in CHRTABLE)."
+DELCHR
+	;"returns deleted character or false, args as ADDCHR
+		applies the LVAL of DELPRINT to the character, unless
+		DELPRINT is false.  Initial LVAL of DELPRINT
+		is IMDEL."
+DELPRINT
+	;"LVAL applied to chars when deleted, unless
+		LVAL is FALSE"
+DELTOCH
+	;"deletes characters from buffer (arg1) till member of
+		(arg2) is deleted.  Returns # of chrs deleted."
+DEL-TO-EOL
+	;"sends delete-to-end-of-line stream (ctl-P L) to system/IMLAC"
+DLINE
+	;"deletes the current line from the buffer (ARG1).  The sep-
+	arator (initially .LINEBRKS contains CR__ only) is also deleted."
+
+DWORD
+	;"deletes one 'word' in the buffer (ARG1) back from current point
+	till a member of .WORDBREAKS is encountered.  The sep-
+	arator is also deleted."
+EDITOR-PARAMS
+	;"defines editor used by BUFTECO -- default value is
+		,TECO-EDITOR-PARAMS"
+EFUNCTION
+	;"does imlac local editing"
+FILEINP
+	;"asks for file names, inputs the file"
+FORMATEFFS
+	;"string of format-effector chars"
+GETSTR
+	;"reads a string from the tty into the
+		buffer (arg1).  the processing for characters is defined
+		by a dispatch table, (arg2).
+		This argument is a structured object of pairs.
+		the first element is a character, the second an
+		applicable object which is applied to the buffer and
+		the character, whenever that character is seen.
+		GETSTR sets up a special activation which is
+		bound to the atom GETSTRACT.  This activation
+		marks the repeat loop, and thus may be returned from
+		to get out of GETSTR.  GETSTR returns the buffer."
+GETSTRACT
+	;"GETSTR's activation, special"
+HPOS-BUF
+	;"takes a BUFFER and does a horizontal position to the (calculated) end
+	of the last line.  For deletions, etc."
+IBUFCLEAR
+	;"Takes buffer (ARG1) and character (ARG2) -- clears the
+	buffer and does '<TERPRI>."
+IBUFPRINT
+	;"Takes buffer (ARG1) and character (ARG2) -- clears screen
+	if character is FF__.  Then prints the buffer."
+IDELCHR
+	;"Takes buffer (ARG1) and character (ARG2)
+	deletes on character and returns it, or FALSE if
+	buffer empty.  (Used in CHRTABLE)."
+IMBUF
+	;"uses IMED functions to IMEDIT a BUFFER.  SSV-28 up."
+IMDEL
+	;"knows how to delete chars from IMLAC.  Uses LVAL of IMLAC?
+		to determine whether console is IMLAC."
+IMLAC?
+	;"true if console is IMLAC. (Set at load time)"
+IMTTY1
+IMTTY2
+	;"these are words which my-tty-off uses to pass to
+		tty-set.  tty-set sets the way the system handles
+		characters for you -- echoing, interrupting and
+		activating may be specified for classes of characters.
+		each class has a field in either tty1 or tty2."
+INIT
+	;"initializes defaults, sets 'IMLAC?'"
+ISIMLAC?
+	;"returns T if console is IMLAC."
+LINEBRKS
+MY-TTY-GET
+MY-TTY-SET
+	;"SIMILAR TO TTY-xxx IN TTY package."
+MY-TTY-OFF
+	;"see 'TTY ORDER' on .INFO.;
+		also NDR;TTY-ON (et al)."
+QUOTECHR
+	;"takes buffer (arg1) and character (arg2) -- quotes the
+	next character by calling IOT, thus escaping the normal
+	dispatch through GETSTR.  The function assumes
+	the TTY environment has been set up correctly. (see MY-TTY-OFF)"
+RETFCN	;"used in CHRTABLE, terminates buffer and returns"
+TECO-EDITOR-PARAMS
+	;"vector of strings which control BUFTECO"
+TNX-TTY-VARS
+	;"tty variables for TENEX ![coc1, coc2, mod]"
+TTY-POS
+	;"takes a char (H or V) and a FIX, does ctl-P to set cursor
+	position in system."
+TTY1
+TTY2
+	;"THESE ARE WORDS WHICH MY-TTY-OFF USES TO PASS TO
+		TTY-SET.  TTY-SET SETS THE WAY THE SYSTEM HANDLES
+		CHARACTERS FOR YOU -- ECHOING, INTERRUPTING AND
+		ACTIVATING MAY BE SPECIFIED FOR CLASSES OF CHARACTERS.
+		EACH CLASS HAS A FIELD IN EITHER TTY1 OR TTY2."
+WORDBRKS
+	;"STRINGS OF BREAKS TO BE USED IN DELETION"
+XED-EDITOR-PARAMS
+	;"vector of strings which control BUFTECO"
+>
+
+<USE "OS">	;"atom OS!- is set to TENEX!- OR ITS!-"
+<USE "CALUTL" "STR" "TTY" "IM" "IMLAC">	;"substr, extract and tty-subrs, imed"
+<USE "JOBS">	;"for BUFTECO only"
+
+<SET FORMATEFFS <MAPF ,STRING ,ASCII [13 10 14 9 32 8]>>
+
+<SET WORDBRKS
+ <STRING
+  <ASCII 10>
+    "	, ;:.">>
+
+<SET LINEBRKS <STRING <ASCII 10>>>
+
+<SET BUFSIZE 200>	;"INITIAL LENGTH TO GROW BUFFERS"
+
+<SETG TECO-EDITOR-PARAMS
+[
+"<SUBSYS>TECO.SAV"
+"<MUDLIB>BUFTECO.INIT"
+"[BUFTECO].TEMPOUT;-1;T"
+"<MUDLIB>BUFTECO.DONE"
+"[BUFTECO].TEMPIN"
+"TECO"
+![	#WORD *252525513125*
+	#WORD *252525652400*
+	#WORD *260517163100*]
+]>
+
+<SETG EDITOR-PARAMS	;"default to XED"
+<SETG XED-EDITOR-PARAMS
+[
+"<SUBSYS>XED.SAV"
+"<MUDLIB>BUFXED.INIT"
+"[BUFXED].TEMPOUT;-1"
+"<MUDLIB>BUFXED.DONE"
+"[BUFXED].TEMPIN"
+"XED"
+![	#WORD *252531713125*
+	#WORD *252525653125*
+	#WORD *060517175100*]
+]>>
+
+<DEFINE ADDCHR (BUFFER CHR)
+	#DECL ((CHR) CHARACTER
+		(VALUE BUFFER) BUFFER)
+	<COND (<EMPTY? <2 .BUFFER>>	;"NO MORE ROOM"
+		<BUFGROW .BUFFER>)>
+	<PUT .BUFFER 2
+	<REST 	<PUT <2 .BUFFER> 1 .CHR>>>
+	>
+
+<DEFINE BUFGROW (BUFFER "OPTIONAL" (BUFSIZE .BUFSIZE)
+		"AUX" (STR <1 .BUFFER>)
+			(PTR <2 .BUFFER>)
+			(LSTR <- <LENGTH .STR> <LENGTH .PTR>>))
+	#DECL ((VALUE BUFFER) BUFFER
+		(STR PTR) STRING
+		(BUFSIZE LSTR) FIX)
+	<SET PTR
+	  <REST
+	   <SET STR
+	     <EXTRACT .STR <ISTRING <+ .BUFSIZE <LENGTH .STR>>>>>
+	  .LSTR>>
+	<PUT .BUFFER 1 .STR>
+	<PUT .BUFFER 2 .PTR>>
+
+<DEFINE INIT ()
+	#DECL ((VALUE) ATOM)
+	<SET IMLAC? <ISIMLAC?>>
+	<SET DELPRINT ,IMDEL>
+	T>
+
+
+<DEFINE BUFTOS (BUF)
+	#DECL ((BUF) BUFFER
+		(VALUE) STRING)
+	<EXTRACT <1 .BUF> <- <LENGTH <1 .BUF>><LENGTH <2 .BUF>>>>>
+<DEFINE DELCHR (BUF
+		"AUX" (LSTR <LENGTH <1 .BUF>>)(PTR <2 .BUF>))
+	#DECL ((VALUE) <OR FALSE CHARACTER>
+		(BUF) BUFFER
+		(LSTR) FIX
+		(PTR) STRING)
+	<COND (<NOT <0? <- <LENGTH .PTR> .LSTR>>>
+		<PUT .BUF 2
+			<SET PTR <BACK .PTR>>>
+		<COND (.DELPRINT	;"IF TRUE, APPLY IT"
+			<APPLY .DELPRINT .BUF <1 .PTR>>)>
+		<1 .PTR>)>	;"RETURNS DELETED CHR"
+	;"RETURNS FALSE IF BUFFER EMPTY"
+>
+
+
+<DEFINE BUFPRINT (BUF "OPTIONAL" (CH .OUTCHAN) "AUX" (STR <1 .BUF>)
+		(LL <BUFLENGTH .BUF>))
+	#DECL ((BUF) BUFFER
+		(STR) STRING
+		(VALUE LL) FIX)
+	<REPEAT ((LEN .LL))
+		#DECL ((LEN) FIX)
+		<COND (<0? .LEN><RETURN>)>
+		<PRINC <1 .STR> .CH>
+		<SET LEN <- .LEN 1>>
+		<SET STR <REST .STR>>
+	> .LL>
+
+<DEFINE BUFSPRINT (BUF "OPTIONAL" (OUTCHAN .OUTCHAN)
+		"AUX" (STR <1 .BUF>)(L <LENGTH <2 .BUF>>)
+			SS LL (ESCSTR "\\\"")(ESCESC "\\\\"))
+	#DECL ((BUF VALUE) BUFFER
+		(L LL) FIX
+		(STR) STRING
+		(SS) <OR STRING FALSE>
+		(OUTCHAN) <SPECIAL CHANNEL>)
+<PRINC !"">	;"start string"
+	<PROG ()
+	<COND (<0? <SET LL  <- <LENGTH .STR> .L>>> T)
+		(<SET SS <FIRST-OF .ESCSTR .STR .LL>>	;"find losers"
+		<PRINTSTRING .STR .OUTCHAN <- <LENGTH .STR><LENGTH .SS>>>
+	<PRINC <COND (<==? <1 .SS> !"\\> .ESCESC)(ELSE .ESCSTR)>>
+		<SET STR <REST .SS>>
+		<AGAIN>)	;"go look some more"
+		(ELSE
+		<PRINTSTRING .STR .OUTCHAN .LL>)>
+	>
+<PRINC !"">	;"terminate string"
+.BUF>
+
+
+<DEFINE BUFLENGTH (BUF)
+	#DECL ((BUF) BUFFER
+		(VALUE) FIX)
+	<- <LENGTH <1 .BUF>><LENGTH <2 .BUF>>>>
+<DEFINE BUFCLEAR (BUF)
+	#DECL ((BUF VALUE) BUFFER)
+	<PUT .BUF 2 <1 .BUF>>>
+
+<DEFINE DELTOCH (BUF BREAKS "AUX" DELCH (COUNT 0) (ST <2 .BUF>)
+				  (MAXC <BUFLENGTH .BUF>)
+				   (NBREAKFLAG <>) C)
+	#DECL ((BUF) BUFFER
+		(BREAKS ST) STRING
+		(DELCH) <OR FALSE CHARACTER>
+		(NBREAKFLAG) <OR FALSE 'T>
+		(C) CHARACTER
+		(COUNT MAXC VALUE) FIX)
+	<REPEAT ()
+	<COND (<0? .MAXC><RETURN .COUNT>)>
+	<SET C <1 <SET ST <BACK .ST>>>>	;"get last char"
+	<COND (<MEMQ .C .BREAKS>
+		<COND (.NBREAKFLAG	;"seen any non-breaks?"
+			<RETURN .COUNT>)>)
+	      (<SET NBREAKFLAG T>)>	;"non-break"
+	<DELCHR .BUF>	;"delete non-breaks, trailing breaks."
+	<SET COUNT <+ .COUNT 1>>
+	<SET MAXC <- .MAXC 1>>
+	>>
+
+
+<DEFINE CTL-Z-FCN (JOBCHAN STATUS-STRING)
+	#DECL ((JOBCHAN) CHANNEL (VALUE STATUS-STRING) STRING)
+	<PRINC <STRING <ASCII 16> !"C>>	;"CLEAR SCREEN"
+	<PRINC
+"
+*** return from TECO by typing 'MC$$' where
+     '$' is ESCAPE (altmode) -- otherwise the buffer will
+     be lost.
+*** TECO is being continued !!!
+">>
+
+
+
+;"CHARACTER GROUP MODES FOR USE DURING IMEDIT (SEE TTY ORDER .INFO.;)"
+
+<SET IMTTY1 #WORD *020202020202*>
+<SET IMTTY2 #WORD *030202020202*>
+;"CHARACTER GROUP MODES FOR USE IN GETSTRACT"
+
+<SET TTY1 #WORD *022020202020*>	;"DON'T ECHO CTL CHARS"
+<SET TTY2 #WORD *232022222220*>
+
+<SET TNX-TTY-VARS
+ ![
+#WORD *252532525125*
+#WORD *252525652400*
+#WORD *000000171100*
+]>
+
+<DEFINE MY-TTY-OFF ()
+	#DECL ((VALUE) <UVECTOR [REST WORD]>)
+	<MY-TTY-SET .TNX-TTY-VARS>>
+
+<DEFINE MY-TTY-SET (UV)
+	#DECL ((UV VALUE) <UVECTOR [REST WORD]>)
+	<*SFMOD *101* <3 .UV>>
+	<*SFCOC *101* .UV>
+	.UV>
+
+<DEFINE MY-TTY-GET ("OPTIONAL" (RUV ![#WORD *0* #WORD *0* #WORD *0*]))
+	#DECL ((RUV VALUE) <UVECTOR [REST WORD]>)
+	<PUT .RUV 3 <*RFMOD *101*>>
+	<*RFCOC *101* .RUV>
+	>
+
+<DEFINE ERRFCN (FRM "TUPLE" ANY "AUX" ERRVAL OTTY)
+	#DECL ((FRM) FRAME (OTTY) <UVECTOR [REST WORD]>)
+<COND (<AND <BOUND? GETSTRACT><LEGAL? .GETSTRACT>>
+	;"HE MAY HAVE ERRETED"
+	<SET OTTY <MY-TTY-GET>>	;"REMEMBER TTY STATUS"
+	<MY-TTY-SET .OLD-TTY>	;"RESETS TTY"
+	<OFF .GETSTR-HAND>	;"OFFS THIS FCN"
+	<INT-LEVEL 0>
+	<SET ERRVAL <ERROR !.ANY>>	;"RE-ENTERS ERROR"
+	<HANDLER <GET ERROR!-INTERRUPTS INTERRUPT> .GETSTR-HAND>
+		;"IF ERRET W/ARG"
+	<MY-TTY-SET .OTTY>		;"RESET TTY STATUS"
+	<ERRET .ERRVAL .FRM>	;"IF HE ERRET'S ANYTHING"
+	)(ELSE ;"GROVEL AND DELETE THIS HANDLER")>>
+
+<DEFINE CHARFCN (CHR CHN "AUX" OTTY)
+	#DECL ((CHR ) CHARACTER
+		(CHN) CHANNEL
+		(OTTY) <UVECTOR [REST WORD]>
+		(VALUE) <OR DISMISS FALSE>)
+	<COND (<AND <BOUND? GETSTRACT><LEGAL? .GETSTRACT>
+		<OR <=? .CHR <ASCII 7>><=? .CHR !">>>
+		<SET OTTY <MY-TTY-GET>>	;"REMEMBER TTY-STATUS"
+		<MY-TTY-SET .OLD-TTY>	;"SET UP IN GETSTR"
+		;"OFF ALL HANDLERS, IN CASE HE ABORTS"
+		<OFF .GETSTR-HAND>	;"ERROR HANDLER"
+		<OFF .GETSTR-CHAND>	;"CHAR HANDLER"
+		;"AND CALL QUITTER"
+		<QUITTER .CHR .CHN>
+		;"IF RETURNS, WANT TO REINSTATE INTERRUPTS"
+		<HANDLER <GET ERROR!-INTERRUPTS INTERRUPT> .GETSTR-HAND>
+		<HANDLER <GET ,INCHAN INTERRUPT> .GETSTR-CHAND>
+		<MY-TTY-SET .OTTY>	;"REINSTATE TTY"
+		#DISMISS T
+		)>>
+
+
+<DEFINE GETSTR (BUF "OPTIONAL" (CHRTABLE .CHRTABLE)
+		"AUX" (OLD-TTY <MY-TTY-GET>) GETSTR-HAND GETSTR-CHAND )
+	#DECL ((VALUE BUF) BUFFER
+		(CHRTABLE) VECTOR
+		(OLD-TTY) <SPECIAL <UVECTOR [REST WORD]>>
+		(GETSTR-HAND GETSTR-CHAND) <SPECIAL HANDLER>)
+	<MY-TTY-OFF>	;"SET SYSTEM TTY-HANDLING"
+	<SET GETSTR-HAND
+	 <ON "ERROR" ,ERRFCN 3 0>>
+	<SET GETSTR-CHAND
+	 <ON "CHAR" ,CHARFCN 7 0 ,INCHAN>>
+<UNWIND	;"watch out for non-local returns"
+	<REPEAT GETSTRACT (CHR CP)
+		#DECL ((CHR) CHARACTER
+			(CP) <OR FALSE VECTOR>
+			(GETSTRACT) <SPECIAL ACTIVATION>)
+		<COND (<SET CP <MEMQ <SET CHR <IOT>> .CHRTABLE>>
+			<APPLY <2 .CP> .BUF .CHR>)
+			(ELSE <ADDCHR .BUF .CHR>
+			<COND (<==? ,OS ITS>
+			       <AND <L? <ASCII .CHR> *40*>
+			       <NOT <MEMQ .CHR .FORMATEFFS>>
+			       <PRINC .CHR>>)
+			       (ELSE <PRINC .CHR>)>)>
+	>
+<PROG ()
+	<OFF .GETSTR-CHAND>	;"GET RID OF CHAR FCN"
+	<OFF .GETSTR-HAND>	;"GET RID OF ERROR FCN"
+	<MY-TTY-SET .OLD-TTY>	;"RESTORE TTY"
+	>>	;"close unwind"
+	<OFF .GETSTR-CHAND>	;"GET RID OF CHAR FCN"
+	<OFF .GETSTR-HAND>	;"GET RID OF ERROR FCN"
+	<MY-TTY-SET .OLD-TTY>	;"RESTORE TTY"
+	<TERPRI>
+	.BUF>
+
+
+<DEFINE DWORD (BUF CHR "AUX" TEM)
+	#DECL ((BUF) BUFFER (CHR) CHARACTER (TEM VALUE) FIX)
+	<COND (<==? ,OS TENEX><PRINC "//">)>
+	<SET TEM <DELTOCH .BUF .WORDBRKS>>
+	<COND (<==? ,OS TENEX><PRINC "//">)>
+.TEM>
+
+<DEFINE DLINE (BUF CHR "AUX" TEM)
+	#DECL ((BUF) BUFFER (CHR) CHARACTER (TEM VALUE) FIX)
+	<COND (<==? ,OS TENEX><PRINC "//">)>
+	<SET TEM <DELTOCH .BUF .LINEBRKS>>
+	<COND (<==? ,OS TENEX><PRINC "//">)>
+.TEM>
+
+<DEFINE QUOTECHR (BUF CHR)
+	#DECL ((BUF VALUE) BUFFER (CHR) CHARACTER)
+	<SET CHR <IOT>>	;"get a character"
+	<PRINC .CHR>	;"echo"
+	<ADDCHR .BUF .CHR>>
+
+<DEFINE XCRLF (BUF CHR)
+	#DECL ((BUF VALUE) BUFFER (CHR) CHARACTER)
+	<TERPRI>
+	<ADDCHR .BUF %<ASCII 13>>
+	<ADDCHR .BUF %<ASCII 10>>	;"LF"
+	>
+
+<DEFINE IDELCHR (BUF CHR)
+	#DECL ((BUF) BUFFER (CHR) CHARACTER (VALUE) <OR FALSE CHARACTER>)
+	<COND (<==? <1 .BUF> <2 .BUF>>	;"empty?"
+		<TERPRI>)
+	      (<==? ,OS ITS>
+		<DELCHR .BUF>)
+	      (ELSE <PRINC !"/>	;"tenex flavor"
+		      <DELCHR .BUF>)>
+	>
+
+<DEFINE IMDEL (BUF CHR "AUX" (C <ASCII .CHR>))
+	#DECL ((BUF) BUFFER (CHR VALUE) CHARACTER (C) FIX)
+	<COND (.IMLAC?
+	<COND (<OR <==? .C *10*>	;"bs"
+		<==? .C *11*>>		;"tab"
+		<HPOS-BUF .BUF><DEL-TO-EOL>)
+		(<==? .C *12*>	;"lf"
+		<PRINC %<STRING <ASCII 16> !"U>>	;"line starve"
+			<UNPRINT 2>)
+		(<==? .C *15*><HPOS-BUF .BUF>)
+		(ELSE
+		<PRINC %<STRING <ASCII 16> !"X>>
+		<UNPRINT 2>
+		<AND <L=? <ASCII .CHR> *37*>
+			<PRINC %<STRING <ASCII 16> !"X>>
+			<UNPRINT 2>>)>
+		.CHR	;"RETURNS CHR")
+		(ELSE  <PRINC .CHR>)>>
+
+<DEFINE DEL-TO-EOL ()
+	<PRINC %<STRING <ASCII 16> !"L>>
+	<UNPRINT 2>>
+
+<DEFINE UNPRINT (N)	;"hacks line-pos in .OUTCHAN -- for ctl-P hacks"
+	#DECL ((VALUE N) FIX)
+	<PUT .OUTCHAN 14 <- <NTH .OUTCHAN 14> .N>>
+	<14 .OUTCHAN>>
+
+<DEFINE IBUFCLEAR (BUF CHR)
+	#DECL ((BUF VALUE) BUFFER (CHR) CHARACTER)
+	<PRINC .CHR>
+	<BUFCLEAR .BUF>
+	<TERPRI>
+	.BUF>
+
+<DEFINE IBUFPRINT (BUF CHR)
+	#DECL ((BUF) BUFFER (CHR) CHARACTER (VALUE) FIX)
+	<COND (<AND <==? ,OS ITS><=? .CHR %<ASCII 12>>>
+		<PRINC %<STRING <ASCII 16> !"C>>)
+		(ELSE <PRINC .CHR>)>
+	;"IF FF__, CLEAR SCREEN"
+	<TERPRI>
+	<BUFPRINT .BUF>>
+
+
+
+
+<DEFINE EFUNCTION (BUF "OPTIONAL" CHR)
+	#DECL ((BUF VALUE) BUFFER (CHR) CHARACTER)
+<COND (.IMLAC?	;"DON'T ALLOW THIS CLOWNING ON AN ARDS"
+	<IMBUF .BUF>	;"go imedit, user returns with PAGE-TRANSMIT"
+	)(ELSE <ADDCHR .BUF .CHR>	;"ADDS ^E IF NOT IMLAC")>
+	.BUF>
+
+<DEFMAC CONTIF ('FRM "ARGS" FRME) #DECL ((FRM) ANY (VALUE) FORM)
+	<FORM OR .FRM 
+		<FORM PROG () !.FRME
+		 '<RETURN <> .BUFTECO-ACT>>>>
+
+<DEFINE ERRP (FRK "TUPLE" TUP)
+	#DECL ((TUP) <TUPLE [REST STRING]> (FRK) <OR FALSE <PRIMTYPE WORD>>)
+	<MAPF <> ,PRINC .TUP>
+	<TERPRI>
+	<PRINC "The buffer is unchanged.">
+	<TERPRI>
+	<COND (.FRK <*KFORK .FRK>
+		    <*RFRKH .FRK>)>>
+
+<DEFINE STATESTRING (FRK)
+	#DECL ((FRK) <PRIMTYPE WORD> (VALUE) STRING)
+	<NTH ,STATUS-STRINGS
+	   <+ 1 <CHTYPE <GETBITS <*RFSTS .FRK> <BITS 3 18>> FIX>>>>
+
+<DEFINE BUFTECO (BUF "OPTIONAL" CHR "AUX" FRK CH BUFCH (WON <>)
+			(COC <MY-TTY-GET>) (PARAMS ,EDITOR-PARAMS)
+			(UNM <DIR-TO-S <1 <GET-JOB-INFO>>>)	;"uname"
+		 "NAME" BUFTECO-ACT)
+	#DECL ((PARAMS) <VECTOR [6 STRING]>
+	(BUF) BUFFER (CHR) CHARACTER
+	(FRK) <OR FALSE <PRIMTYPE WORD>>
+	(VALUE) <OR BUFFER FALSE>
+	(CH) <OR FALSE CHANNEL <PRIMTYPE WORD>>
+	(COC) <UVECTOR [REST <PRIMTYPE WORD>]>
+	(BUFCH) <OR CHANNEL FALSE>)
+<AND <ASSIGNED? CHR><PRINC .CHR>>
+<TERPRI>
+<COND (<SET FRK <*CFORK *200000000000*>>	;"use this fork's spec cap"
+	<COND (<SET CH <GTJFN <1 .PARAMS>>>	;"sav file"
+		<*GET .FRK .CH>	;"load the program"
+		<RLJFN .CH>
+		<CONTIF <SET CH <OPEN "READ" <2 .PARAMS>>>
+			<ERRP .FRK
+				"Can't open startup file: "
+				<2 .PARAMS>
+				", "
+				<1 .CH>>>	;"init file"
+		<*SFBSZ <1 .CH> 7>	;"set byte size to 7"
+		<*SPJFN .FRK <1 .CH> *377777*>
+		;"read from file, write to nul (*377777*)
+			or primary out (*101*) for testing"
+	;"write buffer into file"
+		<SET BUFCH
+		     <OPEN "PRINT" 
+			<STRING !"< .UNM !"> <3 .PARAMS>>>> ;"temporary"
+		<PUT .BUFCH 13 1000000>	;"long line length"
+		<BUFPRINT .BUF .BUFCH>	;"print the file"
+		<CLOSE .BUFCH>
+	;"delete BUFCH later?"
+			<*SFRKV	.FRK>	;"start fork at 0th entry"
+			<*WFORK .FRK>	;"wait for termination"
+			<CLOSE .CH>	;"through with init jfn"
+	;"let the loser loose"
+			<*SPJFN .FRK -1 -1>	;"set primary I/O to terminal"
+		<PRINC <6 .PARAMS>>	;"editor name"
+		<PRINC !".>
+		<TERPRI>
+		<MY-TTY-SET <7 .PARAMS>>	;"set his terminal characteristics"
+		<CONTIF <=? <GETBITS <*RFSTS .FRK> <BITS 3 18>> #WORD *2*>
+			<ERRP .FRK
+				"Fork in wrong state after init: " 
+				<STATESTRING .FRK>>>
+		<*SFORK .FRK <*RFSTS .FRK 1>>	;"set pc to itself"
+			<*RFORK .FRK>	;"resume fork"
+			<*WFORK .FRK>	;"wait for termination"
+	;"done editing at this point"
+		<CONTIF <SET CH <OPEN "READ"  <4 .PARAMS>>>
+			<ERRP .FRK
+				"Can't open termination file: "
+				 <4 .PARAMS>
+				", "
+				<1 .CH>>>
+		<*SFBSZ <1 .CH> 7>	;"set byte size to 7"
+		<*SPJFN .FRK <1 .CH> *377777*>
+	;"can't back up pc until after the SPJFN"
+		<CONTIF <=? <GETBITS <*RFSTS .FRK> <BITS 3 18>> #WORD *2*>
+			<ERRP .FRK
+				"Fork in wrong state after edit: "
+				<STATESTRING .FRK>>>
+		<*SFORK .FRK <*RFSTS .FRK 1>>	;"set pc to itself"
+		<*RFORK .FRK>	;"write the file"
+		<*WFORK .FRK>
+		<CONTIF <=? <GETBITS <*RFSTS .FRK> <BITS 3 18>> #WORD *2*>
+			<ERRP .FRK
+				"Fork in wrong state after writing file: "
+				<STATESTRING .FRK>>>
+	;"OK if state 2"
+		<CLOSE .CH>	;"done with done-file jfn"
+	;"won -- go get the file"
+		<CONTIF <SET CH
+		     <OPEN "READ"
+			<STRING !"< .UNM !"> <5 .PARAMS>>>>
+			<ERRP .FRK
+				"Can't open edited file: "
+				<5 .PARAMS>
+				", "
+				<1 .CH>>>
+		<SET WON T>	;"won by this point"
+		<BUFCLEAR .BUF>	;"flush old contents"
+		<ADDFILE .BUF .CH>	;"put channel in buffer"
+		<CLOSE .CH>
+	;"edited file in buffer"
+		<MY-TTY-SET .COC>	;"restore tty"
+		<CLOSE .CH>	;"release the JFN"
+		<*KFORK .FRK>	;"kill the fork"
+		<*RFRKH .FRK>	;"release handle")
+		(ELSE <*RFRKH .FRK> .CH)>)>
+	<COND (.WON <PRINT "DONE"><TERPRI>)
+	      (ELSE <PRINC "
+An error occurred in the return from ">
+		<PRINC <6 .PARAMS>>	;"jobs name"
+		<PRINC ".
+The buffer is unchanged.
+">	      )>
+	.BUF>
+
+<DEFINE IMBUF (BUF "OPTIONAL" CHR)
+	#DECL ((VALUE BUF) BUFFER (CHR) CHARACTER)
+	<HANDLER ,ERROR-EVENT ,ERROR-HANDLER>
+	<IMAGE 12>
+	<BUFPRINT .BUF ,IMLAC-OUTCHAN>
+	<IMAGE 1>
+	<IMAGE 9>
+	<TTY-OFF>
+	<COND (<IMLAC-COMMAND>
+		<RESET-IMLAC>
+		<ERROR NO-PAGE-XMIT!-ERRORS IMSTR>)
+		(ELSE
+		<BUFCLEAR .BUF>
+	;"flush any leftover '!$' or 'alt-mode'"
+	<SET CHR <NEXTCHR ,IMLAC-INCHAN>>
+		<COND (<=? .CHR <ASCII 27>>
+			<READCHR ,IMLAC-INCHAN>)
+			(<=? .CHR !"!>
+			<READCHR ,IMLAC-INCHAN>	;"flush '!'"
+			<COND (<=? <NEXTCHR ,IMLAC-INCHAN> <ASCII 27>>
+				<READCHR ,IMLAC-INCHAN>)
+				(ELSE <ADDCHR .BUF !"!>)>)>
+
+		<PROG (N)
+		#DECL ((N) FIX)
+		<COND (<0? <BUFLENGTH .BUF>><BUFGROW .BUF>)>
+		;"cretinous READSTRING change -- error on 0 length string"
+		<SET N <READSTRING <2 .BUF> ,IMLAC-INCHAN "!">>
+		<COND (<=? .N <LENGTH <2 .BUF>>>
+			<PUT .BUF 2 <REST <2 .BUF> .N>>
+			<BUFGROW .BUF <LENGTH <1 .BUF>>>	;"double the length"
+			<AGAIN>	;"read some more"
+			)>
+		<READCHR ,IMLAC-INCHAN>			;"flush the excl"
+		<PUT .BUF 2 <REST <2 .BUF> .N>>
+		<COND (<=? <NEXTCHR ,IMLAC-INCHAN>
+			<ASCII 27>>	;"excl-alt-mode"
+			.BUF)
+			(ELSE
+			<ADDCHR .BUF !"!>
+			<AGAIN>	;"'!' not followed by alt-mode")>>
+		;"checks imlac type, and sets cursor so system wins"
+	<IMAGE 1>
+	<IMAGE 13>	;"inquire IMLAC command"
+	<SET N <CHTYPE <TYI> FIX>>
+	<TYI>	;"flush 'type'"
+	<COND (<G? .N <+ 29 *40*>>	;"in SSV.30 and up"
+		;"get linnum"
+		<IMAGE 1>
+		<IMAGE 14>
+		<SET N <- <CHTYPE <TYI> FIX> *40*>>
+		<TTY-POS !"V .N>	;"vert-pos"
+		<HPOS-BUF .BUF <>>	;" FALSE => real tabs")>
+	<RESET-IMLAC>
+	<MY-TTY-OFF>
+	<DEL-TO-EOL>	)>
+	.BUF>
+
+<DEFINE TTY-POS (CHR POS "AUX" (GARBSTR %<STRING <ASCII 16> "HX">))
+	#DECL ((VALUE POS) FIX (CHR) CHARACTER (GARBSTR) STRING)
+	<OR <G=? .POS 0><SET POS 0>>	;"neg pos?"
+	<PUT .GARBSTR 2 .CHR>
+	<PUT .GARBSTR 3 <ASCII <+ .POS *10*>>>	;"system definition"
+	<PRINC .GARBSTR>
+	<UNPRINT 3>
+	.POS>
+
+<DEFINE HPOS-BUF (BUF "OPTIONAL" (SOFT-TAB T) "AUX" SCR)
+	#DECL ((BUF) BUFFER (SOFT-TAB) <OR ATOM FALSE>
+		(SCR) <OR FALSE STRING> (VALUE) FIX)
+	<SET SCR <BACKS <2 .BUF> %<STRING <ASCII 13>>>>	;"back to cr"
+	<COND (.SCR <SET SCR <REST .SCR>>	;"rest cr")
+		(ELSE  <SET SCR <1 .BUF>>)>	;"no cr's"
+	<REPEAT ((N 0)(LEN <- <LENGTH .SCR><LENGTH <2 .BUF>>>))
+	#DECL ((N LEN) FIX)
+		<COND (<0? .LEN><RETURN <TTY-POS !"H .N>>)>
+		<SET C <ASCII <1 .SCR>>>
+	<COND (<G=? .C *40*><SET N <+ .N 1>>)
+		(<==? .C *10*>	;"bs" <SET N <- .N 1>>)
+		(<==? .C *11*>	;"tab"
+		<COND (.SOFT-TAB	;"simulated tabs"
+			<SET N <+ .N <- 8 <MOD .N 8>>>>)
+			(ELSE <SET N <+ .N 1>>)>)
+		(<==? .C *12*>	;"lf -- 0 WIDTH")
+		(ELSE <SET N <+ .N 2>>)>
+	<SET LEN <- .LEN 1>>
+	<SET SCR <REST .SCR>>
+	>>
+
+<DEFINE IMEDITPRINT (CHR "AUX" (N <ASCII .CHR>))
+		#DECL ((CHR) CHARACTER (N VALUE) FIX)
+		;"FOR USE WITH INTERNAL CHANNEL"
+	<COND (<AND <L=? .N *40*>
+			<NOT <MEMBER .CHR .FORMATEFFS>>>
+		<IMAGE %<ASCII !"#>>
+		<IMAGE %<ASCII !"#>>
+		<IMAGE <+ .N *100*>>
+		;"SENDS CTL CHR AS ##N, WHERE N = ASCII+ *100*"
+		)
+		(ELSE
+		<IMAGE .N>)>>
+
+<DEFINE RETFCN (BUF CHR)
+	#DECL ((BUF) BUFFER (CHR) CHARACTER)
+	<PRINC .CHR>
+	<RETURN .BUF .GETSTRACT>>
+
+
+<DEFINE FILEINP (BUF "OPTIONAL" CHR "AUX" LST FL CH PTR)
+	#DECL ((VALUE BUF) BUFFER (CHR) CHARACTER
+		(CH) <OR FALSE CHANNEL> (PTR) STRING
+		(LST ) FIX (FL) <OR FIX FALSE>)
+	<AND <ASSIGNED? CHR><PRINC .CHR>>
+	<PROG GETFILENAME  ((BB <BUFMAKE 40>) ST)
+		#DECL ((ST) STRING (BB) BUFFER)
+		<PRINC " FILE-NAME : ">
+		<BUFPRINT .BB>	;"SHOW HIM THE BUFFER"
+		<GETSTR .BB>
+		<AND <0? <SET LST <BUFLENGTH .BB>>>
+			<RETURN <SET FL <>>>>	;"ESCAPE BY NUL FILE NAME"
+		<OR
+		<PROG ()
+		<SET ST  <EXTRACT <1 .BB> .LST>>
+		<MAPR <> <FUNCTION (S)
+			#DECL ((S) STRING)
+			<COND (<OR
+				<G? <ASCII <1 .S>> %<+ *77* *40*>>>
+				<PUT .S 1 !" >)>>
+		.ST>
+		<AND <EMPTY? <LPARSE .ST>><SET ST <STRING <SNAME> !";>>>
+		;"if null string, use default"
+		 <SET CH <OPEN "READ" .ST>>>
+		 <PROG ()
+			<TERPRI>
+			<PRINC <1 .CH>>
+			<TERPRI>
+			<AGAIN .GETFILENAME>>
+		>>
+<COND (<0? .LST>	;"nul file name string?"
+	<PRINT "FILE-INPUT ABORTED">)
+	(<SET FL <FILE-LENGTH .CH>>	;"if gives file-length,
+					 we can grow the buffer"
+	<COND (<G? .FL <LENGTH <2 .BUF>>>
+		<BUFGROW .BUF <- .FL <LENGTH <2 .BUF>> -100>>	;"grow the buffer"
+		)>
+		<SET PTR <2 .BUF>>
+		<PUT .BUF 2  <REST .PTR
+			<READSTRING .PTR .CH .FL>>>
+		<CLOSE .CH>
+		<PRINT "DONE">)
+	(ELSE	;"have to grow by leaps and bounds"
+	<COND (<0? <BUFLENGTH .BUF>><BUFGROW .BUF>)>
+	<REPEAT ()
+		<SET LST <LENGTH <SET PTR <2 .BUF>>>>
+		;"buffer may grow"
+		<SET FL <READSTRING .PTR .CH .LST>>
+		<PUT .BUF 2 <REST .PTR .FL>>	;"update end-of-buffer"
+		<COND (<L? .FL .LST>	;"didn't fill the buffer?"
+			<RETURN <CLOSE .CH>>)>	;"at eof"
+		<BUFGROW .BUF>	;"not eof, so grow the buffer"
+		>
+	<PRINT "DONE">)>
+	.BUF>
+
+
+<DEFINE ADDSTRING (BF ST "OPTIONAL" (N <LENGTH .ST>) "AUX" (L <LENGTH <2 .BF>>))
+	#DECL ((VALUE BF) BUFFER
+		(ST) STRING (L N) FIX)
+	<AND <OR <L? .N 0><G? .N <LENGTH .ST>>><SET N <LENGTH .ST>>>
+	;"apply bounds constraint"
+	<COND (<G? .N .L>	;"no room in buffer?"
+		<BUFGROW .BF .N>)>
+	<PUT .BF 2
+		<REST <EXTRACT .ST <2 .BF> .N> .N>>
+	.BF>
+
+<DEFINE ADDFILE (BF CH "OPTIONAL" (N -1)
+		"AUX" (S <2 .BF>)(L <LENGTH .S>)
+		(FL <FILE-LENGTH .CH>)(ACC <17 .CH>))
+	#DECL ((VALUE BF) BUFFER
+		(CH) CHANNEL
+		(S) STRING
+		(FL) <OR FIX FALSE>
+		(ACC L N) FIX)
+	<COND (<NOT .FL>	;"directory 'files', etc."
+		<REPEAT ((M 0)(I 0)(S <ISTRING 100>))
+		<SET M <READSTRING .S .CH 100 0>>	;"read some"
+		<COND (<L? .M 100>	;"read it all?"
+			<RESET .CH>	;"re-access"
+;"random hack to re-access non-random-access devices"
+<REPEAT ()
+	<COND (<L=? .ACC 100>
+		<READSTRING .S .CH .ACC>
+		<RETURN>)>
+	<SET ACC <- .ACC 100>>
+	<READSTRING .S .CH>>
+;"reads and throws away characters"
+			<RETURN <SET FL <+ .M .I>>>)>
+		<SET I <+ .M .I>>	;"count over iterations">)>
+	<COND (<OR <L? .N 0><G? .N .FL>><SET N .FL>)> ;"# chars to read"
+	<COND (<L? .L .N>	;"not enough room"
+		<SET S <2 <BUFGROW .BF .N>>>)>
+	<SET N <READSTRING .S .CH .N 0>>	;"do real read"
+	<PUT .BF 2 <REST .S .N>>	;"set buffer 'access'"
+	.BF>
+<DEFINE ISIMLAC? ()
+	#DECL ((VALUE) <OR ATOM FALSE>)
+	<=? *2* <CHTYPE <ANDB *7* <11 ,INCHAN>> FIX>>>
+
+<INIT>	;"set IMLAC?"
+
+<SET CHRTABLE [
+	<ASCII 5>	<COND (.IMLAC? ,EFUNCTION)(ELSE ,BUFTECO)>
+	<ASCII 6>	,FILEINP
+	<ASCII 1>	,IDELCHR
+	<ASCII 13>	,XCRLF
+	<ASCII 12>	,IBUFPRINT
+	<ASCII 4>	,IBUFPRINT
+	<ASCII 17>	,QUOTECHR
+	<ASCII 27>	,RETFCN
+	<ASCII *27*>	,DWORD
+	<ASCII *30*>	,DLINE
+	<ASCII 0>	,IBUFCLEAR
+	]>
+
+<DEFINE BUFMAKE (N "AUX" (ST <ISTRING .N>))
+	#DECL ((N) FIX
+		(ST) STRING
+		(VALUE) BUFFER)
+	<CHTYPE [.ST .ST] BUFFER>>
+
+<PRINTTYPE BUFFER ,BUFPRINT>
+
+<ENDPACKAGE>
+

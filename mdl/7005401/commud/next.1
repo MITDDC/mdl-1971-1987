@@ -1,0 +1,31 @@
+<DEFINE NEXT-DELIVERY-ATTEMPT (ADR "AUX" DA DF B?)
+	#DECL ((ADR) STRING (DF) FIX (DA) LIST (B?) <OR ATOM FALSE>)
+	<SET DA <DRDMSG .ADR <GETFIX "DELIVERY-ATTEMPTS">>>
+	<SET B? <BEDRIDDEN? <EXTRACT-HOST .ADR>>>
+	<COND (<G? <ITIME> <+ <1 .DA> <* 30 262144>>>
+	       <SCROUT
+		"Sick of trying this loser, it's been 30 days.  I give up.">
+	       <>)
+	      (ELSE
+	       <COND (.B? <SET DF <* 30 262144> ;"30 DAYS">)
+		     (<LENGTH? .DA 2> <SET DF ,NET-INC>)
+		     (ELSE
+		      <SET DA <REST .DA <- <LENGTH .DA> 2>>>	  ;"GET LAST 2"
+		      <SET DF <- <2 .DA> <1 .DA>>>		   ;"LAST WAIT"
+		      <COND (<AND <L? .DF 262144> <NOT <LENGTH? .DA 10>>>
+			     <SET DF <+ .DF ,NET-INC>>)>)>
+	       <COND (.B?
+		      <SCROUT "Host will someday be up, will try in "
+			      <CHTYPE <GETBITS .DF <BITS 18 18>> FIX>
+			      " days.">)
+		     (ELSE
+		      <SCROUT "Delivery failed, will try in "
+			      </ <CHTYPE <GETBITS <QTIME .DF> <BITS 18>> FIX>
+				 60>
+			      " minutes.">)>
+	       <PRCADD .ADR
+		       "DELIVERY"
+		       <+ <ITIME> .DF>
+		       10
+		       <>>
+	       T)>>

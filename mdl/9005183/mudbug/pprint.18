@@ -1,0 +1,959 @@
+
+<BLOAT 7100 100 5 20>
+
+;"MUDDLE PRETTY-PRINT, FRAME-SCANNER, AND OTHER ROUTINES"
+
+<RPACKAGE "PP">
+
+<ENTRY PPRINT EPRINT EPRIN1 COLPP
+       FRAMES FRATM FRLVAL FRM
+       PPRINF INDENT-TO FORMS NULL
+       LINPOS LINLNT PAGPOS PAGLNT 
+       QUICKPRINT LOOKAHEAD VERTICAL DENSE LEFT-MARGIN>
+
+;"These atoms are placed in the ROOT oblist to allow general
+	access to their functions"
+
+<BLOCK (<ROOT>)> FIXUP!-RSUBRS <ENDBLOCK>
+
+<COND (<NOT <GASSIGNED? NULL>>
+       <SETG NULL <INSERT <ATOM <ASCII 127>> <ROOT>>>)> 
+
+<SETG QUICKPRINT <SET QUICKPRINT T>>
+
+<SETG LOOKAHEAD <SET LOOKAHEAD T>>
+
+<SETG VERTICAL <SET VERTICAL <>>>
+
+<SETG DENSE <SET DENSE <>>>
+
+<SETG LEFT-MARGIN <SET LEFT-MARGIN 0>>
+
+\
+
+<DEFINE PPRINT (L "OPTIONAL" (OUTCHAN .OUTCHAN)) 
+	#DECL ((OUTCHAN) <SPECIAL CHANNEL>)
+	<COND (<NOT <TYPE? .L ATOM>> <EPRINT .L>)
+	      (<GASSIGNED? .L>
+	       <COND (<TYPE? ,.L FUNCTION>
+		      <EPRINT <CHTYPE (DEFINE .L !,.L) FORM>>)
+		     (<TYPE? ,.L RSUBR> <EPRINT <FORM SETG .L <DUMP ,.L>>>)
+		     (<TYPE? ,.L RSUBR-ENTRY>
+		      <EPRINT <FORM SETG .L <ENT-DUMP ,.L>>>)
+		     (<AND <TYPE? ,.L MACRO>
+			   <NOT <EMPTY? ,.L>>>
+			   <COND (<TYPE? <1 ,.L> FUNCTION>
+				  <EPRINT <CHTYPE (DEFMAC .L !<1 ,.L>) FORM>>)
+				 (ELSE <EPRINT <FORM SETG .L ,.L>>)>)
+		     (ELSE <EPRINT <FORM SETG .L <FORM QUOTE ,.L>>>)>)
+	      (<ASSIGNED? .L>
+	       <EPRINT <FORM SET
+			     .L
+			     <COND (<TYPE? ..L FUNCTION>
+				    <CHTYPE (FUNCTION !..L) FORM>)
+				   (<TYPE? ..L RSUBR> <DUMP ..L>)
+				   (<TYPE? ..L RSUBR-ENTRY> <ENT-DUMP ..L>)
+				   (ELSE <FORM QUOTE ..L>)>>>)
+	      (ELSE <PRINT .L .OUTCHAN> #FALSE ("NAKED ATOM?"))>>
+
+<DEFINE EPRINT (L "OPTIONAL" (MARG <VALUE LEFT-MARGIN>)
+		  "EXTRA" (FITS? <>) (OUTC <INIT>) (M 0))
+	#DECL ((L) ANY (MARG M) <SPECIAL FIX>
+	       (FITS?) <SPECIAL ANY> (OUTC) CHANNEL)
+	<COND (<0? .MARG> <TERPRI .OUTC>)
+	      (<L? <LINPOS .OUTC> .MARG> <INDENT-TO .MARG .OUTC>)>
+	<FORMS .L .OUTC>
+	<TERPRI .OUTC>
+	,NULL>
+
+<DEFINE EPRIN1 (L "OPTIONAL" MARG
+		  "EXTRA" (FITS? <>) (OUTC <INIT>) (M 0))
+	      #DECL ((L) ANY (MARG M) <SPECIAL FIX>
+		     (FITS?) <SPECIAL ANY> (OUTC) CHANNEL)
+	      <COND (<NOT <ASSIGNED? MARG>> <SET MARG <LINPOS .OUTC>>)>
+	      <COND (<L? <LINPOS .OUTC> .MARG>
+		     <INDENT-TO .MARG .OUTC>)>
+	      <FORMS .L .OUTC>
+	      ,NULL>
+
+<DEFINE PPRINF (INF
+		"OPTIONAL" (OUTF "TPL:") (LL <13 ,OUTCHAN>) (EVAL? <>)
+		"AUX" (INCH <OPEN "READ" .INF>) OUTCH (QUICKPRINT <>)
+		      (REDEFINE T) (KEEP-FIXUPS T))
+   #DECL ((INF OUTF) STRING (INCH OUTCH) <OR FALSE CHANNEL> (LL) FIX
+	  (QUICKPRINT) <SPECIAL ANY> (REDEFINE KEEP-FIXUPS) <SPECIAL ANY>)
+   <UNWIND
+    <PROG ()
+	  <COND (<NOT .INCH> <RETURN .INCH>)>
+	  <SET OUTCH <CHANNEL "PRINT" .OUTF>>
+	  <COND (<NOT <SET OUTCH
+			   <OPEN "PRINT" "_PPRNF" ">" <9 .OUTCH> <10 .OUTCH>>>>
+		 <CLOSE .INCH>
+		 <RETURN .OUTCH>)>
+	  <CLOSE .OUTCH>
+	  <PUT .OUTCH 2 "PRINTO">		  ;"Reopen OUTCH in PRINTO mode"
+	  <RESET .OUTCH>
+	  <PUT .OUTCH ,LINLNT .LL>		      ;"Appropriate line length"
+	  <PUT .OUTCH ,PAGLNT 99999>			      ;"Big page length"
+	  <REPEAT ((OUTCHAN .OUTCH) Q QC (UNIQUE (T)) ACC-OLD ACC-NOW
+		   PPOS-OLD (NEWPG T))
+		  #DECL ((OUTCHAN) <SPECIAL CHANNEL> (Q QC) ANY (UNIQUE) ATOM
+			 (ACC-OLD ACC-NOW PPOS-OLD) FIX)
+		  <SET Q <READ .INCH .UNIQUE>>		        ;"Get next item"
+		  <COND (<==? .Q .UNIQUE> <RETURN>)>
+		  <EPRIN1 .Q>					  ;"Output item"
+		  <COND (<SET QC <GET .INCH COMMENT>>	  ;"Top-Level comment ?"
+			 <TERPRI .OUTCHAN>
+			 <PRINC !\; .OUTCHAN>
+			 <EPRIN1 .QC>)>
+		  <COND (.EVAL? <EVAL .Q>)>
+		  <PROG ()
+		  <COND (<G? <PAGPOS .OUTCHAN> 58>
+						  ;"Last item overflowed page ?"
+			 <COND (.NEWPG	   ;"Last item only item on this page ?"
+				<TERPRI .OUTCHAN>
+				<PRINC <ASCII 12> .OUTCHAN>
+						    ;"Simply end with form-feed"
+				<TERPRI .OUTCHAN>)
+			       (ELSE
+				    ;"Last item was simply one too many on page"
+				<BUFOUT .OUTCHAN>	 ;"Flush out stragglers"
+				<SET ACC-NOW <17 .OUTCHAN>>
+				        ;"YES, go back and clobber in form-feed"
+				<ACCESS .OUTCHAN .ACC-OLD>
+				<PRINTB ,CR:FF:CR .OUTCHAN>
+				<ACCESS .OUTCHAN .ACC-NOW>	       ;"Return"
+				<PUT .OUTCHAN
+				     ,PAGPOS
+				     <- <PAGPOS .OUTCHAN> .PPOS-OLD 1>>
+					        ;"Repair the page position slot"
+				<SET NEWPG T>
+				<AGAIN>)>)
+			(ELSE
+			 <SET ACC-OLD <17 .OUTCHAN>>    ;"Save current location"
+			 <SET PPOS-OLD <PAGPOS .OUTCHAN>>
+			 <PRINTB ,CR:SP:CR .OUTCHAN> ;"Output clobberable chars"
+			 <PUT .OUTCHAN ,LINPOS 0>	  ;"Fixup OUTCHAN slots"
+			 <PUT .OUTCHAN ,PAGPOS <+ <PAGPOS .OUTCHAN> 2>>
+			 <SET NEWPG <>>)>>>
+	  <CLOSE .INCH>
+	  <RENAME .OUTCH .OUTF>
+	  <CLOSE .OUTCH>
+	  "DONE">
+    <PROG ()
+	  <AND <ASSIGNED? INCH> <TYPE? .INCH CHANNEL> <CLOSE .INCH>>
+	  <AND <ASSIGNED? OUTCH>
+	       <TYPE? .OUTCH CHANNEL>
+	       <CLOSE .OUTCH>>>>>
+
+<SETG CR:SP:CR ![7022316820!]>
+
+<SETG CR:FF:CR ![7021661460!]>
+
+<GDECL (CR:SP:CR CR:FF:CR) UVECTOR>
+
+<DEFINE COLPP (X
+	       "OPTIONAL" (OUTCHAN .OUTCHAN) (COL <LINPOS .OUTCHAN>)
+			  (WID <LINLNT .OUTCHAN>)
+	       "AUX" (SWID <LINLNT .OUTCHAN>))
+	#DECL ((X) ANY (OUTCHAN) <SPECIAL CHANNEL> (COL WID SWID) FIX)
+	<PUT .OUTCHAN ,LINLNT .WID>
+	<EPRINT .X .COL>
+	<PUT .OUTCHAN ,LINLNT .SWID>
+	,NULL>
+
+\ 
+
+<DEFINE FRAMES			    ;"Prints FUNCT and ARGS for -n- frames down"
+	("OPTIONAL" (HOW-MANY 99999) (FIRST 0) "EXTRA" (NO-DUMP T) (OUTCHAN <INIT>)) 
+	#DECL ((HOW-MANY FIRST) FIX (OUTCHAN) <SPECIAL CHANNEL> (NO-DUMP) <SPECIAL ANY>)
+	<REPEAT ((F <FRM .FIRST>))
+		#DECL ((F) FRAME)
+		<COND (<0? .HOW-MANY> <TERPRI .OUTCHAN> <RETURN "FUNCT---ARGS">)
+		      (<==? <FUNCT .F> TOPLEVEL>
+		       <TERPRI .OUTCHAN>
+		       <RETURN TOPLEVEL>)
+		      (<AND		  ;"Don't print repetitious FSUBR args."
+			    <OR <AND <GASSIGNED? <FUNCT .F>> <TYPE? ,<FUNCT .F> FSUBR>>
+				<AND <ASSIGNED? <FUNCT .F>> <TYPE? .<FUNCT .F> FSUBR>>>
+			    <==? <FUNCT <FRAME .F>> EVAL>
+			    <TYPE? <1 <ARGS <FRAME .F>>> FORM>
+			    <==? <FUNCT .F> <1 <1 <ARGS <FRAME .F>>>>>>)
+		      (ELSE
+		       <PRINT .FIRST .OUTCHAN>
+		       <PRINC <FUNCT .F> .OUTCHAN>
+		       <PRINC !\	 .OUTCHAN>				  ;"Tab"
+		       <EPRIN1 <ARGS .F>>)>
+		<SET F <FRAME .F>>
+		<SET HOW-MANY <- .HOW-MANY 1>>
+		<SET FIRST <+ .FIRST 1>>>>
+
+<DEFINE FRATM ("OPTIONAL" (HOW-MANY 9999) (FIRST 0) "EXTRA" (OUTC <INIT>)) 
+	#DECL ((HOW-MANY FIRST) FIX (OUTC) CHANNEL)
+	<REPEAT ((F <FRM .FIRST>) AF V FF)
+		#DECL ((F) FRAME (AF) FORM (FF) ATOM)
+		<COND (<0? .HOW-MANY> <TERPRI .OUTC> <RETURN "FRAME---FUNCTION">)
+		      (<==? <SET FF <FUNCT .F>> TOPLEVEL>
+			<TERPRI .OUTC>
+			<RETURN TOPLEVEL>)
+		      (<OR <AND <==? .FF EVAL>
+				<1? <LENGTH <ARGS .F>>>
+				<TYPE? <1 <ARGS .F>> FORM>
+				<NOT <EMPTY? <SET AF <1 <ARGS .F>>>>>
+				<TYPE? <1 .AF> ATOM>
+				<OR <AND <GASSIGNED? <SET FF <1 .AF>>> <SET V ,.FF>>
+				    <AND <ASSIGNED? .FF> <SET V ..FF>>>
+				<TYPE? .V FUNCTION RSUBR RSUBR-ENTRY>>
+			   <AND <OR <AND <GASSIGNED? .FF> <SET V ,.FF>>
+				    <AND <ASSIGNED? .FF> <SET V ..FF>>>
+				<TYPE? .V RSUBR RSUBR-ENTRY>>>
+		       <PRIN1 .FIRST .OUTC>
+		       <PRINC !\	 .OUTC>
+		       <PRIN1 .FF .OUTC>
+		       <TERPRI .OUTC>)>
+		<SET F <FRAME .F>>
+		<SET FIRST <+ .FIRST 1>>
+		<SET HOW-MANY <- .HOW-MANY 1>>>>
+
+<DEFINE FRM (I) 
+	#DECL ((I) FIX (VALUE) <OR FRAME ATOM>)
+	<REPEAT ((F <FRAME>))
+		<COND (<0? .I> <RETURN .F>)
+		      (<==? <FUNCT .F> TOPLEVEL>
+		       <PRINT .I>
+		       <PRINC "FRAMES FROM ">
+		       <RETURN .F>)>
+		<SET F <FRAME .F>>
+		<SET I <- .I 1>>>>
+
+<DEFINE FRLVAL (ATM "OPTIONAL" (HOW-MANY 100000) (FIRST 0)
+		    "EXTRA" (OUTC <INIT>)) 
+	#DECL ((ATM) ATOM (HOW-MANY FIRST) FIX (OUTC) CHANNEL)
+	<COND (<NOT <BOUND? .ATM>> "Atom is not bound anywhere.")
+	      (ELSE
+	       <TERPRI .OUTC>
+	       <SET HOW-MANY <+ .HOW-MANY 1>>
+	       <REPEAT ((F <FRM .FIRST>) (LAST-LOC <LLOC .ATM>)
+			(FLG <ASSIGNED? .ATM>) (NUM 0) NEXT-LOC)
+		       #DECL ((F) FRAME (LAST-LOC NEXT-LOC) LOCD (NUM) FIX
+			      (FLG) <OR ATOM FALSE>)
+		       <COND (<==? .NUM .HOW-MANY>
+			      <PRINVAL "Bound further down to: " .LAST-LOC .FLG .OUTC>
+			      <RETURN>)
+			     (<==? <FUNCT .F> TOPLEVEL>
+			      <PRINVAL "Toplevel binding: " .LAST-LOC .FLG .OUTC>
+			      <RETURN>)
+			     (<NOT <BOUND? .ATM .F>>
+			      <PRINVAL <- .NUM 1> .LAST-LOC .FLG .OUTC>
+			      <RETURN>)
+			     (<==? .LAST-LOC <SET NEXT-LOC <LLOC .ATM .F>>>)
+			     (ELSE
+			      <PRINVAL <- .NUM 1> .LAST-LOC .FLG .OUTC>
+			      <SET LAST-LOC .NEXT-LOC>
+			      <SET FLG <ASSIGNED? .ATM .F>>)>
+		       <SET F <FRAME .F>>
+		       <SET NUM <+ .NUM 1>>>
+	       "Frame----Value")>>
+
+<DEFINE PRINVAL (PRE LOCA FLG OUTCHAN)
+	#DECL ((LOCA) LOCD (PRE) ANY
+	       (OUTCHAN) <SPECIAL CHANNEL>)
+	<PRINC .PRE .OUTCHAN>
+	<INDENT-TO 5 .OUTCHAN>
+	<COND (.FLG <EPRIN1 <IN .LOCA>> <TERPRI .OUTCHAN>)
+	      (ELSE <PRINC "----bound, but not assigned a value----
+" .OUTCHAN>)>>
+
+<DEFINE INIT ("EXTRA" OUTC)	;"Insure valid OUTCHAN"
+	#DECL ((VALUE) CHANNEL)
+	<PROG ()
+	      <COND (<AND <ASSIGNED? OUTCHAN>
+			  <TYPE? <SET OUTC <VALUE OUTCHAN>> CHANNEL>>
+			;"The VALUE fakes the compiler out"
+		     .OUTC)
+	      (ELSE
+	       <ERROR BAD-CHANNEL!-ERRORS PPRINT>
+	       <AGAIN>)>>>
+
+\ 
+;"Dispatch to proper printer based on type of LNEW.
+Actually pass L (the original object) to save comments."
+
+<DEFINE FORMS			 ;"Pprint one item at the current page location"
+	(L "OPTIONAL" (OUTC <INIT>) (LNEW .L) "AUX" FITS? R TYP PTYP)
+	#DECL ((L LNEW) ANY (FITS?) <SPECIAL ANY> (M) <SPECIAL FIX>
+	       (OUTC) <CHANNEL [12 ANY] [4 FIX]> (R) <OR FALSE APPLICABLE>
+	       (TYP PTYP) ATOM)
+	<PROG ()
+	      <COND (<MONAD? .LNEW> <PRIN1 .LNEW .OUTC> <RETURN>)>
+					       ;"If its a MONAD, just print it."
+	      <SET FITS? <FLATSIZE .LNEW <- <LINLNT .OUTC> <LINPOS .OUTC> .M>>>
+				  ;"If it fits, use ELEMENTS, else COMPONENTS."
+	      <COND (<AND <VALUE QUICKPRINT> .FITS?>
+		     <PRIN1 .LNEW .OUTC>
+		     <RETURN>)
+	            (<TYPE? .LNEW FORM> <FORM-PPRINT .L .OUTC>)
+		    (<TYPE? .LNEW LIST> <LIST-PPRINT .L .OUTC>)
+		    (<TYPE? .LNEW DECL> <DECL-PPRINT .L .OUTC>)
+		    (<TYPE? .LNEW VECTOR> <VECTOR-PPRINT .L .OUTC>)
+		    (<TYPE? .LNEW UVECTOR> <UVECTOR-PPRINT .L .OUTC>)
+		    (<TYPE? .LNEW SEGMENT> <SEGMENT-PPRINT .L .OUTC>)
+		    (<TYPE? .LNEW STRING> <STRING-PPRINT .L .OUTC>)
+		    (<TYPE? .LNEW TEMPLATE> <TEMPLATE-PPRINT .L .OUTC>)
+		    (<TYPE? .LNEW FUNCTION> <FUNCTION-PPRINT .L .OUTC>)
+		    (<TYPE? .LNEW RSUBR-ENTRY> <RSUBR-ENTRY-PPRINT .L .OUTC>)
+		    (<TYPE? .LNEW RSUBR> <RSUBR-PPRINT .L .OUTC>)
+		    (<TYPE? .LNEW CODE> <CODE-PPRINT .L .OUTC>)
+		    (<TYPE? .LNEW CHANNEL> <CHANNEL-PPRINT .L .OUTC>)
+		    (<TYPE? .LNEW TUPLE> <VECTOR-PPRINT .L .OUTC>)
+		    (<TYPE? .LNEW ARGUMENTS> <VECTOR-PPRINT .L .OUTC>)
+		    (<TYPE? .LNEW LOCD LOCAS LOCU LOCS LOCA LOCV LOCL>
+		     <LOCAPRINT .L>)
+		    (<TYPE? .LNEW STORAGE> <STORAGE-PPRINT .L .OUTC>)
+		    (<SET R <GETPROP <SET TYP <TYPE .LNEW>> PPRINT>>
+		     <APPLY .R .LNEW .OUTC>)
+		    (<N==? .TYP <SET PTYP <PRIMTYPE .LNEW>>>  ;"Not primitive ?"
+		     <PRINC !\# .OUTC>		  ;"Try again as primitive type"
+		     <PRIN1 .TYP .OUTC>
+		     <PRINC !\  .OUTC>		        ;"Space after type name"
+		     <SET LNEW <CHTYPE .LNEW .PTYP>>	 ;"Try Primtype instead"
+		     <AGAIN>)
+		    (ELSE <ERROR CANT-PPRINT!-ERRORS .LNEW>)>>>
+
+\ 
+
+;"Routines to print objects in certain special formats"
+
+<DEFINE COMELE (L "OPTIONAL" (OUTC .OUTCHAN) (OM <+ .M 1>))	 ;"Select proper format"
+	#DECL ((L) ANY (OM) FIX (OUTC) CHANNEL)
+	<COND (.FITS? <ELEMENTS .L .OUTC .OM>)
+	      (ELSE <COMPONENTS .L .OUTC .OM>)>>
+
+<DEFINE COMPONENTS	      ;"Print the components of a structure in a column"
+	(L "OPTIONAL" (OUTC .OUTCHAN) (OM <+ .M 1>) (STOP 0)) 
+	#DECL ((L) ANY (OM) FIX (STOP) ANY (OUTC) <CHANNEL [12 ANY] [4 FIX]>)
+	<COND (<VALUE DENSE> <BLOCKP .L <LINPOS .OUTC> .OUTC .OM .STOP>)
+	      (ELSE
+	       <REPEAT ((N <LINPOS .OUTC>) (M 0))
+		#DECL ((N) FIX (M) <SPECIAL FIX>)
+		<AND <EMPTY? <REST .L>> <SET M .OM>>
+		<FORMS <1 .L> .OUTC>
+		<COMMENTS .L .OUTC>
+		<COND (<EMPTY? <SET L <REST .L>>> <RETURN DONE>)>
+		<AND <==? .STOP .L> <RETURN DONE>>
+		<TERPRI .OUTC>
+		<INDENT-TO .N .OUTC>>)>>
+
+
+<DEFINE ELEMENTS	       ;"Print the components of a structure in a line."
+	(L "OPTIONAL" (OUTC .OUTCHAN) (OM <+ .M 1>) (STOP 0)) 
+	#DECL ((L) ANY (OM) FIX (STOP) ANY (OUTC) <CHANNEL [12 ANY] [4 FIX]>)
+	<COND (<EMPTY? .L>)
+	      (<VALUE QUICKPRINT>
+	       <REPEAT ()
+		       <PRIN1 <1 .L> .OUTC>
+		       <AND <OR <EMPTY? <SET L <REST .L>>> <==? .L .STOP>>
+			    <RETURN>>
+		       <PRINC !\  .OUTC>>)
+	      (ELSE
+	       <REPEAT ((N <LINPOS .OUTC>) (M 0) COM)
+		       #DECL ((N) FIX (M) <SPECIAL FIX> (COM) <OR FALSE ATOM>)
+		       <AND <EMPTY? <REST .L>> <SET M .OM>>
+		       <FORMS <1 .L> .OUTC>
+		       <SET COM <COMMENTS .L .OUTC>>
+		       <COND (<OR <EMPTY? <SET L <REST .L>>> <==? .L .STOP>>
+			      <RETURN>)>
+		       <COND (.COM <TERPRI .OUTC> <INDENT-TO .N .OUTC>)
+			     (ELSE <PRINC !\  .OUTC>)>>)>>
+
+<DEFINE BLOCKP (L STRT "OPTIONAL" (OUTC .OUTCHAN) (OM <+ .M 1>) (STOP ()) "AUX" (M 0))
+							        ;"Block Printer"
+	#DECL ((L STOP) ANY (STRT) FIX (M) <SPECIAL FIX>
+	       (OUTC) CHANNEL)
+	<COND (<EMPTY? .L>)
+	      (ELSE
+	       <COND (<EMPTY? <REST .L>> <SET M .OM>)>
+	       <REPEAT ((LINE <PAGPOS .OUTC>) FLGC)
+		       #DECL ((LINE) FIX)
+		       <FORMS <1 .L> .OUTC>
+		       <SET FLGC <COMMENTS .L .OUTC>>
+		       <COND (<OR <EMPTY? <SET L <REST .L>>> <==? .L .STOP>>
+			      <RETURN>)>
+		       <COND (<EMPTY? <REST .L>> <SET M .OM>)>
+		       <COND (<AND <NOT .FLGC> <==? .LINE <PAGPOS .OUTC>>
+				   <FLATSIZE <1 .L> <- <LINLNT .OUTC>
+						      <LINPOS .OUTC> .M 1>>>
+			      <PRINC !\  .OUTC>
+			      <AGAIN>)>
+		       <TERPRI .OUTC>
+		       <INDENT-TO .STRT .OUTC>
+		       <SET LINE <PAGPOS .OUTC>>>)>>
+
+<DEFINE COMMENTS (L "OPTIONAL" (OUTC .OUTCHAN) "AUX" R CMNT FS1)
+			       ;"Prints comments.  If no comment, returns false"
+	#DECL ((L CMNT) ANY (R FS1) FIX (M MARG) <SPECIAL FIX>
+	       (VALUE) <OR FALSE ATOM> (OUTC) <CHANNEL [12 ANY] [4 FIX]>)
+	<COND (<SET CMNT <OR <GETPROP .L COMMENT> <GETPROP <REST .L 0> COMMENT>>>
+	       <SET R <COND (<LENGTH? .L 1> .M) (0)>>
+	       <SET FS1
+		    <OR <FLATSIZE .CMNT <LINLNT .OUTC>> <LINLNT .OUTC>>>
+	       <COND (<G? .FS1 <- <LINLNT .OUTC> <LINPOS .OUTC> .R 2>>
+		      <TERPRI .OUTC>)>
+	       <INDENT-TO <- <MAX <+ 2 .MARG> <- <LINLNT .OUTC> .FS1 .R>> 2> .OUTC>
+	       <PRINC " ;" .OUTC>
+	       <PRIN1 .CMNT .OUTC>
+	       T)>>
+
+\ 
+
+;"The following functions define the way to pprint a given data type.
+They are called from FORMS for the appropriate type
+FORM is a special case - see next page."
+
+<DEFMAC LIST-PPRINT ('L "OPTIONAL" ('OUTC '.OUTCHAN)) 
+	<FORM PROG
+	      ()
+	      <FORM PRINC !\(  .OUTC>
+	      <FORM COMELE .L .OUTC>
+	      <FORM PRINC !\)  .OUTC>>>
+
+<DEFMAC VECTOR-PPRINT ('L "OPTIONAL" ('OUTC '.OUTCHAN)) 
+	<FORM PROG
+	      ()
+	      <FORM PRINC !\[  .OUTC>
+	      <FORM COMELE .L .OUTC>
+	      <FORM PRINC !\]  .OUTC>>>
+
+<DEFMAC FUNCTION-PPRINT ('L "OPTIONAL" ('OUTC '.OUTCHAN)) 
+	<FORM PROG
+	      ((POS1 <FORM + <FORM LINPOS <FORM LVAL OUTC>> 2>))
+	      #DECL ((POS1) FIX)
+	      <FORM PRINC !\#  .OUTC>
+	      <FORM PRIN1 FUNCTION  .OUTC>
+	      <FORM PRINC " ("  .OUTC>
+	      <FORM FUNCBODY
+		    .L
+		    <FORM LINPOS  .OUTC>
+		    <FORM LVAL POS1>  .OUTC>
+	      <FORM PRINC !\)  .OUTC>>>
+
+<DEFMAC CHANNEL-PPRINT ('L "OPTIONAL" ('OUTC '.OUTCHAN)) 
+	<FORM PROG
+	      ()
+	      <FORM PRINC !\# .OUTC>
+	      <FORM PRIN1 CHANNEL  .OUTC>
+	      <FORM PRINC " ["  .OUTC>
+	      <FORM BLOCKP .L <FORM LINPOS  .OUTC> .OUTC>
+	      <FORM PRINC !\]  .OUTC>>>
+
+<DEFMAC UVECTOR-PPRINT ('L "OPTIONAL" ('OUTC '.OUTCHAN)) 
+	<FORM PROG
+	      ((L .L))
+	      #DECL ((L) <PRIMTYPE UVECTOR> (M) <SPECIAL FIX>)
+	      <FORM PRINC "!["  .OUTC>
+	      <FORM COND
+		    (<FORM OR
+			   <FORM ==?
+				 WORD
+				 <FORM TYPEPRIM <FORM UTYPE <FORM LVAL L>>>>
+			   <FORM FLATSIZE
+				 <FORM LVAL L>
+				 <FORM * 9 <FORM LENGTH <FORM LVAL L>>>>>
+		     <FORM BLOCKP
+			   <FORM LVAL L>
+			   <FORM LINPOS  .OUTC> .OUTC
+			   <FORM + <FORM LVAL M> 2>>)
+		    (ELSE <FORM COMELE .L .OUTC <FORM + <FORM LVAL M> 2>>)>
+	      <FORM PRINC "!]"  .OUTC>>>
+
+<DEFMAC SEGMENT-PPRINT ('L "OPTIONAL" ('OUTC '.OUTCHAN)) 
+	<FORM PROG () <FORM PRINC !\! .OUTC>
+	      <FORM FORMS .L .OUTC <FORM CHTYPE .L FORM>>>>
+
+<DEFMAC STRING-PPRINT ('L "OPTIONAL" ('OUTC '.OUTCHAN)) <FORM PRIN1 .L .OUTC>>
+
+<DEFMAC TEMPLATE-PPRINT ('L "OPTIONAL" ('OUTC '.OUTCHAN)) 
+	<FORM PROG
+	      ()
+	      <FORM PRINC !\{ .OUTC>
+	      <FORM COMELE .L .OUTC>
+	      <FORM PRINC !\} .OUTC>>>
+
+<DEFINE LOCAPRINT (L "OPTIONAL" (OUTC .OUTCHAN)) 
+	#DECL ((L) LOCATIVE (OUTC) <CHANNEL [12 ANY] [4 FIX]>)
+	<PRINC !\# .OUTC>
+	<PRINC <TYPE .L> .OUTC>
+	<PRINC !\  .OUTC>
+	<FORMS <IN .L> .OUTC>>
+
+<DEFMAC RSUBR-ENTRY-PPRINT ('L "OPTIONAL" ('OUTC '.OUTCHAN)) 
+	<FORM PROG
+	      ()
+	      <FORM PRINC !\% .OUTC>
+	      <FORM FORMS <FORM ENT-DUMP .L> .OUTC>>>
+
+<DEFINE ENT-DUMP (RSENT) 
+	#DECL ((RSENT) RSUBR-ENTRY)
+	<FORM RSUBR-ENTRY
+	      [<COND (<TYPE? <1 .RSENT> ATOM> <1 .RSENT>)
+		     (ELSE <2 <1 .RSENT>>)>
+	       <2 .RSENT>
+	       !<REST .RSENT 2>]
+	      <ENTRY-LOC .RSENT>>>
+
+<DEFMAC RSUBR-PPRINT ('L "OPTIONAL" ('OUTC '.OUTCHAN)) 
+	<FORM PROG () <FORM PRINC !\% .OUTC> <FORM FORMS <FORM DUMP .L> .OUTC>>>
+
+<DEFINE DUMP (RSUB
+	      "EXTRA" (FIXUPS <GET .RSUB RSUBR>)
+		      (PURE <NOT <TYPE? <1 .RSUB> CODE>>))
+   #DECL ((RSUB) RSUBR (FIXUPS) ANY)
+   <OR <TYPE? .FIXUPS LIST> <SET FIXUPS <>>>
+   <COND
+    (<OR .FIXUPS .PURE <AND <ASSIGNED? NO-DUMP> .NO-DUMP <SET PURE T>>
+	 <=? <5 .OUTCHAN> "TTY">>
+     <FORM
+      <COND (.PURE RSUBR) (ELSE FIXUP!-RSUBRS)>
+      <FORM QUOTE
+	    <MAPF ,VECTOR
+		  <FUNCTION (OB "AUX" ATM) 
+			  #DECL ((OB) ANY (ATM) ATOM)
+			  <COND (<AND <TYPE? .OB RSUBR RSUBR-ENTRY>
+							        ;"Named RSUBR ?"
+				      <GASSIGNED? <SET ATM <2 .OB>>>
+				      <TYPE? ,.ATM RSUBR RSUBR-ENTRY>>
+				 .ATM)
+				(ELSE .OB)>>
+		  .RSUB>>
+      !<COND (.PURE ()) (ELSE (<FORM QUOTE .FIXUPS>))>>)
+    (ELSE
+     <ERROR CAN-NOT-BE-DUMPED!-ERRORS>
+     <FORM RSUBR <FORM QUOTE <CHTYPE .RSUB VECTOR>>>)>>
+
+<DEFMAC CODE-PPRINT ('L "OPTIONAL" ('OUTC '.OUTCHAN)) 
+	<FORM PROG
+	      ()
+	      <FORM COND
+		    (<FORM N==? <FORM LINPOS  .OUTC> 0>
+		     <FORM TERPRI  .OUTC>)>
+	      <FORM PRIN1 .L  .OUTC>>>
+
+<DEFMAC STORAGE-PPRINT ('L "OPTIONAL" ('OUTC '.OUTCHAN)) 
+	<FORM PROG
+	      ()
+	      <FORM PRINC !\#  .OUTC>
+	      <FORM PRIN1 STORE  .OUTC>
+	      <FORM PRINC !\   .OUTC>
+	      <FORM PRINC
+		    <FORM CHTYPE
+			  <FORM GETBITS .L #BITS *004400000000*>
+			  FIX>
+		    .OUTC>>>
+
+<DEFINE CHECK2 (L "OPTIONAL" (OUTC .OUTCHAN)
+		  "AUX" (F <CHECK <1 .L> 1 <REST .L> .OUTC>) FF) 
+	#DECL ((L) <<PRIMTYPE LIST> [2 ANY]> (FF) FIX (OUTC) CHANNEL)
+	<AND .F
+	     <NOT <GET .L COMMENT>>
+	     <SET FF .F>
+	     <CHECK <2 .L> <+ 2 .FF> <REST .L 2> .OUTC>>>
+
+<DEFINE DECL-PPRINT (L "OPTIONAL" (OUTC .OUTCHAN) "AUX" (M <+ .M 1>) POS) 
+	#DECL ((L) <PRIMTYPE LIST> (POS) FIX (M) <SPECIAL FIX>
+	       (OUTC) <CHANNEL [12 ANY] [4 FIX]>)
+	<PRINC !\# .OUTC>
+	<PRIN1 DECL .OUTC>
+	<PRINC " (" .OUTC>
+	<SET POS <LINPOS .OUTC>>
+	<COND (.FITS? <ELEMENTS .L .OUTC>)
+	      (<NOT <0? <MOD <LENGTH .L> 2>>> <BLOCKP .L .POS .OUTC .M>)
+	      (ELSE
+	       <REPEAT ((FLG <CHECK2 .L .OUTC>) FLGC)
+		       <COND (<TYPE? <1 .L> LIST>
+			      <COND (<AND <VALUE QUICKPRINT>
+					  <CHECK <1 .L> 0 <REST .L> .OUTC>>
+				     <PRIN1 <1 .L> .OUTC>)
+				    (ELSE
+				     <PRINC !\( .OUTC>
+				     <BLOCKP <1 .L> <LINPOS .OUTC> .OUTC>
+				     <PRINC !\) .OUTC>)>)
+			     (ELSE <FORMS <1 .L> .OUTC>)>
+		       <COMMENTS .L .OUTC>
+		       <SET L <REST .L>>
+		       <COND (.FLG <PRINC !\  .OUTC>)
+			     (ELSE <TERPRI .OUTC> <INDENT-TO .POS .OUTC>)>
+		       <FORMS <1 .L> .OUTC>
+		       <SET FLGC <COMMENTS .L .OUTC>>
+		       <COND (<EMPTY? <SET L <REST .L>>> <RETURN>)>
+		       <COND (<AND <NOT .FLGC> .FLG <CHECK2 .L .OUTC>>
+			      <PRINC !\  .OUTC>
+			      <AGAIN>)>
+		       <TERPRI .OUTC>
+		       <INDENT-TO .POS .OUTC>>)>
+	<PRINC !\) .OUTC>>
+
+\ 
+
+;"Routines for PPRINTing Functions"
+
+<DEFINE FUNCBODY (L P P1 "OPTIONAL" (OUTC .OUTCHAN)
+		  "AUX" (M <+ .M 1>) (NEWLINE #FALSE ()) COMFLG)
+	#DECL ((L) <PRIMTYPE LIST> (M) <SPECIAL FIX>
+	       (NEWLINE COMFLG) <OR FALSE ATOM>
+	       (OUTC) <CHANNEL [12 ANY] [4 FIX]>)
+	<PROG ()
+	      <COND (<EMPTY? .L> <RETURN>)
+		    (<TYPE? <1 .L> ATOM>
+		     <OR <CHECK <1 .L> -1 .L .OUTC> <TERPRI .OUTC> <INDENT-TO .P .OUTC>>
+		     <PRIN1 <1 .L> .OUTC>
+		     <SET COMFLG <COMMENTS .L .OUTC>>
+		     <COND (<EMPTY? <SET L <REST .L>>> <RETURN>)
+			   (.COMFLG <TERPRI .OUTC> <SET NEWLINE T>)
+			   (ELSE <PRINC !\  .OUTC>)>)>
+	      <COND (<TYPE? <1 .L> LIST>
+		     <AND .NEWLINE <INDENT-TO .P .OUTC>>
+		     <SET NEWLINE <PRINARGL <1 .L> .P .OUTC>>
+		     <SET COMFLG <COMMENTS .L .OUTC>>
+		     <COND (<EMPTY? <SET L <REST .L>>> <RETURN>)
+			   (.COMFLG <TERPRI .OUTC> <SET NEWLINE T>)
+			   (<NOT .NEWLINE> <PRINC !\  .OUTC>)>)>
+	      <COND (<AND <NOT .NEWLINE> <CHECK .L -1 .L .OUTC>> <ELEMENTS .L .OUTC .M>)
+		    (ELSE
+		     <OR .NEWLINE <TERPRI .OUTC>>
+		     <COND (<FORMREC .L <- <LINLNT .OUTCHAN> .P .M>>
+			    <INDENT-TO .P1 .OUTC>)
+			   (ELSE <INDENT-TO .P .OUTC>)>
+		     <COMPONENTS .L .OUTC .M>)>>>
+
+<DEFINE CHECK (IT FUDGE L "OPTIONAL" (OUTC .OUTCHAN)) 
+	#DECL ((L IT) ANY (FUDGE) FIX (M) <SPECIAL FIX> (VALUE) <OR FALSE FIX>
+	       (OUTC) <CHANNEL [12 ANY] [4 FIX]>)
+	<FLATSIZE .IT
+		  <- <LINLNT .OUTC>
+		     <LINPOS .OUTC>
+		     .FUDGE
+		     <COND (<EMPTY? .L> .M) (0)>>>>
+
+<DEFINE PRINARGL (L PB "OPTIONAL" (OUTC .OUTCHAN) "AUX" POS Q (OL .L))
+	#DECL ((L) <SPECIAL LIST> (M) <SPECIAL FIX> (PB) FIX (POS) FIX (OL) LIST
+	       (Q) <OR LIST STRING FALSE> (OUTC) <CHANNEL [12 ANY] [4 FIX]>)
+	<COND (<CHECK .L 0 .L .OUTC>
+	       <PRINC !\( .OUTC>
+	       <ELEMENTS .L .OUTC>
+	       <PRINC !\) .OUTC>
+	       #FALSE ())
+	      (ELSE
+	       <COND (<NOT <CHECK <SET Q <ABUNCH L>> -1 .L .OUTC>>
+		      <TERPRI .OUTC>
+		      <INDENT-TO .PB .OUTC>)>
+	       <PRINC !\( .OUTC>
+	       <SET POS <LINPOS .OUTC>>
+	       <REPEAT ((FIRST T) (N <+ .M 1>))
+		       #DECL ((FIRST) <OR FALSE ATOM> (N) FIX)
+		       <COND (<NOT .Q> <RETURN>)>
+		       <COND (<TYPE? .Q STRING>
+			      <COND (<NOT .FIRST> <TERPRI .OUTC>
+				     <INDENT-TO .POS .OUTC>)>
+			      <PRIN1 .Q .OUTC>
+			      <COND (<COMMENTS .OL .OUTC>
+				     <OR <EMPTY? .L>
+					 <TERPRI .OUTC>
+					 <INDENT-TO .POS .OUTC>>)
+				    (<NOT <EMPTY? .L>> <PRINC !\  .OUTC>)>)
+			     (<BLOCKP .OL <LINPOS .OUTC> .OUTC .N .L>)>
+		       <SET FIRST <>>
+		       <SET OL .L>
+		       <SET Q <ABUNCH L>>>
+	       <PRINC !\) .OUTC>
+	       <TERPRI .OUTC>
+	       T)>>
+
+<DEFINE ABUNCH (ATM "AUX" (BUNCH ..ATM))
+	#DECL ((ATM) ATOM (BUNCH) LIST (VALUE) <OR LIST STRING FALSE>)
+	<COND (<EMPTY? .BUNCH> #FALSE ())
+	      (<TYPE? <1 .BUNCH> STRING>
+	       <SET .ATM <REST .BUNCH>>
+	       <1 .BUNCH>)
+	      (ELSE
+	       <MAPF ,LIST
+		     <FUNCTION ("EXTRA" T)
+			  <COND (<OR <EMPTY? .BUNCH> <TYPE? <1 .BUNCH> STRING>>
+				 <SET .ATM .BUNCH>
+				 <MAPSTOP>)
+				(ELSE
+				 <SET T <1 .BUNCH>>
+				 <SET BUNCH <REST .BUNCH>>
+				 .T)>>>)>>
+
+\ 
+
+;"How to print FORM and its special cases.
+Special cases for FORM are called from FORM-PPRINT."
+
+<DEFMAC FORM-PPRINT ('L "OPTIONAL" ('OUTC '.OUTCHAN)) 
+	<FORM PROG
+	      ((L .L) (L1 <FORM 1 <FORM LVAL L>>))
+	      #DECL ((L) <PRIMTYPE LIST>)
+	      <FORM COND
+		    (<FORM ==? <FORM LVAL L1> PROG>
+		     <FORM PROGREP <FORM LVAL L> .OUTC>)
+		    (<FORM ==? <FORM LVAL L1> REPEAT>
+		     <FORM PROGREP <FORM LVAL L> .OUTC>)
+		    (<FORM ==? <FORM LVAL L1> LVAL>
+		     <FORM LVAL-SPECFORM <FORM LVAL L> .OUTC>)
+		    (<FORM ==? <FORM LVAL L1> GVAL>
+		     <FORM GVAL-SPECFORM <FORM LVAL L> .OUTC>)
+		    (<FORM ==? <FORM LVAL L1> QUOTE>
+		     <FORM QUOTE-SPECFORM <FORM LVAL L> .OUTC>)
+		    (<FORM ==? <FORM LVAL L1> FUNCTION>
+		     <FORM FUNCTION-SPECFORM <FORM LVAL L> .OUTC>)
+		    (<FORM OR
+			   <FORM ==? <FORM LVAL L1> DEFINE>
+			   <FORM ==? <FORM LVAL L1> DEFMAC>>
+		     <FORM DEFINE-SPECFORM  <FORM LVAL L> .OUTC>)
+		    (ELSE <FORM NORMFORM <FORM LVAL L> .OUTC>)>>>
+
+<DEFINE NORMFORM (L "OPTIONAL" (OUTC .OUTCHAN)
+		    "EXTRA" (PN <+ 1 <LINPOS .OUTC>>) L1 COMFLG) 
+	#DECL ((L) <PRIMTYPE LIST> (PN) FIX (M) <SPECIAL FIX>
+	       (OUTC) <CHANNEL [12 ANY] [4 FIX]>)
+	<PRINC !\< .OUTC>
+	<FORMS <1 .L> .OUTC>
+	<COND (.FITS? <COMEND .L .OUTC>)
+	      (<FORMAHEAD .L <- <LINLNT .OUTC> <LINPOS .OUTC> .M>>
+	       <PROG ()
+		     <SET COMFLG <COMMENTS .L .OUTC>>
+		     <COND (<EMPTY? <REST .L>> <RETURN>)
+			   (<AND <NOT .COMFLG>
+				 <OR <==? <SET L1 <1 .L>> SET>
+				     <==? .L1 SETG>
+				     <==? .L1 STACKFORM>
+				     <==? .L1 MAPF>
+				     <==? .L1 MAPR>>
+				 <CHECK <2 .L> 1 '(0) .OUTC>>
+			    <SET L <REST .L>>
+			    <PRINC !\  .OUTC>
+			    <ELEMENTS .L .OUTC .M <REST .L>>
+			    <COND (<EMPTY? <SET L <REST .L>>> <RETURN>)>)
+			   (ELSE <SET L <REST .L>>)>
+		     <TERPRI .OUTC>
+		     <INDENT-TO .PN .OUTC>
+		     <COND (<CHECK .L 3 .L .OUTC> <ELEMENTS .L .OUTC>)
+			   (ELSE <COMPONENTS .L .OUTC>)>>)
+	      (T <COMEND .L .OUTC>)>
+	<PRINC !\> .OUTC>>
+
+<DEFMAC COMEND ('L "OPTIONAL" ('OUTC '.OUTCHAN))
+	<FORM PROG
+	      ((L .L) (PPN <FORM LINPOS <FORM LVAL OUTC>>))
+	      #DECL ((PPN) FIX)
+	      <FORM COND
+		    (<FORM COMMENTS <FORM LVAL L> .OUTC>
+		     <FORM TERPRI  .OUTC>
+		     <FORM INDENT-TO <FORM LVAL PPN>  .OUTC>)>
+	      <FORM COND
+		    (<FORM EMPTY? <FORM REST <FORM LVAL L>>>)
+		    (<FORM PRINC !\  .OUTC>
+		     <FORM COMELE <FORM REST <FORM LVAL L>> .OUTC>)>>>
+
+<DEFMAC FORMAHEAD ('F 'AVSP) 
+	<FORM PROG
+	      ((F .F) (AVSP .AVSP))
+	      #DECL ((F) ANY (AVSP) FIX)
+	      <FORM COND
+		    (<FORM AND
+			   <FORM TYPE? <FORM 1 <FORM LVAL F>> FORM SEGMENT>
+			   <FORM NOT <FORM EMPTY? <FORM REST <FORM LVAL F>>>>
+			   <FORM NOT
+				 <FORM FLATSIZE
+				       <FORM 1 <FORM LVAL F>>
+				       <FORM LVAL AVSP>>>>
+		     T)
+		    (ELSE <FORM FORMREC <FORM LVAL F> <FORM LVAL AVSP>>)>>>
+
+<DEFMAC FORMREC ('F 'AVSP) 
+	<FORM COND
+	      (<FORM VALUE LOOKAHEAD> <FORM FORMREC1 .F .AVSP>)
+	      (ELSE <FORM VALUE VERTICAL>)>>
+
+<DEFINE FORMREC1 (F AVSP) 
+	#DECL ((AVSP) FIX (F) <<PRIMTYPE LIST> [1 ANY]>)
+	<PROG (FS FSFIX FO)
+	      #DECL ((FSFIX) FIX (FS FO) ANY)
+	      <COND (<SET FS <FLATSIZE <1 .F> .AVSP>>)
+		    (<TYPE? .F FORM SEGMENT>
+		     <COND (<EMPTY? <REST .F>> <RETURN #FALSE ()>)
+			   (ELSE <RETURN T>)>)
+		    (<OR <MONAD? <1 .F>>
+			 <NOT <==? <PRIMTYPE <1 .F>> LIST>>
+			 <FORMREC1 <1 .F> .AVSP>>
+		     <RETURN T>)>
+	      <COND (<EMPTY? <REST .F>> <RETURN #FALSE ()>)>
+	      <COND (<TYPE? .F FORM SEGMENT>
+		     <COND (<AND <TYPE? <SET FO <1 .F>> ATOM>
+				 <OR <==? .FO LVAL>
+				     <==? .FO GVAL>
+				     <==? .FO QUOTE>>>
+			    <SET AVSP <- .AVSP 1>>)
+			   (ELSE
+			    <SET FSFIX .FS>
+			    <SET AVSP <- .AVSP .FSFIX 3>>)>)
+		    (<TYPE? .F FUNCTION> <SET AVSP <- .AVSP 12>>)
+		    (<TYPE? .F DECL> <SET AVSP <- .AVSP 8>>)
+		    (ELSE <SET AVSP <- .AVSP 3>>)>
+	      <SET F <REST .F>>
+	      <REPEAT ((F2 <1 .F>) (F1 .F))
+		      #DECL ((F1) <PRIMTYPE LIST>)
+		      <COND (<MONAD? .F2> <OR <FLATSIZE .F2 .AVSP> <RETURN T>>)
+			    (<FLATSIZE .F2 .AVSP>)
+			    (<NOT <==? LIST <PRIMTYPE .F2>>>)
+			    (<FORMREC1 .F2 .AVSP> <RETURN T>)>
+		      <COND (<EMPTY? <SET F1 <REST .F1>>> <RETURN #FALSE ()>)>
+		      <SET F2 <1 .F1>>>>>
+
+<DEFINE PROGREP (L "OPTIONAL" (OUTC .OUTCHAN)
+		   "AUX" (POS1 <+ 2 <LINPOS .OUTC>>) POS COMFLG)
+ 
+	#DECL ((L) <PRIMTYPE LIST> (POS1 POS) FIX (M) <SPECIAL FIX>
+	       (OUTC) <CHANNEL [12 ANY] [4 FIX]>)
+	<PRINC !\< .OUTC>
+	<PRIN1 <1 .L> .OUTC>
+	<SET POS <+ 1 <LINPOS .OUTC>>>
+	<SET COMFLG <COMMENTS .L .OUTC>>
+	<COND (<EMPTY? <SET L <REST .L>>>)
+	      (ELSE
+	       <PROG ()
+		     <COND (<TYPE? <1 .L> ATOM>
+			    <COND (.COMFLG <TERPRI .OUTC> <INDENT-TO .POS .OUTC>)
+				  (ELSE <PRINC !\  .OUTC>)>
+			    <PRIN1 <1 .L> .OUTC>
+			    <SET COMFLG <COMMENTS .L .OUTC>>
+			    <COND (<EMPTY? <SET L <REST .L>>> <RETURN>)>)>
+		     <COND (<TYPE? <1 .L> LIST>
+			    <COND (.COMFLG <TERPRI .OUTC> <INDENT-TO .POS .OUTC>)
+				  (ELSE <PRINC !\  .OUTC>)>
+			    <COND (<CHECK <1 .L> 1 .L .OUTC> <FORMS <1 .L> .OUTC>)
+				  (ELSE
+				   <PRINC !\( .OUTC>
+				   <BLOCKP <1 .L> <LINPOS .OUTC> .OUTC .M>
+				   <PRINC !\) .OUTC>)>
+			    <COMMENTS .L .OUTC>
+			    <COND (<EMPTY? <SET L <REST .L>>> <RETURN>)>)>
+		     <COND (<FORMREC .L <- <LINLNT .OUTC> .POS .M>>
+			    <TERPRI .OUTC>
+			    <INDENT-TO .POS1 .OUTC>)
+			   (ELSE
+			    <AND <G? <LINPOS .OUTC> .POS> <TERPRI .OUTC>>
+			    <INDENT-TO .POS .OUTC>)>
+		     <COMPONENTS .L .OUTC>>)>
+	<PRINC !\> .OUTC>>
+
+<DEFMAC LVAL-SPECFORM ('L "OPTIONAL" ('OUTC '.OUTCHAN))
+	<FORM DAMMIT !\. .L .OUTC>>
+
+<DEFMAC GVAL-SPECFORM ('L "OPTIONAL" ('OUTC '.OUTCHAN))
+	<FORM DAMMIT !\, .L .OUTC>>
+
+<DEFMAC QUOTE-SPECFORM ('L "OPTIONAL" ('OUTC '.OUTCHAN))
+	<FORM DAMMIT !\' .L .OUTC>>
+
+<DEFMAC DAMMIT ('Q 'L "OPTIONAL" ('OUTC '.OUTCHAN)) 
+	<FORM PROG
+	      ((L .L))
+	      <FORM COND
+		    (<FORM ==? 2 <FORM LENGTH <FORM LVAL L>>>
+		     <FORM PRINC .Q .OUTC>
+		     <FORM COMELE <FORM REST <FORM LVAL L>> .OUTC>)
+		    (ELSE <FORM NORMFORM <FORM LVAL L> .OUTC>)>>>
+
+<DEFMAC FUNCTION-SPECFORM ('L "OPTIONAL" ('OUTC '.OUTCHAN))
+	<FORM PROG
+	      ((L .L) (POS1 <FORM + <FORM LINPOS <FORM LVAL OUTC>> 3>)
+	       POS
+	       COMFLG)
+	      #DECL ((L) <PRIMTYPE LIST> (POS1 POS) FIX)
+	      <FORM PRINC !\<  .OUTC>
+	      <FORM PRIN1 FUNCTION  .OUTC>
+	      <FORM SET POS <FORM - <FORM LINPOS .OUTC> 1>>
+	      <FORM PROG
+		    ()
+		    <FORM SET COMFLG <FORM COMMENTS <FORM LVAL L> .OUTC>>
+		    <FORM COND
+			  (<FORM EMPTY? <FORM SET L <FORM REST <FORM LVAL L>>>>
+			   <FORM RETURN>)
+			  (<FORM LVAL COMFLG>
+			   <FORM TERPRI .OUTC>
+			   <FORM INDENT-TO <FORM LVAL POS> .OUTC>)
+			  (ELSE <FORM PRINC !\  .OUTC >)>
+		    <FORM FUNCBODY
+			  <FORM LVAL L>
+			  <FORM LVAL POS>
+			  <FORM LVAL POS1> .OUTC>>
+	      <FORM PRINC !\>  .OUTC>>>
+
+<DEFMAC DEFINE-SPECFORM ('L "OPTIONAL" ('OUTC '.OUTCHAN)) 
+	<FORM PROG
+	      ((L .L)
+	       (POS1 <FORM + <FORM LINPOS <FORM LVAL OUTC>> 3>)
+	       POS
+	       COMFLG)
+	      #DECL ((POS POS1) FIX (L) <PRIMTYPE LIST>)
+	      <FORM PRINC !\<  .OUTC>
+	      <FORM PRIN1 <FORM 1 <FORM LVAL L>>  .OUTC>
+	      <FORM SET POS <FORM + 1 <FORM LINPOS  .OUTC>>>
+	      <FORM PROG
+		    ()
+		    <FORM SET COMFLG <FORM COMMENTS <FORM LVAL L> .OUTC>>
+		    <FORM COND
+			  (<FORM EMPTY? <FORM SET L <FORM REST <FORM LVAL L>>>>
+			   <FORM RETURN>)
+			  (<FORM LVAL COMFLG>
+			   <FORM TERPRI  .OUTC>
+			   <FORM INDENT-TO <FORM LVAL POS>  .OUTC>)
+			  (ELSE <FORM PRINC !\   .OUTC>)>
+		    <FORM PRIN1 <FORM 1 <FORM LVAL L>>  .OUTC>
+		    <FORM SET COMFLG <FORM COMMENTS <FORM LVAL L> .OUTC>>
+		    <FORM COND
+			  (<FORM EMPTY? <FORM SET L <FORM REST <FORM LVAL L>>>>
+			   <FORM RETURN>)
+			  (<FORM LVAL COMFLG>
+			   <FORM TERPRI  .OUTC>
+			   <FORM INDENT-TO <FORM LVAL POS>  .OUTC>)
+			  (ELSE <FORM PRINC !\   .OUTC>)>
+		    <FORM FUNCBODY
+			  <FORM LVAL L>
+			  <FORM LVAL POS>
+			  <FORM LVAL POS1> .OUTC>>
+	      <FORM PRINC !\>  .OUTC>>>
+
+\ 
+
+<SETG LINPOS 14>
+
+<SETG LINLNT 13>
+
+<SETG PAGPOS 16>
+
+<SETG PAGLNT 15>
+
+<MANIFEST LINPOS LINLNT PAGPOS PAGLNT>
+
+<SETG TABS		   ;"The n'th element is a string of n-1 tab characters"
+      <PROG ((I -1))
+	    <IVECTOR 15 '<ISTRING <SET I <+ .I 1>> !\	>>>>
+
+<SETG SPACES		 ;"The n'th element is a string of n-1 space characters"
+      <PROG ((I -1))
+	    <IVECTOR 8 '<ISTRING <SET I <+ .I 1>> !\ >>>>
+
+<GDECL (TABS SPACES) <VECTOR [REST STRING]>>
+
+<DEFINE INDENT-TO (N "OPTIONAL" (OUTC .OUTCHAN) "EXTRA" (NOW <LINPOS .OUTC>))
+				   ;"Print tabs and spaces to get to column -n-"
+	#DECL ((N NOW) FIX (OUTC) <CHANNEL [12 ANY] [4 FIX]>)
+	<COND (<G? .N .NOW>
+	       <PRINC <NTH ,TABS <MIN 15 <- </ .N 8> </ .NOW 8> -1>>>
+		      .OUTC>
+	       <PRINC <NTH ,SPACES <- .N <LINPOS .OUTC> -1>> .OUTC>)>>
+
+<ENDPACKAGE>

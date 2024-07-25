@@ -1,0 +1,35 @@
+;"RCVR-FORMAT-5 -- SIMPLIFIED FORMAT FOR RECEIVER OUTPUT TO FILE
+"
+
+(
+  ("
+Forwarded to:  " <GETFIX "FORWARDING"> ,P-FORWARD)
+  ("
+To:            " <GETFIX  "ACTION-TO"> 4)
+  ("
+From:          " <GETFIX  "FROM"> 9)
+  ("
+In reply to:   " <GETFIX "IN-REPLY-TO"> 2)
+  ("
+Subject:       " <GETFIX  "SUBJECT"> 2)
+  ("
+Date:          " <GETFIX  "WHEN-ORIGINATED"> 8)
+  ("
+Cc to:         " <GETFIX  "CARBON-COPY-TO"> 4)
+  ("
+
+Notes:         " "NOTES" 
+#FUNCTION ((NN CC)
+ <TERPRI .CC>
+ <MAPF <> <FUNCTION (S) <PRINC .S .CC><TERPRI .CC>> .NN>
+ <TERPRI .CC>
+ <PRINC "Message:" .CC>)
+)
+ ("
+
+" <GETFIX  "TEXT"> 2)
+  ("
+-----
+
+")
+)

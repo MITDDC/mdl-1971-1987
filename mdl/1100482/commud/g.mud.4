@@ -1,0 +1,38 @@
+<USE "GLUE" "PDUMP" ;"GTFDB">
+
+<SETG L-SEARCH-PATH (["READER"] ["COMMUD"] !,L-SEARCH-PATH)>
+
+<DEFINE GL (X "OPTIONAL" (SAVE? T))
+	<AND <SET GRP <GROUP-LOAD <STRING .X <COND (<G? ,MUDDLE 100> ".NBIN")
+						   (ELSE " NBIN")>>>>
+	     <GROUP-GLUE .GRP <> .OUTCHAN <AND .SAVE? .X>>
+	     .GRP>>
+
+<DEFINE G (X "OPTIONAL" (S <>))
+	<AND .S <SNAME .S>>
+	<AND <GL .X> <GROUP-DUMP <STRING .X <COND (<G? ,MUDDLE 100> ".GBIN")
+						  (ELSE " GBIN")>>>>>
+
+<DEFINE P (X "OPTIONAL" (S <>) "AUX" A)
+	<AND .S <SNAME .S>>
+	<AND <SET A <GL .X <>>> <PDUMP .A>>>
+
+<DEFINE NM (S) <3 <CHANNEL "READ" .S>>>
+
+<DEFINE NEWER? (X "OPTIONAL" (A "NBIN") (B "GBIN") "AUX" AC BC AD BD)
+	<COND (<SET C <OPEN-NR "READB" <STRING .X !\. .A>>>
+	       <SET AD <CHTYPE <FBCRE <GTFDB <1 .C>>> FIX>>
+	       <CLOSE .C>
+	       <COND (<SET C <OPEN-NR "READB" <STRING .X !\. .B>>>
+		      <SET BD <CHTYPE <FBCRE <GTFDB <1 .BC>>> FIX>>
+		      <CLOSE .C>
+		      <G? .AD .BD>)
+		     (ELSE T)>)>>
+
+<DEFINE GLUE-ALL (V "AUX" R)
+	<MAPF ,VECTOR
+	      <FUNCTION (F)
+		   <COND (<NEWER? .F "NBIN" "GBIN">
+			  <COND (<SET R <G .F>> <MAPRET>)
+				(ELSE <MAPRET .F .R>)>)>>
+	      .V>>

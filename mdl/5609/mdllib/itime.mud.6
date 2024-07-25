@@ -1,0 +1,185 @@
+<PACKAGE "ITIME">
+
+<ENTRY ITIME QTIME LTIME BTIME IDAY ZONE>
+
+<SETG TIME-LIST ((0 0 0) (0 0 0) "EST")>
+<GDECL (TIME-LIST) <LIST LIST LIST STRING>>
+
+<DEFINE LTIME ("OPTIONAL" (FF <ITIME>) (LST ,TIME-LIST)
+	       "AUX" F S D LY? Y M L Z (DATE <1 .LST>) (TIME <2 .LST>))
+	#DECL ((VALUE LST) <LIST [2 LIST] STRING> (F D S Y M L Z) FIX
+	       (FF) <OR FIX UVECTOR> (LY?) <OR ATOM FALSE>
+	       (DATE TIME) <LIST [3 FIX]>)
+	<SET F <COND (<TYPE? .FF FIX> .FF) (ELSE <1 .FF>)>>
+	<PUT .LST
+	     3
+	     <COND (<TYPE? .FF FIX> <ZONE <SET Z <ZONE>>>)
+		   (ELSE <ZONE <SET Z <2 .FF>>>)>>
+	<COND (<NOT <0? <CHTYPE <ANDB .Z *200000*> FIX>>>
+	       <SET Z <- .Z 1>>)>
+	<SET F <- .F <* <CHTYPE <ANDB .Z *77*> FIX> </ 262144 24>>>>
+	<SET S <CHTYPE <GETBITS <QTIME .F> <BITS 18>> FIX>>
+	<SET D <CHTYPE <GETBITS .F <BITS 18 18>> FIX>>
+	<COND (<L? <SET D <- .D 15019>> 0>
+	       <PUT .DATE 1 0>
+	       <PUT .DATE 2 1>
+	       <PUT .DATE 3 1>
+	       <PUT .TIME 1 0>
+	       <PUT .TIME 2 0>
+	       <PUT .TIME 3 0>)
+	      (ELSE
+	       <SET Y <* 4 </ .D <+ 366 365 365 365>>>>
+	       <SET D <MOD .D <+ 366 365 365 365>>>
+	       <COND (<SET LY? <L? <SET D <- .D 366>> 0>> <SET D <+ .D 366>>)
+		     (<AND <SET Y <+ .Y 1>> <L? <SET D <- .D 365>> 0>>
+		      <SET D <+ .D 365>>)
+		     (<AND <SET Y <+ .Y 1>> <L? <SET D <- .D 365>> 0>>
+		      <SET D <+ .D 365>>)
+		     (ELSE <SET Y <+ .Y 1>>)>
+	       <PUT .DATE 1 .Y>
+	       <SET M 1>
+	       <MAPF <>
+		     <FUNCTION (N) 
+			     #DECL ((N) FIX)
+			     <COND (<AND .LY? <==? .N 28>> <SET N 29>)>
+			     <COND (<L? <- .D .N> 0>
+				    <PUT .DATE 2 .M>
+				    <PUT .DATE 3 <+ 1 .D>>
+				    <MAPLEAVE>)
+				   (ELSE <SET D <- .D .N>> <SET M <+ .M 1>>)>>
+		     '![31 28 31 30 31 30 31 31 30 31 30 31!]>
+	       <PUT .TIME 1 </ .S 3600>>
+	       <SET S <MOD .S 3600>>
+	       <PUT .TIME 2 </ .S 60>>
+	       <PUT .TIME 3 <MOD .S 60>>)>
+	.LST>
+
+\
+
+<DEFINE ZONE ("OPTIONAL" Z "AUX" (ZL ,ZONELIST) ZS (IZ <IZONE>))
+	#DECL ((Z) <OR FIX STRING> (ZL) VECTOR (IZ) FIX (ZS) <OR FALSE VECTOR>)
+	<COND (<NOT <ASSIGNED? Z>> .IZ)
+	      (<TYPE? .Z FIX>
+	       <COND (<SET ZS <MEMQ .Z .ZL>> <1 <BACK .ZS>>)
+		     (ELSE .IZ)>)
+	      (<SET ZS <MEMBER .Z .ZL>> <2 .ZS>)
+	      (ELSE <ZONE .IZ>)>>
+
+<SETG ZONELIST
+      '["EST" 5 "EDT" *200005*
+	"CST" 6 "CDT" *200006*
+	"MST" 7 "MDT" *200007*
+	"PST" 8 "PDT" *200010*
+	"YST" 9 "YDT" *200011*
+	"HST" 10 "HDT" *200012*
+	"BST" 11 "BDT" *200013*
+	"AST" 4 "ADT" *200004*
+	"NST" 3
+	"GMT" 0]>
+
+<GDECL (ZONELIST) <VECTOR [REST STRING FIX]>>
+
+<DEFINE BTIME ("OPTIONAL" (Y 0) (M 1) (D 1) (HH 0) (MM 0) (SS 0))
+	#DECL ((VALUE Y M D HH MM SS) FIX)
+	<SET HH <* 2 <+ .SS <* .MM 60> <* .HH 3600>>>>
+	<SET HH <PUTBITS .HH <BITS 5 18> .D>>
+	<SET HH <PUTBITS .HH <BITS 4 23> .M>>
+	<SET HH <PUTBITS .HH <BITS 7 27> .Y>>
+	<ITIME <CHTYPE .HH FIX>>>
+
+\
+
+<TITLE ITIME>
+	<DECLARE ("VALUE" FIX "OPTIONAL" FIX)>
+	<JUMPL	AB* ITIMED>
+	<PUSHJ	P* IITIME0>
+	<JRST	FINIS>
+
+ITIMED	<PUSH	TP* (AB)>
+	<PUSH	TP* 1(AB)>
+      	<PUSHJ	P* IITIME1>
+	<JRST	FINIS>
+
+<INTERNAL-ENTRY IITIME0 0>
+	<SUBM	M* (P)>
+	<GTAD>
+	<MOVE	B* A>
+	<JRST	ITIMEX>
+
+<INTERNAL-ENTRY IITIME1 1>
+	<SUBM	M* (P)>
+	<MOVE	A* (TP)>
+	<LDB	C* [<(*330700*) A>]>	;"YEAR MOD 100"
+	<ADDI	C* 1900>
+	<HRLZ	B* C>
+	<LDB	C* [<(*270400*) A>]>	;"MONTH"
+	<HRRI	B* -1(C)>
+	<LDB	C* [<(*220500*) A>]>
+	<HRLZI	C* -1(C)>
+	<HRRZ	D* A>		;"TIME SINCE MIDNIGHT IN 1/2 SECS."
+	<LSH	D* -1>		;"1/2 SECS? BAH!"
+	<IDCNV>
+	 <MOVEI	B* 0>
+ITIMEX	<MOVSI	A* <TYPE-CODE FIX>>
+	<SUB	TP* [<2(2)>]>
+	<JRST	MPOPJ>
+
+<SUB-ENTRY QTIME #DECL ("VALUE" FIX FIX)>
+	<DPUSH	TP* (AB)>
+	<PUSHJ	P* IQTIME>
+	<JRST	FINIS>
+
+<INTERNAL-ENTRY IQTIME 1>
+	<SUBM	M* (P)>
+	<HRRZ	B* (TP)>
+	<MULI	B* %<* 24 3600>>
+	<DIV	B* [<(1)>]>
+	<CAIL	C* *400000*>
+	 <ADDI	B* 1>
+	<HLL	B* (TP)>
+	<MOVSI	A* <TYPE-CODE FIX>>
+	<SUB	TP* [<2(2)>]>
+	<JRST	MPOPJ>
+
+<SUB-ENTRY IZONE ("VALUE" FIX)>
+	<PUSHJ	P* IIZONE>
+	<JRST	FINIS>
+<INTERNAL-ENTRY IIZONE 0>
+	<SUBM	M* (P)>
+	<MOVNI	B* 1>
+	<MOVEI	D* 0>
+	<ODCNV>
+	<HLRZ	B* D>	;"TIME ZONE"
+	<ANDI	B* *200077*>
+	<MOVSI	A* <TYPE-CODE FIX>>
+	<JRST	MPOPJ>
+
+<SUB-ENTRY IDAY ("VALUE" FIX "OPTIONAL" FIX)>
+	<JUMPL	AB* IDAYD>
+	<PUSHJ	P* IIDAY0>
+	<JRST	FINIS>
+
+IDAYD	<PUSH	TP* (AB)>
+	<PUSH	TP* 1(AB)>
+	<PUSHJ	P* IIDAY1>
+	<JRST	FINIS>
+
+<INTERNAL-ENTRY IIDAY0 0>
+	<SUBM	M* (P)>
+	<GTAD>
+	<PUSH	TP* <TYPE-WORD FIX>>
+	<PUSH	TP* A>
+	<JRST	IDAYS>
+
+<INTERNAL-ENTRY IIDAY1 1>
+	<SUBM	M* (P)>
+IDAYS	<MOVE	B* (TP)>
+	<MOVEI	D* 0>
+	<ODCNV>
+	<HRRZ	B* C>
+	<MOVSI	A* <TYPE-CODE FIX>>
+	<SUB	TP* [<2(2)>]>
+	<JRST MPOPJ>
+<END>
+
+<ENDPACKAGE>

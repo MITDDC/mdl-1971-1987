@@ -1,0 +1,6 @@
+    This directory is used for hacks related to MADMAN/ASYLUM.
+Installed versions are MADMAN FBIN and ASYLUM FBIN (XFBIN for
+TENEX hackers).
+    All MADMAN related files start with an M (MGC, MFIXUP, etc)
+    All ASYLUM related files start with an A (ALOCK, AALLOC, etc)
+    Other files are miscellaneous hacks.

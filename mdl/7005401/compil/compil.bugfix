@@ -1,0 +1,6 @@
+1)	Took out .RTF from AND in setup of W in BOOL-GEN.  To fix
+	<COND (<OR x y> ...)(ELSE ..)> if y always true still need to
+	conditional on x.
+
+2)	Changed ==? generator to not commute if a value is already
+	in an AC.  Also not to move a known type into an AC.

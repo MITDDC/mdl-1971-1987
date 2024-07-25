@@ -1,0 +1,25 @@
+;"F.NETW -- Default format for output to Arpanet"
+
+((
+"Date: " <GETFIX "WHEN-ORIGINATED"> 10) ("
+Forwarded-to: " <GETFIX "FORWARDING"> 15) ("
+From: " (<GETFIX "FROM"> <GETFIX "FULL-NAME">) 14) ("
+Sender: " [<GETFIX "SENDER"> <GETFIX "FROM">] 14) ("
+Reply-to: " <GETFIX "REPLY-TO"> 4) ("
+To: " <GETFIX "ACTION-TO"> 4) ("
+Cc: " <GETFIX "CARBON-COPY-TO"> 4) ("
+Bcc: " <GETFIX "BLIND"> 4) ("
+In-reply-to: " <GETFIX "IN-REPLY-TO"> 11) ("
+Subject: " <GETFIX "SUBJECT"> 11) ("
+Keywords: " <GETFIX "KEYWORDS"> 5) ("
+Message-id: " <GETFIX "MESSAGE-ID"> 2) ("
+
+Notes:" <GETFIX "NOTES"> "
+Message:" 12) ("
+
+" <GETFIX "TEXT"> 2) ("
+")
+ ("
+" 
+<GETFIX "ENCLOSURES"> 13))
+

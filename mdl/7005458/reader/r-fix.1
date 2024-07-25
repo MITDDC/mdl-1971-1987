@@ -1,0 +1,39 @@
+<USE "R-DEFS" "READER" "MADMAN" "ASYLUM" "M-DAC" "M-DEFS">
+
+"REBUILD-LOCALS -- rebuild local-message-table after clobbering.
+looks at maniacs between 10 and 200 for things that look like messages
+and if they are in ,MESSAGE-TABLE it adds them to the local message
+table"
+
+<DEFINE REBUILD-LOCALS ("AUX"
+			(MS ,MSG-SPACE) (SS ,SCRATCH-SPACE)
+			(LT ,LOCAL-MESSAGES) (L ())
+			(N 10) (RA ,READER-ASYLUM) V)
+	<REPEAT ()
+		<PRINT .N>
+		<COND (<SET M <DATA-AREAD .RA .N <ARESET .MS>>>
+		       <COND (<AND <TYPE? .M VECTOR>
+				   <SET D <MEMBER "" .M>>
+				   <SET D <1 <REST .D>>>
+				   <TYPE? .D VECTOR>
+				   <SET MSG <NTH <1 .D> 1>>>
+			      <COND (<MT? .MSG>
+				     <PRINC "==> ">
+				     <PRIN1 .MSG>
+				     <COND (<MEMQ .MSG .LT> <PRINC !\*>)>
+				     <SET L (.MSG .N !.L)>)
+				    (ELSE <PRIN1 .MSG> <PRINC !\?>)>)
+			     (ELSE <PRIN1 "...">)>)>
+		<COND (<G? <SET N <+ .N 1>> 200>
+		       <SET V <AVECTOR <ARESET .SS> !.L>>
+		       <RETURN>)>>
+	<DATA-APRINT .RA ,M-ASYLUM .SS .V>>
+
+"MT? -- return T if message is in message-table"
+
+<DEFINE MT? (N "AUX" (MT ,MESSAGE-TABLE) (T <R-TUPLE .MT>))
+	<SET MT <REST .MT <R-HEADER .MT>>>
+	<REPEAT ()
+		<COND (<OR <EMPTY? .MT> <0? <1 .MT>>> <RETURN <>>)
+		      (<==? <MSG .MT> .N> <RETURN T>)
+		      (ELSE <SET MT <REST .MT .T>>)>>>

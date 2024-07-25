@@ -1,0 +1,26 @@
+'<PCODE "M-SUM">
+
+<PACKAGE "M-SUM"> 
+
+"MESSAGE SUMMARY" 
+
+<ENTRY PSUMMARY RSUMMARY> 
+
+<USE "M-READ" "ITIME" "FIELDS"> 
+
+<SETG PSUMMARY  %<RSUBR!- '[ %<PCODE!- "M-SUM" 0> PSUMMARY #DECL ("VALUE" <OR 
+CHARACTER FALSE> FIX) LTIME INDENT-TO DRDMSG OUTCHAN " " "  " "   " "    " 
+"     " ": " "" "??" " => " "MESSAGE" T " [" "REMIND" "  => " "REMINDER for " 
+"Re: " "..." "\"" " 	
+" ", " "??/?? ??:??"]>> 
+<AND <ASSIGNED? GLUE> .GLUE <PUT ,PSUMMARY PGLUE ![721420287 -65536!]>> 
+
+
+\ 
+
+<SETG RSUMMARY %<RSUBR-ENTRY '[PSUMMARY RSUMMARY #DECL ("VALUE" <OR FALSE STRING
+> FIX)] 208>> 
+
+\ 
+
+<ENDPACKAGE> 

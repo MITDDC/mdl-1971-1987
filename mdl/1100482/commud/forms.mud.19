@@ -1,0 +1,202 @@
+<PACKAGE "FORMS">
+
+<ENTRY FIELD 
+       FLDNM	;"atom which is the name of the field"
+       FBUF ;"field's input buffer (or <>)"
+       BFLAGS	;"T if BUFFER to be cleared after each message"
+       PFIELD ;"apply this to print message file for this field"
+       PR1	;"short prompt and pretty header to print"
+       PRD	;"tail end of short prompt (crlf for TEXT...)"
+       PR2	;"verbose prompt for this field"
+       FHIGH
+       FWIN
+       FDATA	;"random useful data"
+       SPACE
+       SPEOL>
+
+<ENTRY FORMS-CHRTABLE BTEST FILL-FIELD EDIT-FIELD SPLICE-FIELD
+       FIRST-FIELD LAST-FIELD PREVIOUS-FIELD NEXT-FIELD COPY
+       INIT-FIELDS INIT-BUF REDISPLAY-ALL REDISPLAY-BUF>
+
+<USE "BUF" "BUFTECO" "SCR" "NSTR" "ITIME" "JCL" "HOSTS" "LSRTNS"
+     "CHKADR" "DID" "NEWSTRUC">
+
+<USE "COMMAND" "INPUT" "SPEC" "WINDOW">
+
+\
+
+;"field utilities"
+
+<DEFINE FIRST-FIELD (C "AUX" W)
+	#DECL ((C) <OR FALSE CHANNEL>)
+	<SET C <WCHILD <GET-WINDOW <WPARENT <GET-WINDOW .C>>>>>
+	<REPEAT ()
+		<SET W <GET-WINDOW .C>>
+		<COND (<NOT <WBIT? .W ,WINVISIBLE>>
+		       <RETURN <WDATA .W>>)>
+		<COND (<SET C <WNEXT .W>>)
+		      (ELSE <RETURN <>>)>>>
+
+<DEFINE LAST-FIELD (INFO "AUX" (C <>) W)
+	#DECL ((C) <OR FALSE CHANNEL>)
+	<SET W <GET-WINDOW <FWIN .INFO>>>
+	<REPEAT ()
+		<COND (<SET C <WNEXT .W>>
+		       <SET W <GET-WINDOW .C>>
+		       <COND (<NOT <WBIT? .W ,WINVISIBLE>>
+			      <SET INFO <WDATA .W>>)>)
+		      (ELSE <RETURN .INFO>)>>>
+
+<DEFINE PREVIOUS-FIELD (INFO "AUX" C W (CC <>))
+	#DECL ((INFO) FIELD)
+	<SET C <WCHILD <GET-WINDOW <WPARENT <GET-WINDOW <FWIN .INFO>>>>>>
+	<REPEAT ()
+		<SET W <GET-WINDOW .C>>
+		<COND (<NOT <WBIT? .W ,WINVISIBLE>>
+		       <COND (<==? .C <FWIN .INFO>>
+			      <RETURN
+			        <COND (.CC)
+				      (ELSE <LAST-FIELD .INFO>)>>)
+			     (ELSE <SET CC <WDATA .W>>)>)>
+		<COND (<WNEXT .W> <SET C <WNEXT .W>>)
+		      (ELSE <RETURN <LAST-FIELD .INFO>>)>>>
+
+<DEFINE NEXT-FIELD (INFO "AUX" (C <FWIN .INFO>) W)
+	#DECL ((INFO) FIELD)
+	<SET W <GET-WINDOW .C>>
+	<SET C <WNEXT .W>>
+	<REPEAT ()
+		<SET W <GET-WINDOW .C>>
+		<COND (<NOT <WBIT? .W ,WINVISIBLE>>
+		       <RETURN <WDATA .W>>)>
+		<COND (<SET C <WNEXT .W>>)
+		      (ELSE
+		       <SET C <WPARENT <GET-WINDOW <FWIN .INFO>>>>
+		       <SET C <WCHILD <GET-WINDOW .C>>>)>>>
+
+\ 
+
+"Appending routines (ie: normal input) for various fields"
+
+<DEFINE COPY (INFO STR "AUX" (BUF <FBUF .INFO>))
+	#DECL ((INFO) FIELD (STR) <OR FALSE STRING> (BUF) BUFFER)
+	<BUFCLEAR .BUF>
+	<COND (.STR <ADDSTRING .BUF .STR>)>>
+
+"Buffer prompts"
+
+<SETG SPACE ": ">
+<SETG SPEOL ":
+">
+
+<DEFINE INIT-FIELDS (PAR TABLE "AUX" (OUTCHAN <SELECT .PAR>)
+		     (WIN <GET-WINDOW .OUTCHAN>) (LAST <>))
+	#DECL ((OUTCHAN) <SPECIAL CHANNEL> (WIN) WINDOW)
+	<WFUNC .WIN REDISPLAY-ALL>
+	<MAPF <>
+	      <FUNCTION (INFO)
+		   #DECL ((INFO) FIELD)
+		   <SETG <FLDNM .INFO> .INFO>
+		   <INIT-BUF .INFO>
+		   <COND (<NOT .LAST> <WCHILD .WIN <FWIN .INFO>>)
+			 (ELSE <WNEXT <GET-WINDOW .LAST> <FWIN .INFO>>)>
+		   <SET LAST <FWIN .INFO>>
+		   <ADOPT-WINDOW .OUTCHAN .LAST>>
+	      .TABLE>
+	T>
+
+<DEFINE INIT-BUF (INFO "AUX" B C (WIN <GET-WINDOW .OUTCHAN>))
+	#DECL ((INFO) <OR VECTOR FIELD> (B VALUE) BUFFER
+	       (C) CHANNEL (WIN) WINDOW)
+	<SET B <BUFMAKE 100 <PR1 .INFO> <PRD .INFO>>>
+	<PUT .INFO ,FBUF .B>
+	<SET C
+	     <MAKE-WINDOW <SPNAME <FLDNM .INFO>>
+			  <FHIGH .INFO>
+			  <WWIDTH .WIN>
+			  0
+			  <WXLOC .WIN>
+			  <+ ,WINVISIBLE ,WGROW ,WMORE ,WMOVE>>>
+	<WFUNC <SET WIN <GET-WINDOW .C>> REDISPLAY-BUF>
+	<WDATA .WIN .INFO>
+	<FWIN .INFO .C>
+	.B>
+
+<DEFINE REDISPLAY-ALL (WIN OP DATA)
+	#DECL ((WIN) CHANNEL (OP) FIX (DATA) ANY)
+	<REPEAT ((CC <WCHILD <GET-WINDOW .WIN>>))
+		#DECL ((CC) <OR CHANNEL FALSE>)
+		<COND (<NOT .CC> <RETURN>)
+		      (<AND <SET WIN <GET-WINDOW .CC>>
+			    <WFUNC .WIN>>
+		       <APPLY <WFUNC .WIN> .CC ,REDISPLAY <WDATA .WIN>>)>
+		<SET CC <WNEXT .WIN>>>>
+
+<DEFINE REDISPLAY-BUF (OUTCHAN OP DATA "OPTIONAL" (TOP <>) (BOT <>))
+	#DECL ((OUTCHAN) CHANNEL (OP) FIX (DATA) FIELD)
+	<BUFPRINT <FBUF .DATA> .OUTCHAN .TOP .BOT>>
+
+\
+
+"Offsets in a field information vector"
+
+<NEWSTRUC FIELD VECTOR
+	  FLDNM ATOM	;"atom which is the name of the field"
+	  FBUF <OR BUFFER FALSE> ;"field's input buffer (or <>)"
+	  BFLAGS FIX	;"T if BUFFER to be cleared after each message"
+	  PFIELD <OR APPLICABLE FALSE>
+	  		;"apply this to print message file for this field"
+	  PR1 STRING	;"short prompt and pretty header to print"
+	  PRD STRING	;"tail end of short prompt (crlf for TEXT...)"
+	  PR2 STRING	;"verbose prompt for this field"
+	  FHIGH FIX
+	  FWIN <OR FALSE CHANNEL>
+	  FDATA ANY	;"useful data">
+
+<DEFMAC BTEST ('BIT 'BUF)
+	<FORM NOT
+	      <FORM 0?
+		    <FORM CHTYPE
+			  <FORM ANDB
+				<FORM BFLAGS .BUF>
+				.BIT>
+			  FIX>>>>
+
+<DEFINE FIELD ("TUPLE" TUP)
+	#DECL ((TUP) TUPLE (VALUE) FIELD)
+	<CHTYPE <VECTOR !.TUP> FIELD>>
+
+\
+
+<DEFINE FILL-FIELD (INFO SCREEN CIRC "AUX" (BUF <FBUF .INFO>) OC)
+	#DECL ((INFO) FIELD (BUF) <OR BUFFER FALSE> (PROMPT?) <OR ATOM FALSE>)
+	<SET OUTCHAN <SET OC <SELECT <FWIN .INFO>>>>
+	<COND (<WBIT? <GET-WINDOW .OC> ,WINVISIBLE>
+	       <WINOP <SET OUTCHAN <SELECT .OC>> ,DISPLAY>)>
+	<SINPUT .SCREEN .OC>
+	<INPUT .CIRC .SCREEN ,FORMS-CHRTABLE .BUF <>>
+	<COPY .INFO <1 ,VALUES>>
+	T>
+
+<DEFINE EDIT-FIELD (INFO "AUX" OC)
+	#DECL ((INFO) FIELD (OC) CHANNEL)
+	<SET OUTCHAN <SET OC <SELECT <FWIN .INFO>>>>
+	<COND (<WBIT? <GET-WINDOW .OC> ,WINVISIBLE>
+	       <WINOP <SET OUTCHAN <SELECT .OC>> ,DISPLAY>)>
+	<RETURN .INFO .COMMAND-LOOP-ACTIVATION>>
+
+<DEFINE SPLICE-FIELD (AFTER F
+		      "AUX" AW (FC <FWIN .F>) (FW <GET-WINDOW .FC>) NEXT)
+	#DECL ((AFTER F) FIELD (FC) CHANNEL (AW FW) WINDOW
+	       (OUTCHAN) <SPECIAL CHANNEL> (AFTER) FIELD)
+	<SET AW <GET-WINDOW <FWIN .AFTER>>>
+	<SET NEXT <WNEXT .AW>>
+	<ADOPT-WINDOW <WPARENT .AW> .FC>
+	<WYLOC .FW <+ <WYLOC .AW> <WHEIGHT .AW>>>
+	<WNEXT .AW .FC>
+	<WNEXT .FW .NEXT>
+	<WINOP <SET OUTCHAN <SELECT .FC>> ,DISPLAY>
+	.F>
+
+<ENDPACKAGE>
+

@@ -1,0 +1,675 @@
+<PACKAGE "R-HELP">
+
+<ENTRY READER-HELP>
+
+<USE "SYMBOLS" "CTABLE">
+
+<DEFINE READER-HELP ("AUX" H (OUTCHAN .OUTCHAN))
+	#DECL ((H) <OR STRING FALSE> (OUTCHAN) CHANNEL)
+	<SETG SYMBOL-CHRTABLE ,SYMBOL-CHRTABLE>
+	<REPEAT ()
+	<COND (<SET H <CTABLE "topic " ""
+
+"Select a topic for which you wish to see help."
+
+"Stop-helping" <>
+
+"Reader"
+
+"READER is a mail reader-composer-filer written in MDL and interfaced to
+the Comsys mail daemon.  It includes facilities for reading, answering,
+and forwarding mail as well as a filing system for old mail.  Keyword,
+date, sender, and receiver-based searching is possible, as well as
+boolean operations on the results of searches.  Input is through a
+symbolic command reader and a buffered input reader.  The Reader
+incorporates a simple office model based on that of the Data-based
+Message System."
+
+"Calico"
+
+"Calico is a symbolic command reader.  It allows command input with
+prompting, completion, listing of possibilities at any point, and so on.
+It is similar to the Tops-20 command reader.  All special functions are
+invoked by single characters as listed below.
+
+<space> - complete symbol as far as possible.  & is printed if there is
+  still ambiguity.  ! is printed if there is already a symbol specified. 
+<escape> - like space, but terminate if the result is a complete symbol.
+<crlf> - terminate the command if it is unambiguous.
+ctrl-F - show all symbols which are still possibilities.
+<delete> - delete a character.
+ctrl-U or ctrl-X - delete last line of input.
+ctrl-W - delete a word.
+ctrl-@ - delete entire input buffer.
+ctrl-R - return to Reader command level (@ prompt).  Aborts commands.
+? - if input buffer is empty, print an explanatory message, otherwise
+  inserted in buffer.
+ctrl-D - reprint prompt and input buffer.
+ctrl-L - clear screen and reprint prompt and input buffer.
+ctrl-C - if a message is being composed, return to composing it.
+ctrl-H - if scanning (prompt @@) return for one command to non-scanning."
+
+"Which"
+
+"Many Reader commands prompt with 'which', and when that is done, the
+user is expected to specify which messages are to be acted on by the
+command.  There are several general types of answer to this question.
+
+(a) an escape.  As 'Current' is the default answer to 'which', this
+means 'the current message'.
+(b) a Bin name, such as 'In-box'.  This means 'all messages in that
+bin.'
+(c) a Tag name, such as 'Recently-received'.  This means 'all messages
+with that tag'.
+(d) a Folder name.  This means 'all messages in that folder.'
+(e) a Day, such as 'Today' or 'Monday'.  This means all messages
+received on that day.
+(f) a number or series of numbers.  This means those specific messages. 
+The format is numbers separated by commas or ranges of numbers separated
+by hyphens or > and <.  For example, '32,37,40-43,>50' means message 32,
+message 37, messages 40, 41, 42, and 43, and messages greater than 50.
+
+Once a set is specified to 'which' it becomes the 'Last' set used and
+may be respecified by responding 'Last' to the 'which' prompt."
+
+"Bins"
+
+"Bins represent the physical location of a message in your 'office'.
+The office consists of a desk (the 'Workspace'), a file cabinet (the
+'File'), and a wastebasket ('Discarded').  On the desk are the 'In-box',
+the 'Out-box', and the 'Pending' box.  New messages received appear in
+the In-box, messages sent appear in the Out-box, and messages can be
+held in the Pending box.  Various commands move messages from the In-box
+and Out-box to other locations in the office.  For example, 'File' moves
+a message into the File, and 'Hold' moves a message into the Pending
+box.  Messages also have Tags attached to them, and these are more or
+less independent of location (see 'Tags').  Finally there exist Folders
+which may be used to store related messages under a mnemonic name.  See
+'Folders'."
+
+"Tags"
+
+"Tags represent an aspect of a message's status, for example
+'Text-not-seen', which indicates that a message has not been read.  Many
+commands add or remove tags, for example 'Show' removes the tags
+'Text-not-seen' and Summary-not-seen' from a message.  When messages
+are first processed, the tag 'Recently-received' is added, and so on.
+Tags are independent from the location of a message, that is, what bin
+it is in.  Read Help 'Bins' for more information."
+
+"Help"
+
+"Format: 'Help <topic>'. Used to find information about the Reader. Exit
+from helping by typing <crlf> alone or selecting the 'topic'
+'Stop-helping'.  <topics> include each of the Reader commands and some
+overviews.  The beginner should read the <topics> 'Reader', 'Which', and
+(if unfamiliar with the Calico user interface) 'Calico'.  The general
+format of each command is given in the help for that command.  In that
+format, Calico symbolic input is shown in brackets <thus>, buffered
+input terminated by escape is shown in braces [thus]$ and prompts are
+shown in parentheses (thus)."
+
+"Status"
+
+"Format: 'Status'. Lists the locations of messages ('BINS') and their
+status ('TAGS') and how many messages are in each.  All bins are shown
+but not all possible tags. Read Help topics 'Bins' and 'Tags' for more
+information on these."
+
+"Summarize"
+
+"Format: 'Summarize <which>'.  Show a one or two line summary of each
+specified message.  The summary shows date, sender, addressee, and
+subject of each message, along with a short status report giving the
+location of the message: F(ile), O(ut-box), D(iscarded) and space for
+In-box.  It also tells whether the message is recent ('r') or new ('n')
+and whether it still has it's 'Text-not-seen' ('t') and
+'Summary-not-seen' ('s') tags.  You can cause Reader to automatically
+'Summarize recently-received' on startup; see 'Tailor'."
+
+"Show"
+
+"Format: 'Show <which>'.  Prints each specified message.  Removes the
+'Text-not-seen' tag for each message."
+
+"Next"
+
+"Moves to the next message in the open set (usually this set is
+'Recently-received').  If the message has not been seen, 'Shows' it.
+'Next' may also be given as the answer to 'which', referring to the
+message that would have been gotten by the 'Next' command."
+
+"Previous"
+
+"Moves to the previous message in the open set.  May also be used to
+refer to this message (see 'Next')."
+
+"Top"
+
+"Moves to the first message in the open set.  May also be used to refer
+to this message (see 'Next')."
+
+"Rest"
+
+"Matches the rest of the messages in the currently open set.  'Hold Rest'
+would be useful if you have to interrupt a reader session, or 'Summarize
+Rest' to see if a message you are currently looking at has already been
+answered."
+
+"Discard"
+
+"Format: 'Discard <which>'.  Moves the messages specified to the
+discarded bin.  Once discarded, a message may be completely removed by
+'Expunge'."
+
+"Expunge"
+
+"Format: 'Expunge'.  This command 'empties the wastebasket,' so to
+speak.  It removes all trace of any message in the 'Discarded' bin.
+Until an 'Expunge' is performed, discarded messages are still accessible
+and can be retrieved by 'Hold' or 'File'.  If a discarded message has
+not been read, you will be asked to confirm that you wish it expunged.
+Typing escape or 'Y$' to assent, 'N$' to save the message (it will still
+be in the discarded bin after the expunge completes).  Expunge causes
+the message table to be written to disk.  See also 'Exit'."
+
+"File"
+
+"Format: 'File <which> (in) <folder>'.  Moves the specified messages to
+the File and places them in the specified folder.  If <crlf> alone is
+typed when the folder is asked for, the messages are not placed in a
+folder.  'Filed' messages have their 'Action-completed' tag removed if
+they have one.
+
+As a response to 'which', 'File' specifies all messages in the File
+(i.e., all messages not in the Workspace and not Discarded).  Messages
+may be placed in the File using the 'File' command.  Some other commands
+'auto-file', such as 'Answer' and 'Forward'."
+
+"Hold"
+
+"Format: 'Hold <which> (in) <folder>'.  Moves the specified messages to
+the Pending bin and places them in the specified folder.  If <crlf>
+alone is typed when the folder is asked for, the messages are not placed
+in a folder."
+
+"Count"
+
+"Format: 'Count <which>'.  Tells how many messages match the
+specification."
+
+"Answer"
+
+"Format: 'Answer <which>'.  Invokes the mail composer for each message.
+When the composer is started, some fields will already have 'suggested'
+values in them.  To accept these values, type an escape.  To reject
+them, edit them as you would any buffer (^U will erase the suggested
+value entirely).  While composing a message, you may return to the
+Reader's command level by typing 'Reader' to the composer's command
+level.  Sets the 'Answered' and 'Action-completed' tags on the message
+and moves it to the File if it is not already there."
+
+"Forward"
+
+"Format: 'Forward <which>'.  Like 'Answer', except that the composer is
+called differently and only asks for whom to forward the message.  Sets
+the 'Forwarded' and 'Action-completed' tags on the message and moves the
+message to the File if it is not already there."
+
+"Inform"
+
+"Format: 'Inform <which>'.  Like 'Forward', but does not set the
+'Action-completed' tag."
+
+"Send"
+
+"Format: 'Send'.  Invokes the mail composer directly."
+
+"Bug"
+
+"Like the :BUG command to DDT."
+
+"Feature"
+
+"Like the :FEATURE command to DDT."
+
+"Msg"
+
+"Like the :MSG command to DDT."
+
+"Remind"
+
+"Like the :REMIND command to DDT."
+
+"Correct"
+
+"Like the :CORREC command to DDT."
+
+"Print"
+
+"Format: 'Print <which> (to) [file]$'.  Outputs a summary of <which> and
+then a 'Show' of which to [file].  The default file is 'TPL:', the
+line-printer.  Type ctrl-U to erase that if you wish to give a different
+file name."
+
+"Append"
+
+"Format: 'Append <which> (to) [file]$'.  Exactly like 'Print' except
+that the information is appended to the [file] if it exists."
+
+"Create"
+
+"Format: 'Create [folder-name]$'.  Creates a folder with the name given.
+The new folder is added to the folder table and its name may be given as
+a response to ' which ' and other symbol prompts." 
+
+"Destroy"
+
+"Format: 'Destroy <folder>'.  Destroys a folder.  The messages which
+were in it are not affected."
+
+"Add"
+
+"Format: 'Add <which> (to) <folder>'.  Adds the specified messages to
+the folder.  The folder must already exist (see 'Create').  Adding a
+message to a folder has no effect on its location in the Bins nor does
+it add or remove any Tags."
+
+"Remove"
+
+"Format: 'Remove <which> (from) <folder>'.  Removes the specified
+messages from the folder.  An empty folder does not disappear, it must
+be 'Destroy'ed."
+
+"Folders"
+
+"Format: 'Folders'.  This command prints the name of each folder that
+exists and how many messages are in it.  Folders are created by the
+'Create' command.  Messages may be put in a folder using 'Add' and
+removed with 'Remove'.  Note that a message may be in several folders,
+and that a message's presence in a folder (or folders) is independent of
+its location in the Bins.  In this way they are somewhat more general
+than their real-life counterparts."
+
+"Where"
+
+"Format: 'Where <which>'.  Prints the folders each message in <which>
+are in.  This command is useful for finding messages that are 'lost in
+the file cabinet.'"
+
+"Attach"
+
+"Format: 'Attach (tag) <tag> (to) <which>'.  Attaches the tag named to
+the messages specified.  Only some tags may be manipulated with 'Attach'
+and 'Detach'; type ^F to the (tag) prompt for a list."
+
+"Detach"
+
+"Format: 'Detach (tag) <tag> (from) <which>'.  Detaches the tag named
+from the messages specified.  You can use this to remove (for example)
+'Text-not-seen' from a message you don't want to see.  Only some tags
+may be manipulated with 'Attach' and 'Detach'; type ^F to the (tag)
+prompt for a list."
+
+"Build"
+
+"Format: 'Build'.  This command builds a Reader-asylum for you.  It is
+necessary to have a Reader-asylum if you wish to save messages beyond a
+single session or to use Folders.  The Reader-asylum is named:
+	<hsname>;<xuname> ASYLUM"
+
+"Asylum-info"
+
+"Format: 'Asylum-info'.  Prints statistics on your usage of your Reader
+Asylum.  If your asylum is largely free space or you have recently removed
+a large number of locally-stored messages, you might want to try 'Compact-
+asylum'."
+
+"Compact-asylum"
+
+"Format: 'Compact-asylum'.  Creates a new asylum named \"<you> NEW\", and
+copies all good data from your current Reader Asylum into it.  The new
+asylum will be built slightly larger than is needed for all the good data
+in the current one.  If the compaction is successful, it then renames the
+current asylum to \"OLD\" and makes the \"NEW\" asylum the current one,
+re-opening it.  The \"OLD\" asylum is NOT deleted.  If any errors or other
+problems occur during compaction, the rename will not happen and the problem
+should be reported."
+
+"Tailor"
+
+"Format: 'Tailor (what) <feature>'.  ('Tailor show' shows the current
+status of all tailoring settings.)
+	This command is for:
+	(a) 'formats':  changing the output format used by 'Show'.  (You
+probably don't want to use it).
+	(b) 'editor':  changing the default editor program to use.
+	(c) specifying what actions to perform when the Reader starts up;
+'scan-recently-received', 'summarize-recently-received', and their
+inverses (just say 'no' or 'don't' first).
+	(d) determining whether to clear the screen before showing the
+next message during 'scan'; '(no) clear-screen-before-messages'.
+	(e) '(no) renumber-after-expunge' controls whether the local
+message numbers are to be recreated after an expunge.  Normally they
+are not.
+	(f) '(no) update-after-each-command'  The message table may be
+written either each time it is changed (inefficient) or only when it is
+mandatory (such as when you leave the Reader).  This command sets this
+switch.  The initial state is to update only when forced.  This is
+normally off (and probably should not be changed -- it slows things down
+a lot)."
+
+"Check"
+
+"Format: 'Check'.  Checks for new mail.  This command writes the
+message table to disk.  Messages read as the result of a 'Check' command
+have the tag 'Received-during-session' (or 'rds') in addition to the
+usual tags for new messages.  'Check' runs the user's initialization
+sequence if new mail if found."
+
+"Renumber"
+
+"Format: 'Renumber'.  Messages in the Workspace may be referred to by a
+small number which is assigned to each message as it is read.  These
+numbers increase until either the Workspace is empty when the Reader
+starts up or the 'Renumber' command is executed.  See 'Tailor'."
+
+"Update"
+
+"Format: 'Update'.  Causes the message table to be written out."
+
+"Quit"
+
+"Format: 'Quit'.  Causes Reader to terminate.  The message table is
+written out if it has been changed.  See also 'Exit'."
+
+"Exit"
+
+"Format: 'Exit'.  First expunges, then quits."
+
+;""
+
+"Current"
+
+"Specifies the message currently being worked on in the open set. 
+Typing only escape to the 'which' prompt selects 'Current'."
+
+"Open"
+
+"'Open' is both a command and the name of a set.
+
+Format: 'Open <which>'.  Selects which set of messages 'Next',
+'Previous', 'Current' and 'Top' refer to.  Normally this set is the set
+of messages with the 'Recently-received' tag, but it can be any set,
+including 'All'.
+
+Specifies the 'Open' set, usually 'Recently-received' but more
+generally any set given to the 'Open' command."
+
+"Scan"
+
+"Format: 'Scan <which>'.  'Scan' puts the Reader into a mode in which
+all the messages specified by <which> are visited sequentially, shown,
+and then available for any appropriate action.  When scanning, the set
+of messages which is the <which> argument to any command is always
+'Current-message'.  For example, in scanning mode, 'Discard'
+automatically discards the current message, and 'File' becomes 'File (in
+folder) <folder>'.  When one is scanning, typing only <crlf> moves to
+the next message in the scanning set (as does <escape>).  When the last
+message in the set has been processed, scanning mode is turned off.
+When in scanning mode the prompt is '@@' rather than '@'.  To exit
+scanning mode, type the 'End-scan' command.  To exit the scan for one
+command, type ctrl-H to the '@@' prompt.  To exit for several commands,
+use the 'Push' command.  'Scan Recently-received' would be a useful
+first command to type if you have new messages on starting the Reader.
+(It's sufficiently useful that you can do it automatically on startup;
+see 'Tailor'.)"
+
+"Briefly-scan"
+
+"Format:  'Briefly-scan <which>'.  This command is identical to 'Scan'
+except that each message is summarized rather than shown when its turn
+comes."
+
+"End-scan"
+
+"Format:  'End-scan'.  Exits scanning mode."
+
+"Peek"
+
+"Format:  'Peek'.  Equivalent to 'Summarize Rest,' but has the advantage
+that it works during scanning."
+
+"Push"
+
+"Format:  'Push'.  Reinvokes the command reader with scanning turned off
+if it was on.  See 'Pop'."
+
+"Pop"
+
+"Format:  'Pop'.  Returns from a 'Push'.  The state of scanning and of
+the open inversion are restored."
+
+"History"
+
+"Format:  'History <which>'.  For messages you have sent, tells the
+history of their processing by COMSYS.  This command is somewhat less
+useful than one would like and will be improved in the future."
+
+"Last"
+
+"Re-uses the last set given to 'which'.  Sometimes an action will change
+the set, so you won't always get the same result from 'Last' as you did
+originally.  For example, 'Discard In-box', 'Summarize Last' will give
+'Summarize' an empty set."
+
+"Search-result"
+
+"Whenever a search is done by using the 'not', 'and', 'or', 'To',
+'From', 'Subject', 'Text', 'Before', etc. commands, a search-result is
+produced which may referenced analogously to 'Last'.  It stays around
+until the next such search is done."
+
+"All"
+
+"Specifies every message in the message-table."
+
+"Workspace"
+
+"Specifies the messages not in the File and not Discarded:  the current
+working set.  Consists of the In-box, the Out-box, and the Pending bin."
+
+"In-Box"
+
+"Newly received messages are put in the In-box and stay there until
+removed.  'ib' is a synonym for 'In-box'."
+
+"ib"
+
+"A synonym for 'In-box'."
+
+"Out-Box"
+
+"Messages sent by the user are put in the Out-box and stay there until
+removed.  Such messages also get the 'Sent' tag attached.  A message
+sent by the user to himself will only appear in his Out-box.  'ob' is a
+synonym for 'Out-box'."
+
+"ob"
+
+"A synonym for 'Out-box'."
+
+"Pending"
+
+"Messages may at any time be placed in the 'Pending' bin by using the
+'Hold' command.  Use it for whatever purpose you desire."
+
+"Discarded"
+
+"Messages are placed in the Discarded bin by the 'Discard' command. 
+They stay there until removed with 'Hold' or 'File' or an 'Expunge' is
+performed."
+
+"Summary-not-seen"
+
+"Specifies messages which have not been summarized or shown.  All newly
+received messages have this tag set.  'sns' is a synonym."
+
+"sns"
+
+"A synonym of 'Summary-not-seen'."
+
+"Text-not-seen"
+
+"Specifies messages which have not been shown.  All newly received
+messages have this tag set.  'tns' is a synonym."
+
+"tns"
+
+"A synonym of 'Text-not-seen'."
+
+"Recently-received"
+
+"Specifies messages received since Reader was last run.  All newly
+received messages have this tag set.  It is cleared by starting a new
+copy of the Reader.  'rr' is a synonym."
+
+"rr"
+
+"A synonym of 'Recently-received'."
+
+"Received-during-session"
+
+"Specifies messages received since Reader was started.  Such messages
+are read by doing a 'Check'.  'rds' is a synonym."
+
+"rds"
+
+"A synonym of 'Received-during-session'."
+
+"Action-completed"
+
+"Messages 'Answer'ed or 'Forward'ed have this tag set.  It is cleared by
+putting the message in a folder or moving it explicitly.  'ac' is a
+synonym."
+
+"ac"
+
+"A synonym of 'Action-completed'."
+
+"Answered"
+
+"Specifies messages that have been 'Answer'ed.  This is particularly
+useful with the 'Not' construct."
+
+"Forwarded"
+
+"Specifies messages that have been 'Forward'ed or 'Inform'ed.  This is
+particularly useful with the 'Not' construct."
+
+"Sent"
+
+"Messages the user sends are given this tag."
+
+"Locally-stored"
+
+"After a message has been around for a few weeks in the 'public' data
+base, only a few users (the author, perhaps, and the receivers) will
+still point to it.  At this time it is copied to these users' reader
+asylums.  When this happens the message is given this tag; the more of
+them there are the larger your reader asylum will be.  Whenever messages
+are copied into your reader asylum you will be informed the next time
+you run the Reader.  'ls' is a synonym."
+
+"ls"
+
+"'ls' is a synonym of 'Locally-stored'."
+
+"To"
+
+"Format: 'To [addressees]$'.  Specifies messages addressed to particular
+addressees.  They should be input as they would be to the 'To' prompt of
+the composer.  All addressee fields (To, Carbon-Copy, etc.) are
+searched.  Case is not significant and partial matches are accepted
+(i.e., 'foo' would match 'FOOBAR').  Sets up the 'Search-result' set."
+
+"From"
+
+"Format: 'From [senders]$'.  Specifies messages sent by particular
+addressees.  They should be input as they would be to the composer. Case
+is not significant and partial matches are accepted (i.e., 'foo' would
+match 'FOOBAR').  Sets up the 'Search-result' set."
+
+"Subject"
+
+"Format: 'Subject [words]$'.  Specifies messages whose Subject fields
+contain one of the words specified.  They should be input separated by
+commas.  Case is not significant and partial matches are accepted (i.e.,
+'foo' would match 'FOOBAR').  Sets up the 'Search-result' set."
+
+"Text"
+
+"Format: 'Text [words]$'.  Specifies messages whose Text fields contain
+one of the words specified.  They should be input separated by commas.
+Case is not significant and partial matches are accepted (i.e., 'foo'
+would match 'FOOBAR').  Sets up the 'Search-result' set."
+
+"and"
+
+"Format: 'And <which> (and) <which> ... (and) <crlf>'.  Specifies a
+boolean search where all specifications must be true.  For example, 'And
+In-box (and) From PDL$ (and) <crlf>'.  Sets up the 'Search-result' set
+to those messages which meet the conditions."
+
+"or"
+
+"Format: 'Or <which> (or) <which> ... (or) <crlf>'.  Specifies a boolean
+search where at least one specification must be true.  For example, 'Or
+From PDL$ (or) Text Foobar$ (or) <crlf>'.  Sets up the 'Search-result' set
+to those messages which meet the conditions."
+
+"not"
+
+"Format: 'Not <which>'.  Specifies messages which are not in the set
+specified.  For example, 'And Not Discarded (and) Not File (and) <crlf>'
+specifies all messages in the Workspace.  Sets up the 'Search-result'
+set to those messages which meet the conditions."
+
+"before"
+
+"Format: 'Before [when]$'.  Specifies messages sent before a certain
+date.  Dates are specified as (for example) '9/1', 'August 12', 'Aug
+21', 'Today', 'Monday', etc.  Sets up the 'Search-result' set to those
+messages which meet the conditions."
+
+"after"
+
+"Format: 'After [when]$'.  Specifies messages sent after a certain
+date.  Dates are specified as (for example) '9/1', 'August 12', 'Aug
+21', 'Today', 'Monday', etc.  Sets up the 'Search-result' set to those
+messages which meet the conditions.  'Since' is a synonym of 'After'."
+
+"since"
+
+"'Since' is a synonym of 'After'."
+
+"between"
+
+"Format: 'Between [when]$ (and) [when]$'.  Specifies messages sent
+between two dates.  Dates are specified as (for example) '9/1', 'August
+12', 'Aug 21', 'Today', 'Monday', etc.  Sets up the 'Search-result' set
+to those messages which meet the conditions."
+
+"on"
+
+"Format: 'On [when]$'.  Specifies messages sent on a certain
+date.  Dates are specified as (for example) '9/1', 'August 12', 'Aug
+21', 'Today', 'Monday', etc.  Sets up the 'Search-result' set to those
+messages which meet the conditions."
+>>
+	       <PRINC "A">
+	       <PRINC .H>
+	       <CRLF>)
+	      (ELSE <RETURN>)>>>
+
+<ENDPACKAGE>

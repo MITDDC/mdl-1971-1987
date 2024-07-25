@@ -1,0 +1,122 @@
+
+<PACKAGE "MDDATA">
+
+<ENTRY SETUP NEW-DICTIONARY THE-DICT ADD-DICT DROP-DICT
+       DICTIONARY? PRINT-DICTS DICTIONARY
+       RLSDIC PREDIC MRKDIC ENDTRE DNAME>
+
+<USE "DATA-SAVE">
+
+"Offsets into a dictionary"
+
+<SETG RLSDIC 1> ; "RLS-dictionary"
+
+<SETG PREDIC 2> ; "Prefix-dictionary"
+
+<SETG MRKDIC 3> ; "Mark-error"
+
+<SETG ENDTRE 4> ; "Ending-tree"
+
+<SETG DNAME 5>	; "Name of Dictionary"
+
+<MANIFEST RLSDIC PREDIC MRKDIC ENDTRE DNAME>
+
+\
+
+"SETUP -- Set up the normal single element COMDEC dictionary"
+
+<DEFINE SETUP () 
+	<SETG DICTIONARY <SET DICTIONARY ()>>
+	"READY">
+
+"NEW-DICTIONARY -- adds a dictionary to the global dictionary list from a file"
+
+<DEFINE NEW-DICTIONARY (FILE "OPTIONAL" (REPLACE? <>) "AUX" R (DI ,DICTIONARY))
+	#DECL ((FILE) STRING (DI) <LIST [REST VECTOR]>)
+	<PROG ()
+	      <COND (<SET R <RESTORE-DATA .FILE>>
+		     <COND (<AND <TYPE? .R ATOM>
+				 <TYPE? <SET R ,.R> VECTOR>>
+			    <COND (<DICTIONARY? <DNAME .R>>
+				   <COND (.REPLACE?
+					  <MAPR <>
+						<FUNCTION (DD)
+						#DECL ((DD) <LIST [REST VECTOR]>)
+						<COND (<=? <DNAME .R> <DNAME <1 .DD>>>
+						       <PUT .DD 1 .R>
+						       <MAPLEAVE>)>>
+						.DI>)
+					 (ELSE <RETURN #FALSE("ALREADY THERE")>)>)>
+			    <COND (<EMPTY? .DI>
+				   <SETG DICTIONARY <SET DICTIONARY (.R)>>)
+				  (ELSE
+				   <PUTREST <REST .DI <- <LENGTH .DI> 1>> (.R)>)>
+			    <DNAME .R>)
+			   (ELSE <CHTYPE (.R) FALSE>)>)>>>
+
+"Set up the current state of the dictionary list"
+
+<DEFINE THE-DICT ("TUPLE" D)
+	#DECL ((D) <TUPLE [REST STRING]>)
+	<COND (<SET DICTIONARY
+	     <MAPF ,LIST
+		   <FUNCTION (D)
+			#DECL ((D) STRING)
+			<COND (<DICTIONARY? .D> <MAPRET .D>)
+			      (ELSE
+			       <MAPLEAVE <CHTYPE ("NOT-A-DICTIONARY" .D) FALSE>>)>>
+		   .D>>
+	       "DONE")>>
+
+"Add a single dictionary to the current selected list"
+
+<DEFINE ADD-DICT (D "AUX" (DI .DICTIONARY) DD)
+	#DECL ((D) STRING (DI) LIST (DD) <OR FALSE VECTOR>)
+	<COND (<SET DD <DICTIONARY? .D>>
+	       <COND (<MEMQ .D .DI>)
+		     (<EMPTY? .DI> <SET DICTIONARY <LIST .DD>>)
+		     (ELSE
+		      <PUTREST <REST .DI <- <LENGTH .DI> 1>> (.DD)>)>
+	       .D)>>
+
+"Drop a single dictionary from the current selected list"
+
+<DEFINE DROP-DICT (D "AUX" (DI .DICTIONARY) DD)
+	#DECL ((D) STRING (DI) <LIST [REST VECTOR]> (DD) <OR FALSE VECTOR>)
+	<COND (<SET DD <DICTIONARY? .D>>
+	       <REPEAT ()
+		       <COND (<EMPTY? .DI> <RETURN <>>)
+			     (<==? .DD <1 .DI>>
+			      <SET DICTIONARY <REST .DICTIONARY>>
+			      <RETURN <DNAME .DD>>)
+			     (<LENGTH? .DI 1> <RETURN <>>)
+			     (<==? .DD <2 .DI>>
+			      <PUTREST .DI <REST .DI 2>>
+			      <RETURN>)>
+		       <SET DI <REST .DI>>>)>>
+
+"Is a dictionary in the global list?"
+
+<DEFINE DICTIONARY? (D "OPTIONAL" (DI ,DICTIONARY))
+	#DECL ((D) STRING (DI) <LIST [REST VECTOR]>)
+	<COND (<MAPF <>
+	      <FUNCTION (E)
+			<AND <=? .D <DNAME .E>> <MAPLEAVE .E>>>
+	      .DI>)
+	      (ELSE #FALSE ("UNKNOWN"))>>
+
+"Print list of currently selected dictionaries"
+
+<DEFINE PRINT-DICTS ("OPTIONAL" (DL .DICTIONARY))
+	#DECL ((DL) <LIST [REST VECTOR]>)
+	<PRINC "Dictionaries:  ">
+	<MAPR <>
+	      <FUNCTION (DD "AUX" (D <1 .DD>))
+			#DECL ((DD) LIST (D) VECTOR)
+			<PRINC <DNAME .D>>
+			<OR <LENGTH? .DD 1> <PRINC ", ">>>
+	      .DL>
+	<CRLF>
+	,NULL>
+
+<ENDPACKAGE>

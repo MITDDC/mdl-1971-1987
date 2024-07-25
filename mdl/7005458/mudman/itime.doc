@@ -1,0 +1,83 @@
+ITIME Package					pdl 7/2/79
+
+     ITIME is a package for representing dates and times in Muddle
+space- and manipulation- efficiently.  A daytime (sans time-zone) is
+represented as a FIX, and with time-zone as a UVECTOR of two FIXes.
+
+     This package is intended to replace the older "TIMFCN" package as a
+standard for representing and manipulating dates and times.
+
+     A daytime consists of a fix in which the right half is a
+"fractional" time and the left is the number of days since some
+arbitrary past date. The standard chosen is that described in the
+TOPS-20 Monitor Calls Manual, section 2.8.2.
+
+     The advantage of this standard is that manipulation of it need not
+take into account any of the details (leap-years, daylight savings time,
+etc.) of time representation other than at conversion to or from the
+more conventional representation.  For example, the number 262144
+represents one day (CHTYPE it to a WORD to see why).  Therefore, noon of
+any day is </ 262144 2>, since noon is the middle of the day.
+Unfortunately, one hour is 10922 2/3 time units, so really fussy
+manipulations must compensate for the fractional units, but since one
+unit is about 1/3 of a second, you have to be pretty fussy to care.
+
+     To add or subtract numbers of days, just add or subtract that
+number times 262144, which represents one day.
+
+     There are several entries:
+
+ITIME { qtime:fix }
+
+With no arguments, returns the current daytime in internal format.  If
+an argument is given, it is a time in ITS internal format (which is of
+course, different):  its internal format will be returned.
+
+LTIME { itime:fix-or-uvector } { time-list:list }
+
+Converts "internal" daytime format into "external" daytime format.
+External format is a Muddle list:
+		((yy mm dd) (hh mm ss) "zone")
+This format is obviously more convenient for certain operations
+(printing the daytime, for example) than the internal format.
+
+Both arguments are optional.  The second defaults to an internal (and
+reused!) daytime list.  The first defaults to the current daytime as
+returned by ITIME.  Note that LTIME will accept daytimes in "uvector"
+format:  that is, with a zone attached.
+
+BTIME { yy:fix mm:fix dd:fix hh:fix mm:fix ss:fix }
+
+Returns the internal daytime specified by its arguments.  All are
+optional.
+
+IDAY { itime:fix }
+
+Returns the day of the week of the daytime given, as a FIX:  0 = Sunday,
+1 = Monday, etc.  The argument is optional, by default the current
+daytime.
+
+ZONE { zone:fix-or-string }
+
+Converts internal zone format to external and vice versa.  If given no
+argument, returns the external format for the local time zone (assumed
+to be Eastern).  T  Tzone tables are reproduced below:
+
+        "EST" 5  "EDT" *1000005*
+	"CST" 6  "CDT" *1000006*
+	"MST" 7  "MDT" *1000007*
+	"PST" 8  "PDT" *1000010*
+	"YST" 9  "YDT" *1000011*
+	"HST" 10 "HDT" *1000012*
+	"BST" 11 "BDT" *1000013*
+	"AST" 4  "ADT" *1000004*
+	"NST" 3
+	"GMT" 0
+
+As you can see from the tables, the zone which represents the "Summer
+time" is the FIX produced by turning on the lowest bit of the left half
+in a FIX of the basic zone.  E.g.; EST and EDT have the same right half.
+
+QTIME itime:fix
+
+Converts the right half (the time) if a daytime into ITS internal format.

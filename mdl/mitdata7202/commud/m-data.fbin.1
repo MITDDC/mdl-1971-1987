@@ -1,0 +1,133 @@
+'<PCODE "1M-DAT">
+
+<PACKAGE "M-DATA"> 
+
+"functions to handle usage of library data items" 
+
+<ENTRY GET-DATUM-ERRORS? PURIFIED? DDATUMS LOADED-STUFF DATUM FDATUM QDATUM 
+OPEN-DATUM GET-DATUM MAKE-DATUM DATED-DATUM CHECK-DATUM LOADIT REMEMBERIT 
+FORGETIT LIST-ITEMS PURIFY-ITEMS> 
+
+<USE "M-DEFS" "M-DIR" "M-MSG" "M-TIME" "SORTX" "OPSYS"> 
+
+<SETG GET-DATUM-ERRORS? <>> 
+
+<SETG DATA-NM2 <OPSYS (TOPS-20 "DATA") (ITS ">")>> 
+
+<GDECL (PURIFIED? GET-DATUM-ERRORS?) <OR FALSE ATOM> (GETDERR) HANDLER (
+LOADED-STUFF) LIST (DATA) OBLIST> 
+
+\ 
+
+<SETG DATA <MOBLIST DATUM>> 
+
+"GET-ATOMD -- macro to return form to get atom of pname of
+  supplied string, on oblist datum." 
+
+<SETG GET-ATOMD  %<RSUBR!- '[ %<PCODE!- "1M-DAT" 0> GET-ATOMD #DECL ("VALUE" 
+ATOM STRING) WATCH SENDMSG SCROUT FILCHN CREATED? %<RGLOC DATA T> DATE 
+"COMSYS-SORTED-DATA" %<RGLOC DATA-NM2 T> "DSK" "COMSYS-DATA-DIR" T "" 
+"??? Unsorted: " " from " " at " "READ" TO "?" "??? Loaded datum chomps: " %<
+RGLOC GET-DATUM-ERRORS? T> ("COMSYS") "COMSYS-Daemon" CANT-LOAD-DATUM %<RGLOC 
+LOADED-STUFF T> %<RGLOC PURIFIED? T> OUTCHAN "ALREADY PURIFIED, SORRY." GETDERR 
+"ERROR" %<RGLOC READ-ERROR T> GETDACT (ACTIVATION) %<RGLOC GETDERR T> "READB" 
+"PURIFIED ALREADY:" "NOT YET PURIFIED:" ": " " (" ")"]>> 
+<AND <ASSIGNED? GLUE> .GLUE <PUT ,GET-ATOMD PGLUE ![715128832 0 0!]>> 
+
+
+"MAKE-DATUM -- set up a datum in core (for preloaded constant data)" 
+
+<SETG MAKE-DATUM %<RSUBR-ENTRY '[GET-ATOMD MAKE-DATUM #DECL ("VALUE" STRING 
+STRING ANY)] 25>> 
+
+"DATED-DATUM -- get new copy only if file has changed" 
+
+<SETG DATED-DATUM %<RSUBR-ENTRY '[GET-ATOMD DATED-DATUM #DECL ("VALUE" ANY 
+STRING STRING)] 53>> 
+
+"CHANGED-FILE? -- looks for a file with a different cdate than is recorded" 
+
+<SETG CHANGED-FILE? %<RSUBR-ENTRY '[GET-ATOMD CHANGED-FILE? #DECL ("VALUE" <OR 
+FALSE FIX> STRING <OR FIX FALSE>)] 124>> 
+
+<SETG DDATUMS %<RSUBR-ENTRY '[GET-ATOMD DDATUMS #DECL ("VALUE" ATOM <VECTOR [
+REST STRING]>)] 169>> 
+
+<SETG CHECK-DATUM %<RSUBR-ENTRY '[GET-ATOMD CHECK-DATUM #DECL ("VALUE" <OR ATOM 
+FALSE> STRING STRING ANY)] 203>> 
+
+"DATUM -- takes string, name of library data
+ item, and returns it.  items may be obtained from the gval of the
+ associated atom, or, as a last resort, by calling USE-DATUM." 
+
+<SETG DATUM %<RSUBR-ENTRY '[GET-ATOMD DATUM #DECL ("VALUE" ANY STRING)] 380>> 
+
+<SETG QDATUM %<RSUBR-ENTRY '[GET-ATOMD QDATUM #DECL ("VALUE" ANY STRING)] 418>> 
+
+<SETG FDATUM %<RSUBR-ENTRY '[GET-ATOMD FDATUM #DECL ("VALUE" ANY STRING 
+"OPTIONAL" <OR ATOM FALSE>)] 434>> 
+
+\ 
+
+"LOADIT -- function to load a datum, saving its value as gval
+  of an atom.  if no <PURIFY-ITEMS> has been done yet, also adds
+  it to front of LOADED-STUFF list.  note that
+  this list may be used to purify a bunch of preloaded data items
+  it is also possible to reload a data item by calling LOADIT directly.
+  it is normally not called when the data item is found as the related
+  atom's gval.
+
+-- if optional arg SV? false, will not save as a gval" 
+
+<SETG LOADED-STUFF (T)> 
+
+<SETG LOADIT %<RSUBR-ENTRY '[GET-ATOMD LOADIT #DECL ("VALUE" ANY STRING 
+"OPTIONAL" <OR 'T FALSE>)] 472>> 
+
+<SETG REMEMBERIT %<RSUBR-ENTRY '[GET-ATOMD REMEMBERIT #DECL ("VALUE" <OR ATOM 
+LIST> STRING ANY)] 523>> 
+
+"FORGETIT -- used to remove all traces of a specified datum from core" 
+
+<SETG FORGETIT %<RSUBR-ENTRY '[GET-ATOMD FORGETIT #DECL ("VALUE" ATOM STRING)] 
+609>> 
+
+"PURIFY-ITEMS -- causes current list to become pure (done just before SAVE'ing)" 
+
+<SETG PURIFIED? <>> 
+
+<SETG PURIFY-ITEMS %<RSUBR-ENTRY '[GET-ATOMD PURIFY-ITEMS #DECL ("VALUE" ANY)] 
+680>> 
+
+\ 
+
+"GET-DATUM -- takes data name, loads datum from library, evaling forms
+  encountered until it gets last item -- permits including <USE...>
+  forms in data item file.
+
+if given an optional arg to be used with decl?, reads items until
+something matching the specified pattern is found, which it returns.
+otherwise, evals each object seen, and returns result of last eval when
+eof encountered
+
+will try to read from library first, then see if data name is file name." 
+
+<SETG GET-DATUM %<RSUBR-ENTRY '[GET-ATOMD GET-DATUM #DECL ("VALUE" ANY STRING 
+"OPTIONAL" ANY)] 716>> 
+
+<SETG OPEN-DATUM %<RSUBR-ENTRY '[GET-ATOMD OPEN-DATUM #DECL ("VALUE" <OR CHANNEL
+FALSE> STRING)] 851>> 
+
+"READ-ERROR -- readin time error handler" 
+
+<SETG READ-ERROR %<RSUBR-ENTRY '[GET-ATOMD READ-ERROR #DECL ("VALUE" ANY "TUPLE"
+TUPLE)] 889>> 
+
+\ 
+
+"LIST-ITEMS -- lists names of currently loaded data items" 
+
+<SETG LIST-ITEMS %<RSUBR-ENTRY '[GET-ATOMD LIST-ITEMS #DECL ("VALUE" ATOM)] 935>
+> 
+
+<ENDPACKAGE> 

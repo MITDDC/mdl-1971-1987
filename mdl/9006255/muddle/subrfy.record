@@ -1,0 +1,17 @@
+Compilation record for: DSK:MUDDLE;SUBRFY UBTB75
+Output file:  DSK:MUDDLE;SUBRFY NBIN
+
+It is now Wednesday, 8 Nov 1978 02:57 EST
+
+File loaded.
+Precompilation loaded.
+No DEFINEd functions in this file.
+Functions ordered.
+
+
+Total time used is
+	53 sec. CPU time,
+	19 sec. garbage collector CPU time,
+	1 min. 12 sec. real time.
+CPU utilization is 73.611111%.
+Number of garbage collects = 3

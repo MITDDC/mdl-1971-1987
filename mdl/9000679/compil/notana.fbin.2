@@ -1,0 +1,39 @@
+'<PCODE "1NOTANA">
+
+"	This module contains analysis and generation functions for
+NOT, TYPE? and ==?.  See SYMANA for more details about ANALYSIS and
+CODGEN for more detali abour code generation.
+" 
+
+"Analyze NOT usage make sure arg can be FALSE." 
+
+<SETG NOT-ANA  %<RSUBR!- '[ %<PCODE!- "1NOTANA" 0> NOT-ANA #DECL ("VALUE" ANY 
+NODE ANY) ADDVMESS ADD-TYPE-LIST EANA HACK-BOUNDS ARGCHK TYPE-OK? ISTYPE? ANA 
+MESSAGE SEGFLUSH PRED T TRUTH UNTRUTH (ANY) (LIST) ERROR 
+"WRONG NUMBER OF ARGS TO  NOT " %<TYPE-W NODE VECTOR> ANY FALSE ATOM <OR FALSE 
+ATOM> WHON (NODE) WHO GLN GLE ==? FIX (<OR NODE FALSE>) "TOO FEW ARGS TO TYPE? "
+ TYPE? "ARG TO TYPE? NOT A TYPE " OR NOT %<TYPE-W SYMTAB VECTOR> 
+"Not open compiled."]>> 
+<AND <ASSIGNED? GLUE> .GLUE <PUT ,NOT-ANA PGLUE ![715828223 -1 -67108864!]>> 
+
+
+<PUT ,NOT ANALYSIS ,NOT-ANA> 
+
+"	Analyze N==? and ==? usage.  Complain if types differ such that
+ the args  can never be ==?." 
+
+<SETG ==?-ANA %<RSUBR-ENTRY '[NOT-ANA ==?-ANA #DECL ("VALUE" ANY NODE ANY)] 177>
+> 
+
+<PUT ,==? ANALYSIS ,==?-ANA> 
+
+<PUT ,N==? ANALYSIS ,==?-ANA> 
+
+"	Ananlyze TYPE? usage warn about any potential losers by using
+TYPE-OK?. " 
+
+<SETG TYPE?-ANA %<RSUBR-ENTRY '[NOT-ANA TYPE?-ANA #DECL ("VALUE" ANY NODE ANY)] 
+319>> 
+
+<PUT ,TYPE? ANALYSIS ,TYPE?-ANA> 
+

@@ -1,0 +1,90 @@
+.ds
+MDL began existence in 1970 as a successor to Lisp and a vehicle
+for the Dynamic Modeling System at MIT-LCS (then Project MAC).
+It now serves as a base for software prototyping, research, development,
+education, and implementation of the majority of programs at MIT-DMS.
+
+The original design goals
+included:
+	* an interactive integrated environment for programming,
+debugging, loading, and editing;
+	* ease in learning and use;
+	* facilities for structured, modular, shared programs;
+	* extensibility of syntax, data types and operators;
+	* data-type checking for debugging and optional data-type
+declarations for compiled efficiency;
+	* an integrated environment for both interpreted and
+compiled programs;
+	* associative storage;
+	* multiprocessing; and
+	* graphics.
+
+Besides reaching these goals, MDL also includes:
+	* a variety of control structures,
+	* static and dynamic binding of variables,
+	* static and dynamic blocking or scoping of names,
+	* extensibility of data types, including packing to the bit
+level, like PL/I "structures",
+	* complete accessibility of the "stack", where function
+invocations and variable bindings are kept,
+	* flexible
+input/output (including the ARPA Network), and
+	* flexible interrupt and
+signal facilities.
+
+An editing and debugging system gives the user the
+ability to compose, run, debug, and edit programs without leaving the
+MDL environment.  A user can:
+	* type in a simple program at a terminal
+while composing it mentally,
+	* then enter the program editor to make
+necessary changes as the program becomes more fully developed,
+	* run the
+program with test cases (without leaving the editor), and
+	* if errors
+occur, examine the program's state fully while execution is suspended. 
+.br
+The user can then correct bugs with the editor and either resume
+execution or restart from any pending operation.  To aid debugging, the user can:
+	* insert conditional breakpoints,
+	* follow execution a step at a time, or
+	* trace
+execution of function calls (including the primitive operations of the
+language).
+.br
+Even later on in development, when all or most programs are
+compiled, if and when an error or bug is encountered, uncompiled
+versions of suspect programs can be substituted at the time, and then
+the above debugging aids can be used to good effect.  The editor will
+keep track of which functions in a related group have been changed
+on-line, and update the source file on disk appropriately.
+
+There is a library system that includes:
+	* static blocking or scoping that allows only the external names of a package to be
+accessible to other programs;
+	* easy access to one or more libraries containing packages of
+programs and/or data, by both people and programs;
+	* optional loading of a package from the library by
+referring to one of its external names.
+
+The MDL compiler (written in MDL) has the ability to:
+	* produce code in the same speed range (for comparable
+programs) as typical Lisp or Fortran compilers;
+	* tell the user when he or she has forced the compiler to produce
+slower code than it could ideally have produced.
+
+There is also an assembler (written in MDL), which converts hand-written
+assembly-language programs (which are rarely necessary) into the same
+binary form that the compiler
+produces, making a clean and consistent way to intermix low-level and
+higher-level programs.
+
+Auxiliary programs can operate on compiled or assembled code to:
+	* make pure, sharable, compiled programs which the
+interpreter will map in and out of core as needed, giving MDL an
+effective address space larger than 256K words;
+	* progressively speed up the execution time of packages of
+functions as their development stabilizes by eliminating the mediation
+of internal calls and ultimately of external calls;
+	* place code and data outside the garbage-collected space,
+reducing the overhead of garbage collecting.

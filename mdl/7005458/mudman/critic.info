@@ -1,0 +1,306 @@
+CRITIC INFO				Last updated:	PDL (4/8/77)
+
+	CRITIC is a PACKAGE designed to aid the user in debugging (and
+perhaps increasing the efficiency of) his programs.  It accumulates and
+prints in a readable format information about the interactions of the
+various functions (and lvals and gvals) in the Package.  It also warns
+the user about various conditions it finds either untasteful or
+erroneous, such as incorrect use of SPECIAL, forgetting to QUOTE some
+structure, and so on.  Like most critics, it is sometimes wrong, but it
+tries to perform a useful service.  To get CRITIC say:
+
+	<USE "CRITIC">
+
+	There are two major entries, one of which prints more
+information than the other.
+
+	<CRITIC <group-name> { <output-file> }>
+
+where <group-name> is the ATOM returned by a GROUP-LOAD, and the
+optional <output-file> is a string giving the name of the file to output
+to (defaults to have second name "CRITIC").  This can also be a CHANNEL
+if you are planning to do several CRITICs into one file.  CRITIC prints
+information about interactions between the functions in a group (as
+described below).
+
+	<CRITIC-NOTES <group-name> { <output-file> }>
+
+is similar but only prints "errors" and "warnings": things it thinks
+might be problems with the functions in the group.
+
+	Output format (for each function and for the group as a whole):
+
+<function>  (<offset of function in group>)
+
+  Called-by:  a list of all the functions which call <function>
+  Calls:  a list of all the functions called by <function>
+  SETG:  external globals SETG'd by <function>
+  GVAL:  external globals referenced by <function> 
+  SET:  external variables SET by <function>
+  LVAL:  external variables referenced by <function>
+  SPECIAL:  variables declared SPECIAL in <function>
+  USE-DATUM:  DATUMS used by <function>
+
+	The above section is printed by CRITIC but not by CRITIC-NOTES.
+"External" as used above means "External to <function>".
+
+	CRITIC-NOTES and CRITIC both print information about possible
+errors and untastefulnesses in each function.  These can be any or all
+of the following (explanations follow where needed):
+
+a. Global problems with the Group.
+
+FLOAD in file.
+
+	This is pretty minor:  FLOADs at top level are discouraged if
+   you can avoid them.
+
+BLOCK or ENDBLOCK at top level in PACKAGE.
+
+	Packages should not have to resort to this.
+
+<atom-name>: MANIFESTed structure.
+
+	The atom given is a structure but was MANIFESTed.  Since a
+   MANIFEST is copied within the Rvector of any RSUBR that uses it, it
+   is usually not a good idea.
+
+ENTRYs not bound, assumed locals: <atom-list>
+
+	The atoms given were made ENTRYs in the PACKAGE, but were not
+   bound, so CRITIC has assumed they are locals, for lack of something
+   better to do.
+
+Packages USEd but never referenced: <package-names>
+
+	These packages were in USE statements but no atom was ever found
+   which fell on their oblists.  There will sometimes be incorrect
+   entries in this list if you USE a package which sets up a funny ENTRY
+   oblist (RPACKAGEs included) or no OBLISTs at all.
+
+Internal Functions Unused: <atom-list>
+
+	These are functions DEFINEd but apparently never referenced and
+   not entries.  There will sometimes be incorrect entries in this list
+   if you have functions invoked only by funny dispatching methods, such
+   as APPLYing or EVALing an element of a structure.
+
+Internal Globals Unused: <atom-list>
+
+	Atoms SETG'd at top level but never referenced.
+
+Internal Manifests Unused: <atom-list>
+
+	Atoms SETG'd and MANIFESTed at top level but never referenced.
+
+b. Parameter list problems.
+
+ATOM <atom-name> used twice in parameter list.
+
+	The atom named was bound twice in the same parameter list within
+   the function.  MUDDLE doesn't worry about this, but you might.
+
+Untasteful re-use of ATOM <atom-name> in ROOT.
+
+	An atom was bound which happened to map into an atom in ROOT
+   which has a GVAL that is a SUBR or FSUBR.  This is untasteful because
+   the atom will have to be unpurified, which is expensive.
+
+"BIND" illegally located.
+
+	A "BIND" was found other than at the beginning of a parameter
+   list.
+
+"CALL"/"ARGS" illegally located.
+
+	A "CALL" or "ARGS" was found after the "AUX" in a parameter
+   list.
+
+"OPTIONAL" illegally located.
+
+	"OPTIONAL" was found after "AUX" in a parameter list.
+
+"TUPLE" illegally located.
+
+	"TUPLE" was found after "AUX" in a parameter list.
+
+<atom> "AUX" Illegally QUOTEd.
+
+	The atom named was given as a quoted argument in the "AUX" part
+   of the parameter list.
+
+External locals set but unbound and unDECLed: <atom-list>
+External locals set but unbound: <atom-list>
+
+	Two different classes of hacking an external local.  In both
+   cases it means that the atoms did not appear to be improperly
+   SPECIALed, since no one bound them higher in the call tree (or at top
+   level).  These are most often indications of misspelling or
+   forgetting to put a temporary in the parameter list.
+
+External locals used but unbound and unDECLed: <atom-list>
+External locals used but unbound: <atom-list>
+
+	A reference to an external local which was not bound anywhere is
+   probably a misspelling of a SPECIAL bound elsewhere or the result of
+   forgetting to put the atoms in the function's parameter list.
+
+External locals set but unDECLed: <atom-list>
+External locals used but unDECLed: <atom-list>
+
+	An external used but not DECLed usually means that the compiler
+   will produce poorer code.
+
+c. Unused ATOMs.
+
+Argument unused: <atom-list>
+
+	The arguments listed were never referenced.
+
+Unused: <atom-list>
+
+	The atoms listed were bound at top level of the function and
+   never referenced.
+
+Unused in PROG: <atom-list>
+
+	Similar to the above, but the atoms were bound within a PROG.
+
+Unused in REPEAT: <atom-list>
+
+	Similar to the above, but the atoms were bound within a REPEAT.
+
+Unused in FUNCTION: <atom-list>
+
+	Similar to the above, but the atoms were bound within a
+   FUNCTION, such as the second argument to a MAPF/MAPR.
+
+Unused SPECIALs: <atom-list>
+
+	The same as above (including " ... in FUNCTION", etc.), except
+   that the atom was SPECIAL.  This really does look down the call tree,
+   so it is more accurate about this than the compiler, which only looks
+   at the function in which the atom is bound.
+
+d. Function calling errors.
+
+Calls undefined function <atom>.
+
+	The function calls an undefined function (undefined at the time
+   CRITIC ran).
+
+Calls <function> with too few arguments.
+
+Calls <function> with too many arguments.
+
+External FUNCTION <function>
+
+	The function named is called but doesn't seem to fall on any of
+   the oblists associated with the group.
+
+e. SPECIAL/UNSPECIAL problems.
+
+SPECIALs never used as SPECIALs: <atom-list>
+
+	The atoms were made SPECIAL but never used outside the function
+   in which they were bound.
+
+<atom-name> is unused or should be SPECIAL.
+
+	A very specific error which means that the atom given (always
+   either INCHAN, OUTCHAN, or OBLIST) was bound but never referenced
+   within the function, and was not SPECIAL:  Either you bound it for
+   effect and forgot to SPECIAL it, or you didn't need to bind it.
+
+<atom> unbound in paths:  <path-list>
+
+	If the function is called by one of the paths given the <atom>
+   will be unbound.  A path is just a list of calls CRITIC has found are
+   possible, such as (FOO BAR BLECH), meaning "FOO is called by BAR
+   which is called by BLECH".
+
+The ATOM <atom> used in <fcn1> should be special in <fcn2>.
+
+	This note will appear with both functions mentioned.  It means
+   that <atom> is referenced in <fcn1> and the nearest function that
+   binds it and percolates down to <fcn1> is <fcn2>.
+
+f. DECLing problems.
+
+RSUBR has no DECL.
+
+FUNCTION has no DECL.
+
+Parameters not DECLed: <atom-list>
+
+	The atoms given were bound but not DECLed in the parameter list
+   of a FUNCTION, PROG, or REPEAT.
+
+No DECL in DECL for: <atom-list>
+
+	The <atom-list> given had no associated declaration.
+
+Illegal DECL: <atom-list> <decl> <reason>
+
+	The DECL pair given had illegal syntax for the reason given. 
+   These can include:
+
+   "Not a legal type":  An object appeared in a DECL that was not an
+      ATOM, FORM, or SEGMENT.
+
+   "Type-name not a type: <atom>":  Something other than a type-name or
+      special symbol (such as ANY) appeared where a type was expected. 
+      This is sometimes caused by not having your environment completely
+      set up when CRITIC is run.
+
+   "FORM/SEGMENT too short":  A FORM/SEGMENT construction of only one
+      element was found.
+
+   "SPECIAL/UNSPECIAL with three or more elements"
+
+   "Bad PRIMTYPE type":  The type given in a PRIMTYPE was not a
+      type-name.
+
+   "PRIMTYPE with three or more elements"
+
+   "Bad type of structured type":  The type-name given as the type of a
+      structured type was not a type.
+
+   "Bad BYTES specification":  A BYTES specification was not of the form
+      <BYTES fix fix>, or the byte size was greater than 36.
+
+   "BYTES DECL too short":  A BYTES construction of only one element was
+      encountered.
+
+   "BYTES DECL too long":  A BYTES construction of more than three
+      elements was encountered.
+
+   "VECTOR in OR specification":  An Nth/REST/OPT construction was found
+      at top level of an OR.
+
+   "Nth/REST/OPT too short":  A one-element Nth/REST/OPT.
+
+   "Only REST or OPT may follow OPT":  Something other than a REST or
+      OPT was found after an OPT.
+
+   "REST must terminate DECL":  Something was found after a REST in the
+      DECL.
+
+NEWTYPE not DECLed: <type-name>
+
+	A NEWTYPE of a structured type was made but no DECL argument was
+   included.  In a structured NEWTYPE including a DECL of the interior
+   can greatly increase the efficiency of compiled code.
+
+g. Miscellaneous.
+
+Possibly should be QUOTEd: <structure>
+
+	The structure given will be =? to itself if EVALed.  CRITIC
+   lists these under the assumption that you might have forgotten to
+   QUOTE a structure that should have been.  It says "possibly" because
+   you obviously want to build new structure sometimes.  One way to do
+   this without offending the critic is to build new structure with
+   explicit calls to LIST, VECTOR, etc.
+
+

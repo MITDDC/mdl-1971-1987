@@ -1,0 +1,275 @@
+<PRINC "
+JUST ONE MOMENT AND THE DOCTOR WILL BE WITH YOU.
+">
+
+<BLOAT 20000 0 125 125>
+
+"SCRIPT WRITING FUNCTIONS"
+
+<SETG TFF ()> <SETG TFR ()> <GDECL (TFF TFR) LIST>
+
+<DEFINE TOPLEVEL ("TUPLE" TUP)
+	<MAPF <> <FUNCTION (A)
+			   <SETG TFF (<1 .A> !,TFF)>
+			   <SETG TFR (<REST .A> !,TFR)>>
+	      .TUP>>
+
+
+<SETG GSUBSF ()> <SETG GSUBSR ()>
+
+<DEFINE GSUBS ("TUPLE" TUP)
+	<MAPF <> <FUNCTION (A)
+			   <SETG GSUBSF (<1 .A> !,GSUBSF)>
+			   <SETG GSUBSR (<2 .A> !,GSUBSR)>>
+	      .TUP>>
+
+
+<DEFINE PV (VAR GETT "TUPLE" Q)
+	<SET .VAR (.GETT
+		!<PROG ((N 0)) <ILIST <LENGTH .Q>
+				      '<PNAME <NTH .Q <SET N <+ .N 1>>>> >>)>>
+
+<DEFINE RR (VAR RANK "ARGS" RULES)
+	<COND (<==? <TYPE <1 .RULES>> SEGMENT>
+		<SET RULES (!<EVAL <CHTYPE <1 .RULES> FORM>>)>)>
+	<COND (<==? <TYPE .VAR> ATOM> <SET VAR (.VAR)>)>
+	<MAPF <> <FUNCTION (A)
+			   <SET .A .RANK>
+			   <SETG .A .RULES>
+			   <INSERT <COND (<OBLIST? .A> <REMOVE .A>) (ELSE .A)> .KWOB>>
+	      .VAR>>
+
+
+<DEFINE CYC ("BIND" ENV "ARGS" L "AUX" (Q <GET .L CYC '.L>))
+	<COND (<EMPTY? .Q> <SET Q .L>)>
+	<PUT .L CYC <REST .Q>>
+	<EVAL <1 .Q> .ENV>>
+
+<DEFINE SUBS (OBJ FIND REPLACE)
+	#DECL ((OBJ FIND REPLACE) LIST)
+	<MAPR <> <FUNCTION (A)
+			   <COND (<SET Q <MEMBER <1 .A> .FIND>>
+				  <PUT .A 1 <NTH
+					     .REPLACE
+					     <- <LENGTH .FIND> <LENGTH .Q> -1>>>)>>
+	      .OBJ>>
+
+
+<DEFINE TOPSUBS (OS FND REP1)
+	#DECL ((OS FND REP1) LIST)
+	<MAPR <> <FUNCTION (A "AUX" Q SBS)
+			   <COND (<SET Q <MEMBER <1 .A> .FND>>
+				  <SET SBS <NTH .REP1
+						<- <LENGTH .FND> <LENGTH .Q> -1>>>
+				  <PUT .A 1 <1 .SBS>>
+				  <PUTREST .A (!<REST .SBS> !<REST .A>)>)>>
+	      .OS>>
+
+<DEFINE DOCTOR ()
+	<READCHR>		;"FLUSH ALTMODE"
+	<COND (<AND <ASSIGNED? HEEHEE> <TYPE? .HEEHEE CHANNEL>>)
+	      (ELSE <SET HEEHEE <OPEN "PRINT" "MUDDLE;DOCSCR >">>)> ;"SCRIPT CHANNEL"
+	<PRINC "Being run by " .HEEHEE>
+	<PRINC <UNAME> .HEEHEE>
+	<TERPRI .HEEHEE>
+	<SET BADNO 0>
+	<SET SMALL <MAX>>
+	<PRINC .INTRODUCTION>
+	<REPEAT ()
+	   <SET INP <READIN>>
+	   <COND (<EMPTY? .INP> <REPLY <OR <CKBAD!-> <HUH?>>> <AGAIN>)>
+	   <SET REPLIST ()>
+	   <MAPF <> #FUNCTION ((A)
+			    <SET REPLIST
+				 (!<PROG ()
+					 <TOPSUBS .A ,TFF ,TFR>
+					 <SET KWLIST <SORTK <FINDK .A>>>
+					 <SUBS .A ,GSUBSF ,GSUBSR>
+					 <SET GOTCHA <DECOMP .KWLIST .A>>
+					 <COND (.GOTCHA ((.KEY .GOTCHA .A))) (ELSE ())>>
+				  !.REPLIST)>)
+		 .INP>
+	   <SET REP1 '<HUH?>>
+	   <PUT <SET LARGEP SMALL> POST <SET WHOLE .INP>>
+	   <MAPF <> #FUNCTION ((A)
+			    <AND <L? ..LARGEP .<1 .A>>
+				 <SET LARGEP <1 .A>>
+				 <SET REP1 <2 .A>>
+				 <SET WHOLE <3 .A>>>)
+		 .REPLIST>
+	   <SET POST <GET .LARGEP POST>>
+	   <OR <MEMQ .LARGEP ,BADNOLIST> <SET BADNO 0>>
+	   <REPLY <EVAL .REP1>>>>
+
+
+<DEFINE READIN ("AUX" CHR (ADN T) (PDN T) (NOCY T) (LEN -1))
+	#DECL ((ADN PDN NOCY) <OR ATOM FALSE> (LEN) FIX
+	       (CHR VALUE) <LIST [REST LIST]>)
+	<SET QFLG #FALSE ()>
+	<SET CHR
+	     <MAPF ,LIST
+		 <FUNCTION ("EXTRA" (INL -1) IND)
+		       <SET PDN T>
+		       <SET LEN <+ .LEN 1>>
+		       <COND (<NOT .ADN> <MAPSTOP>)>
+		       <SET IND
+			    <MAPF ,LIST
+				<FUNCTION ()
+				  <SET NOCY T>
+				  <SET INL <+ .INL 1>>
+				  <COND (<NOT .PDN> <MAPSTOP>)>
+				  <MAPF ,STRING
+				    <FUNCTION ()
+					<PROG (NC)
+					  #DECL ((NC) CHARACTER)
+					  <COND (<==? <SET NC <NEXTCHR>> !">
+						 <READCHR> <CRLF .HEEHEE>
+						 <SET ADN <SET PDN #FALSE ()>>
+						 <MAPSTOP>)
+						(<MEMQ .NC ,WDBK>
+						 <PRINC <READCHR> .HEEHEE>
+						 <AND .NOCY <AGAIN>>
+						 <MAPSTOP>)
+						(<MEMQ .NC ,PHBK>
+						 <PRINC <READCHR> .HEEHEE>
+						 <SET QFLG <OR .QFLG <==? .NC !"?>>>
+						 <COND (.NOCY <AGAIN>)
+						       (ELSE
+							<SET PDN #FALSE ()>
+							<MAPSTOP>)>)
+						(ELSE <SET NOCY #FALSE ()>)>>
+				  <PRINC <READCHR> .HEEHEE>>>>>>
+		       <AND <G? .INL 1>
+			    <EMPTY? <.INL .IND>>
+			    <PUTREST <REST .IND <- .INL 2>> ()>>
+		       .IND>>>
+	<AND <EMPTY? <1 <NTH .CHR .LEN>>>
+	     <COND (<==? .LEN 1> <SET CHR ()>)
+		   (ELSE <PUTREST <REST .CHR <- .LEN 2>> ()>)>>
+	.CHR>
+
+<SETG PHBK '![!". !", !"; !": !"? !"- !"( !") !"[ !"] !"!!]>
+
+<SETG WDBK '![!"  !"	 !"
+ !"!]>
+
+<GDECL (PHBK WDBK) <UVECTOR [REST CHARACTER]>>
+
+<DEFINE FINDK (INP)
+	<REPEAT ((RES ()))
+		<COND (<EMPTY? .INP> <RETURN .RES>)
+		      (<MONAD? <1 .INP>>)
+		      (<NOT <==? <TYPE <1 .INP>> STRING>>)
+		      (<SET TEM <LOOKUP <1 .INP> .KWOB>>
+			<PUT .TEM POST <REST .INP>>
+			<SET RES <CONS .TEM .RES>>)>
+		<SET INP <REST .INP>> >>
+
+
+<DEFINE SORTK (KWL)
+	<COND (<L? <LENGTH .KWL> 2> .KWL)
+	      (ELSE
+		<REPEAT ((A .KWL) (B <REST .KWL>) (C .B) (NOMORE %<>))
+			<REPEAT ()
+				<COND (<EMPTY? .B> <RETURN T>)
+				      (<L? .<1 .A> .<1 .B>>
+					<SET NOMORE <1 .A>>
+					<PUT .A 1 <1 .B>>
+					<PUT .B 1 .NOMORE>)>
+				<SET B <REST <SET A .B>>> >
+			<COND (.NOMORE <SET NOMORE %<>> <SET A .KWL> <SET B .C>)
+			      (ELSE <RETURN .KWL>)> >)>>
+
+<SETG BADNOLIST ()> <GDECL (BADNOLIST) LIST>
+
+<DEFINE DECOMP EDECO (KWL INP)
+	<REPEAT ()
+		<COND (<EMPTY? .KWL> <RETURN %<>>)>
+		<REPEAT ((Q ,<1 .KWL>))
+			<COND (<EMPTY? .Q> <RETURN T>)
+			      (<COND (<==? <TYPE <1 <1 .Q>>> LIST> <MATCH <1 <1 .Q>> .INP>)
+				     (ELSE <EVAL <1 <1 .Q>>>)>
+				<SET KEY <1 .KWL>>
+				<SET POST <GET <1 .KWL> POST>>
+				<RETURN <SETG SHORT-TERM <2 <1 .Q>>> .EDECO> )>
+			<SET Q <REST .Q>> >
+		<SET KWL <REST .KWL>> >>
+
+<DEFINE REPLY (LOS) <TERPRI> <RECREP .LOS> <TERPRI> <TERPRI .HEEHEE>>
+
+<DEFINE RECREP (LS)
+	<COND (<==? <TYPE .LS> STRING>
+		<COND (<EMPTY? .LS>)
+		      (ELSE <PRINC2 .LS> <PRINC2 !" >)>)
+	      (<MONAD? .LS> <PRINC2 .LS> <PRINC2 !" >)
+	      (ELSE
+		<REPEAT ()
+			<COND (<EMPTY? .LS> <RETURN T>)
+			      (<OR <==? <TYPE <1 .LS>> STRING> <==? <TYPE <1 .LS>> ATOM>>
+			       <PRINC2 <1 .LS>>
+			       <PRINC2 !" >)
+			      (<MONAD? <1 .LS>>)
+			      (ELSE <RECREP <1 .LS>>)>
+			<SET LS <REST .LS>>>)>>
+
+<DEFINE PRINC2 (OBJ) <PRINC .OBJ> <PRINC .OBJ .HEEHEE>>
+<DEFINE MATCH (PAT OBJ)
+	<COND (<EMPTY? .PAT> <EMPTY? .OBJ>)
+	      (<==? <TYPE <1 .PAT>> STRING>
+	       <AND <=? <1 .PAT> <1 .OBJ>> <MATCH <REST .PAT> <REST .OBJ>>>)
+	      (<==? <TYPE <1 .PAT>> ATOM>
+	       <COND (<EMPTY? <REST .PAT>> <SET <1 .PAT> .OBJ>)
+		     (ELSE
+		      <REPEAT (M
+			       (Q
+				<COND (<==? <TYPE <2 .PAT>> STRING> (<2 .PAT>))
+				      (ELSE <REST <2 .PAT>>)>))
+			      <COND (<EMPTY? .Q> <RETURN #FALSE ()>)
+				    (<AND <SET M <MEMBER <1 .Q> .OBJ>>
+					  <MATCH <REST .PAT 2> <REST .M>>>
+				     <COND (<==? <TYPE <2 .PAT>> STRING>)
+					   (ELSE <SET <1 <2 .PAT>> <1 .Q>>)>
+				     <RETURN
+				      <SET <1 .PAT>
+					   <PROG ((N 0))
+						 <ILIST <- <LENGTH .OBJ> <LENGTH .M>>
+							'<NTH .OBJ
+							      <SET N <+ .N 1>>>>>>>)>
+			      <SET Q <REST .Q>>>)>)
+	      (ELSE
+	       <REPEAT ((Q <REST <1 .PAT>>))
+		       <COND (<EMPTY? .Q> <RETURN #FALSE ()>)
+			     (<AND <=? <1 .Q> <1 .OBJ>> <MATCH <REST .PAT> <REST .OBJ>>>
+			      <RETURN <SET <1 <1 .PAT>> <1 .Q>>>)>
+		       <SET Q <REST .Q>>>)>>
+
+<BLOCK (<1 .OBLIST> <SET KWOB <MOBLIST KW>> <ROOT>)>
+<FLOAD "MUDDLE;SCR">
+<ENDBLOCK>
+
+<SET WHAT!-KW .HOW!-KW>
+<SETG WHAT!-KW ,HOW!-KW>
+
+<SETG SHORT-TERM "STOP THAT.">
+
+<SETG FOOLIST
+     '(MATCH
+       PRINC2
+       RECREP
+       REPLY
+       DECOMP
+       SORTK
+       FINDK
+       TOPSUBS
+       SUBS
+       CYC
+       RR
+       PV
+       GSUBS
+       TOPLEVEL
+       HUH?
+       CKBAD
+       READIN
+       DOCTOR)>
+
+<OR <GASSIGNED? FILE-COMPILE!-> <DOCTOR>>   ;"START IT UP."

@@ -1,0 +1,126 @@
+MUDDLE Debugger ---- command summary
+
+<USE "DEBUGR"> loads the Debugger
+
+<DEBUG> makes the Debugger ready.
+     use  to _____Begin one-stepping.
+         use  to do ____Next step of the computation.
+         use  to step ____Over completely the next computation,
+		then stop and continue one-stepping.
+         use  to evaluate the _________Arguments of the current object
+		then stop and continue one-stepping through the body.
+         use  to contine evaluation until you ______Return to this point.
+     use  to ___End one-stepping.
+use  to ____Quit one-stepping and make the Debugger unready (off).
+
+<HELP> prints this command summary.
+
+<REPAIR> attempts to repair any Debugger errors you might invoke.
+
+
+
+MUDDLE Debugger ---- operation
+
+     The current MUDDLE Debugger can be in any of three states.
+In the initial state, OFF, no one-stepping occurs and the
+Debugger does not listen for any special interrupt characters.
+The Debugger is, therefore, completely inactive.
+By typing <DEBUG> to MUDDLE, you leave the OFF state and enter
+the READY state.  In the READY state no one-stepping occurs,
+however the Debugger does listen for interrupt characters.
+By typing the interrupt character , you enter the ON state and
+one-stepping begins.  In addition, if you were stopped at an
+EDIT breakpoint when the  was typed, the breakpoint will
+automatically be exited and evaluation continued.
+    While in the ON state, the Debugger will proceed through
+the execution of any MUDDLE objects one step at a time.
+In essence, the Debugger stops just before and just after
+every call to EVAL.  At each step the Debugger will
+indicate its current condition as follows.
+If EVAL is recursively entered at level, n, with input, obj,
+the display will be:
+	n=>  obj.
+If EVAL is returning from level, n, with result, obj,
+the display will be:
+	n<=  obj.
+
+    Also the Debugger will stop at each such step and
+wait for directions. The interrupt character  will
+proceed to the next step of the current evaluation.
+The interrupt character  will completely evaluate
+the current object without any one-stepping and then
+will stop with the result of that evaluation.
+The interrupt character  will evaluate all the args
+of the current object then stop on evaluation of the
+body of a function or returning of a result.
+Each arg will be evaluated with out any one-stepping.
+The interrupt character  is most effectively used
+in a REPEAT or PROG loop.  Typing  causes evaluation
+to proceed until control returns to the same point
+in the body of the REPEAT/PROG that you are currently at.
+It thus allows you to go once around a loop.
+The interrupt characters  ,  ,  and  take an optional
+prefix argument that serves as a repeat count.
+     It should be noticed that when stopped at one of these
+steps you can examine and modify program variables,
+do a FRAMES or FR&, EDIT Functions and set breakpoints,
+and in general perform any valid MUDDLE operations.
+Also, when you stop, the local value of the atom LAST-OUT
+will be set to the object the Debugger last typed out.
+This is useful if the FR& performed by the Debugger did
+not show a particular detail that you are interested in.
+    Use the interrupt character  to leave the ON state and
+return to the READY state.  Use the interrupt character 
+to leave either the ON state or the READY state and return
+to the OFF state.  When leaving the READY state as described,
+the execution currently being one-stepped will be finished
+in the usual manner.
+    The MUDDLE Function REPAIR attempts to fix any errors
+in the Debugger that the you might happen to invoke.
+These errors are easily distinquished since they never
+occur in MUDDLE's MAIN Process.  Therefore, you will see:
+LISTENING-AT-LEVEL <-m>- PROCESS <-n>-	(where n is not 1).
+The REPAIR Function turns off the Debugger and returns you
+back to running in the MAIN Process (no longer one-stepping).
+Since REPAIR turns off the Debugger, you must do <DEBUG> again
+if you wish to try any further one-stepping 
+
+
+MUDDLE Debugger ---- special features
+
+The following flags have special importance to the Debugger:
+	INDENT-INC	amount by which to indent for each level
+			 default 2.
+	INDENT-MOD	indentation-level is the real level taken
+			 modulo this number.  default 10.
+			 indentation "restarts" when level gets here.
+			 if you don't like this feature make number large
+	INDENT-DIF	minimum amount of free space to reserve on each line
+			 that indentation must not touch.  default 20.
+therefore for at level L the indentation is exactly:
+	<MIN <* ,INDENT-INC <MOD .L ,INDENT-MOD>>
+	     <- <LINE-LENGTH ,OUTCHAN> ,INDENT-DIF>>
+
+	OUT-FAST	if true the Debugger will not stop when
+			 leaving a level with a result.  default T.
+	OUT-UNIQUE	if both this and previous flag are true
+			 successive "outs" of the same items
+			 will not be displayed.  default T.
+	SELF-FAST	if true the Debugger will not stop when
+			 entering a level with an object which
+			 EVALs to itself (e.g. ATOMs, FIXes, STRINGs)
+			 display will be:	n:  obj.
+			 default T.
+	FORM-FAST	if true the Debugger will not stop when
+			 entering a level with any of the "short" FORMs
+			 (e.g. <> .FOO ,BAR 'ANYTHING)
+			 display will be:	n:  .FOO = lval
+			 default T.
+Any of these flags can be SETGed by you to "tailor" the Debugger
+to your own tastes.
+
+RESTRICTION	(to be corrected in MUDDLE 52)
+    If you turn the Debugger on via ^B during a MUDDLE interrupt,
+in particular during a ^G Interrupt, when the interrupt is left
+the Debugger will be turned back off by MUDDLE.
+

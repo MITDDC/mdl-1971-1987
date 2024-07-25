@@ -1,0 +1,135 @@
+<DEFINE COMPILE:LVAL (MOBJ RETVAR REF NXT ACT-LIST DEF-ACT
+		      MAP-LIST SYMBOLS NLEVEL "AUX" VAR)
+	#DECL ((MOBJ) FORM (RETVAR) <OR VARIABLE FALSE> (REF NXT) FORWRD
+	       (ACT-LIST DEF-ACT MAP-LIST) LIST (VAR) <OR ATOM VARIABLE FALSE>
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]> (NLEVEL) FIX)
+	<COND (<NOT <==? <LENGTH .MOBJ> 2>>
+	       ;"**ENVIRONMENTS NEGLECTED**"
+	       <REPORT-ERROR WRONG-NUMBER-OF-ARGS-TO-LVAL COMPILE:LVAL>)
+	      (<NOT <TYPE? <2 .MOBJ> ATOM>>	       
+	       <COND (<NOT .RETVAR> <SET RETVAR <GENSYM>>)>
+	       ;"evaluate 2nd arg and assume it returns an atom."
+	       <COND (<AND <TYPE? .RETVAR VARIABLE>
+			   <0? <CHTYPE .RETVAR FIX>>>
+		      <WARNING CODE-WITH-NO-EFFECT COMPILE:LVAL>
+		      .RETVAR)
+		     (<MCODIFY
+		       <FORM MSET .RETVAR
+			     <FORM LVAL
+				   <MCODE-DISPATCH
+				    <2 .MOBJ> <>
+				    .REF <SET REF <GENREF>>
+				    .ACT-LIST .DEF-ACT
+				    .MAP-LIST .SYMBOLS
+				    .NLEVEL>>>
+		      .REF <SET REF <GENREF>>>)>)
+	      (<TYPE? <SET VAR <FIND-SYMBOL <SPNAME <2 .MOBJ>>
+					    .SYMBOLS>>
+		      VARIABLE>
+	       ;"non-special, bound"
+	       <COND (<AND <TYPE? .RETVAR VARIABLE><0? <CHTYPE .RETVAR FIX>>>
+		      <WARNING CODE-HAS-NO-EFFECT COMPILE:LVAL>
+		      #VARIABLE 0)
+		     (<NOT .RETVAR>
+		      ;"no code, so synonymize."
+		      <SYNONYMIZE .REF .NXT> .VAR)
+		     (ELSE <MCODIFY <FORM MSET .RETVAR .VAR>
+				    .REF <SET REF <GENREF>>>)>)
+	      (ELSE
+	       ;"special, perhaps not bound in this FUNCTION"
+	       <OR .VAR <WARNING ATOM-UNBOUND-IN-THIS-FUNCTION COMPILE:LVAL>>
+	       <COND (<NOT .RETVAR> <SET RETVAR <GENSYM>>)>
+	       <COND (<AND <TYPE? .RETVAR VARIABLE><0? <CHTYPE .RETVAR FIX>>>
+		      <WARNING CODE-HAS-NO-EFFECT COMPILE:LVAL>
+		      #VARIABLE 0)
+		     (ELSE
+		      <MCODIFY <FORM MSET .RETVAR <FORM LVAL <2 .MOBJ>>>
+			       .REF <SET REF <GENREF>>>)>)>>
+
+<DEFINE COMPILE:SET (MOBJ RETVAR REF NXT ACT-LIST DEF-ACT MAP-LIST SYMBOLS NLEVEL
+		     "AUX" VAR RESULT)
+	#DECL ((MOBJ) FORM (RETVAR) <OR VARIABLE FALSE> (REF NXT) FORWRD
+	       (ACT-LIST DEF-ACT MAP-LIST) LIST (SYMBOLS) <LIST [REST SYMBOL-TABLE]>
+	       (NLEVEL) FIX (VAR) <OR ATOM VARIABLE FALSE> (RESULT) ANY)
+	<COND (<N==? <LENGTH .MOBJ> 3>
+	       <REPORT-ERROR WRONG-NUMBER-OF-ARGS-TO-SET COMPILE:SET>)
+	      (<NOT <TYPE? <2 .MOBJ> ATOM>>
+	       ;"evaluate second argument, assume it returns an atom."
+	       <COND (<NOT .RETVAR> <SET RETVAR <GENSYM>>)>
+	       <COND (<0? <CHTYPE .RETVAR FIX>>
+		      <MCODIFY
+		       <FORM SET
+			     <MCODE-DISPATCH <2 .MOBJ> <>
+					     .REF <SET REF <GENREF>>
+					     .ACT-LIST .DEF-ACT
+					     .MAP-LIST .SYMBOLS
+					     .NLEVEL>
+			     <MCODE-DISPATCH <3 .MOBJ> <>
+					     .REF <SET REF <GENREF>>
+					     .ACT-LIST .DEF-ACT
+					     .MAP-LIST .SYMBOLS
+					     .NLEVEL>>
+		       .REF <SET REF <GENREF>>>)
+		     (ELSE
+		      ;"value returned by SET is important." 
+		      <MCODIFY
+		       <FORM MSET .RETVAR
+			     <FORM SET
+				   <MCODE-DISPATCH <2 .MOBJ> <>
+						   .REF <SET REF <GENREF>>
+						   .ACT-LIST .DEF-ACT
+						   .MAP-LIST .SYMBOLS
+						   .NLEVEL>
+				   <MCODE-DISPATCH <3 .MOBJ> <>
+						   .REF <SET REF <GENREF>>
+						   .ACT-LIST .DEF-ACT
+						   .MAP-LIST .SYMBOLS
+						   .NLEVEL>>>
+		       .REF <SET REF <GENREF>>>)>
+	       <WARNING SECOND-ARG-TO-SET-NOT-ATOM COMPILE:SET>)
+	      (<TYPE? <SET VAR <FIND-SYMBOL <SPNAME <2 .MOBJ>>
+					    .SYMBOLS>>
+		      VARIABLE>
+	       ;"symbol is bound and not SPECIAL."
+	       <COND (<NOT .RETVAR><SET RETVAR <GENSYM>>)>
+	       <SET RESULT
+		    <MCODE-DISPATCH <3 .MOBJ> .VAR
+				    .REF <SET REF <GENREF>>
+				    .ACT-LIST .DEF-ACT
+				    .MAP-LIST .SYMBOLS
+				    .NLEVEL>>
+	       <COND (<0? <CHTYPE .RETVAR FIX>> .RESULT)
+		     (ELSE
+		      ;"return value of SET is important."
+		      <MCODIFY <FORM MSET .RETVAR .RESULT> .REF .NXT>)>)
+	      (ELSE
+	       ;"then it's SPECIAL."	       
+	       <OR .VAR <WARNING UNBOUND-VARIABLE ASSUMING-SPECIAL COMPILE:SET>>
+	       <COND (<NOT .RETVAR> <SET RETVAR <GENSYM>>)>
+	       <COND (<0? <CHTYPE .RETVAR FIX>>
+		      <MCODIFY
+		       <FORM SET <2 .MOBJ>
+			     <MCODE-DISPATCH
+			      <3 .MOBJ> <GENSYM>
+			      .REF <SET REF <GENREF>>
+			      .ACT-LIST .DEF-ACT
+			      .MAP-LIST .SYMBOLS .NLEVEL>>
+		       .REF <SET REF <GENREF>>>)
+		     (ELSE
+		      <MCODIFY
+		       <FORM MSET .RETVAR
+			     <FORM SET <2 .MOBJ>
+				   <MCODE-DISPATCH
+				    <3 .MOBJ> <GENSYM>
+				    .REF <SET REF <GENREF>>
+				    .ACT-LIST .DEF-ACT
+				    .MAP-LIST .SYMBOLS .NLEVEL>>
+			     .REF <SET REF <GENREF>>>>)>)>>
+
+;"(,VALUE!-COMPILABLE-TABLE)
+  (,UNASSIGN!-COMPILABLE-TABLE)
+  (,GUNASSIGN!-COMPILABLE-TABLE)
+  (,ASSIGNED?!-COMPILABLE-TABLE)
+  (,GASSIGNED?!-COMPILABLE-TABLE)
+  (,BOUND?!-COMPILABLE-TABLE)
+  (,GBOUND?!-COMPILABLE-TABLE)"

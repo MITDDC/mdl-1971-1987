@@ -1,0 +1,503 @@
+<PACKAGE "M.COMB">
+
+;"MESSAGE COMB"
+
+<ENTRY MCOMB SCOMB QCOMB RETRIEVE RETREIVE QHISTORY HISTORY
+       PSUMMARY JUNK-MAIL? GOOD-MAIL? MSG-QUERY? GOOD-TO GOOD-FROM
+       USELESS-TO USELESS-FROM>
+
+<USE "M.READ" "M.DAC" "M.DEFS" "GC" "M.TAI" "M.DOUT" "M.FORM" "M.DLV" "M.PRCD"
+     "NSTR" "ITIME" "M.SET" "AP" "M.DATA" "FIELDS">
+
+<MDBG <>>			;"Flushes 'Loaded Tailor for...' junk"
+
+<SETG MSG-QUERY? <>>
+
+<GDECL (MSG-QUERY?) <OR ATOM FALSE>
+       (JUNK-MAIL? GOOD-MAIL?) APPLICABLE 	;"User's Mail Filter Function"
+       (USELESS-TO USELESS-FROM GOOD-TO GOOD-FROM)
+       <VECTOR [REST STRING]>
+       (PENDING-QUEUE) <LIST FIX [REST PNQENTRY]>>
+
+"MFIND -- find messages with certain features"
+
+<DEFINE MFIND ("OPTIONAL" TO FROM)
+	<COND (<ASSIGNED? TO>
+	       <SETG GOOD-TO .TO>)>
+	<COND (<ASSIGNED? FROM>
+	       <SETG GOOD-FROM .FROM>)>
+	<MCOMB T>>
+
+"MCOMB -- comb recent messages"
+
+<DEFINE MCOMB ("OPTIONAL" (FIND? <>) "AUX" H (SNM <UNAME>))
+	#DECL ((H) HANDLER (SNM) <SPECIAL STRING>)
+	<COND (<AND <NOT <OPEN "READ" "COMDAT;STAY DOWN">>
+		    <INIT>>
+	       <SET H <ON "CHAR" ,COMBH 100 0 .INCHAN>>
+	       <DO-COMB .FIND?>
+	       <OFF .H>
+	       <DCLOSE>
+	       "DONE")
+	      (ELSE
+	       <CRLF>
+	       <PRINC "Mail Data Base not available.">
+	       T)>>
+
+"SCOMB -- summarize recent messages"
+
+<DEFINE SCOMB ("OPTIONAL" N "AUX" (OUTCHAN .OUTCHAN))
+	#DECL ((N) FIX (OUTCHAN) CHANNEL)
+	<COND (<AND <NOT <OPEN "READ" "COMDAT;STAY DOWN">>
+		    <INIT>>
+	       <AND <NOT <ASSIGNED? N>> <SET N <HIGH-MESSAGE-ID>>>
+	       <REPEAT ()
+		       <COND (<0? <SET N <- .N 1>>> <RETURN>)>
+		       <MREAD .N>
+		       <PSUMMARY T>
+		       <CRLF>>
+	       <DCLOSE>
+	       "DONE")
+	      (ELSE
+	       <CRLF>
+	       <PRINC "Mail Data Base not available.">
+	       T)>>
+
+"QCOMB -- comb pendinq-queue"
+
+<DEFINE QCOMB ("AUX" (N 0) PQ (OUTCHAN .OUTCHAN))
+	#DECL ((N) FIX (PQ) <LIST [REST PNQENTRY]> (OUTCHAN) CHANNEL)
+	<COND (<AND <NOT <OPEN "READ" "COMDAT;STAY DOWN">>
+		    <INIT>>
+	       <SET PQ <REST ,PENDING-QUEUE>>
+	       <MAPF <>
+		     <FUNCTION (M)
+			#DECL ((M) PNQENTRY)
+			<MREAD <QMSG .M>>
+			<QSUMMARY .M>
+			<CRLF>
+			<SET N <+ .N 1>>>
+		     .PQ>
+	       .N)
+	      (ELSE
+	       <CRLF>
+	       <PRINC "Mail Data Base not available.">
+	       T)>>
+
+"RETRIEVE -- retrieve a message to a file"
+
+<DEFINE RETRIEVE (N "OPTIONAL" (FILE <STRING "MSG " <UNPARSE .N>>)
+		  "AUX" CH (SNM <UNAME>))
+	#DECL ((N) FIX (FILE) <OR FALSE STRING CHANNEL>
+	       (CH) CHANNEL (SNM) <SPECIAL STRING>)
+	<COND (<AND <INIT> <MREAD .N>>
+	       <COND (<SET CH
+			   <OR <AND <NOT .FILE> .OUTCHAN>
+			       <AND <TYPE? .FILE CHANNEL> .FILE>
+			       <OPEN "PRINT" .FILE>>>
+		      <DO-APPLY "" ,DDT-FORMAT .CH>
+		      <AND .FILE <CLOSE .CH>>
+		      .N)>)>>
+
+<SETG RETREIVE ,RETRIEVE>	;"for those who can't spell"
+
+<DEFINE QHISTORY ()
+	<INIT>
+	<MAPF <>
+	      <FUNCTION (Q)
+		   #DECL ((Q) PNQENTRY)
+		   <HISTORY <QMSG .Q> *>>
+	      <REST ,PENDING-QUEUE>>
+	T>
+
+<DEFINE HISTORY ("OPTIONAL" S0 S1 S2 "AUX" N (O <MVMSG ,MDB>) D
+		 (P "DELIVERY") (A "") (OUTCHAN .OUTCHAN))
+	#DECL ((N O) FIX (S0 S1 S2) <OR STRING ATOM FIX> (A P) STRING
+	       (OUTCHAN) CHANNEL (D) <LIST [REST STRING]>)
+	<COND (<ASSIGNED? S0>
+	       <AND <TYPE? .S0 FIX> <SET N .S0>>
+	       <AND <TYPE? .S0 ATOM> <SET S0 <SPNAME .S0>>>)>
+	<COND (<ASSIGNED? S1>
+	       <AND <TYPE? .S1 FIX> <SET N .S1>>
+	       <AND <TYPE? .S1 ATOM> <SET S1 <SPNAME .S1>>>)>
+	<COND (<ASSIGNED? S2>
+	       <AND <TYPE? .S2 FIX> <SET N .S2>>
+	       <AND <TYPE? .S2 ATOM> <SET S2 <SPNAME .S2>>>)>
+	<COND (<OR <AND <NOT <ASSIGNED? N>> <G? .O 0> <SET N .O>>
+		   <AND <INIT> <MREAD .N>>>
+	       <SET D <DUSERS>>
+	       <COND (<AND <ASSIGNED? S0> <TYPE? .S0 STRING>>
+		      <AND <MEMBER .S0 .D> <SET A .S0>>
+		      <AND <OR <GET-PROCESS .S0> <=? .S0 "*">> <SET P .S0>>)>
+	       <COND (<AND <ASSIGNED? S1> <TYPE? .S1 STRING>>
+		      <AND <MEMBER .S1 .D> <SET A .S1>>
+		      <AND <OR <GET-PROCESS .S1> <=? .S1 "*">> <SET P .S1>>)>
+	       <COND (<AND <ASSIGNED? S2> <TYPE? .S2 STRING>>
+		      <AND <MEMBER .S2 .D> <SET A .S2>>
+		      <AND <OR <GET-PROCESS .S2> <=? .S2 "*">> <SET P .S2>>)>
+	       <PRINC "---------------- ">
+	       <PRINC .N>
+	       <PRINC " ----------------">
+	       <CRLF>
+	       <COND (<=? .P "*">
+		      <MAPF <>
+			    <FUNCTION (A)
+				 #DECL ((A) STRING)
+				 <COND (<=? .A ""> <PRINC "[Author]">)
+				       (ELSE <PRINC .A>)>
+				 <CRLF>
+				 <MAPF <>
+				       <FUNCTION (P)
+					    #DECL ((P) STRING)
+					    <PRC-INFO .A .P <>>>
+				       ,PROCESSES>
+				 <CRLF>>
+			    <DUSERS>>)
+		     (<MEMBER .P '["DELIVERY" "RECEIVER-PROCESSING"]>
+		      <MAPF <>
+			    <FUNCTION (A)
+				 #DECL ((A) STRING)
+				 <COND (<N=? .A "">
+					<PRINC .A>
+					<CRLF>
+					<PRC-INFO .A .P <>>)>>
+			    <DUSERS>>)
+		     (ELSE
+		      <PRINC "[Author]">
+		      <CRLF>
+		      <PRC-INFO "" .P>)>
+	       .N)>>
+
+<SETG PROCESSES ["SENDING"
+		 "PARSING"
+		 "EXPANSION"
+		 "TRANSMISSION"
+		 "PERSONAL-PROCESSING"
+		 "AUTHOR-PROCESSING"
+		 "RECEIVER-PROCESSING"
+		 "FILE-OUTPUT"
+		 "DELIVERY"
+		 "ACKNOWLEDGMENT"
+		 "CORRECTION"]>
+
+<GDECL (PROCESSES) <VECTOR [REST STRING]>>
+
+<DEFINE PRC-INFO (A P "OPTIONAL" (V? T) "AUX" PP EC PC PN (OUTCHAN .OUTCHAN))
+	#DECL ((A P) STRING (PP) <OR FALSE LIST> (V?) <OR ATOM FALSE>
+	       (EC PC PN) <OR FALSE <LIST STRING <OR FIX FALSE LIST>>>
+	       (OUTCHAN) CHANNEL)
+	<SET EC <AND <SET PP <DRDMSG .A <GETFIX "ERROR-CONDITIONS">>>
+		     <FP .P .PP>>>
+	<SET PC <AND <OR <SET PP <DRDMSG .A <GETFIX "CONDITIONS">>>
+			 <SET PP <DRDMSG .A <GETFIX "PROCESSING-COMPLETED">>>>
+		     <FP .P .PP>>>
+	<SET PN <AND <SET PP <DRDMSG .A <GETFIX "PROCESSING-NEEDED">>>
+		     <FP .P .PP>>>
+	<PRC-HISTORY .P .A>
+	<COND (<AND .PN <N==? <2 .PN> -1>>
+	       <PRINC "  >> ">
+	       <DPRT <2 .PN>>
+	       <PRINC " -- ">
+	       <PRINC .P>
+	       <PRINC " scheduled.">
+	       <CRLF>)
+	      (<AND .PC <OR <NOT .EC> <G? <2 .PC> <2 .EC>>>>
+	       <PRINC "     ">
+	       <DPRT <2 .PC>>
+	       <PRINC " -- ">
+	       <PRINC .P>
+	       <PRINC " completed.">
+	       <CRLF>)
+	      (.EC
+	       <PRINC "  ** ">
+	       <DPRT <2 .EC>>
+	       <PRINC " -- ">
+	       <PRINC .P>
+	       <PRINC " is in Error Hold; ">
+	       <CRLF>
+	       <PRINC "  ">
+	       <PRIN1 <3 .EC>>
+	       <CRLF>)
+	      (.V? <PRINC "     <>"> <CRLF>)>>
+
+<DEFINE PRC-HISTORY (P A "AUX" DA DE (OUTCHAN .OUTCHAN) (OCD <>))
+	#DECL ((P A) STRING (DA DE) <OR FALSE LIST> (OCD) FALSE)
+	<COND (<OR <N=? .P "DELIVERY"> <=? .A "">>)
+	      (<AND <SET DA <DRDMSG .A <GETFIX "DELIVERY-ATTEMPTS">>>
+		    <NOT <EMPTY? .DA>>
+		    <SET DE <DRDMSG .A <GETFIX "NET-DELIVERY-ERRORS">>>
+		    <NOT <EMPTY? .DE>>>
+	       <MAPF <>
+		     <FUNCTION (DT CD) 
+			  #DECL ((DT) FIX (CD) <FALSE FIX>)
+			  <PRINC "     ">
+			  <DPRT .DT>
+			  <PRINC " -- ">
+			  <COND (<=? .CD .OCD> <PRINC "(ditto)">)
+				(ELSE
+				 <MAPF <>
+				       ,PRINC
+				       <DLV-ERR "DELIVERY" .CD .A <>>>)>
+			  <SET OCD .CD>
+			  <CRLF>>
+		     .DA
+		     .DE>)>>
+
+<DEFINE FP (P L)
+	#DECL ((L) LIST (P) STRING)
+	<MAPF <>
+	      <FUNCTION (PL)
+		   #DECL ((PL) ANY)
+		   <AND <TYPE? .PL LIST>
+			<NOT <EMPTY? .PL>>
+			<=? <1 .PL> .P>
+			<MAPLEAVE .PL>>>
+	      .L>>
+
+\
+
+<DEFINE DO-COMB MC (FIND? "AUX" N NXTMSG)
+	#DECL ((N) <OR FALSE FIX> (NXTMSG) FIX (MC) <SPECIAL ACTIVATION>)
+	<COND (<SET N <HIGH-MESSAGE-ID>> <SET NXTMSG .N>)>
+	<COND (.FIND?
+	       <AND <FILE-EXISTS? "_MCOMB">
+		    <FLOAD "_MCOMB">>)
+	      (<SET N <MSG-NUMBER "_MCOMB >">>
+	       <FLOAD "_MCOMB >">	;"Load user's initialization")
+	      (ELSE
+	       <SET N <- .NXTMSG 50>>
+	       <CLOSE <OPEN "PRINT" "_MCOMB" <UNPARSE .N>>>)>
+	<RESET .INCHAN>
+	<REPEAT ((MSG .N) (OUTCHAN .OUTCHAN) (INCHAN .INCHAN))
+		#DECL ((MSG) FIX (OUTCHAN INCHAN) CHANNEL)
+		<COND (<AND <NOT .FIND?> <G=? .MSG .NXTMSG>> <RETURN>)>
+		<COND (<MSG-PRINT .MSG .FIND?>
+		       <PREVENT-GC>
+		       <PRINC "A">
+		       <PUT .OUTCHAN 14 0>
+		       <PRINC "--Next?--NA">
+		       <RESET .INCHAN>)>
+		<COND (.FIND? <SET MSG <- .MSG 1>>)
+		      (ELSE
+		       <SET MSG <+ .MSG 1>>
+		       <RENAME "_MCOMB >" TO "_MCOMB" <UNPARSE .MSG>>)>>>
+
+\
+
+<DEFINE MSG-PRINT SP (MSG FIND? "AUX" (OUTCHAN .OUTCHAN) CH (Q? ,MSG-QUERY?))
+   #DECL ((MSG) FIX (VALUE Q?) <OR FALSE ATOM> (CH) CHARACTER
+	  (OUTCHAN) CHANNEL (SP) <SPECIAL ACTIVATION>)
+     <MREAD .MSG>
+     <COND (<EMPTY? <MVDATA ,MDB>>
+	    <PRINC "C">
+	    <PUT .OUTCHAN 14 0>
+	    <PRINC !\#>
+	    <PRIN1 .MSG>
+	    <PRINC " has no data.">
+	    <RETURN <NOT <GASSIGNED? JUNK-MAIL?>> .SP>)>
+     <COND (.FIND?
+	    <COND (<AND <GASSIGNED? GOOD-MAIL?>
+			<NOT <APPLY ,GOOD-MAIL?
+				    .MSG <DRDMSG "" "FROM"> <DRDMSG "" "TO">>>>
+		   <RETURN <> .SP>)>)
+	   (<AND <GASSIGNED? JUNK-MAIL?>
+		 <APPLY ,JUNK-MAIL? .MSG <DRDMSG "" "FROM"> <DRDMSG "" "TO">>>
+	    <RETURN <> .SP>)>
+     <PRINC "C">
+     <PUT .OUTCHAN 14 0>
+     <PSUMMARY .Q?>
+     <COND (.Q?
+	    <PRINC "A">
+	    <PUT .OUTCHAN 14 0>
+	    <PRINC "--Message?--">
+	    <RESET .INCHAN>
+	    <PREVENT-GC>
+	    <SET CH <TYI>>
+	    <TERPRI>
+	    <COND (<N==? .CH <ASCII 32>> <RETURN <> .SP>)>)
+	   (ELSE <PRINC "A"> <CRLF>)>
+     <DDT-FORMAT "" .OUTCHAN>
+     T>
+
+\
+
+<DEFINE PSUMMARY ("OPTIONAL" (Q? <>)
+		  "AUX" S (OUTCHAN .OUTCHAN) (ST <+ 21 <14 .OUTCHAN>>)) 
+	#DECL ((S) <OR FALSE STRING> (OUTCHAN) CHANNEL (Q?) <OR ATOM FALSE> (ST) FIX)
+	<PRINC !\#>
+	<PRINC <MVMSG ,MDB>>
+	<PRINC ": ">
+	<DPRT <DRDMSG "" <GETFIX "WHEN-ORIGINATED">>>
+	<INDENT-TO .ST>
+	<COND (<SET S <DRDMSG "" <GETFIX "FROM">>>
+	       <PRINC .S>)
+	      (ELSE <PRINC "??">)>
+	<PRINC " => ">
+	<APRT <DRDMSG "" <GETFIX "TO">> .ST>
+	<COND (<AND .Q? <SET S <DRDMSG "" <GETFIX "SUBJECT">>>>
+	       <PRINC "  ">
+	       <SPRT .S .ST>)>>
+
+<DEFINE QSUMMARY (M "AUX" (OUTCHAN .OUTCHAN) (ADR <QADR .M>) PN)
+	#DECL ((M) PNQENTRY (ADR) STRING (OUTCHAN) CHANNEL
+	       (PN) <LIST [REST PRCSTATE]>)
+	<PRINC !\#>
+	<PRINC <MVMSG ,MDB>>
+	<PRINC ": ">
+	<COND (<EMPTY? .ADR>
+	       <PRINC <DRDMSG "" <GETFIX "FROM">>>
+	       <PRINC !\*>)
+	      (ELSE <PRINC .ADR>)>
+	<PRINC " at ">
+	<DPRT <QTIM .M>>
+	<PRINC "; ">
+	<SET PN <REST <DRD .ADR <GETFIX "PROCESSING-NEEDED">>>>
+	<MAPF <>
+	      <FUNCTION (N)
+			#DECL ((N) PRCSTATE)
+			<PRINC <PNAM .N>>
+			<COND (<==? <PTIM .N> -1>
+			       <PRINC !\?>)>>
+	      .PN>
+	T>
+
+\
+
+<DEFINE SPRT (S "OPTIONAL" (ST 21)
+	      "AUX" (OUTCHAN .OUTCHAN) (R <- <13 .OUTCHAN> <14 .OUTCHAN>>) SX SL)
+	#DECL ((S SX) <OR STRING FALSE> (R SL ST) FIX (OUTCHAN) CHANNEL)
+	<COND (<SET S <ANY? .S>>
+	       <COND (<=? <MEMBER "Re: " .S> .S> <SET S <REST .S 4>>)>
+	       <COND (<SET SX <MEMQ <ASCII 13> .S>>
+		      <SET SL <- <LENGTH .S> <LENGTH .SX>>>)
+		     (<SET SL <LENGTH .S>>)>
+	       <COND (<G? <+ .SL 6> .R> <CRLF> <INDENT-TO .ST>) (<PRINC "  ">)>
+	       <PRINC "Re: ">
+	       <PRINTSTRING .S .OUTCHAN .SL>)>>
+
+<DEFINE ANY? (S)
+	#DECL ((S) STRING (VALUE) <OR STRING FALSE>)
+	<MAPR <>
+	      <FUNCTION (S)
+		#DECL ((S) STRING)
+		<AND <NOT <MEMQ <1 .S> " 	
+">>
+		     <MAPLEAVE .S>>>
+	      .S>>
+
+<DEFINE APRT (L "OPTIONAL" (ST 21) "AUX" (OUTCHAN .OUTCHAN) R S SX SL)
+	#DECL ((L) <OR FALSE <LIST [REST STRING]>> (OUTCHAN) CHANNEL
+	       (S SX) <OR STRING FALSE> (R SL ST) FIX)
+	<COND (.L
+	       <REPEAT ()
+		       <COND (<EMPTY? .L> <RETURN>)>
+		       <SET R <- <13 .OUTCHAN> <14 .OUTCHAN>>>
+		       <SET S <1 .L>>
+		       <COND (<SET SX <MEMQ <ASCII 13> .S>>
+			      <SET SL <- <LENGTH .S> <LENGTH .SX>>>)
+			     (<SET SL <LENGTH .S>>)>
+		       <COND (<G? <+ .SL 2> .R> <CRLF> <INDENT-TO .ST>)>
+		       <PRINTSTRING .S .OUTCHAN .SL>
+		       <COND (<NOT <LENGTH? .L 1>> <PRINC ", ">)>
+		       <SET L <REST .L>>>)
+	      (ELSE <PRINC "??">)>>
+
+<DEFINE DPRT (DD "AUX" D (OUTCHAN .OUTCHAN)) 
+	#DECL ((DD) <OR FIX LIST UVECTOR> (D) <LIST [2 <LIST [3 FIX]>] STRING>
+	       (OUTCHAN) CHANNEL)
+	<COND (<TYPE? .DD UVECTOR FIX> <SET D <LTIME .DD>>)
+	      (ELSE <SET D .DD>)>
+	<PNUM <2 <1 .D>>>
+	<PRINC !\/>
+	<PNUM <3 <1 .D>>>
+	<PRINC !\ >
+	<PNUM <1 <2 .D>>>
+	<PRINC !\:>
+	<PNUM <2 <2 .D>>>>
+
+<DEFINE PNUM (N "AUX" (OUTCHAN .OUTCHAN))
+	#DECL ((N) FIX (OUTCHAN) CHANNEL)
+	<COND (<L? .N 10> <PRINC !\0>)>
+	<PRINC .N>>
+
+\
+
+<DEFINE COMBH (CHAR CHAN "AUX" X)
+	#DECL ((CHAR) CHARACTER (CHAN) CHANNEL (X) ANY)
+	<COND (<==? .CHAR <ASCII 19>>	;"^S"
+	       <RESET .CHAN>
+	       <COND (<AND <ASSIGNED? SP>
+			   <TYPE? <SET X .SP> ACTIVATION>
+			   <LEGAL? .X>>
+		      <RESET ,OUTCHAN>
+		      <DISMISS T .X>)>
+	       <DISMISS T>)
+	      (<==? .CHAR <ASCII 17>>
+	       <SETG MSG-QUERY? <NOT ,MSG-QUERY?>>)
+	      (<==? .CHAR <ASCII 7>>	;"^G"
+	       <RESET .CHAN>
+	       <COND (<AND <ASSIGNED? MC>
+			   <TYPE? <SET X .MC> ACTIVATION>
+			   <LEGAL? .X>>
+		      <RESET ,OUTCHAN>
+		      <DISMISS T .X>)>
+	       <DISMISS T>)
+	       (<==? .CHAR <ASCII 26>>	;"^Z"
+		<RESET .CHAN>
+		<RESET ,OUTCHAN>
+		<INT-LEVEL 0>
+		<ERROR CONTROL-G?!-ERRORS>)>>
+
+<DEFINE MSG-NUMBER (STR "AUX" CHN S X)
+	#DECL ((STR S) STRING (CHN) <OR FALSE CHANNEL> (VALUE X) <OR FALSE FIX>)
+	<PROG ()
+	      <COND (<NOT <SET CHN <OPEN "READ" .STR>>>
+		     <RETURN <CHTYPE ("NO FILE" .STR) FALSE>>)>
+	      <SET S <8 .CHN>>
+	      <CLOSE .CHN>
+	      <COND (<NOT <TYPE? <SET X <PARSE .S>> FIX>>
+		     <RETURN <CHTYPE ("BAD FILE" .STR) FALSE>>)>
+	      .X>>
+
+\
+
+"predefined searching goodies"
+
+<DEFINE JUNK-MAIL? (MSG FROM TO)
+	#DECL ((MSG) FIX (FROM TO) ANY)
+	<COND (<NOT .TO> <>)
+	      (<OR <OVERLAP ,USELESS-TO .TO>
+		   <MEMSNC "[.MSGS.;" .TO>>)
+	      (<OVERLAP ["UPDATE-INQUIR"] .TO>)
+	      (<AND .FROM <OVERLAP ,USELESS-FROM .FROM>>)>>
+
+<DEFINE GOOD-MAIL? (MSG FROM TO)
+	#DECL ((MSG) FIX (FROM TO) ANY)
+	<COND (<AND .TO <OVERLAP ,GOOD-TO .TO>>)
+	      (<AND .FROM <OVERLAP ,GOOD-FROM .FROM>>)>>
+
+<DEFINE OVERLAP (V L)
+	#DECL ((V) <VECTOR [REST STRING]> (L) ANY)
+	<COND (<TYPE? .L LIST>
+	       <MAPF <>
+		     <FUNCTION (S)
+			  #DECL ((S) STRING)
+			  <COND (<MEMSNC .S .L> <MAPLEAVE .S>)>>
+		     .V>)
+	      (<TYPE? .L STRING>
+	       <MAPF <>
+		     <FUNCTION (S)
+			  #DECL ((S) STRING)
+			  <COND (<SUBSNC .S .L> <MAPLEAVE .S>)>>
+		     .V>)>>
+
+<DEFINE MEMSNC (S L)
+	#DECL ((S) STRING (L) <LIST [REST STRING]>)
+	<MAPF <>
+	      <FUNCTION (M)
+		   #DECL ((M) STRING)
+		   <COND (<SUBSNC .S .M> <MAPLEAVE .S>)>>
+	      .L>>
+
+<ENDPACKAGE>
+

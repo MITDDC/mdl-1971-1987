@@ -1,0 +1,49 @@
+<PACKAGE "M-DSP">
+
+<ENTRY DISPATCH-DELIVERY>
+
+<USE "MADMAN" "ASYLUM" "M-DEFS">
+
+<SETG DISPATCH-ASYLUM <>>
+
+"DISPATCH-DELIVERY -- deliver dispatch and store local maniac number in
+a specified 'box' in user's asylum
+
+	<DISPATCH-DELIVERY addressee:string
+			   box:fix     -- maniac # of 'mailbox'
+			   obj:any     -- data to be delivered
+			  -ms:space-   -- obj is in here (,MSG-SPACE)
+			  -ss:space- > -- box built here (,SCRATCH-SPACE)
+
+"
+
+<DEFINE DISPATCH-DELIVERY (ADR BOX OBJ
+			   "OPTIONAL" (MS ,MSG-SPACE) (SS ,SCRATCH-SPACE)
+			   "AUX" RA LC R RR (V <>) (VV <>))
+	#DECL ((ADR) STRING (BOX LC) FIX (OBJ) ANY (MS SS) SPACE
+	       (RA) <OR FALSE ASYLUM> (R RR) <OR FALSE MANIAC>
+	       (V VV) <OR FALSE UVECTOR>)
+	<COND (<SET RA <OPEN-DATA-FILE <STRING "<" .ADR ">READER.ASYLUM">
+				       ,DISPATCH-ASYLUM>>
+	       <SETG DISPATCH-ASYLUM .RA>
+	       <COND (<NOT <SET R <DATA-OPEN "PRINT" .RA -1>>>
+		      <AFALSE 30 <ACOPY .MS .R>>)
+		     (<L? <SET LC <1 .R>> 10>
+		      <DATA-CLOSE .RA .R>
+		      <AFALSE 31 <ASTRING .MS "ABOUT-TO-CLOBBER"> .LC>)
+		     (<NOT <SET RR <DATA-IPRINT .RA .R .MS .OBJ>>>
+		      <DATA-CLOSE .RA .R>
+		      <AFALSE 32 <ACOPY .MS .RR>>)
+		     (<NOT <SET R <DATA-CLOSE .RA .R>>>
+		      <AFALSE 33 <ACOPY .MS .R>>)
+		     (ELSE
+		      <COND (<SET V <DATA-AREAD .RA .BOX <ARESET .SS>>>
+			     <SET VV <AUVECTOR .SS !.V .LC>>
+			     <ARELEASE .SS .V>)
+			    (ELSE
+			     <SET VV <AUVECTOR .SS .LC>>)>
+		      <COND (<SET R <DATA-APRINT .RA .BOX .SS .VV>>)
+			    (ELSE <AFALSE 34 <ACOPY .MS .R>>)>)>)
+	      (ELSE <AFALSE 35>)>>
+
+<ENDPACKAGE>

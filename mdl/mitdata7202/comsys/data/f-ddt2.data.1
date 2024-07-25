@@ -1,0 +1,31 @@
+; "DDT-FORMAT-2 -- DDT FORMAT MESSAGE OUTPUT FOR RECEIVERS"
+
+(
+  ("
+" <GETFIX "FROM"> ,DDT-ADRL)
+  (" (Sent by " [<GETFIX "SENDER"> <GETFIX "FROM">] ")" ,DDT-ADRL)
+  (" " <GETFIX "WHEN-ORIGINATED"> ,QUICK-DATE)
+  (" Re: " <GETFIX "SUBJECT"> 2)
+  ("
+In reply to: " <GETFIX "IN-REPLY-TO"> 2)
+  ("
+Forwarded to:  " <GETFIX "FORWARDING"> ,DDT-FORWARD)
+  ("
+To: " [<GETFIX "ACTION-TO"> <GETFIX "ADDRESSED-TO">] ,DDT-ADRL)
+  ("
+CC To: " <GETFIX "CARBON-COPY-TO"> ,DDT-ADRL)
+  ("
+Blind CC To: " <GETFIX "BLIND"> ,DDT-ADRL)
+  ("
+--Notes--" <GETFIX "NOTES"> ,DDT-TEXT-LIST)
+  ("
+" <GETFIX "TEXT"> 2)
+  ("
+--Enclosures--" <GETFIX "ENCLOSURES"> 13)
+  ("
+Keywords: " <GETFIX "KEYWORDS"> ,DDT-LIST)
+  ("
+
+"))
+
+

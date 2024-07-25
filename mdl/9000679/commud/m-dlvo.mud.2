@@ -1,0 +1,196 @@
+<PACKAGE "M-DLVO">
+
+;"mail delivery options"
+
+<ENTRY LOGIN-MAIL	;"<hsname>;<uname> MAIL"
+       READER-MAIL	;"<hsname>;<uname> READER"
+       ONLINE-OUTPUT	;"CLI:">
+
+<USE "MADMAN" "CHAN" "OPEN-APPEND" "FIELDS" "M-DEFS" "ITIME" "M-READ"
+     "M-DAC" "M-DOUT" "M-DATA" "M-TEMP" "AP" "USRUTI" "M-TAI">
+
+\
+
+"LOGIN-MAIL -- login-file output"
+
+<DEFINE LOGIN-MAIL (ADR
+		    "AUX" U CH DATA LST UK (INSERT? <>) FMT AFMT DFLT
+		    (MS ,MSG-SPACE))
+   #DECL ((ADR) STRING (DATA) ANY (U) <LIST [REST <OR STRING VECTOR>]>
+	  (AFMT) <OR FALSE APPLICABLE> (FMT) <OR STRING LIST> (MS) SPACE
+	  (UK INSERT?) <OR STRING FALSE> (LST DFLT) LIST
+	  (CH) <OR FALSE CHANNEL>)
+   <PROG L-ACT ()
+      #DECL ((L-ACT) ACTIVATION)
+      <SET DATA <DRD .ADR <GETFIX "LOGIN-MAIL">>>
+      <COND (<NOT <OK? <GETFIX "LOGIN-MAIL"> .DATA>>
+	     <RETURN <AFALSE 5
+			     <ASTRING .MS "LOGIN-MAIL">
+			     <ASTRING .MS <UNPARSE .DATA>>>>)>
+      <SET LST .DATA>
+      <SET DFLT <DRDFLT "LOGIN-MAIL">>
+      <REPEAT ()
+	 <COND (<EMPTY? .LST> <RETURN T>)
+	       (<NOT <1 .LST>>					;"USE DEFAULTS"
+		<SET DATA <DRD .ADR <GETFIX "LOGIN-USERS">>>
+		<COND (<AND .DATA <OK? <GETFIX "LOGIN-USERS"> .DATA>>
+		       <SET U .DATA>)
+		      (.DATA
+		       <RETURN <AFALSE 6
+				       <ASTRING .MS "LOGIN-USERS">
+				       <ASTRING .MS <UNPARSE .DATA>>>>)
+		      (<SET UK <KEYGET .ADR>> ;"NOTHING SUPPLIED"
+		       <SET U (.UK)>)
+		      (ELSE <RETURN <AFALSE 8 <ASTRING .MS .ADR>>>)>)
+	       (<TYPE? <1 .LST> LIST>			 ;"LIST OF USERS GIVEN"
+		<SET U <1 .LST>>)
+	       (ELSE				   ;"ONLY ONE GIVEN, AS STRING"
+		<SET U <LIST <1 .LST>>>)>
+	 <SET LST <REST .LST>>
+	 <COND (<OR <EMPTY? .LST> <NOT <1 .LST>>>
+		<SET DATA <2 .DFLT>>) 
+	       (ELSE <SET DATA <1 .LST>>)>
+	 <COND (<NOT .DATA>)
+	       (<AND <TYPE? .DATA STRING>
+		     <MEMBER .DATA '["INSERT" "APPEND"]>>
+		<AND <=? .DATA "INSERT"> <SET INSERT? "INSERT">>)
+	       (ELSE
+		<RETURN <AFALSE 5
+				<ASTRING .MS "LOGIN-MAIL">
+				<ASTRING .MS <UNPARSE .DATA>>>>)>
+	 <OR <EMPTY? .LST> <SET LST <REST .LST>>>
+	 <COND (<OR <EMPTY? .LST> <NOT <1 .LST>>>
+		<SET FMT <3 .DFLT>>)
+	       (ELSE <SET FMT <1 .LST>>)>
+	 <OR <EMPTY? .LST> <SET LST <REST .LST>>>
+	 <COND (<AND <NOT <EMPTY? .LST>> <1 .LST>>
+		<SET DATA <DRD .ADR "RECEIVED-FROM-HOST">>
+		<COND (<NOT <HOME? .DATA>> <SET FMT <1 .LST>>)>)>
+	 <OR <EMPTY? .LST> <SET LST <REST .LST>>>
+	 <COND (<SET AFMT <AP? .FMT>>)
+	       (<TYPE? .FMT STRING>
+		<SET DATA <DATUM .FMT>>
+		<OR <TYPE? .DATA LIST>
+		    <RETURN <AFALSE 9
+				    <ASTRING .MS "LOGIN-MAIL">
+				    <ASTRING .MS <UNPARSE .DATA>>>>>
+		<SET FMT .DATA>)>
+	 <MAPF <>
+	       <FUNCTION (UU) 
+		       #DECL ((UU) <OR STRING VECTOR>)
+		       <COND (<AND <TYPE? .UU STRING> <EMPTY? .UU>>
+			      <SET UU .ADR>)>
+		       <COND (<SET CH <MAIL-OPEN .UU "MAIL" .INSERT?>>
+			      <SET DATA
+				   <COND (.AFMT <DO-APPLY .ADR .AFMT .CH>)
+					 (ELSE <DO-OUTPUT .ADR .FMT .CH>)>>
+			      <COND (.DATA
+				     <COND (.INSERT? <TEMPAPPEND .CH>)
+					   (ELSE <TEMPCLOSE .CH>)>)
+				    (ELSE
+				     <COND (.INSERT? <CLOSE .CH>)
+					   (ELSE <TEMPDELETE .CH>)>
+				     <RETURN .DATA .L-ACT>)>)
+			     (ELSE
+			      <RETURN <AFALSE 7 <ASTRING .MS <UNPARSE .CH>>>
+				      .L-ACT>)>>
+	       .U>>>>
+
+\
+
+"READER-MAIL -- deliver mail to '<user> READER' file"
+
+<DEFINE READER-MAIL (ADR "AUX" CH (MS ,MSG-SPACE) U UU ID)
+	#DECL ((ADR) STRING (U UU) <OR FALSE STRING> (CH) <OR CHANNEL FALSE>
+	       (ID) FIX (MS) SPACE)
+	<COND (<SET U <DRDMSG "" <GETFIX "FROM">>>
+	       <SET UU <KEYGET <COND (<=? .ADR ""> .U) (ELSE .ADR)>>>
+	       <COND (<SET CH <MAIL-OPEN .UU "READER">>
+		      <SET ID <DRDMSG "" "MSG-NO">>
+		      <COND (<AND <=? .ADR ""> <NOT <DRDMSG "" "REMIND">>>
+			     <SET ID <- .ID>>)>
+		      <PRINT .ID .CH>
+		      <CLOSE .CH>
+		      T)
+		     (ELSE <AFALSE 7 <ASTRING .MS <UNPARSE .CH>>>)>)
+	      (ELSE <AFALSE 8 <ASTRING .MS "Author">>)>>
+
+\ 
+
+"ONLINE OUTPUT -- inform mail arrived via CLI:"
+
+<DEFINE ONLINE-OUTPUT (ADR "OPTIONAL" (SELF? <>)
+		       "AUX" AFMT U CH DATA (LST <>) (FRM ()) (MS ,MSG-SPACE)) 
+	#DECL ((ADR) STRING (DATA) ANY (FRM) <OR STRING LIST>
+	       (LST) <OR FALSE LIST>
+	       (SELF?) <OR FIX FALSE> (MS) SPACE (AFMT) <OR FALSE APPLICABLE>
+	       (U) <LIST [REST <OR STRING VECTOR>]> (CH) <OR FALSE CHANNEL>)
+	<PROG O-ACT ()
+	      #DECL ((O-ACT) ACTIVATION)
+	      <SET DATA <DRD .ADR <GETFIX "ONLINE-OUTPUT">>>
+	      <COND (<SET AFMT <AP? .DATA>>)
+		    (<TYPE? .DATA LIST> <SET LST .DATA>)
+		    (ELSE
+		     <RETURN <AFALSE 5
+				     <ASTRING .MS "ONLINE-OUTPUT">
+				     <ASTRING .MS <UNPARSE .DATA>>>>)>
+	      <COND (.AFMT) (<LENGTH? .LST 1> <RETURN T>)>
+	      <COND (<OR <NOT .LST> <NOT <1 .LST>>>	 ;"USE DEFAULTS"
+		     <SET DATA <DRD .ADR <GETFIX "ONLINE-USERS">>>
+		     <COND (<AND .DATA <OK? <GETFIX "ONLINE-USERS"> .DATA>>
+			    <SET U .DATA>)
+			   (.DATA
+			    <RETURN <AFALSE 6
+					    <ASTRING .MS "ONLINE-OUTPUT">
+					    <ASTRING .MS <UNPARSE .DATA>>>>)
+			   (ELSE <SET U (.ADR)>)>)
+		    (ELSE			    ;"'FILE' LOCATION SPECIFIED"
+		     <SET U
+			  <COND (<TYPE? <1 .LST> LIST> <1 .LST>)
+				(ELSE (<1 .LST>))>>)>
+	      <COND (<DRD "" "REMIND">)
+		    (<SET DATA <DRD .ADR "FROM">>
+		     <SET FRM .DATA>)>
+	      <MAPF <>
+		    <FUNCTION (UU) 
+			    #DECL ((UU) <OR STRING VECTOR>)
+			    <COND (<SET CH
+					<COND (<TYPE? .UU VECTOR>
+					       <OPEN "PRINT" !.UU>)
+					      (<OR <MEMBER !\: .UU>
+						   <MEMBER !\; .UU>>
+					       <OPEN "PRINT" .UU>)
+					      (<OR .SELF?
+						   <COND (<TYPE? .FRM STRING>
+							  <N=? .FRM .UU>)
+							 (<NOT <MEMBER .UU .FRM>>)>>
+					       <OPEN "PRINT"
+						     .UU
+						     "HACTRN"
+						     "CLI"
+						     .UU>)>>
+				   <SET DATA
+					<COND (.AFMT
+					       <DO-APPLY .ADR .AFMT .CH>)
+					      (ELSE
+					       <DO-OUTPUT .ADR <REST .LST> .CH>)>>
+				   <CLOSE .CH>
+				   <OR .DATA <RETURN .DATA .O-ACT>>)>>
+		    .U>
+	      <RETURN T>>>
+
+\
+
+"MAIL-OPEN -- open channel to mail file, either explicitly spec'ed
+or the user's normal one in his directory.  If he has no directory,
+then try the common; directory.  If INSERT? is false, try to append to
+existing file, otherwise insert at beginning."
+
+<DEFINE MAIL-OPEN (UU FNM2 "OPTIONAL" (INSERT? <>))
+	#DECL ((UU FNM2) STRING (INSERT?) <OR STRING FALSE>)
+	<PROG ((SNM <HSNAME .UU>) (NM1 .UU) (NM2 .FNM2))
+	      #DECL ((SNM NM1 NM2) <SPECIAL STRING>)
+	      <COND (.INSERT? <TEMPOPEN .UU>)
+		    (<OPEN-APPEND .UU>)>>>
+
+<ENDPACKAGE>

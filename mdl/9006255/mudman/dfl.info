@@ -1,0 +1,112 @@
+DFL and UNLINK packages      TAA 9/11/77
+
+	ERB's old DFL package has been significantly rewritten to allow
+the following features not provided by the original version:
+1)  UN-DFL:  writing a function back out to its file after editing it.
+2)  UNLINK:  UNLINKing of RSUBRs which have been RSUBR-LINKed by the
+    interpreter or by GROUP-PURIFY.  See UNLINK documentation below.
+3)  RDFL:  DFL for RSUBRs, optionally with glue bits.
+
+DFL usage
+A.  DFL
+	<DFL "OPT" <func-names> <file-name> <hair>>, where:
+func-names:  names of the DEFINEd functions to be obtained from this
+    file.  May be an atom, a string, or a structure of atoms or strings;
+    if atoms are given, their SPNAMEs are used.  The default is the
+    argument last given to DFL or RDFL.
+file-name:  file to obtain the functions from.  Default is the last file
+    DFL'ed or RDFL'ed.  An atom may be given, in which case its SPNAME
+    is used for the first file name.
+hair:  If this is true, and if one or more of the values replaced by the
+    DFL'ed functions were RSUBR/ENTRY's, ALL RSUBRs, including pure
+    ones, will be searched for occurrences of the old value; such
+    occurrences will be replaced by the atom.  This is the inverse of
+    RSUBR-LINKing.  Pure structures will be unpurified; this does not
+    change their address in core, but simply makes the pages they live
+    in read/write.
+IMPORTANT:  in the normal case, if an RSUBR/ENTRY is being replaced,
+    unlinking will occur automatically in garbage-collector space iff
+    RSUBR-LINK is T.
+MORE IMPORTANT:  Unlinking is not the same as substituting.
+
+B.  RDFL
+	<RDFL "OPT" <func-names> <file-name> <hair> <glue?>>
+The first three arguments are as before.  The only difference between
+    RDFL and DFL (barring the magic fourth argument) is that RDFL
+    searches for "<SETG " rather than "<DEFINE ".
+glue?:  If non-false, DFL will READ and EVAL the next object in the file
+    following each RSUBR read.  This will in the normal case obtain the
+    glue bits for the RSUBR.  The default for this is:
+	<AND <ASSIGNED? GLUE!- > .GLUE!- >; this is the form used in
+    NBIN files to determine whether glue bits should be kept.
+Note that RDFL need not be used solely for RSUBRs.
+IMPORTANT:  RDFL'ing an RSUBR-ENTRY may well be fatal.
+
+C.  UN-DFL
+	<UN-DFL <atms> "OPT" <filnam> <force>>
+atms:  An atom or a list of atoms, which will be un-dfl'ed.  THE
+    FUNCTIONS DEFINED MUST ALL BE FROM THE SAME FILE, LEST YOU DIE. 
+    UN-DFL can only UN-DFL things which were DFL'ed:  necessary
+    information is kept around by DFL.
+filnam:  The default is 'foo >', where 'foo' is the file the atoms
+    originally came from.
+force:  Normally, UN-DFL will barf if there is a version between the
+    file the functions came from and the file which UN-DFL will create: 
+    it thinks it will likely destroy useful information.  Providing an
+    atom here causes this scruple to be ignored.  It is unwise to do so.
+IMPORTANT:  <DFL (FOO BAR)> <UN-DFL FOO> <UN-DFL BAR> will cause UN-DFL
+    to barf as mentioned above.  It is thus a VERY bad idea to UN-DFL
+    functions piecemeal.
+UN-DFL may work with rsubrs, but why would you want to?
+
+UNLINK
+	The UNLINK package contains three entries:  UNLINK, PURE?, and
+UNPURIFY.  UNLINK is sometimes called by DFL; PURE? and UNPURIFY are
+good ways to take the back off your muddle.
+UNLINK:
+	<UNLINK <OR ATOM FALSE <LIST [REST ATOM]>> "OPT" <OR ATOM FALSE>>
+1:  A group name, a list of the atoms to be unlinked, or false:  false
+    unlinks everything. 
+2:  If true (default is false), even pure rsubrs will be searched.
+UNLINK grovels over all the oblists in the world looking for RSUBRs; if
+an RSUBR exists only in a structure, it will not be found.  If a group
+name is supplied, it will first grovel over the group finding all
+DEFINEs and SETGs; the associated atoms will be consed into a list which
+then replaces the first argument.
+If the first argument is a list or group name, only calls to the
+specified atoms will be unlinked.
+
+PURE?
+	PURE? takes an ANY and determines if the right half of the value
+word is greater than the number contained in PURBOT, which is the lowest
+pure location in muddle.  Ergo, is the object I gave you pure?  It works
+for fixes, though it isn't meaningful.
+
+UNPURIFY
+	Use of this RSUBR voids your warrantee, according to
+knowledgeable sources.
+	UNPURIFY takes a single argument, which must be of PRIMTYPE
+VECTOR or UVECTOR (i.e., it must have an AOBJN pointer for its value
+word).  It causes the pages in which that object lives to become
+read/write, and returns T.
+	Because there is no way on ITS to make a read-only page a
+read/write page directly, the following obscenity is performed instead:
+1) Is the object pure, according to PURE?  If not, leave.
+2) Is UNPURIFY-PAGE!-IUNLINK gassigned?  If not, get a page from the
+interpreter, and setg the aforementioned atom to its number.  I.e., the
+page is more or less permanently snarfed.
+3) For each page occupied by the object:
+   a)  If the page is already read/write, do nothing.
+   b)  Otherwise, map the page on top of UNPURIFY-PAGE.
+   c)  Create a new, read/write page where the old page was.
+   d)  BLT the contents of UNPURIFY-PAGE back to the old, now read/write
+page.
+
+Thus, no pointers are changed:  as far as muddle is concerned, in fact,
+nothing has changed.  The unpurified pages are still pure, according to
+its page map.  However, you may freely mung the unpurified object.
+IMPORTANT:  If your mungage of the unpurified object consists of PUTting
+a pointer into garbage-collected space into the object, you will lose
+mightily unless the pointer points to a frozen object.  The garbage
+collector does NOT examine unpurified objects.  UNLINK can only win with
+this hack because all atoms referenced by pure RSUBRs are indeed frozen.

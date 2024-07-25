@@ -1,0 +1,232 @@
+<PACKAGE "PRTEXT">
+
+<ENTRY SETUP-CAPABILITIES>
+
+<ENTRY PRINT-TEXT PRINT-FAX PRINT-GRAPHICS PRINT-VOICE PRINT-IMAGE
+       PRINT-SEQUENTIAL PRINT-SIMULTANEOUS PRINT-INDEPENDENT PRINT-BRANCH>
+
+<ENTRY MEDIA-TYPES PRESENTATION-MODES>
+
+<ENTRY PRESENTATION-CAPABILITIES
+       IMAGE-PRINTERS FAX-PRINTERS VOICE-PRINTERS GRAPHICS-PRINTERS>
+
+<USE "PRBG" "SCR">
+
+<SETG PRESENTATION-CAPABILITIES ("RFC767")>
+<GDECL (PRESENTATION-CAPABILITIES) <LIST [REST STRING]>>
+
+\
+
+<DEFINE SETUP-CAPABILITIES ("OPTIONAL" (P ,PRESENTATION-CAPABILITIES)
+			    "AUX" (TYP <DO-GTTYP ,STREAM>))
+	#DECL ((P) <LIST [REST STRING]> (TYP) FIX)
+	<COND (<==? .TYP 29>
+	       <OR <MEMBER "BITGRAPH" .P>
+		   <SET P ("BITGRAPH" !.P)>>
+	       <OR <MEMBER "BITMAP" .P>
+		   <SET P ("BITMAP" !.P)>>)>
+	<SETG PRESENTATION-CAPABILITIES .P>>
+
+"PRINT-TEXT -- print possibly multi-media text field"
+
+<DEFINE PRINT-TEXT (TXT OUTCHAN "AUX" MODE M)
+	#DECL ((TXT) ANY (OUTCHAN) CHANNEL)
+	<COND (<TYPE? .TXT STRING> <PRINC .TXT>)
+	      (<TYPE? .TXT LIST>
+	       <MAPR <>
+		     <FUNCTION (L "AUX" (S <1 .L>))
+			  #DECL ((L) LIST (S) STRING)
+			  <PRINC .S>
+			  <CRLF>
+			  <COND (<NOT <EMPTY? <REST .S>>>
+				 <CRLF>)>>
+		     .TXT>)
+	      (<AND <TYPE? .TXT VECTOR> <==? <LENGTH .TXT> 2>>
+	       <COND (<NOT <SET MODE <1 .TXT>>> <SET MODE "BRANCH">)>
+	       <COND (<SET M <MEMBER .MODE ,PRESENTATION-MODES>>
+		      <APPLY ,<2 .M> <2 .TXT> .OUTCHAN>)
+		     (<SET M <MEMBER .MODE ,MEDIA-TYPES>>
+		      <APPLY ,<2 .M> <2 .TXT> .OUTCHAN>)
+		     (<=? .MODE "NOTES">
+		      <PRINT-NOTES <2 .TXT> .OUTCHAN>)
+		     (<=? .MODE "ENCLOSURES">
+		      <PRINT-ENCLOSURES <2 .TXT> .OUTCHAN>)
+		     (ELSE
+		      <PRINC ">>Bad mode indicator: ">
+		      <PRINC .MODE>
+		      <PRINC "<<">
+		      <PRINT-TEXT <2 .TXT> .OUTCHAN>)>)
+	      (ELSE
+	       <PRINC ">>Begin unintelligible text field<<">
+	       <PRINT .TXT>
+	       <PRINC ">>End unintelligible text field<<">)>>
+
+<DEFINE PRINT-INDEPENDENT (TXT OUTCHAN)
+	#DECL ((TXT) LIST (OUTCHAN) CHANNEL)
+	<PRINC "[[Beginning of Sender-specified independent presentation]]">
+	<CRLF>
+	<MAPF <>
+	      <FUNCTION (TXT)
+		   <PRINT-TEXT .TXT .OUTCHAN>
+		   <CRLF>>
+	      .TXT>
+	<PRINC "[[End of Sender-specified independent presentation]]">
+	<CRLF>>
+
+<DEFINE PRINT-SIMULTANEOUS (TXT OUTCHAN)
+	#DECL ((TXT) LIST (OUTCHAN) CHANNEL)
+	<PRINC "[[Beginning of Sender-specified simultaneous presentation]]">
+	<CRLF>
+	<MAPF <>
+	      <FUNCTION (TXT)
+		   <PRINT-TEXT .TXT .OUTCHAN>
+		   <CRLF>>
+	      .TXT>
+	<PRINC "[[End of Sender-specified simultaneous presentation]]">
+	<CRLF>>
+
+<DEFINE PRINT-BRANCH (TXT OUTCHAN)
+	#DECL ((TXT) LIST (OUTCHAN) CHANNEL)
+	<MAPF <>
+	      <FUNCTION (TXT)
+		   <PRINT-TEXT .TXT .OUTCHAN>
+		   <CRLF>>
+	      .TXT>>
+
+<DEFINE PRINT-SEQUENTIAL (TXT OUTCHAN)
+	#DECL ((TXT) LIST (OUTCHAN) CHANNEL)
+	<PRINC "[[Beginning of Sender-specified sequential presentation]]">
+	<CRLF>
+	<MAPF <>
+	      <FUNCTION (TXT)
+		   <PRINT-TEXT .TXT .OUTCHAN>
+		   <CRLF>>
+	      .TXT>
+	<PRINC "[[End of Sender-specified sequential presentation]]">
+	<CRLF>>
+
+<SETG PRESENTATION-MODES
+      '["INDEPENDENT" PRINT-INDEPENDENT
+	"SEQUENTIAL" PRINT-SEQUENTIAL
+	"SIMULTANEOUS" PRINT-SIMULTANEOUS
+	"BRANCH" PRINT-BRANCH]>
+<GDECL (PRESENTATION-MODES) <VECTOR [REST STRING ATOM]>>
+
+<DEFINE PRINT-MM (REPS OUTCHAN STR PRINTERS "AUX" REP TXT PRE TMP)
+	#DECL ((REPS) ANY (OUTCHAN) CHANNEL (STR REP) STRING
+	       (PRINTERS) VECTOR (TMP) <OR LIST FALSE>
+	       (PRE) <OR VECTOR FALSE>)
+	<PROG ()
+	      <COND (<NOT <TYPE? .REPS LIST>>
+		     <SET REP "RFC767">
+		     <SET TXT .REPS>)
+		    (<SET TMP <FIND-REP .REPS>>
+		     <SET REP <1 .TMP>>
+		     <SET TXT <2 .TMP>>)
+		    (ELSE
+		     <PRINC "[Can't present ">
+		     <PRINC .STR>
+		     <PRINC " in this format: ">
+		     <PRIN1 .REPS>
+		     <PRINC "]">
+		     <RETURN>)>
+	      <PRINC "[Beginning of ">
+	      <PRINC .STR>
+	      <PRINC " (">
+	      <PRINC .REP>
+	      <PRINC ") ">
+	      <COND (<TYPE? .TXT STRING>
+		     <PRINC "from file ">
+		     <PRINC .TXT>)
+		    (<TYPE? .TXT CHANNEL>
+		     <PRINC "from file ">
+		     <CHANPRINT .TXT>)
+		    (<TYPE? .TXT BYTES>
+		     <PRINC " containing ">
+		     <PRINC <LENGTH .TXT>>
+		     <PRINC " bytes">)>
+	      <PRINC ".]">
+	      <CRLF>
+	      <COND (<SET PRE <MEMBER .REP .PRINTERS>>
+		     <COND (<NOT <2 .PRE>>
+			    <PRESENT-GIVE-UP .TXT .OUTCHAN>)
+			   (ELSE
+			    <APPLY ,<2 .PRE> .TXT .OUTCHAN>)>)
+		    (ELSE
+		     <PRINC "***Can't find printer for ">
+		     <PRINC .STR>
+		     <PRINC " in ">
+		     <PRINC .REP>
+		     <PRINC " format?***">)>
+	      <CRLF>
+	      <PRINC "[End of ">
+	      <PRINC .STR>
+	      <PRINC " presentation.]">>
+	<CRLF>>
+
+<DEFINE PRINT-FAX (REPS OUTCHAN)
+	<PRINT-MM .REPS .OUTCHAN "Facsimile" ,FAX-PRINTERS>>
+
+<DEFINE PRINT-VOICE (REPS OUTCHAN)
+	<PRINT-MM .REPS .OUTCHAN "Voice" ,VOICE-PRINTERS>>
+
+<DEFINE PRINT-IMAGE (REPS OUTCHAN)
+	<PRINT-MM .REPS .OUTCHAN "Image" ,IMAGE-PRINTERS>>
+
+<DEFINE PRINT-GRAPHICS (REPS OUTCHAN)
+	<PRINT-MM .REPS .OUTCHAN "Graphics" ,GRAPHICS-PRINTERS>>
+
+<SETG MEDIA-TYPES
+      '["FAX" PRINT-FAX
+	"IMAGE" PRINT-IMAGE
+	"VOICE" PRINT-VOICE
+	"GRAPHICS" PRINT-GRAPHICS]>
+<GDECL (MEDIA-TYPES) <VECTOR [REST STRING ATOM]>>
+
+<DEFINE FIND-REP (REPS "AUX" (CAP ,PRESENTATION-CAPABILITIES) TMP)
+	#DECL ((REPS) <LIST [REST STRING ANY]>
+	       (CAP) <LIST [REST STRING]>)
+	<REPEAT ()
+		<COND (<EMPTY? .CAP> <RETURN <>>)
+		      (<SET TMP <MEMBER <1 .CAP> .REPS>>
+		       <RETURN .TMP>)
+		      (ELSE <SET CAP <REST .CAP>>)>>>
+
+<SETG IMAGE-PRINTERS
+      ["RFC767"	  <>
+       "BITGRAPH" PRESENT-BITGRAPH-IMAGE
+       "BITMAP" PRESENT-BITMAP-IMAGE]>
+<SETG FAX-PRINTERS
+      ["RFC767"	  <>]>
+<SETG VOICE-PRINTERS
+      ["RFC767"	  <>]>
+<SETG GRAPHICS-PRINTERS
+      ["RFC767"	  <>]>
+<GDECL (IMAGE-PRINTERS FAX-PRINTERS VOICE-PRINTERS GRAPHICS-PRINTERS)
+       VECTOR>
+
+\
+
+<DEFINE PRESENT-GIVE-UP (TXT OUTCHAN)
+	<PRINC "	**Terminal Incapable of Presenting this Object**">>
+
+\
+
+<DEFINE CHANPRINT (CH "AUX" (OUTCHAN .OUTCHAN))
+	#DECL ((CH OUTCHAN) CHANNEL)
+	<PRINC "#CHANNEL [">
+	<PRINC <1 .CH>>
+	<PRINC !\ >
+	<PRIN1 <2 .CH>>
+	<PRINC " \"">
+	<PRINC <9 .CH>>
+	<PRINC ":<">
+	<PRINC <10 .CH>>
+	<PRINC !\>>
+	<PRINC <7 .CH>>
+	<PRINC !\.>
+	<PRINC <8 .CH>>
+	<PRINC "\"">
+	<PRINC !\]>>
+
+<ENDPACKAGE>

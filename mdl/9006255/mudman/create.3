@@ -1,0 +1,215 @@
+
+"PRESENT AT THE CREATION"			last updated: 6/8/78
+
+This file contains helpful hints in the area of making, patching,
+maintaining, and otherwise dealing with the MUDDLE interpreter.
+
+(Compiled mostly by Dave Lebling, with the patient assistance of Chris
+Reeve)
+
+--------------- TOPICS ----------------------------------------------
+
+I.	Making a MUDDLE.
+II.	Patching MUDDLE.
+III.	Patching a Running MUDDLE.
+
+---------------I. Making a MUDDLE.-----------------------------------
+
+How to create a new MUDDLE.  This section may be somewhat out of date.
+
+1 [ITS].  If this MUDDLE is for ITS, print the file
+
+		MUDSYS;MUD STINK
+
+If any of the files specified have not been created since their corres-
+ponding source files were last modified, reassemble them.
+
+1 [Tenex].  If this MUDDLE is for TENEX, do the above step using the file
+
+		MUDSYS;TNX STINK
+
+2.  To reassemble any module, get a MIDAS (the special version kept on
+the MUDSYS; directory).  Type:
+
+		MUDSYS;_MUDSYS;<-module name>-	; (to MIDAS)
+
+Some modules, which differ in their Tenex/TOPS-20 and ITS versions, must
+be assembled twice, once for ITS and once for Tenex/TOPS-20.  The
+convention is to assemble the Tenex version to a file named
+
+		T.<module> BIN
+
+where <module> is what you would normally call the ITS version.  As it
+happens, there are links in MUDSYS that allow you to do this
+automatically:
+
+		MUDSYS;_MUDSYS;T.INTERR
+
+for example.  There are about ten modules that have separate Tenex
+versions.
+
+3.  Make sure you are running under DDT.  Get a STINK (the special
+version on the MUDSYS; directory).  Type:
+
+		MMUDSYS;MUD STINK@		; (to STINK)
+	     or MMUDSYS;TNX STINK@
+
+Eventually STINK will type out a symbol table.  Check for any undefined
+globals (symbols printed out indented 1 space). Type:
+
+		TD				; (to STINK)
+
+and wait.
+
+4.  You are now back in DDT.  Type a rubout and wait for DDT to respond
+with "??".  DDT is now ready.
+
+5 [ITS]. If this MUDDLE is for ITS, type:
+
+		:XFILE MUDSYS;SYMBOL CLEANR	; (to DDT)
+
+5 [Tenex]. If this MUDDLE is for TENEX, type:
+
+		:XFILE MUDSYS;TNX SYMBOL	; (to DDT)
+
+6.  If this is going to be a real new version of MUDDLE (i.e., you are
+ready to install this as NMUDDLE, and are finished debugging), type:
+
+		VCREATG			; (to DDT)
+
+to create a new version number.
+
+7 [ITS].  If this MUDDLE is for ITS, type
+
+		:PDUMP MUDSAV;TS MUD		; (to DDT)
+
+then
+
+		G				; (to DDT)
+
+MUDDLE will type 
+
+		MUDDLE INITIALIZATION.
+
+and eventually it will cause DDT to type a *
+
+7 [Tenex].  If this MUDDLE is for TENEX, dump out the current core image using
+Y in DDT.  Kill the job.  Get a MUDDLE and type 
+
+		<FLOAD "CLR;ITSNX NBIN">	; (to MUDDLE)
+
+Invoke
+
+		<ITSEX <-name of dump file>->	; (to MUDDLE)
+
+ITSEX will return a closed CHANNEL when it is done.  Two new files now
+exist, they both have the same name as the original dump file with the
+second name of one SAV and the other SYMBOL. These will be referred to
+as the SAV file and the SYMBOL file from now on.
+
+Go to ISI (or some other accessible Tenex/TOPS-20 site) via telnet.  Log
+in and get an FTP.  Type
+
+		CON(tenex completes) DMS	; (to FTP)
+
+Type
+
+		GET(tenex completes) <-SAV file>-
+		<-local file name>-		; (to FTP)
+
+after TENEX says the transfer has completed.
+
+Do the GET for the SYMBOL file.  Now get an IDDT. Type
+
+		L<-sav file>-		; (to IDDT)
+	    and ;O<-symbol file>-
+
+Now type
+
+		SETUPG				; (to IDDT)
+
+MUDDLE will type
+
+		MUDDLE INITIALIZATION
+
+and eventually return to IDDT via a JRST 4,.
+
+8 [ITS].  Depending on whether new bugs are suspected or not, it may be
+wise to dump the MUDDLE at this point.
+
+		:PDUMP TS MUDDLE		; (to DDT)
+
+You probably want to dump it to your directory?
+
+8 [Tenex].  To dump a Tenex MUDDLE, type (to IDDT)
+
+		;U MDL105.EXE
+
+(for example) which will write out a pure save file.
+
+9.  Type G and MUDDLE will respond
+
+		MUDDLE <-version>- IN OPERATION
+
+etc.
+
+10 [ITS].  To get PPRINT, EDIT, etc. loaded, type
+
+		<FLOAD "MUDSYS;NEWMUD">	; (to MUDDLE)
+
+After :INPOPping, your new MUDDLE may be dumped and tested.
+
+
+----------II. Patching MUDDLE----------------------------------------
+
+0. Get permission from someone who knows what they are doing.
+
+1. Get a fresh copy of the MUDDLE you are patching.
+
+		JJ				; (to DDT)
+
+		L SYS1;TS MUDnm		; (to DDT)
+
+2. Make your patches.  MUDDLE has a PATCH space defined, so the DDT
+patch commands will work reasonably.  (If the previous sentence is at
+all mysterious, this is a good time to stop and think twice before
+proceding).
+
+3. Dump out the world.
+
+		:PDUMP SYS1;TS MUDnm		; (to DDT)
+
+(or whereever:  at this writing the interpreter actually lives in
+MUDSAV;)
+
+
+-------------III.  Patching a Running MUDDLE.--------------------------
+
+This process is known as "desecration" (Thanks, NDR).  It allows a
+user to make the pure part of his core image become the pure part
+of a MUDDLE's core image.
+
+0.  Think twice, ask someone who knows what they are doing.
+
+1.  Get the Desecration program.
+
+		<FLOAD "MUDSYS;CRATE">
+
+2.  Desecrate the MUDDLE.
+
+		<DESECRATE "name">
+
+Where "name" is a string giving the file to desecrate  (defaults if not
+given to "MUDDLE").  The pure part of the PDUMPed file
+
+		DSK:SYS;TS name
+
+is changed to be the same as the corresponding pages of your core image.
+Thus, changes to the pure pages of your MUDDLE will propagate to other
+users and to the file.
+
+3.  Make your patch.  Note that this method of patching does not change
+the symbol table of the file.  Consequently, there is only a limited
+range of patches that can be put in in this way.
+
+

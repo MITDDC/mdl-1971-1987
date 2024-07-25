@@ -1,0 +1,60 @@
+<PACKAGE "M-NETS">
+
+<ENTRY FIND-NETS FIND-GATEWAYS SHARE-NET?>
+
+<USE "HOSTS" "M-DEFS" "M-DATA">
+
+<DEFINE FIND-NETS (NAM "AUX" NUM (N 0) U)
+	#DECL ((NAM) STRING (NUM) <OR FIX FALSE> (N) FIX (U) UVECTOR)
+	<SET U
+	     <MAPF ,UVECTOR
+		   <FUNCTION ()
+			<COND (<G? <SET N <+ .N 1>> 100>
+			       <MAPSTOP>)
+			      (<SET NUM <HOST .NAM .N>>
+			       <CHTYPE <GETBITS .NUM <BITS 8 27>> FIX>)
+			      (ELSE <MAPRET>)>>>>
+	<COND (<EMPTY? .U> <>)
+	      (ELSE .U)>>
+
+<DEFINE FIND-GATEWAYS (H1 "OPTIONAL" (H2 <HOST <HOME?>>) "AUX" N1 N2)
+	#DECL ((H1 H2) STRING (N1 N2) <OR FALSE UVECTOR>)
+	<COND (<SHARE-NET? .H1 .H2>)
+	      (<AND <SET N1 <FIND-NETS .H1>>
+		    <SET N2 <FIND-NETS .H2>>>
+	       <MAPF ,VECTOR
+		     <FUNCTION (N1 "AUX" V1 L1)
+			  #DECL ((N1) FIX (V1) <OR VECTOR FALSE> (L1) LIST)
+			  <COND (<SET V1 <MEMQ .N1 <DATUM "GATEWAYS">>>
+				 <SET L1
+				      <MAPF ,LIST
+					    <FUNCTION (N2 "AUX" V2)
+						 #DECL ((N2) FIX
+							(V2) <OR VECTOR FALSE>)
+						 <SET V2 <MEMQ .N2 <2 .V1>>>
+						 <COND (.V2
+							<MAPRET .N1 <2 .V2>>)
+						       (ELSE <MAPRET>)>>
+					    .N2>>
+				 <COND (<AND .L1 <NOT <EMPTY? .L1>>>
+					<MAPRET !.L1>)
+				       (ELSE <MAPRET>)>)>>
+		     .N1>)>>
+
+<DEFINE SHARE-NET? (H1 "OPTIONAL" (H2 <HOST <HOME?>>) "AUX" N1 N2 U)
+	#DECL ((H1 H2) STRING (N1 N2 U) <OR UVECTOR FALSE>)
+	<COND (<AND <SET N1 <FIND-NETS .H1>>
+		    <SET N2 <FIND-NETS .H2>>>
+	       <SET U
+		    <MAPF ,UVECTOR
+			  <FUNCTION (N)
+			       #DECL ((N) FIX)
+			       <COND (<MEMQ .N .N2>
+				      <HOST .H1 .N>)
+				     (ELSE <MAPRET>)>>
+			  .N1>>
+	       <COND (<EMPTY? .U>
+		      #FALSE ("Cain't get theuh from heuh."))
+		     (ELSE .U)>)>>
+
+<ENDPACKAGE>

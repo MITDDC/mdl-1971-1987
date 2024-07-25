@@ -1,0 +1,41 @@
+Recent Changes to MEND
+----------------------------------------------------------------------
+							3/14/76 (JMB)
+
+[1]  Control-S
+
+	The control-S bug has been fixed.  Control-S may be typed at
+any time while using MEND.  It will return you to the last LISTEN,
+ERROR, or EDIT loop, whichever comes first.  If that is the point
+where the current invocation of MEND was called from, it will be
+flushed.
+
+
+[2]  State Indicators
+
+	The separation line now has three text fields on it.  The
+first says "next" whenever MEND is waiting for a new object to operate
+on.  The second says "print" or "noprint" depending upon the state of
+the printing switch (set by ^P, cleared by ^U).  The third says "auto"
+or "noauto" according to whether or not MEND is running automatically
+(begun by ^B, ended by ^E).
+	Initially "next", "print", and "auto" are displayed, meaning
+that MEND is in automatic mode, is printing each step, and is waiting
+for an object to be typed in to evaluate.
+
+
+[3]  QT
+
+	QT (QuiT) is a new EDIT command that has been added for
+convenience.  If EDIT is explicitely called (in an ERROR loop, for
+example) this command allows you to quit from EDIT without returning
+to automatic mode, which would happen if Q were used to quit.
+
+
+[4]  Variable Screen Size
+
+	MEND will now acommodate any size display screen with
+at least 25 characters on a line and 11 lines on a page as long as
+MUDDLE knows these parameters when MEND is loaded (normally the case
+unless the parameters are changed after MUDDLE is started).
+

@@ -1,0 +1,50 @@
+;"(c) Copyright 1978 Massachusetts Institute of Technology.  All Rights Reserved."
+
+<TITLE GET-FRESH-PAGE>
+
+<DECLARE ("VALUE" <OR FIX FALSE> FIX)>
+
+	<DPUSH	TP* (AB)>
+	<PUSHJ	P* IGET-FRESH-PAGE>
+	<JRST	FINIS>
+
+<INTERNAL-ENTRY IGET-FRESH-PAGE 1>
+
+	<SUBM	M* (P)>
+	<PSEUDO <SETG PMAP #OPCODE *104000000056*>>
+	<GETYP	O* -1(TP)>
+	<CAIN	O* <TYPE-CODE FIX>>
+	<SKIPG	B* (TP)>
+	<JRST	FAILED>
+	<CAILE	B* 256>
+	<JRST	FAILED>
+	<LSH	B* 1>
+	<HRLI	B* *400000*>
+	<MOVNI	A* 1>
+	<MOVEI	C* 0>
+	<PUSH	P* B>
+	<PMAP>
+	<POP	P* B>
+	<IMULI	B* 512>
+	<SETZM	(B)>
+	<MOVNI	A* 1>
+	<MOVE	B* (TP)>
+	<LSH	B* 1>
+	<ADDI	B* 1>
+	<HRLI	B* *400000*>
+	<MOVEI	C* 0>
+	<PUSH	P* B>
+	<PMAP>
+	<POP	P* B>
+	<IMULI	B* 512>
+	<SETZM	(B)>
+	<DPOP	TP* A>
+	<JRST	MPOPJ>
+
+FAILED	<SUB	TP* [<2(2)>]>
+	<MOVE	A* <TYPE-WORD FALSE>>
+	<MOVEI	B* 0>
+	<JRST	MPOPJ>
+
+
+

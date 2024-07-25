@@ -1,0 +1,70 @@
+{
+    "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+    "type": "SoftwareSourceCode",
+    "applicationCategory": "Computer Science",
+    "contributor": [
+        {
+            "id": "_:contributor_1",
+            "type": "Person",
+            "affiliation": {
+                "type": "Organization",
+                "name": "Massachusetts Institute of Technology"
+            },
+            "familyName": "Sussman",
+            "givenName": "Gerald"
+        },
+        {
+            "id": "_:contributor_2",
+            "type": "Person",
+            "affiliation": {
+                "type": "Organization",
+                "name": "Massachusetts Institute of Technology"
+            },
+            "familyName": "Hewitt",
+            "givenName": "Carl"
+        },
+        {
+            "id": "_:contributor_3",
+            "type": "Person",
+            "affiliation": {
+                "type": "Organization",
+                "name": "Massachusetts Institute of Technology"
+            },
+            "familyName": "Reeve",
+            "givenName": "Chris"
+        },
+        {
+            "id": "_:contributor_4",
+            "type": "Person",
+            "affiliation": {
+                "type": "Organization",
+                "name": "Massachusetts Institute of Technology"
+            },
+            "familyName": "Cressey",
+            "givenName": "Dave"
+        },
+        {
+            "id": "_:contributor_5",
+            "type": "Person",
+            "affiliation": {
+                "type": "Organization",
+                "name": "Massachusetts Institute of Technology"
+            },
+            "familyName": "Daniels",
+            "givenName": "Bruce"
+        }
+    ],
+    "dateCreated": "1973-04-08",
+    "description": "A set of files from 1973-1987 that consist of the source and related files for the MDL programming language also known as Muddle.",
+    "isPartOf": "https://archivesspace.mit.edu/repositories/2/resources/1265",
+    "keywords": "Programming Language",
+    "license": "https://spdx.org/licenses/MIT",
+    "name": "MDL",
+    "operatingSystem": [
+        "ITS",
+        "TOPS-20",
+        "TENEX"
+    ],
+    "programmingLanguage": "MDL",
+    "developmentStatus": "unsupported"
+}

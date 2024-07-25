@@ -1,0 +1,14 @@
+Compilation record for: PS:<MDLLIB>SKY-FANS.MUD.23;P777752;APT
+Output file:  PS:<MDLLIB>SKY-FANS.NBIN.23
+File loaded.
+Precompilation loaded.
+No DEFINEd functions in this file.
+Functions ordered.
+
+
+Total time used is
+	12 sec. CPU time,
+	2 sec. garbage collector CPU time,
+	4 min. 38 sec. real time.
+CPU utilization is 4.3165467%.
+Number of garbage collects = 3

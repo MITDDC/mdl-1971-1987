@@ -1,0 +1,301 @@
+Compilation record for: DSK:MUDDLE;ELMER UBT108
+Output file:  DSK:MUDDLE;ELMER NBIN
+
+It is now SATURDAY, 28 JAN 1978 14:26 EST
+
+File loaded.
+Functions ordered.
+COMPILING SLOT!-IGLUE!-GLUE!-PACKAGE
+Peephole  0% 26/26
+Job done in:  13 / 1:44
+COMPILING SPLOUT!-IGLUE!-GLUE!-PACKAGE
+Peephole  0% 45/45
+Job done in:  7 / 53
+   COMPILING UPINT!-IGLUE!-GLUE!-PACKAGE
+Peephole  0% 46/46
+Job done in:  14 / 1:38
+ COMPILING SPLOUTN!-IGLUE!-GLUE!-PACKAGE
+Peephole  2% 41/40
+Job done in:  17 / 2:26
+    COMPILING OUT-INFO!-IGLUE!-GLUE!-PACKAGE
+Peephole  0% 43/43
+Job done in:  13 / 1:44
+   COMPILING ZEROBIT!-IGLUE!-GLUE!-PACKAGE
+Peephole  0% 60/60
+Job done in:  5 / 27
+  COMPILING CM!-IGLUE!-GLUE!-PACKAGE
+Peephole  0% 77/77
+Job done in:  20 / 2:02
+    COMPILING CODUP!-IGLUE!-GLUE!-PACKAGE
+Peephole  0% 36/36
+Job done in:  15 / 1:50
+ COMPILING GET-SURV!-IGLUE!-GLUE!-PACKAGE
+===== Variable:  NA!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Computed decl of variable:  NA!-IGLUE!-GLUE!-PACKAGE is:  <OR ATOM LINK>
+Peephole  0% 132/132
+Job done in:  32 / 2:30
+ COMPILING FIXZER!-IGLUE!-GLUE!-PACKAGE
+===== Variable:  FIXER!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Variable:  INSER!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Variable:  FIXPTR!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Variable:  FIRSGRP!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Computed decl of variable:  INSER!-IGLUE!-GLUE!-PACKAGE is:  <OR ATOM 
+FALSE>
+===== Computed decl of variable:  FIXPTR!-IGLUE!-GLUE!-PACKAGE is:  <FIX (0 
+34359738367)>
+===== Computed decl of variable:  FIRSGRP!-IGLUE!-GLUE!-PACKAGE is:  <OR ATOM 
+FALSE>
+===== Computed decl of variable:  HW!-IGLUE!-GLUE!-PACKAGE is:  FIX
+===== Arithmetic can't open compile because:  <0?  **** .NWD!-IGLUE!-GLUE!-PACKA
+GE **** >
+ is of type:  <OR FIX FLOAT>
+ **** <0? .NWD!-IGLUE!-GLUE!-PACKAGE> **** 
+Peephole  3% 286/275
+Job done in:  1:53 / 3:17
+  COMPILING CREATE!-IGLUE!-GLUE!-PACKAGE
+Peephole  0% 53/53
+Job done in:  4 / 6
+    COMPILING HASH!-IGLUE!-GLUE!-PACKAGE
+===== Variable:  X not DECLed.
+===== Computed decl of variable:  HASHNO!-IGLUE!-GLUE!-PACKAGE is:  <OR FIX WORD
+>
+===== Non-specific structure for MAPF/R:   **** .OB!-IGLUE!-GLUE!-PACKAGE **** 
+ type is:  STRUCTURED
+ **** <MAPF #FALSE () <FUNCTION ("AUX" X) #DECL ((VALUE) WORD) <SET 
+HASHNO!-IG ...
+===== Can't open compile CHTYPE.
+ **** <CHTYPE .OB!-IGLUE!-GLUE!-PACKAGE <PRIMTYPE .OB!-IGLUE!-GLUE!-PACKAGE>>
+  ...
+Peephole  0% 201/199
+Job done in:  39 / 1:07
+   COMPILING INSERT-ASSOC!-IGLUE!-GLUE!-PACKAGE
+Peephole  0% 103/103
+Job done in:  18 / 26
+    COMPILING LOOKUP-ASSOC!-IGLUE!-GLUE!-PACKAGE
+Peephole  0% 58/58
+Job done in:  6 / 7
+   COMPILING MINIMIZE!-IGLUE!-GLUE!-PACKAGE
+===== Variable:  MIN not DECLed.
+===== Variable:  IT!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Computed decl of variable:  MIN is:  FIX
+Peephole  0% 38/38
+Job done in:  15 / 24
+   COMPILING GVALABLE!-IGLUE!-GLUE!-PACKAGE
+===== Variable:  X not DECLed.
+===== Variable:  XX!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Non-specific structure for MAPF/R:   **** .ITM!-IGLUE!-GLUE!-PACKAGE **** 
+ type is:  STRUCTURED
+ **** <MAPF ,LIST <FUNCTION ("AUX" X XX!-IGLUE!-GLUE!-PACKAGE) #DECL ((VALUE) 
+ ...
+Peephole  2% 106/103
+Job done in:  19 / 24
+COMPILING CODE-TO-DISK!-IGLUE!-GLUE!-PACKAGE
+===== Variable:  1WORD!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Variable:  L!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Variable:  LN!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Variable:  U!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Variable:  WD!-IGLUE!-GLUE!-PACKAGE not DECLed.
+*** ERROR	BAD ARGUMENT TO SUBSTRUC 
+ **** <REST .U!-IGLUE!-GLUE!-PACKAGE <- <LENGTH .U!-IGLUE!-GLUE!-PACKAGE> .
+LN! ...
+
+ 
+ COMPILATION ABORTED 
+  COMPILING READ-IN-CODE!-IGLUE!-GLUE!-PACKAGE
+Peephole  0% 38/38
+Job done in:  3 / 4
+   COMPILING GLUE?!-IGLUE!-GLUE!-PACKAGE
+===== Variable:  OBJ!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Variable:  FM!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Computed decl of variable:  FM!-IGLUE!-GLUE!-PACKAGE is:  FORM
+Peephole  10% 131/117
+Job done in:  20 / 34
+    COMPILING GVAL?!-IGLUE!-GLUE!-PACKAGE
+===== Variable:  OBJ!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Variable:  FM!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Variable:  OBJ!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Computed decl of variable:  FM!-IGLUE!-GLUE!-PACKAGE is:  FORM
+===== Not open compiled because type is:  STRUCTURED
+ **** <NTH <PARSE <REST <UNPARSE .OBJ!-IGLUE!-GLUE!-PACKAGE 10> 1>> 2> **** 
+Peephole  0% 134/134
+Job done in:  34 / 1:02
+COMPILING RSUBR-ENTRY?!-IGLUE!-GLUE!-PACKAGE
+===== Variable:  OBJ!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Variable:  FM!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Variable:  RSBE!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Variable:  NM!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Computed decl of variable:  FM!-IGLUE!-GLUE!-PACKAGE is:  FORM
+===== Not open compiled because of defer.
+ **** <PUT .FM!-IGLUE!-GLUE!-PACKAGE 3 ,.NM!-IGLUE!-GLUE!-PACKAGE> **** 
+===== Not open compiled because type is:  STRUCTURED
+ **** <NTH <SET RSBE!-IGLUE!-GLUE!-PACKAGE <3 .FM!-IGLUE!-GLUE!-PACKAGE>> 2>
+ * ...
+===== Not open compiled because type is:  STRUCTURED
+<FORM GVAL  **** <NTH .RSBE!-IGLUE!-GLUE!-PACKAGE 2> **** >
+===== Not open compiled because type is:  STRUCTURED
+<SET NM!-IGLUE!-GLUE!-PACKAGE  **** <NTH .RSBE!-IGLUE!-GLUE!-PACKAGE 1> **** >
+===== Not open compiled because type is:  STRUCTURED
+ **** <NTH .RSBE!-IGLUE!-GLUE!-PACKAGE 2> **** 
+===== PUT used for association manipulation.
+ **** <PUT .NM!-IGLUE!-GLUE!-PACKAGE .RSBIND!-IGLUE!-GLUE!-PACKAGE <LIST 0 .
+NM ...
+===== Not open compiled because type is:  STRUCTURED
+ **** <NTH .RSBE!-IGLUE!-GLUE!-PACKAGE 2> **** 
+===== PUT used for association manipulation.
+ **** <PUT .NM!-IGLUE!-GLUE!-PACKAGE .RSBIND!-IGLUE!-GLUE!-PACKAGE <LIST .
+OFFS ...
+===== Not open compiled because type is:  STRUCTURED
+ **** <NTH .RSBE!-IGLUE!-GLUE!-PACKAGE 2> **** 
+===== Not open compiled because type is:  STRUCTURED
+ **** <NTH .RSBE!-IGLUE!-GLUE!-PACKAGE 2> **** 
+Peephole  3% 374/361
+Job done in:  1:14 / 2:35
+COMPILING FINAL-RSUBR-ENTRYS!-IGLUE!-GLUE!-PACKAGE
+===== PUT used for association manipulation.
+ **** <PUT ,.ONM!-IGLUE!-GLUE!-PACKAGE GLUE <UVECTOR  >> **** 
+Peephole  0% 144/143
+Job done in:  34 / 49
+   COMPILING FIXUP-COPY!-IGLUE!-GLUE!-PACKAGE
+===== Not open compiled because type is:  STRUCTURED
+ **** <LENGTH <1 >> **** 
+===== PUT used for association manipulation.
+ **** <PUT .RSB!-IGLUE!-GLUE!-PACKAGE RSUBR .FIXES!-IGLUE!-GLUE!-PACKAGE>
+ **** ...
+Peephole  0% 117/117
+Job done in:  20 / 28
+   COMPILING FINAL-GROUP-CLEANUP!-IGLUE!-GLUE!-PACKAGE
+===== Variable:  NMN!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Variable:  OB!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Computed decl of variable:  NMN!-IGLUE!-GLUE!-PACKAGE is:  LIST
+===== PUT being used to remove association.
+ **** <PUT <3 .FM!-IGLUE!-GLUE!-PACKAGE> GLUE> **** 
+===== PUT being used to remove association.
+ **** <PUT <3 .FM!-IGLUE!-GLUE!-PACKAGE> RSUBR> **** 
+===== Not open compiled because of defer.
+ **** <PUT .FM!-IGLUE!-GLUE!-PACKAGE 3 ,<GET <2 .FM!-IGLUE!-GLUE!-PACKAGE> 
+VAL ...
+===== Not open compiled because type is:  NO-RETURN!-ICC!-CC!-PACKAGE
+ **** <EMPTY? .NMN!-IGLUE!-GLUE!-PACKAGE> **** 
+Peephole  2% 311/304
+Job done in:  1:05 / 1:45
+   COMPILING MCALL-RESOLVE!-IGLUE!-GLUE!-PACKAGE
+===== Variable:  UNRESIND!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Variable:  TMP not DECLed.
+===== PUT being used to remove association.
+ **** <PUT <1 .L!-IGLUE!-GLUE!-PACKAGE> .UNRESIND!-IGLUE!-GLUE!-PACKAGE> **** 
+===== PUT maybe structure or association.  Type of 1st arg is:  #FALSE ()
+ and that of 2d arg is:  ANY
+ **** <PUT <1 .L!-IGLUE!-GLUE!-PACKAGE> .UNRESIND!-IGLUE!-GLUE!-PACKAGE <SET 
+T ...
+Peephole  1% 170/168
+Job done in:  1:15 / 1:59
+   COMPILING CONS-SYMBOLS!-IGLUE!-GLUE!-PACKAGE
+Peephole  0% 58/58
+Job done in:  15 / 21
+ COMPILING PASS-1!-IGLUE!-GLUE!-PACKAGE
+===== Variable:  FM!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Variable:  RSB!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Variable:  FIXES!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Variable:  IC!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Variable:  ONM!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Variable:  TMP1!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Variable:  OBJ!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Variable:  RBOD!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Variable:  RB!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Variable:  IP!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Variable:  NM!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Computed decl of variable:  FM!-IGLUE!-GLUE!-PACKAGE is:  FORM
+===== Computed decl of variable:  RSB!-IGLUE!-GLUE!-PACKAGE is:  RSUBR
+===== Computed decl of variable:  COD!-IGLUE!-GLUE!-PACKAGE is:  ANY
+===== Computed decl of variable:  IC!-IGLUE!-GLUE!-PACKAGE is:  FIX
+===== Computed decl of variable:  RBOD!-IGLUE!-GLUE!-PACKAGE is:  VECTOR
+===== Computed decl of variable:  IP!-IGLUE!-GLUE!-PACKAGE is:  FIX
+===== Not open compiled because type is:  <OR FALSE <UVECTOR [REST <PRIMTYPE 
+WORD>]>>
+ **** <LENGTH .GLUE-BITS!-IGLUE!-GLUE!-PACKAGE> **** 
+===== Not open compiled because type is:  <OR FALSE <UVECTOR [REST <PRIMTYPE 
+WORD>]>>
+ **** <LENGTH .GLUE-BITS!-IGLUE!-GLUE!-PACKAGE> **** 
+===== Not open compiled because type is:  <OR FALSE <UVECTOR [REST <PRIMTYPE 
+WORD>]>>
+ **** <NTH .GLUE-BITS!-IGLUE!-GLUE!-PACKAGE <- <LENGTH .
+GLUE-BITS!-IGLUE!-GLUE ...
+===== Not open compiled because type is:  <OR FALSE <UVECTOR [REST <PRIMTYPE 
+WORD>]>>
+ **** <REST .GLUE-BITS!-IGLUE!-GLUE!-PACKAGE .NINTS!-IGLUE!-GLUE!-PACKAGE>
+ *** ...
+===== Not open compiled because type is:  <OR FALSE <UVECTOR [REST <PRIMTYPE 
+WORD>]>>
+ **** <REST .GLUE-BITS!-IGLUE!-GLUE!-PACKAGE .NINTS!-IGLUE!-GLUE!-PACKAGE>
+ *** ...
+===== Arithmetic can't open compile because:   **** <1 .LLL!-IGLUE!-GLUE!-PACKAG
+E> **** 
+ is of type:  <OR FIX FLOAT>
+ **** <+ <1 .LLL!-IGLUE!-GLUE!-PACKAGE> .POINT!-IGLUE!-GLUE!-PACKAGE <- .
+MINEN ...
+===== Arithmetic can't open compile because:   **** <+ <1 .LLL!-IGLUE!-GLUE!-PAC
+KAGE> .POINT!-IGLUE!-GLUE!-PACKAGE <- .
+MINEN ...
+ is of type:  <OR FIX FLOAT>
+ **** <L? <2 .L!-IGLUE!-GLUE!-PACKAGE> <+ <1 .LLL!-IGLUE!-GLUE!-PACKAGE> .
+POIN ...
+===== PUT used for association manipulation.
+ **** <PUT <2 .LL!-IGLUE!-GLUE!-PACKAGE> .IENTIND!-IGLUE!-GLUE!-PACKAGE <LIST 
+ ...
+===== PUT used for association manipulation.
+ **** <PUT <2 .LL!-IGLUE!-GLUE!-PACKAGE> .IENTIND!-IGLUE!-GLUE!-PACKAGE <LIST 
+ ...
+===== Not open compiled because type is:  <OR FALSE <UVECTOR [REST <PRIMTYPE 
+WORD>]>>
+ **** <REST .GLUE-BITS!-IGLUE!-GLUE!-PACKAGE .NINTS!-IGLUE!-GLUE!-PACKAGE>
+ *** ...
+===== PUT used for association manipulation.
+ **** <PUT <2 .RSB!-IGLUE!-GLUE!-PACKAGE> .IENTIND!-IGLUE!-GLUE!-PACKAGE <
+UPIN ...
+===== Not open compiled because type is:  <OR FALSE <UVECTOR [REST <PRIMTYPE 
+WORD>]>>
+ **** <REST .GLUE-BITS!-IGLUE!-GLUE!-PACKAGE .NINTS!-IGLUE!-GLUE!-PACKAGE>
+ *** ...
+===== PUT used for association manipulation.
+ **** <PUT .NM!-IGLUE!-GLUE!-PACKAGE .MCIND!-IGLUE!-GLUE!-PACKAGE <SET 
+TMC!-IG ...
+===== PUT used for association manipulation.
+ **** <PUT .NM!-IGLUE!-GLUE!-PACKAGE .UNRESIND!-IGLUE!-GLUE!-PACKAGE <LIST .
+N! ...
+===== PUT used for association manipulation.
+ **** <PUT .NM!-IGLUE!-GLUE!-PACKAGE .UNRESIND!-IGLUE!-GLUE!-PACKAGE <LIST .
+N! ...
+Peephole  0% 1501/1495
+Job done in:  32:29 / 51:46
+COMPILING GROUP-GLUE!-GLUE!-PACKAGE
+===== Variable:  OBJ!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Variable:  X not DECLed.
+===== Variable:  RS!-IGLUE!-GLUE!-PACKAGE not DECLed.
+===== Computed decl of variable:  COD!-IGLUE!-GLUE!-PACKAGE is:  UVECTOR
+*** WARNING	VARIABLE NEVER USED: RSBE 
+===== External variable being referenced:  PKG!-GLUE!-PACKAGE
+ **** .PKG!-GLUE!-PACKAGE **** 
+===== External variable being referenced:  SURV!-GLUE!-PACKAGE
+ **** .SURV!-GLUE!-PACKAGE **** 
+===== Cond predicate always FALSE:   **** <SET NORED!-IGLUE!-GLUE!-PACKAGE #FALS
+E ()> **** 
+
+ **** <COND (.PKG!-GLUE!-PACKAGE <SET SURV!-GLUE!-PACKAGE <LIST  >>) (<TYPE? .
+ ...
+===== PUT being used to remove association.
+ **** <PUT <1 .UNRES!-IGLUE!-GLUE!-PACKAGE> .UNRESIND!-IGLUE!-GLUE!-PACKAGE>
+ * ...
+===== PUT being used to remove association.
+ **** <PUT .X .MCIND!-IGLUE!-GLUE!-PACKAGE> **** 
+===== PUT being used to remove association.
+ **** <PUT .RS!-IGLUE!-GLUE!-PACKAGE .RSBIND!-IGLUE!-GLUE!-PACKAGE> **** 
+Peephole  0% 1078/1071
+Job done in:  5:46 / 13:00
+
+
+Total time used is
+	51 min. 0 sec. CPU time,
+	19 min. 39 sec. garbage collector CPU time,
+	1 hours 39 min. 14 sec. real time.
+CPU utilization is 51.394020%.
+Number of garbage collects = 113

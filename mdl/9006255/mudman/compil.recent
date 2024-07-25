@@ -1,0 +1,202 @@
+
+Feb. 13, 1976
+
+	A new version of the compiler has been released on an experimental
+basis.  It has the following features:
+
+1)	TUPLE and ITUPLE compile correctly.
+
+2)	Compiler ERRORs, WARNINGs and NOTEs will now print out part of the
+FUNCTION being compiled associated with the problem.  This should be a great
+aid to finding compiler problems.
+
+3)	Many new optimizations have been added to the compiler including
+a peep-hole optimizer that looks over the final code and tries to
+improve it.
+
+4)	A fix has been put in the compiler to make errors in macro expansion
+not abort the entire compilation.
+
+5)	Some new switches have been added to FILE-COMPILE and should be
+in COMBAT soon (until they are in COMBAT they may be SET as a thing to do
+before...).   The switches are:
+
+		a)	MAX-SPACE	Default false.  This switch causes the compiler
+					throw away the RSUBRs as it compiles
+					them.  It reloads them from the
+					temporary file when everything is
+					compiled.  Do not use this if the functions
+					may be run during compilation
+					(for instance EDIT, ASSEM etc.)
+
+		b)	MACRO-COMPILE	Default false.  Should MACROs be compiled?
+
+		c)	MACRO-FLUSH	Default false. Flush MACROs from output file.
+
+		d)	HAIRY-ANALYSIS	Default true.  If this is false
+					hairy analysis based on TYPE?, COND etc.
+					will not occur.  The produced code
+					will be less efficient but the
+					compiler will run faster.
+
+
+September 4, 1974 (clr)
+
+	A new compiler and FILE-COMPILE have been installed and are
+optionally available through COMBAT (just answer T to the first question).
+The main features of this version of the compiler are open compiling of
+MAPFs and Group Compilation.
+
+	MAPFs and MAPRs do not go off and call the interpretive versions
+in this version of the compiler.  If the second argument to MAPF/R is
+a function it is compiled in line and does not become an anonymous function.
+This means that variables referenced in the MAPF/R function and bound in
+the containing function need not be SPECIAL.  Note:  when using GROUP-CHECK
+or GROUP-BLESS, SETG MAPF-OPEN-COMPILED?!-GROUP-CHECK to T if you wish to
+check or bless a file to be compiled with the new compiler.
+
+*** WARNING*****
+
+There is a known difference between the way MAPF/R behaves compiled
+and interpretively.  It will be resolved shortly.  For now, however,
+if you MAPF/R with first argument of #FALSE () and use the
+value returned by the MAPF/R you are very likely to lose.
+
+
+	A new entry to the compiler called COMPILE-GROUP has been created.
+It takes three required arguments.
+
+	1)	A list of functions to be compiled.
+
+	2)	A list of functions that are to be entries to the final group.
+
+	3)	An atom to be the name of the RSUBR the functions get
+		compiled into.
+
+The functions that are entries to the group become RSUBR-ENTRYs after
+compilation.  Currently, due to known bugs, it is advisable to make all
+functions in the group be entries when using COMPILE-GROUP.
+
+Features of the new FILE-COMPILE
+
+	The new version of FILE-COMPILE uses GROUP-LOAD and GROUP-DUMP
+to read in and write out its files.  It is capable of producing fast loading
+binary output directly and it can do group compilations.  These new features
+are controllable by new parameters whose LVALs must be set and which
+COMBAT knows about.
+
+GROUP-MODE	If this is set to an ATOM, a group compilation is done
+		and all functions become entries (avoiding aforementioned
+		bugs).  The final RSUBR will have the name
+		of the atom to which GROUP-MODE is set.  default:  #FALSE ()
+
+NILOBL		If this is set to non-false, the binary file will be
+		written out with full trailers (the case in the old
+		FILE-COMPILE).  default:  #FALSE ()
+
+FAST-OUT	If this is non-false, output will be in fast binary mode;
+		otherwise, it will be in ascii.  default:  T
+
+EXPFLOAD	If this is non-false, files FLOADed will be output into
+		the final file as in the old FILE-COMPILE.  Otherwise,
+		the call to FLOAD will remain.  default:  #FALSE ()
+
+DESTROY		If this is non-false, the temporary file built during
+		compilation will be deleted upon successful completion
+		of the compilation.  default:  #FALSE ()
+
+REDO		If this is a LIST of atoms whose GVALs are among the
+		functions being compiled, the corresponding functions
+		will be compiled even if they appear in the PRECOMPILATION
+		file.  This is useful for correcting one or two functions
+		in a file.
+
+TEMPNAME	If this is a string, it specifiles the name of the
+		temporary file built during compilation.  default:  "_COMP_ >"
+
+
+October 4, 1973   (clr)  New Version of the Compiler
+
+	A new version of the MUDDLE compiler exists as a saved
+file on the MUDDLE directory ("NCOMP SAVE").  It works in
+conjunction with NMUDDL (#43).  It contains three main entry
+points. 
+
+	<COMPILE -<fcn-> -<achan-> -<binary-> -<careful-> -<specsw-> >
+
+where:  
+
+	-<fcn-> is as in the old compiler (atom, locative or list
+		thereof).
+
+	-<achan-> (optional) is a channel for assembly listing or
+		false.   Default is false.
+
+	-<binary-> (optional): If true, produce real code; else
+		return unassembled list of assembly code.
+		Default is true.
+
+	-<careful-> (optional): If true, put in extra checks for
+		NTH, REST and PUT.  Default is true.
+
+	-<specsw-> (optional): If true, default variable mode is
+		special;   else, unspecial.  Default is false.  
+
+	<MANIFEST -<atom1-> -<atom2-> ... -<atom n-> >
+
+	MANIFEST takes a TUPLE of atoms and declares their global
+values to be "frozen".  This means the compiler will always get
+their GVALs at compile time.  It is not necessary to make SUBRs
+and RSUBRs manifest, since they are treated that way by default.
+
+	<GDECL -<list of atoms-> -<decl-> -<list of atoms-> -<decl-> >
+
+	GDECL declares global values as in #DECL for functions. 
+
+W_A_R__N_I_N_G_S_:
+
+	The compiler does not grok the fullness of everything
+yet!  Specifically, many cases of READ, READCHR, NEXTCHR, GET,
+ILIST, IVECTOR, IUVECTOR, ISTRING, ... will lose if the form to
+be EVALed contains UNSPECIAL variables or calls to RETURN with
+fewer than two arguments.  TUPLE and ITUPLE don't work ("TUPLE"
+does however).  GO works if the argument is an explicit atom.
+
+May 31, 1973	MUDDLE Compiler (clr)
+
+	A saved file exists in the MUDDLE directory containing
+the current version of the MUDDLE compiler.  It must be used in
+conjunction with NMUDDL (version 42).  The name of the saved file
+is COMPIL SAVE. 
+	The function COMPILE is the main entry to the compiler.
+It takes one or two arguments.  The first argument is the thing
+or things to be compiled.  It may be an ATOM, in which case the
+global value of that atom is compiled and stored back as the
+global value of the atom (the global value better be a FUNCTION).
+The first argument may be a locative, in which case the contents
+of the locative are compiled and stored back into the locative.
+The first argument may be a list of either of the above things,
+in which case that group of functions is compiled.
+	The second argument is optional and should be used
+primarily for debugging purposes.  It is a channel onto which the
+intermediate assembly output is written.
+
+R__e_s_t_r_i_c_t_i_o_n_s :
+
+	The compiler will not compile GOs at all.  It will
+compile most uses of SEGMENTs; however, some obscure cases will
+lose (see me if you have problems).  It will not compile calls to
+TUPLE or ITUPLE.
+
+A__d_v_i_c_e :
+
+	The compiler is fairly slow at this point.  If possible,
+do your compilations on a lightly-loaded system.  If you wish to
+compile a group of functions that call each other,  compile them
+as a group by giving COMPILE a list of the functions.  Using this
+technique, you do not have to worry about compiling in the right
+order.  The compiler prints a variety of messages as it
+progresses.   If either an ERROR or an INCONSISTENCY occurs, just
+the compilation  currently in progress is aborted.  The rest of
+the functions in the list are still compiled.
+

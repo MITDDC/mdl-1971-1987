@@ -1,0 +1,83 @@
+<DEFINE MEMF (F L "AUX" FO) 
+	#DECL ((FO F) <OR FIX STRING> (L) LIST (VALUE) <OR LIST FALSE>)
+	<COND (<TYPE? .F STRING> <SET FO <FGETFIX .F>>)
+	      (ELSE <SET FO .F>)>
+	<MAPR <>
+	      <FUNCTION (L)
+		#DECL ((L) <LIST [REST <OR FIX STRING>]>)
+		<AND <F==? .FO <1 .L>> <MAPLEAVE .L>>>
+	      .L>>
+
+
+	<TITLE MEMF>
+
+	<DECLARE ("VALUE" <OR FALSE <LIST [REST <OR FIX STRING>]>> <OR FIX 
+STRING> LIST)>
+	<PUSH	TP* (AB) >
+	<PUSH	TP* (AB) 1>
+	<PUSH	TP* (AB) 2>
+	<PUSH	TP* (AB) 3>
+	<PUSHJ	P* TAG1>
+	<JRST	|FINIS >
+TAG1	<SUBM	M* (P) >				    ; 6
+	<PUSH	TP* [0]>				    ; [4]
+	<PUSH	TP* [0]>				    ; [5]
+	<PUSH	TP* <TYPE-WORD LIST>>			    ; [6]
+	<PUSH	TP* [0]>				    ; [7]
+	<INTGO>
+	<GETYP	O* (TP) -7>				    ; (0)
+	<CAIE	O* <TYPE-CODE STRING>>
+	<JRST	TAG2>
+	<PUSH	TP* (TP) -7>				    ; (0) [8]
+	<PUSH	TP* (TP) -7>				    ; (1) [9]
+	<MCALL	1 FGETFIX>
+	<MOVEM	A* (TP) -3>				    ; (4)
+	<MOVEM	B* (TP) -2>				    ; (5)
+	<JRST	TAG3>
+TAG2	<MOVE	B* (TP) -7>				    ; 22 (0)
+	<MOVE	D* (TP) -6>				    ; (1)
+	<MOVEM	B* (TP) -3>				    ; (4)
+	<MOVEM	D* (TP) -2>				    ; (5)
+TAG3	<MOVE	B* (TP) -4>				    ; 26 (3)
+	<MOVEM	B* (TP) >				    ; (7)
+	<MOVE	A* <TYPE-WORD FALSE>>
+	<MOVEI	B* 0>
+	<MOVE	D* (TP) >				    ; (7)
+	<JUMPE	D* TAG4>
+TAG6	<PUSH	TP* <TYPE-WORD LIST>>			    ; 32 [8]
+	<PUSH	TP* [0]>				    ; [9]
+	<SKIPGE	|INTFLG >
+	<SAVAC	O* [*120000*]>
+	<MOVEM	D* (TP) >				    ; (9)
+	<MOVEM	D* (TP) -2>				    ; (7)
+	<PUSH	TP* (TP) -5>				    ; (4) [10]
+	<PUSH	TP* (TP) -5>				    ; (5) [11]
+	<GETYP	O* (D) 0>
+	<CAIN	O* <TYPE-CODE DEFER>>
+	<MOVE	D* (D) 1>
+	<PUSH	TP* (D) >				    ; [12]
+	<PUSH	TP* (D) 1>				    ; [13]
+	<MCALL	2 F==?>
+	<JUMPGE	B* TAG5>
+	<MOVE	A* (TP) -1>				    ; (8)
+	<MOVE	B* (TP) >				    ; (9)
+	<SUB	TP* [<(2) 2>]>
+	<JRST	TAG4>
+TAG5	<MOVE	A* <TYPE-WORD FALSE>>			    ; 51
+	<SUB	TP* [<(2) 2>]>
+	<HRRZ	O* @ (TP) >				    ; (7)
+	<MOVEM	O* (TP) >				    ; (7)
+	<JUMPN	O* TAG6>
+TAG4	<SUB	TP* [<(8) 8>]>				    ; 56
+	<JRST	|MPOPJ >
+	<0>
+	<IMULI	TB* (TP) -7>				    ; (-8)
+	<*120000*>
+	<IMULI	TB* (D) 0>
+	<(2) 2>
+	<(8) 8>
+	<(2) 6>
+	<(*61660*) *445000*>
+	<0>
+	<(1) 2>
+

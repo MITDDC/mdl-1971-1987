@@ -1,0 +1,91 @@
+<PACKAGE "FORMS">
+
+<ENTRY FIELD 
+       FLDNM	;"atom which is the name of the field"
+       FBUF	;"field's input buffer (or <>)"
+       BFLAGS	;"T if BUFFER to be cleared after each message"
+       PFIELD	;"apply this to print message file for this field"
+       PR1	;"short prompt and pretty header to print"
+       PRD	;"tail end of short prompt (crlf for TEXT...)"
+       PR2	;"verbose prompt for this field"
+       FDATA	;"random useful data"
+       SPACE
+       SPEOL>
+
+<ENTRY FORMS-CHRTABLE BTEST>
+
+<ENTRY FILL-FIELD COPY INIT-FIELDS INIT-BUF>
+
+<USE "BUF" "SCRATCH" "SCR" "NSTR" "ITIME" "JCL" "HOSTS" "LSRTNS"
+     "DID" "NEWSTRUC">
+
+<USE "COMMAND" "INPUT" "SPEC" "WINDOW">
+
+\
+
+"Offsets in a field information vector"
+
+<NEWSTRUC FIELD VECTOR
+	  FLDNM ATOM	;"atom which is the name of the field"
+	  FBUF <OR BUFFER FALSE> ;"field's input buffer (or <>)"
+	  BFLAGS FIX	;"T if BUFFER to be cleared after each message"
+	  PFIELD <OR ATOM FALSE>
+	  		;"apply this to print message file for this field"
+	  PR1 STRING	;"short prompt and pretty header to print"
+	  PRD STRING	;"tail end of short prompt (crlf for TEXT...)"
+	  PR2 STRING	;"verbose prompt for this field"
+	  FDATA ANY	;"useful data">
+
+<DEFMAC BTEST ('BIT 'BUF)
+	<FORM NOT
+	      <FORM 0?
+		    <FORM CHTYPE
+			  <FORM ANDB
+				<FORM BFLAGS .BUF>
+				.BIT>
+			  FIX>>>>
+
+<DEFINE FIELD ("TUPLE" TUP)
+	#DECL ((TUP) TUPLE (VALUE) FIELD)
+	<CHTYPE <VECTOR !.TUP <>> FIELD>>
+
+\
+
+"Appending routines (ie: normal input) for various fields"
+
+<DEFINE COPY (INFO STR "AUX" (BUF <FBUF .INFO>))
+	#DECL ((INFO) FIELD (STR) <OR FALSE STRING> (BUF) BUFFER)
+	<BUFCLEAR .BUF>
+	<COND (.STR <ADDSTRING .BUF .STR>)>>
+
+"Buffer prompts"
+
+<SETG SPACE ": ">
+<SETG SPEOL ":
+">
+
+<DEFINE INIT-FIELDS (CH TABLE "AUX" (OUTCHAN <SELECT .CH>)
+		     (WIN <GET-WINDOW .OUTCHAN>))
+	#DECL ((OUTCHAN) <SPECIAL CHANNEL> (WIN) WINDOW)
+	<MAPF <>
+	      <FUNCTION (INFO)
+		   #DECL ((INFO) FIELD)
+		   <SETG <FLDNM .INFO> .INFO>
+		   <INIT-BUF .INFO>>
+	      .TABLE>>
+
+<DEFINE INIT-BUF (INFO "AUX" B)
+	#DECL ((INFO) <OR VECTOR FIELD> (B VALUE) BUFFER)
+	<SET B <BUFMAKE 100 <PR1 .INFO> <PRD .INFO>>>
+	<PUT .INFO ,FBUF .B>
+	.B>
+
+\
+
+<DEFINE FILL-FIELD (INFO SCREEN CIRC "AUX" (BUF <FBUF .INFO>))
+	#DECL ((INFO) FIELD (BUF) <OR BUFFER FALSE>)
+	<INPUT .CIRC .SCREEN ,FORMS-CHRTABLE .BUF <>>
+	<COPY .INFO <1 ,VALUES>>
+	T>
+
+<ENDPACKAGE>

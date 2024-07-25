@@ -1,0 +1,38 @@
+;"RCVR-FORMAT-1 -- FORMAT FOR RECEIVER OUTPUT TO FILE
+"
+
+(
+  ("
+Forwarded to:  " <GETFIX "FORWARDING"> ,P-FORWARD)
+  ("
+Addressed to:  " <GETFIX  "ADDRESSED-TO"> 9)
+  ("
+From:          " <GETFIX  "FROM"> 9)
+  ("
+Originated:    " <GETFIX  "WHEN-ORIGINATED"> 8)
+  ("
+Received:      " <GETFIX  "WHEN-DELIVERED"> 8)
+  ("
+Action-to:     " <GETFIX  "ACTION-TO"> 4)
+  ("
+Cc to:         " <GETFIX  "CARBON-COPY-TO"> 4)
+  ("
+Blind cc:      " <GETFIX  "BLIND"> 4)
+  ("
+In reply to:   " <GETFIX "IN-REPLY-TO"> 2)
+  ("
+Subject:       " <GETFIX  "SUBJECT"> 2)
+  ("
+Keywords:      " <GETFIX  "KEYWORDS"> 5)
+  ("
+Message id:    " <GETFIX  "MESSAGE-ID"> 2)
+  ("
+
+Notes:         " <GETFIX "NOTES"> 12)
+  ("
+
+" <GETFIX  "TEXT"> 2)
+  ("
+")
+)
+

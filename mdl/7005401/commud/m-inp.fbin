@@ -1,0 +1,96 @@
+'<PCODE "M-INP">
+
+<PACKAGE "M-INP"> 
+
+<ENTRY RQ-DO LST-DO RDPAIRS SUCCESS TRY-LATER NONE MOBY> 
+
+<GDECL (RDHAN) HANDLER> 
+
+<USE "CHAN" "M-DEFS" "MADMAN" "ASYLUM" "M-READ" "M-DAC" "M-DATA" "M-TIME" 
+"ITIME" "RQFILE" "USRUTI" "M-ACK" "ACHOMP"> 
+
+"RQ-DO -- processes next request file for daemon
+
+  -- returns atom success if file was winner, and may have added stuff for queue.
+	in this case, a message will be still locked, and
+	the file will be in a 'save' file, to be deleted
+	when the daemon finishes clearing the queue.
+
+-- if file encountered temporary failure, it will be renamed and
+	may be tried later.  in this case, the return arg is
+	atom try-later.
+
+-- atom none returned if no request files exist
+
+-- else, renames file to loser, returns false(loser-name reason parameter-vect)
+   where loser-name and reason are strings, parameter-vect is vector
+   of 3 elements, or false if none was obtained yet
+" 
+
+<SETG RQ-DO  %<RSUBR!- '[ %<PCODE!- "M-INP" 0> RQ-DO #DECL ("VALUE" <OR ATOM 
+FALSE>) ACHOMP DADD DRMV DAPP DWT NEWMESSAGE COND-SIGNAL EMERGENCY BTIME PRCADD 
+KEYGET MREAD WATCH FRATM FRAMES SCROUT FILCHN RQLOSE DMPMSG RQTEMP DATUM RQNEXT 
+UPDMSG NONE "M" TO "COMSYS-MOBY-FILE" MOBY SUCCESS "FALSE IN FIELD" INPACT 
+">>>> Error During Request File Input, Args -- " " <<<<" LERR\ !-INTERRUPTS 
+OUTCHAN #FALSE ("ERROR IN FILE INPUT") T %<RGLOC MSG-SPACE T> %<TYPE-W SPACE 
+VECTOR> IHAN "ERROR" %<RGLOC INPERR T> %<RGLOC READ-WRITE? T> 
+"Resetting Msg space" %<INTERNAL-RSUBR ARESET 1> %<RGLOC RQLST T> "" (ACTIVATION
+) #FALSE ("IMPROPER LENGTH") %<INTERNAL-RSUBR ACOPY 2> "MSG-NO" #FALSE ("LOST") 
+%<RGLOC DATA-ERRORS T> #FALSE ("ERROR") #FALSE ("IMPROPER FORMAT") "ADDRESSEE" #
+FALSE ("IMPROPER USER ID") "ERROR-TO" #FALSE ("IMPROPER ERROR-TO") "SCHEDULE" #
+FALSE ("IMPROPER SCHEDULE FORMAT") "EMERGENCY" #FALSE (
+"IMPROPER EMERGENCY FORMAT") "SIGNAL" "STORE" #FALSE ("IMPROPER COMMAND FORMAT")
+ "APPEND" "DELETE" "REMOVE" "ADD" #FALSE ("UNRECOGNIZED COMMAND") %<RGLOC IHAN T
+> ">>> Bad request file encountered: " " <<<" %<RGLOC SCRATCH-SPACE T> 
+%<INTERNAL-RSUBR ALIST 262143> CURSPACE (SPACE) "Resetting Scratch space" RDHAN 
+%<RGLOC RDHAND T> RD-ACT %<RGLOC CURSPACE T> %<TYPE-W ACHANNEL VECTOR> #FALSE (
+"UNPAIRED DATA") %<INTERNAL-RSUBR ACONS 3> %<RGLOC RDHAN T> #FALSE (
+"ERROR IN READING")]>> 
+<AND <ASSIGNED? GLUE> .GLUE <PUT ,RQ-DO PGLUE ![715827882 -22906142721 -1 -1 -1 
+-17179869184!]>> 
+
+
+\ 
+
+"LST-DO -- given a list of commands (instead of file) do them...
+
+ -- optional parameter vector gives current state
+     of message, addressee, error-to settings.  if message
+     is given, it is assumed to be locked already.
+
+ -- returns terminal parameter vector if winner, else false
+    containing reason string, and parameter vector
+
+ -- all lossages are fatal except 'lock failed' which may be retried
+     later by the caller
+
+" 
+
+<SETG INPERR %<RSUBR-ENTRY '[RQ-DO INPERR #DECL ("VALUE" ANY "TUPLE" TUPLE)] 135
+>> 
+
+<SETG RQLST <VECTOR <> "" <>>> 
+
+<GDECL (RQLST) RQVECTOR> 
+
+<SETG LST-DO %<RSUBR-ENTRY '[RQ-DO LST-DO #DECL ("VALUE" <OR <FALSE STRING 
+VECTOR> <VECTOR <OR FALSE FIX> STRING <OR STRING FALSE>>> LIST "OPTIONAL" 
+RQVECTOR)] 194>> 
+
+\ 
+
+"RDPAIRS -- given a channel, read pairs of objects from it, returning list
+  of all objects read
+
+-- returns list or false, has error handler, which will
+  intercept errors and return falses
+  false will contain reason in string
+" 
+
+<SETG RDPAIRS %<RSUBR-ENTRY '[RQ-DO RDPAIRS #DECL ("VALUE" <OR FALSE LIST> 
+ACHANNEL)] 781>> 
+
+<SETG RDHAND %<RSUBR-ENTRY '[RQ-DO RDHAND #DECL ("VALUE" ANY "TUPLE" TUPLE)] 990
+>> 
+
+<ENDPACKAGE> 

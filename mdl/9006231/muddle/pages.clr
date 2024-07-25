@@ -1,0 +1,30 @@
+[320] *  F #109917: 05/01 12:20	CLR => pdl  Re: PAGE Data type
+
+[Message #320 (109917)]
+
+CLR@MIT-DMS 05/01/79 12:20:48 Re: PAGE Data type
+To: pdl@MIT-DMS
+CC To: taa@MIT-DMS, msb@MIT-DMS, btb@MIT-DMS, rrs@MIT-DMS, swg@MIT-DMS
+Just a few comments on the proposed "PAGE" data type:
+
+1)	Its not a bad idea since a lot of kludges have been invented already
+to try to achieve this feture.  It probably should be done "right".
+
+2)	It will be a pain to put in the interpreter although not impossible.
+(there are just so many small places to diddle with).
+
+3)	Garbage collecting them might work but require even more stuff.
+
+4)	In general BACK and TOP should be disallowed, all proposed solutions
+lose.  One compromise might be to have two types one for multi-pages which
+couldn't be TOP/BACKed and one for single pages that could in the trivial way.
+
+5)	Compiler changes would be minimal for this hack.
+
+6)	Probably no good reason to have STRINGs/BYTES in pages (if vital
+can be crufted I guess).
+
+7)	In conclusion, in the immortal words of the implementers "feel free".
+I could probably do the compiler hacking when and if.....
+
+

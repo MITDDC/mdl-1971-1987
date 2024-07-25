@@ -1,0 +1,19 @@
+Compilation record for: DSK:MUDDLE;ELMER UBT145
+Output file:  DSK:MUDDLE;ELMER NBIN
+
+It is now Tuesday, 8 Apr 1980 23:03 EST
+
+File loaded.
+Precompilation loaded.
+Functions ordered.
+COMPILING HASH!-IGLUE!-GLUE!-PACKAGE
+Peephole  1% 220/217
+Job done in:  34 / 2:44
+ 
+
+Total time used is
+	1 min. 50 sec. CPU time,
+	43 sec. garbage collector CPU time,
+	6 min. 25 sec. real time.
+CPU utilization is 28.571428%.
+Number of garbage collects = 6

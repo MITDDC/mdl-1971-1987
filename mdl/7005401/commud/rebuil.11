@@ -1,0 +1,92 @@
+<SETG COPY-ASYLUM <>>
+
+<SETG WINLOCS ()>
+
+<SETG MSGIDS ()>
+
+<SETG UV <IUVECTOR 1024 '0>>
+
+<DEFINE REBUILD-SYSTEM ()
+	<REBUILD-MSG "COMDAT;SYSTEM ASYLUM" ,PNQ-OKAY? ,COPY-PNQ>>
+
+<DEFINE REBUILD-MSG ("OPTIONAL"
+		     (FILE "COMDAT;177073 ASYLUM")
+		     (OK ,OKAY?)
+		     (COPIER ,COPY-DATA)
+		     "AUX" (C <OPEN "READB" .FILE>) (UV ,UV) (WINS 0) (END <>)
+		     WINLOC)
+	#DECL ((FILE) STRING)
+	<PROG ()
+	      <COND (<NOT .C> <RETURN .C>)>
+	<SETG COPYCHAN <OPEN "READB" .FILE>>
+	<ACCESS .C 2048>
+	<REPEAT ()
+		<COND (.END <RETURN ,WINLOCS>)>
+		<COND (<L? <READB .UV .C> 1024> <SET END T>)>
+		<PRINT </ <17 .C> 1024>>
+		<REPEAT ((UV .UV))
+			<COND (<EMPTY? .UV> <RETURN>)
+			      (<APPLY .OK <1 .UV> .WINS>
+			       <PRIN1 <SET WINS <+ .WINS 1>>>)
+			      (ELSE <SET WINS 0>)>
+			<SET UV <REST .UV>>
+			<COND (<==? .WINS ,MAX-WINS>
+			       <SET WINLOC
+				    <- <17 .C> <LENGTH .UV> -5 ,MAX-WINS>>
+			       <SETG WINLOCS (.WINLOC !,WINLOCS)>
+			       <APPLY .COPIER .WINLOC>
+			       <PRINT .WINLOC>)>>>>>
+
+<DEFINE OKAY? (N CNT) 
+	#DECL ((N CNT) <PRIMTYPE WORD>)
+	<COND (<L=? .CNT 3> <0? .N>)
+	      (<==? .CNT 4> <NOT <0? .N>>)
+	      (<==? .CNT 5> <NOT <0? .N>>)
+	      (<==? .CNT 6> <==? .N 5505024>)
+	      (<==? .CNT 7> <==? <CHTYPE <ANDB .N -134217728> FIX> -134217728>)
+	      (<==? .CNT 8> <0? <CHTYPE <ANDB .N -262144> FIX>>)
+	      (<==? .CNT 9> <0? <CHTYPE <ANDB .N -2097152> FIX>>)>>
+
+<SETG MAX-WINS 10>
+
+<DEFINE COPY-DATA (A "AUX" D E N)
+	#DECL ((A N) FIX (D) ANY (E) <OR FALSE VECTOR>)
+	<COND (<NOT ,COPY-ASYLUM>
+	       <SETG COPY-ASYLUM <OPEN-DATA-FILE "COMDAT;COPY ASYLUM">>)>
+	<ACCESS ,COPYCHAN .A>
+	<COND (<SET D <AREAD <ARESET ,MSG-SPACE> ,COPYCHAN>>
+	       <COND (<AND <TYPE? .D VECTOR>
+			   <SET E <MEMBER "" .D>>
+			   <TYPE? <2 .E> VECTOR>>
+		      <PRIN1 <SET N <1 <1 <2 .E>>>>>
+		      <PRINC !\ >
+		      <COND (<MEMQ .N ,MSGIDS> <ERROR ALREADY-THERE .N>)>
+		      <SETG MSGIDS (.N !,MSGIDS)>
+		      <PRIN1 <DATA-APRINT ,COPY-ASYLUM .N ,MSG-SPACE .D>>)>)>> 
+
+\
+
+"here to rebuild dead pending-queue"
+
+<DEFINE PNQ-OKAY? (N CNT) 
+	#DECL ((N CNT) <PRIMTYPE WORD>)
+	<COND (<L=? .CNT 3> <0? .N>)
+	      (<==? .CNT 4> <NOT <0? .N>>)
+	      (<==? .CNT 5> <NOT <0? .N>>)
+	      (<==? .CNT 6> <==? .N *13000000*>)
+	      ;(<==? .CNT 7> <==? <CHTYPE <ANDB .N *777777000000*> FIX> 0>)
+	      ;(<==? .CNT 8> <0? <CHTYPE <ANDB .N -262144> FIX>>)
+	      ;(<==? .CNT 9> <0? <CHTYPE <ANDB .N -2097152> FIX>>)>>
+
+<DEFINE COPY-PNQ (A "AUX" D N)
+	#DECL ((A N) FIX (D) ANY)
+	<ACCESS ,COPYCHAN .A>
+	<COND (<SET D <AREAD <ARESET ,QUEUE-SPACE> ,COPYCHAN>>
+	       <COND (<AND <TYPE? .D LIST>
+			   <NOT <EMPTY? .D>>
+			   <TYPE? <1 .D> FIX>
+			   <1? <1 .D>>>
+		      <COND (<ERROR .D ERRET-T-TO-DUMP>
+			     <PROG ((OUTCHAN <OPEN "PRINT" "PNQ">))
+				   <PPRINT .A .OUTCHAN>
+				   <CLOSE .OUTCHAN>>)>)>)>>

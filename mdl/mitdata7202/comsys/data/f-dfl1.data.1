@@ -1,0 +1,26 @@
+;"F.DFL1 -- Like F.DFLT, but separates messages with ^_ instead of ^L"
+
+(("
+Forwarded to:  " <GETFIX "FORWARDING"> 15) ("
+To:            " [<GETFIX "ACTION-TO"> <GETFIX "ADDRESSED-TO">] 4) ("
+Cc to:         " <GETFIX "CARBON-COPY-TO"> 4) ("
+Blind cc:      " <GETFIX "BLIND"> 4) ("
+From:          " (<GETFIX "FROM"> <GETFIX "FULL-NAME">) 14) ("
+Sender:        " [<GETFIX "SENDER"> <GETFIX "FROM">] 14) ("
+Reply-to:      " <GETFIX "REPLY-TO"> 4) ("
+In reply to:   " <GETFIX "IN-REPLY-TO"> 2) ("
+Subject:       " <GETFIX "SUBJECT"> 2) ("
+Keywords:      " <GETFIX "KEYWORDS"> 5) ("
+Message id:    " <GETFIX "MESSAGE-ID"> 2) ("
+Date:          " <GETFIX "WHEN-ORIGINATED"> 8) ("
+Received:      " <GETFIX "WHEN-DELIVERED"> 8) ("
+
+Notes:" <GETFIX "NOTES"> "
+Message:" 12) ("
+
+" <GETFIX "TEXT"> 2) ("
+
+") ("
+" <GETFIX "ENCLOSURES"> 13)
+("")
+)

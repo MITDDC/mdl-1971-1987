@@ -1,0 +1,1219 @@
+
+<PACKAGE "GLUE">
+
+;
+"	This program takes a group of compiled functions and glues 
+them together into one big RSUBR.  It eliminates the majority of the
+overhead encountered in function calls."
+
+<ENTRY GLUE-MAX-SPACE PKG SURV VICTIMS GROUP-GLUE FLUSHED>
+
+<USE "LIST-HACKS">
+
+<FLOAD "MUDDLE;RAND NBIN">
+
+<FLOAD "MUDDLE;ROTATE NBIN">
+
+<FLOAD "MUDDLE;RGLOCS NBIN">
+
+<FLOAD "MUDDLE;HASHER NBIN">
+
+<SET VICTIMS <SET PKG <SET SURV <>>>>
+
+<BLOCK (<ROOT>)>
+
+<SET GLUE T>
+
+<ENDBLOCK>
+
+<NEWTYPE ASOTAB UVECTOR>
+
+<NEWTYPE HASH WORD>
+
+;
+"	BYTER NBIN contains a series of hand crafted RSUBRs to do minor
+tasks.  See BYTER > for more details."
+
+<FLOAD "CLR;NBYTER NBIN">
+
+<MANIFEST R M HW HW-1 PJC LHW AC INSFLD INDEX-FIELD MOVSI-ZERO>
+
+;
+" R is the index register used to reference pureslots, impure slots
+and MCALL references."
+
+<SETG R 14>
+
+;" M is used as the base register for the RSUBRs actual code."
+
+<SETG M 13>
+
+;" HW-1 used to smash a right half and multiply by 2 at the same time."
+
+<SETG HW-1 <BITS 17 1>>
+
+;" PJC is the instruction PUSHJ P,(M) "
+
+<SETG PJC 23751557120>
+
+;" Various byte pointers for smashing various parts of words."
+
+<SETG INSFLD <BITS 9 27>>
+
+<SETG HW <BITS 18>>
+
+<SETG LHW <BITS 18 18>>
+
+<SETG AC <BITS 4 23>>
+
+<SETG INDEX-FIELD <BITS 4 18>>
+
+<SETG MOVSI-ZERO *205000400000*>
+;
+" ICL, PCL and MCL are used for final fixup of code.  They appear in the
+FINALS list."
+
+<SETG ICL 1>
+
+<SETG PCL 2>
+
+<SETG MCL 3>
+
+<MANIFEST ICL PCL MCL>
+
+<SETG FIN-LH <BITS 16 18>>
+
+<SETG FIN-TYPE <BITS 2 34>>
+
+<MANIFEST FIN-LH FIN-TYPE>
+
+<SETG GLUE-MAX-SPACE <>>
+
+""
+
+;
+" GROUP-GLUE is the entry to the entire GLUEing program.  It takes as
+an argument the name of a group.  This must be an atom whose LVAL is a
+list of forms.  This is usually returned by a GROUP-LOAD, but the user
+may construct his own.  The optional argument SUB which defaults to
+#FALSE () specifies whether the newly created RSUBR and RSUBR-ENTRYs
+should be substituted throughout the MUDDLE.  This substitute mode takes
+more time to run but permits the newly GLUEd programs to be run in the
+current MUDDLE.  The last argument defaults to false, it may be supplied
+as a channel for random information as the GLUEing proceeds."
+
+<DEFINE GROUP-GLUE (NAM
+		    "OPTIONAL" (SUB <>) (CHN <>) (PKG .PKG) (SURV .SURV)
+			       (VICTIMS .VICTIMS)
+		    "AUX" GRP RSB COD POINT (FG (![!])) (SYMS (0)) IMPS UNRES
+			  (OCOD (())) STM (OCODP .OCOD) TCR (FINALS ()) PURS
+			  (PC 0) (MCS ()) (MC 0) SENTS ONM (RSBS ())
+			  (UNRESIND (1)) (RSBIND (3)) (MCIND (4)) (WINNERS ())
+			  (NGLUBITS (-1)) (ELNO 34) (QL 0) ARGLIST NORED TCH
+			  LST1)
+   #DECL ((LST1) LIST (SYMS SYMSP) <LIST FIX [REST FIX]> (SUB) <OR ATOM FALSE>
+	  (CHN) <OR CHANNEL FALSE> (FG FGP) <LIST <UVECTOR [REST FIX]>>
+	  (GBYTE) <BYTES 2 0>
+	  (MCS PURS FINALS RVEC RVECP IMPS IENTS UNRES OCOD OCODP) LIST
+	  (SENTS) <LIST [REST <LIST FIX <VECTOR ATOM ATOM DECL>>]>
+	  (SYML POINT ILIC MC PC NINTS IL NEWRS OFFS MINENT QL) FIX
+	  (COD) <OR <PRIMTYPE UVECTOR> CODE PCODE> (ELNO) FIX
+	  (GLUE-BITS FIXES) <OR <UVECTOR [REST <PRIMTYPE WORD>]> FALSE>
+	  (TMP) <PRIMTYPE LIST> (WINNERS RSBS) <SPECIAL LIST>
+	  (STM) <OR FALSE ATOM <LIST [REST ATOM]>> (RSB) RSUBR
+	  (NORED) <OR ATOM FALSE>
+	  (NGLUBITS) <LIST <PRIMTYPE WORD> [REST <PRIMTYPE WORD>]>
+	  (ARGLIST) <LIST [REST <PRIMTYPE WORD>]> (PKG) <OR LIST STRING FALSE>
+	  (SURV VICTIMS) <OR FALSE LIST> (TCH) CHANNEL (ONM) ATOM
+	  (TCR) <OR FALSE LIST> (UNRESIND RSBIND MCIND) <LIST FIX> (NAM) ATOM
+	  (GRP) ANY)
+   <PROG ((TLIST (FOO)))
+     #DECL ((TLIST) <LIST ATOM>)
+     <OUT-INFO .CHN "Group glue ELMER at work.">
+     <AND .CHN <TERPRI .CHN>>
+     <SET NORED T>
+     <COND (<EMPTY? .PKG> <SET PKG <>>)>
+     <COND (.PKG <SET SURV (!.SURV !<GET-SURV .PKG>)> <SET VICTIMS <>>)
+	   (<TYPE? .SURV LIST> <SET VICTIMS <>>)
+	   (.VICTIMS <SET SURV ()>)
+	   (<SET NORED <>>)>
+     <SETG FLUSHED ()>
+     <COND
+      (<OR <NOT <ASSIGNED? .NAM>> <NOT <TYPE? <SET GRP ..NAM> LIST>>>
+       <RETURN #FALSE ("Not a valid GROUP.")>)
+      (<AND
+	<MAPF <>		  ;"First scan group and find all RSUBR-ENTRYs"
+	 <FUNCTION (OBJ "AUX" NSURV RSBE ATM) 
+		 #DECL ((RSBE) RSUBR-ENTRY (ATM) ATOM)
+		 <COND (<SET TCR <RSUBR-ENTRY? .OBJ .RSBIND .RSBS .CHN>>
+			<COND (<==? <OBLIST? <SET ATM <2 <3 .OBJ>>>> <ROOT>>
+			       <SET SURV (.ATM !.SURV)>)>
+			<SET RSBS .TCR>)
+		       (<N==? .SURV <SET NSURV <GVAL? .OBJ .SURV>>>
+			<SET SURV .NSURV>)
+		       (<GLUE? .OBJ>)
+		       (<AND .NORED <SET STM <GVALABLE .OBJ>>>
+			<COND (<TYPE? .STM ATOM>
+			       <SET STM <PUT .TLIST 1 .STM>>)>
+			<MAPF <>
+			      <FUNCTION (STM1) 
+				      #DECL ((STM1) ATOM)
+				      <AND <GASSIGNED? .STM1>
+					   <TYPE? ,.STM1 RSUBR RSUBR-ENTRY>
+					   <OR <MEMQ .STM1 .SURV>
+					       <SET SURV (.STM1 !.SURV)>>>>
+			      .STM>)>
+		 T>
+	 .GRP>
+	<CREATE 13 T>		     ;"Initialize HASH table for pure objects."
+	<SET LST1
+	     <PASS-1 .OCOD
+		     .QL
+		     .PC
+		     .CHN
+		     .SURV
+		     .VICTIMS
+		     .GRP
+		     .UNRESIND
+		     .RSBIND
+		     .MCIND
+		     .FG
+		     .SYMS
+		     .OCODP
+		     .FINALS
+		     .MC
+		     .MCS
+		     .WINNERS
+		     .NORED
+		     .ELNO
+		     .NGLUBITS>>>
+       <SET POINT <1 .LST1>>
+       <SET IMPS <2 .LST1>>
+       <SET UNRES <3 .LST1>>
+       <SET PURS <4 .LST1>>
+       <SET OCODP <5 .LST1>>
+       <SET FINALS <6 .LST1>>
+       <SET PC <7 .LST1>>
+       <SET MC <8 .LST1>>
+       <SET MCS <9 .LST1>>
+       <SET SENTS <10 .LST1>>
+       <SET ONM <11 .LST1>>
+       <SET WINNERS <12 .LST1>>
+       <SET QL <13 .LST1>>
+       <SET ARGLIST <14 .LST1>>
+       <SET ELNO <15 .LST1>>
+       <SET NGLUBITS <16 .LST1>>
+       <SET SURV <17 .LST1>>
+       <OUT-INFO .CHN "Finished pass 1 of GLUE, code length = " .POINT>
+       <COND (<0? .POINT> <RETURN #FALSE ("No RSUBRS")>)>
+       <SET COD '![!]>
+       <SET OCODP
+	    <REST <PUTREST .OCODP
+			   ((<SET QL </ <LENGTH .ARGLIST> 2>>
+			     <UVECTOR !<CODUP .ARGLIST>>))>>>
+       <SET OCOD <REST .OCOD>>
+       <REPEAT ()	    ;"Any things left unresolved stay as being MCALLs."
+	       <COND (<EMPTY? .UNRES> <RETURN>)>
+	       <SET MCS (<1 .UNRES> !.MCS)>
+	       <SET MC <+ .MC 1>>
+	       <REPEAT ((TM <PUT <1 .UNRES> .UNRESIND>))
+		       #DECL ((TM) LIST)
+		       <SET FINALS (<FINALS-SLOT ,MCL .MC <2 .TM>> !.FINALS)>
+		       <AND <EMPTY? <SET TM <REST .TM 2>>> <RETURN>>>
+	       <SET UNRES <REST .UNRES>>>
+       <MAPF <> <FUNCTION (X) <PUT .X .MCIND>> .MCS>
+					        ;"Clean up MCALL associations."
+       <COND (,GLUE-MAX-SPACE
+	      <SET TCH
+		   <OPEN "PRINTB"
+			 <COND (<G? ,MUDDLE 100> "GLUETEMP") (T "_GLUE >")>>>
+	      <CODE-TO-DISK .TCH
+			    <+ 1
+			       .QL
+			       .POINT
+			       <SET POINT <LENGTH <SET SYMS <REST .SYMS>>>>>
+			    .OCOD
+			    .SYMS
+			    <CHTYPE <PUTBITS .POINT <BITS 18 18> .QL> FIX>>
+	      <PUT .TCH 2 "READB">
+	      <RESET .TCH>
+	      <SET OCOD <SET OCODP ()>>
+	      <SET COD <READ-IN-CODE .TCH>>
+	      <COND (<G? ,MUDDLE 100>
+		     <RENAME <STRING <9 .TCH>
+				     ":<"
+				     <10 .TCH>
+				     !\>
+				     <7 .TCH>
+				     !\.
+				     <8 .TCH>>>)
+		    (<RENAME <7 .TCH> <8 .TCH> <9 .TCH> <10 .TCH>>)>)
+	     (ELSE
+	      <SET COD	      ;"Build final code vector from the sub-uvectors."
+		   <MAKE-CODE
+		    <+ 1
+		       .QL
+		       .POINT
+		       <SET POINT <LENGTH <SET SYMS <REST .SYMS>>>>>
+		    .OCOD
+		    .SYMS
+		    <CHTYPE <PUTBITS .POINT <BITS 18 18> .QL> FIX>>>)>
+       <SET RSB	    ;"Build final RSUBR vector from MCALLs, PUREs and IMPUREs."
+	    <RSUBR [<CHTYPE .COD CODE>
+		    PHRED
+		    #DECL ()
+		    !<LREVERSE .MCS>
+		    !<LREVERSE .PURS>
+		    !<LREVERSE .IMPS>]>>
+       <REPEAT (RS)
+		 ;"Any RSUBR-ENTRYs whose RSUBRs were glued get fixed up here."
+	 <COND (<EMPTY? .RSBS> <RETURN>)>
+	 <COND
+	  (<NOT <MEMQ <SET RS <1 .RSBS>> .WINNERS>>
+	   <REPEAT ((LSRS <PUT .RS .RSBIND>)
+		    (OFFS
+		     <COND
+		      (<AND
+			<TYPE? ,.RS RSUBR>
+			<MAPF <>
+			      <FUNCTION (L) 
+				      #DECL ((L)
+					     <LIST FIX
+						   <VECTOR ATOM ATOM DECL>>)
+				      <AND <==? .RS <2 <2 .L>>>
+					   <MAPLEAVE <1 .L>>>>
+			      .SENTS>>)
+		      (<ERROR RSUBR-NOT-IN-SENT-LIST!-ERRORS .RS .SENTS>)>))
+		   #DECL ((LSRS) <LIST [REST FIX ATOM]> (OFFS) FIX)
+		   <COND (<EMPTY? <SET LSRS <REST .LSRS 2>>> <RETURN>)>
+		   <SETG <2 .LSRS>
+			 <RSUBR-ENTRY
+			  <PUT <CHTYPE ,<2 .LSRS> VECTOR> 1 .RSB>
+			  <+ .OFFS <1 .LSRS>>>>>)>
+	 <SET RSBS <REST .RSBS>>>
+       <SET MC <+ .MC 2>>
+       <SET PC <+ .PC .MC>>
+       <OUT-INFO .CHN "Starting final code update.">
+       <FINAL-RSUBR-ENTRYS .SENTS
+			   .NORED
+			   .SURV
+			   .VICTIMS
+			   .ARGLIST
+			   .ONM
+			   .RSB
+			   .NGLUBITS>
+       <FIXUP-COPY .FG .RSB .CHN>
+       <MAPF <>			     ;"Fixup all R refenced in the final code."
+	     <FUNCTION (L
+			"AUX" (WHAT <CHTYPE <GETBITS .L ,FIN-LH> FIX>)
+			      (WHERE <CHTYPE <GETBITS .L ,HW> FIX>) (OFFS 0)
+			      (WHAT-TYPE <CHTYPE <GETBITS .L ,FIN-TYPE> FIX>))
+		     #DECL ((L) FIX (WHERE OFFS) FIX (WHAT) FIX)
+		     <COND (<==? .WHAT-TYPE ,MCL> <SET OFFS 2>)
+			   (<==? .WHAT-TYPE ,PCL> <SET OFFS .MC>)
+			   (<==? .WHAT-TYPE ,ICL> <SET OFFS .PC>)
+			   (ELSE <ERROR BAD-INTERNAL-GLUE-STUFF!-ERRORS>)>
+		     <PUT .COD
+			  <+ .WHERE 1>
+			  <CHTYPE <PUTBITS <NTH .COD <+ .WHERE 1>>
+					   ,HW-1
+					   <+ .OFFS <CHTYPE .WHAT FIX>>>
+				  FIX>>>
+	     .FINALS>
+       <FINAL-GROUP-CLEANUP .CHN .GRP .ONM .NORED .SURV .VICTIMS .SUB>
+       "DONE")>>>
+
+""
+
+;"Make an entry for the FINALS list"
+
+<DEFINE FINALS-SLOT (TYPE WHAT WHERE) 
+	#DECL ((TYPE WHAT WHERE) FIX)
+	<CHTYPE <PUTBITS <PUTBITS <PUTBITS 0 ,FIN-TYPE .TYPE> ,FIN-LH .WHAT>
+			 ,HW
+			 .WHERE>
+		FIX>>
+
+;"Return an element of an R vector based on the address in the instruction."
+
+<DEFINE SLOT (R W) 
+	#DECL ((W) <PRIMTYPE WORD> (R) RSUBR)
+	<NTH .R <+ </ <CHTYPE <GETBITS .W ,HW> FIX> 2> 1>>>
+
+""
+
+;"Mung a word of code at a particular final address."
+
+<DEFINE CM (OC WHAT WHERE PJ? NGLUBITS "AUX" (P 0) (OP 0) (L '(0
+							       #CODE ![!]))) 
+	#DECL ((WHAT WHERE OP P) FIX (OC) <LIST [REST <LIST FIX UVECTOR>]>
+	       (NGLUBITS) <LIST <PRIMTYPE WORD> [REST <PRIMTYPE WORD>]>
+	       (L) LIST (PJ?) <OR ATOM FALSE>)
+	<REPEAT ()
+		<COND (<EMPTY? .OC> <ERROR CODE-RAN-OUT>)>
+		<COND (<G? <SET P <+ .P <1 <SET L <1 .OC>>>>> .WHERE>
+		       <RETURN <COND (.PJ?
+				      <PUT <2 .L>
+					   <- .WHERE .OP -1>
+					   <+ ,PJC .WHAT>>
+				      <ZEROBIT .WHERE .NGLUBITS>)>>)>
+		<SET OP .P>
+		<SET OC <REST .OC>>>>
+
+""
+
+;"Remove an element of a list based on a pointer to it."
+
+<DEFINE SPLOUT (HERE START) 
+	#DECL ((START HERE) <LIST ANY ANY> (VALUE) LIST)
+	<COND (<==? .START .HERE> <REST .START 2>)
+	      (<REPEAT ((LL .START) (L ()))
+		       #DECL ((L LL) LIST)
+		       <COND (<==? <SET L <REST .LL 2>> .HERE>
+			      <PUTREST <REST .LL> <REST .HERE 2>>
+			      <RETURN>)>
+		       <SET LL .L>>
+	       .START)>>
+
+""
+
+;"Change a series of half word numbers to a list of numbers."
+
+<DEFINE UPINT (W OFFS "AUX" (L ())) 
+	#DECL ((W) <UVECTOR [REST FIX]> (L) LIST (OFFS) FIX)
+	<MAPF <>
+	      <FUNCTION (W "AUX" (X <GETBITS .W ,LHW>) (Y <GETBITS .W ,HW>)) 
+		      #DECL ((W) FIX (X Y) WORD)
+		      <SET L (<CHTYPE .X FIX> <+ .OFFS <CHTYPE .Y FIX>> !.L)>>
+	      .W>
+	.L>
+
+""
+
+;"Flush a list element from a list based on its contents."
+
+<DEFINE SPLOUTN (L ATM) 
+	#DECL ((L) LIST (ATM) ATOM)
+	<REPEAT ((LL ()) (LLL .L))
+		#DECL ((LL LLL) <LIST [REST ATOM]>)
+		<AND <EMPTY? .LLL> <RETURN .L>>
+		<COND (<==? <1 .LLL> .ATM>
+		       <COND (<EMPTY? .LL> <RETURN <REST .L>>)
+			     (ELSE <PUTREST .LL <REST .LLL>> <RETURN .L>)>)
+		      (ELSE <SET LLL <REST <SET LL .LLL>>>)>>>
+
+""
+
+;"Give user info if he desires it."
+
+<DEFINE OUT-INFO (CHN STR "OPTIONAL" ARG) 
+	#DECL ((STR) STRING (CHN) <OR FALSE CHANNEL> (ARG) ANY)
+	<COND (.CHN
+	       <PRINC .STR .CHN>
+	       <AND <ASSIGNED? ARG> <PRIN1 .ARG .CHN>>
+	       <TERPRI .CHN>)>
+	T>
+
+""
+
+;"Add a couple of bits to the output glue bits."
+
+<DEFMAC NEXTBITS (ITEM) 
+	#DECL ((ITEM) FIX)
+	<FORM PROG
+	      ()
+	      <FORM COND
+		    '(<L? .ELNO 0>
+		      <SET ELNO 34>
+		      <SET NGLUBITS (-1 !.NGLUBITS)>)>
+	      <FORM PUT
+		    '.NGLUBITS
+		    1
+		    <FORM PUTBITS '<1 .NGLUBITS> '<BITS 2 .ELNO> .ITEM>>
+	      '<SET ELNO <- .ELNO 2>>>>
+
+""
+
+;"Smash a bit in the glue bits to one___ even though called ZEROBIT"
+
+<DEFINE ZEROBIT (WHERE NGLUBITS
+		 "AUX" (WDNO <- <LENGTH .NGLUBITS> </ .WHERE 18>>)
+		       (BITNO <- 34 <* 2 <MOD .WHERE 18>>>))
+	#DECL ((WDNO BITNO WHERE) FIX
+	       (NGLUBITS) <LIST <PRIMTYPE WORD> [REST <PRIMTYPE WORD>]>)
+	<PUT .NGLUBITS .WDNO <PUTBITS <NTH .NGLUBITS .WDNO> <BITS 2 .BITNO> 1>>
+	<>>
+
+""
+
+;"Compact a spread out glue type list into half word mode."
+
+<DEFINE CODUP (X) 
+	#DECL ((X) <LIST [REST <PRIMTYPE WORD>]>)
+	<REPEAT ((Y ()))
+		#DECL ((Y) <LIST [REST <PRIMTYPE WORD>]>)
+		<COND (<EMPTY? .X> <RETURN .Y>)>
+		<SET Y (<PUTBITS <2 .X> ,LHW <1 .X>> !.Y)>
+		<SET X <REST .X 2>>>>
+
+""
+
+;
+"GET-SURV TAKES A STRING AND BUILDS A LIST OF THE ENTRYS TO THE PACKAGE OF THAT NAME."
+
+<DEFINE GET-SURV (STR "AUX" OB (NL ())) 
+   #DECL ((STR) <OR <LIST [REST STRING]> STRING> (OB) <OR FALSE OBLIST>
+	  (NL) LIST)
+   <COND (<TYPE? .STR STRING> <SET STR (.STR)>)>
+   <REPEAT (ST)
+     #DECL ((ST) STRING)
+     <COND (<EMPTY? .STR> <RETURN>)>
+     <SET ST <1 .STR>>
+     <COND
+      (<SET OB <GET <LOOKUP .ST <GET PACKAGE OBLIST>> OBLIST>>
+       <MAPF <>
+	     <FUNCTION (OBL) 
+		     #DECL ((OBL) LIST)
+		     <MAPF <>
+			   <FUNCTION (NA) 
+				   <AND <TYPE? .NA ATOM>
+					<GASSIGNED? .NA>
+					<TYPE? ,.NA RSUBR RSUBR-ENTRY>
+					<SET NL (.NA !.NL)>>>
+			   .OBL>>
+	     .OB>)>
+     <SET STR <REST .STR>>>
+   <AND <NOT <EMPTY? .NL>> .NL>>
+
+""
+
+;
+"ROUTINE TO UPDATE FIXUPS WHEN FLUSHING A RSUBR IN GLUE.  TAKES FIXUPS
+ AND AN OFFSET BELOW WHICH CODE WAS FLUSHED."
+
+<DEFINE FIXZER (COD OFF "AUX" (NCOD (<1 .COD>)) (PTRN .NCOD)) 
+   #DECL ((COD) <UVECTOR [REST <PRIMTYPE WORD>]> (OFF) FIX (NCOD PTRN) LIST)
+   <SET COD <REST .COD>>
+   <REPEAT (FIXER INSER FIXPTR)
+     <SET INSER <>>
+     <SET FIXPTR <LENGTH .NCOD>>
+     <COND (<EMPTY? .COD> <RETURN>)>
+     <SET FIXER <1 .COD>>
+     <SET COD <REST .COD>>
+     <REPEAT ((FIRSGRP T) (WD 0) (CNT 2) NWD HW)
+	     #DECL ((CNT) FIX (NWD HW WD) <PRIMTYPE WORD>)
+	     <SET NWD <1 .COD>>
+	     <COND (.FIRSGRP <SET CNT 1> <SET WD .NWD> <SET FIRSGRP <>>)
+		   (ELSE
+		    <COND (<0? .NWD>
+			   <SET COD <REST .COD>>
+			   <COND (.INSER
+				  <COND (<==? .CNT 2>
+					 <PUTREST .PTRN (0)>
+					 <SET PTRN <REST .PTRN>>)
+					(ELSE
+					 <PUTREST .PTRN (.WD)>
+					 <SET PTRN <REST .PTRN>>)>)>
+			   <RETURN>)>
+		    <SET HW <CHTYPE <GETBITS .NWD <BITS 18 18>> FIX>>
+		    <COND (<G? .HW .OFF>
+			   <SET INSER T>
+			   <SET WD
+				<PUTBITS .WD <BITS 18 <* 18 <- .CNT 1>>> .HW>>
+			   <COND (<0? <SET CNT <- .CNT 1>>>
+				  <PUTREST .PTRN (<CHTYPE .WD FIX>)>
+				  <SET PTRN <REST .PTRN>>
+				  <SET CNT 2>
+				  <SET WD 0>)>)>)>
+	     <SET HW <CHTYPE <GETBITS .NWD <BITS 18>> FIX>>
+	     <COND (<0? .HW>
+		    <COND (.INSER
+			   <COND (<==? .CNT 2>
+				  <PUTREST .PTRN (0)>
+				  <SET PTRN <REST .PTRN>>)
+				 (ELSE
+				  <PUTREST .PTRN (.WD)>
+				  <SET PTRN <REST .PTRN>>)>)>
+		    <SET COD <REST .COD>>
+		    <RETURN>)>
+	     <COND (<G? .HW .OFF>
+		    <SET INSER T>
+		    <SET WD <PUTBITS .WD <BITS 18 <* 18 <- .CNT 1>>> .HW>>
+		    <COND (<0? <SET CNT <- .CNT 1>>>
+			   <PUTREST .PTRN (<CHTYPE .WD FIX>)>
+			   <SET PTRN <REST .PTRN>>
+			   <SET CNT 2>
+			   <SET WD 0>)>)>
+	     <SET COD <REST .COD>>>
+     <COND (.INSER
+	    <PUTREST <REST .NCOD <- .FIXPTR 1>>
+		     (.FIXER !<REST .NCOD .FIXPTR>)>)>>
+   <UVECTOR !.NCOD>>
+
+""
+
+<DEFINE CREATE (X "OPTIONAL" (TYPC <>)) 
+	#DECL ((X) FIX (VALUE) <PRIMTYPE UVECTOR> (TYPC) <OR ATOM FALSE>)
+	<SETG UNIQ.TABLE <IUVECTOR .X '()>>
+	<COND (.TYPC <SETG UNIQ.TABLE <CHTYPE ,UNIQ.TABLE ASOTAB>>)
+	      (ELSE ,UNIQ.TABLE)>>
+
+""
+
+<DEFINE INSERT-ASSOC (OBJ
+		      "OPTIONAL" (NUM #FALSE ()) (UT ,UNIQ.TABLE)
+		      "AUX" HASHNUM REMAINDER UNIQ)
+	#DECL ((HASHNUM) HASH (REMAINDER) FIX (UNIQ) <OR LIST FALSE>
+	       (UT) <<PRIMTYPE UVECTOR> [REST LIST]> (OBJ) ANY
+	       (NUM) <OR FALSE FIX>)
+	<SET HASHNUM <HASH .OBJ>>
+	<SET REMAINDER <+ 1 <MOD <CHTYPE .HASHNUM FIX> <LENGTH .UT>>>>
+	<COND (<SET UNIQ <MEMBER .OBJ <NTH .UT .REMAINDER>>>
+	       <PUT .UNIQ 2 .NUM>
+	       <1 .UNIQ>)
+	      (<PUT .UT .REMAINDER (.HASHNUM .OBJ .NUM !<NTH .UT .REMAINDER>)>
+	       .OBJ)>>
+
+""
+
+<DEFINE LOOKUP-ASSOC (OBJ
+		      "OPTIONAL" (UT ,UNIQ.TABLE)
+		      "AUX" HASHNUM REMAINDER UNIQ)
+	#DECL ((HASHNUM) HASH (REMAINDER) FIX (UNIQ) <OR LIST FALSE>
+	       (UT) <<PRIMTYPE UVECTOR> [REST LIST]> (OBJ) ANY)
+	<SET HASHNUM <HASH .OBJ>>
+	<SET REMAINDER <+ 1 <MOD <CHTYPE .HASHNUM FIX> <LENGTH .UT>>>>
+	<COND (<SET UNIQ <MEMBER .OBJ <NTH .UT .REMAINDER>>> <2 .UNIQ>)>>
+
+""
+
+<DEFINE HASH (OB "AUX" (HASHNO 0) OBPRIM) 
+   #DECL ((OB OBPRIM) ANY (VALUE) HASH (HASHNO) <PRIMTYPE WORD>)
+   <CHTYPE
+    <XORB <RAND <RAND <CHTYPE <TYPE-C <TYPE .OB>> FIX>>>
+	  <COND (<LOCATIVE? .OB> <HASH <IN .OB>>)
+		(<TYPE? .OB RSUBR RSUBR-ENTRY>
+					   ;"Avoid possible infinite recursion"
+		 <XORB <HASH <1 .OB>> <HASH <2 .OB>> <HASH <3 .OB>>>
+					      ;"Use Code, Name, and Decl only")
+		(<STRUCTURED? .OB>
+		 <MAPF <>
+		       <FUNCTION (X) 
+			       <SET HASHNO <XORB <ROTATE .HASHNO> <HASH .X>>>>
+		       .OB>
+		 .HASHNO)
+		(<TYPE? <SET OBPRIM <CHTYPE .OB <PRIMTYPE .OB>>> ATOM STRING>
+		 <HASHER .OBPRIM>)
+		(<TYPE? .OBPRIM WORD> <RAND <CHTYPE .OBPRIM FIX>>)
+		(<TYPE? .OBPRIM LOCR> <RGLOC-CHTYPE .OBPRIM>)
+		(<TYPE? .OBPRIM FRAME>
+		 <XORB <HASH <FUNCT .OBPRIM>> <HASH <ARGS .OBPRIM>>>)
+		(<TYPE? .OBPRIM ASOC>
+		 <XORB <HASH <ITEM .OBPRIM>>
+		       <HASH <INDICATOR .OBPRIM>>
+		       <HASH <AVALUE .OBPRIM>>>)
+		(<TYPE? .OBPRIM OFFSET>
+		 <XORB <HASH <INDEX .OBPRIM>> <HASH <GET-DECL .OBPRIM>>>)
+		(ELSE <HASH <UNPARSE .OB>>)>>
+    HASH>>
+
+""
+
+<DEFINE MINIMIZE (VV "AUX" (MIN <CHTYPE <ANDB <1 .VV> 262143> FIX>)) 
+	#DECL ((VV) <UVECTOR [REST <PRIMTYPE WORD>]>)
+	<MAPF <>
+	      <FUNCTION (IT) 
+		      <COND (<L? <SET IT <CHTYPE <ANDB .IT 262143> FIX>> .MIN>
+			     <SET MIN .IT>)>>
+	      <REST .VV>>
+	.MIN>
+
+""
+
+<DEFINE GVALABLE (ITM "AUX" TL) 
+	#DECL ((VALUE) <OR FALSE ATOM <LIST [REST ATOM]>> (ITM) ANY
+	       (TL) <OR LIST FALSE>)
+	<COND (<TYPE? .ITM FORM>
+	       <COND (<AND <==? <LENGTH .ITM> 2> <==? <1 .ITM> GVAL>> <2 .ITM>)
+		     (<AND <NOT <EMPTY? .ITM>>
+			   <TYPE? <1 .ITM> ATOM>
+			   <N==? <OBLIST? <1 .ITM>> <ROOT>>>
+		      <COND (<SET TL <GVALABLE <REST .ITM>>> (<1 .ITM> !.TL))
+			    (<1 .ITM>)>)
+		     (<NOT <EMPTY? .ITM>> <GVALABLE <REST .ITM>>)>)
+	      (<OR <TYPE? .ITM STRING>
+		   <AND <==? <PRIMTYPE .ITM> UVECTOR>
+			<==? <TYPEPRIM <UTYPE .ITM>> WORD>>>
+	       <>)
+	      (<STRUCTURED? .ITM>
+	       <MAPF ,LIST
+		     <FUNCTION (X "AUX" XX) 
+			     <COND (<SET XX <GVALABLE .X>>
+				    <COND (<TYPE? .XX LIST> <MAPRET !.XX>)
+					  (<MAPRET .XX>)>)
+				   (<MAPRET>)>>
+		     .ITM>)>>
+
+""
+
+;"FOR SOME REASON UNKNOWN TO ME LNT IS UNUSED"
+
+<DEFINE CODE-TO-DISK (CHN LNT CDL SYML ENDW "AUX" (1WORD ![0!])) 
+	#DECL ((CHN) CHANNEL (LNT ENDW) FIX
+	       (CDL) <LIST [REST <LIST FIX UVECTOR>]>
+	       (SYML) <LIST [REST <PRIMTYPE WORD>]> (1WRD) <UVECTOR FIX>)
+	<MAPF <>
+	 <FUNCTION (L "AUX" (LN <1 .L>) (U <2 .L>)) 
+		 <COND (<N==? .LN <LENGTH .U>>
+			<SET U
+			     <SUBSTRUC .U
+				       0
+				       .LN
+				       <REST .U <- <LENGTH .U> .LN>>>>)>
+		 <PRINTB .U .CHN>
+		 <PUT .L 2 '![0!]>>
+	 .CDL>
+	<MAPF <> <FUNCTION (WD) <PUT .1WORD 1 .WD> <PRINTB .1WORD .CHN>> .SYML>
+	<PUT .1WORD 1 .ENDW>
+	<PRINTB .1WORD .CHN>
+	<CLOSE .CHN>
+	T>
+
+<DEFINE READ-IN-CODE (CHN "AUX" (LN <FILE-LENGTH .CHN>) (U <IUVECTOR .LN 0>)) 
+	#DECL ((CHN) CHANNEL (LN) FIX (U) UVECTOR)
+	<READB .U .CHN>
+	<CLOSE .CHN>
+	.U>
+
+""
+
+"IS IT '<AND <ASSIGNED? GLUE> .GLUE <PUT .GLUE ..."
+
+<DEFINE GLUE? (OBJ "AUX" FM) 
+	<AND <TYPE? .OBJ FORM>
+	     <==? <LENGTH <SET FM .OBJ>> 4>
+	     <==? <1 .FM> AND>
+	     <=? <2 .FM> '<ASSIGNED? GLUE>>
+	     <=? <3 .FM> '.GLUE>
+	     <TYPE? <4 .FM> FORM>
+	     <==? <LENGTH <SET FM <4 .FM>>> 4>
+	     <==? <1 .FM> PUT>
+	     <==? <3 .FM> GLUE>>>
+
+""
+
+"IF SOMBTHINGS A GVAL CONS ONTO THE GVAL LIST"
+
+<DEFINE GVAL? (OBJ SURV "AUX" FM NOBJ) 
+   #DECL ((SURV) <OR FALSE LIST> (NOBJ) RSUBR)
+   <COND
+    (<OR <AND <TYPE? .OBJ FORM>
+	      <==? <LENGTH <SET FM .OBJ>> 3>
+	      <==? <1 .FM> SETG>
+	      <TYPE? <3 .FM> RSUBR>
+	      <SET NOBJ <3 .FM>>>
+	 <AND <TYPE? .OBJ RSUBR> <SET NOBJ .OBJ>>>
+     <MAPF <>
+	   <FUNCTION (OBJ) 
+		   <COND (<TYPE? .OBJ LOCR>
+			  <SET OBJ <2 <PARSE <REST <UNPARSE .OBJ>>>>>
+			  <AND <NOT <MEMQ .OBJ .SURV>>
+			       <GASSIGNED? .OBJ>
+			       <TYPE? ,.OBJ RSUBR-ENTRY RSUBR>
+			       <SET SURV (.OBJ !.SURV)>>)
+			 (<AND <TYPE? .OBJ RSUBR> <NOT <GASSIGNED? <2 .OBJ>>>>
+			  <SET SURV <GVAL? .OBJ .SURV>>)>>
+	   .NOBJ>)>
+   .SURV>
+
+""
+
+"IS SOMETHING A RSUBR ENTRY?"
+
+<DEFINE RSUBR-ENTRY? (OBJ RSBIND RSBS CHN "AUX" FM RSBE NM OFFS TMP) 
+   #DECL ((RSBS WINNERS RSBIND) LIST (VALUE) <OR FALSE LIST>
+	  (TMP) <OR FALSE LIST> (OFFS) FIX (CHN) <OR FALSE CHANNEL>)
+   <COND (<AND <TYPE? .OBJ FORM>
+	       <==? <LENGTH <SET FM .OBJ>> 3>
+	       <==? <1 .FM> SETG>
+	       <TYPE? <SET NM <GET <2 .FM> VALUE '<2 .FM>>> ATOM>
+	       <OR <TYPE? <3 .FM> RSUBR-ENTRY>
+		   <AND <GASSIGNED? .NM>
+			<TYPE? ,.NM RSUBR-ENTRY>
+			<PUT .FM 3 ,.NM>>>
+	       <COND (<N==? .NM <2 <SET RSBE <3 .FM>>>>
+		      <PUT .FM 3 <FORM GVAL <2 .RSBE>>>
+		      <>)
+		     (ELSE T)>>
+	  <OUT-INFO .CHN "RSUBR-ENTRY named:  " .NM>
+	  <COND (<TYPE? <SET NM <1 .RSBE>> RSUBR> <SET NM <2 .NM>>)>
+	  <SET OFFS <ENTRY-LOC .RSBE>>
+	  <COND (<NOT <SET TMP <GET .NM .RSBIND>>>
+		 <SET RSBS (.NM !.RSBS)>
+		 <SET WINNERS (.NM !.WINNERS)>
+		 <PUT .NM .RSBIND (0 .NM .OFFS <2 .RSBE>)>)
+		(ELSE
+		 <REPEAT ((L .TMP) (LL ()))
+			 #DECL ((L LL) <LIST [REST FIX ATOM]>)
+			 <COND (<L? .OFFS <1 .L>>
+				<COND (<==? .L .TMP>
+				       <PUT .NM .RSBIND (.OFFS <2 .RSBE> !.L)>)
+				      (<PUTREST <REST .LL>
+						(.OFFS <2 .RSBE> !.L)>)>
+				<RETURN>)
+			       (<EMPTY? <SET L <REST <SET LL .L> 2>>>
+				<PUTREST <REST .LL> (.OFFS <2 .RSBE>)>
+				<RETURN>)>>)>
+	  .RSBS)>>
+
+""
+
+"THIS IS IT.  THIS FUNCTION DOES MOST OF THE WORK OF GLUE.  IT LOOKS OVER THE GLUE
+ BITS AND HACKS THE RSUBRS"
+
+<DEFINE PASS-1 
+	(OCOD QL PC CHN SURV VICTIMS GRP UNRESIND RSBIND MCIND FG SYMS OCODP
+	 FINALS MC MCS WINNERS NORED ELNO NGLUBITS
+	 "AUX" (IENTIND (0)) (POINT 0) FM GLUE-BITS RSB COD FIXES (FGP .FG)
+	       (SYMSP .SYMS) SYML (IMPS ()) (IC 0) GBYTE (SENTS ()) (NINTS 0)
+	       TMP (IL 0) (ONM PHRED) (NEWRS 0) TMP1 (ARGLIST ()) MINENT
+	       (UNRES ()) (PURS ()) (IENTS ()) CHOMP)
+   #DECL ((GRP) LIST (SYMS SYMSP) <LIST FIX [REST FIX]>
+	  (CHN) <OR CHANNEL FALSE> (FG FGP) <LIST <UVECTOR [REST FIX]>>
+	  (GBYTE) <BYTES 2 0> (ELNO) FIX
+	  (MCS PURS FINALS RVEC RVECP IMPS IENTS UNRES OCOD OCODP) LIST
+	  (SENTS) <LIST [REST <LIST FIX <VECTOR ATOM ATOM DECL>>]>
+	  (SYML POINT ILIC MC PC NINTS IL NEWRS OFFS MINENT QL) FIX
+	  (COD) <OR <PRIMTYPE UVECTOR> CODE PCODE> (NORED) <OR FALSE ATOM>
+	  (GLUE-BITS) <UVECTOR [REST <PRIMTYPE WORD>]> (TMP) <PRIMTYPE LIST>
+	  (WINNERS RSBS) LIST (ARGLIST) <LIST [REST <PRIMTYPE WORD>]>
+	  (SURV VICTIMS) <OR FALSE LIST>
+	  (IENTIND MCIND RSBIND UNRESIND) <LIST FIX> (TCH) CHANNEL
+	  (NGLUBITS) <LIST <PRIMTYPE WORD> [REST <PRIMTYPE WORD>]>)
+   <MAPR <>				  ;"Now scan group and process RSUBRs."
+    <FUNCTION (OBJP "AUX" (OBJ <1 .OBJP>) (FLUSHED? <>)) 
+       #DECL ((FLUSHED?) <OR ATOM FALSE> (OBJP) <LIST ANY>)
+       <COND
+	(<AND <TYPE? .OBJ FORM>
+			      ;"This AND returns true if this is a good RSUBR."
+	      <==? <LENGTH <SET FM .OBJ>> 3>
+	      <==? <1 .FM> SETG>
+	      <TYPE? <3 .FM> RSUBR>
+	      <COND (<NOT <SET CHOMP <PUT <SET RSB <3 .FM>> GLUE>>>
+		     <PRINC "Warning--Lacks glue bits. " ,OUTCHAN>
+		     <AND .NORED <SET SURV (<2 .RSB> !.SURV)>>
+					        ;"Must survive if no glue bits"
+		     <PRIN1 <2 .FM> ,OUTCHAN>
+		     <TERPRI ,OUTCHAN>)
+		    (ELSE T)>
+	      <TYPE? <SET COD <1 .RSB>> CODE>
+	      <COND (<N==? <2 .RSB> <GET <2 .FM> VALUE '<2 .FM>>>
+		     <PUT .FM 3 <FORM GVAL <2 .RSB>>>
+		     <>)
+		    (ELSE T)>>
+	 <COND (<==? <OBLIST? <2 .RSB>> <ROOT>> <SET SURV (<2 .RSB> !.SURV)>)>
+	 <SET GLUE-BITS .CHOMP>
+	 <OUT-INFO .CHN "RSUBR named:  " <2 .RSB>>
+	 <COND (<AND <NOT <EMPTY? <REST .OBJP>>> <GLUE? <2 .OBJP>>>
+		<PUTREST .OBJP <REST .OBJP 2>>)> 
+	 <OR <AND <SET FIXES <PUT .RSB RSUBR>> <TYPE? .FIXES UVECTOR>>
+	     <MAPLEAVE <CHTYPE (<2 .RSB> "Lacks good FIXUPS.") FALSE>>>
+			    ;"Flush completely on RSUBR with no or bad fixups."
+	 <MAPR <>	    ;"Unlink any RSUBR/RSUBR-ENTRYs already linked up."
+	       <FUNCTION (RBOD "AUX" (RB <1 .RBOD>)) 
+		       <COND (<AND <TYPE? .RB RSUBR RSUBR-ENTRY>
+				   <GASSIGNED? <2 .RB>>>
+			      <PUT .RBOD 1 <2 .RB>>)>>
+	       <REST .RSB 2>>
+	 <CHUTYPE .FIXES FIX>
+	 <CHUTYPE .COD FIX>
+	 <SET WINNERS <SPLOUTN .WINNERS <2 .RSB>>>
+						 ;"Flush him from WINNER list."
+	 <SET SYML				 ;"Get length of SQUOZE table."
+	      <CHTYPE <GETBITS <NTH .COD <SET IL <LENGTH .COD>>> <BITS 18>>
+		      FIX>>
+	 <SET QL <CHTYPE <GETBITS <NTH .COD .IL> <BITS 18 18>> FIX>>
+						  ;"And legnth of QCALL stuff."
+	 <AND <0? .POINT>
+	      <SET ONM <2 .RSB>>
+	      <OR <MEMQ .ONM .SURV> <SET SURV (.ONM !.SURV)>>>
+				      ;"If first one, make it the final RSUBR."
+	 <SET SENTS ((.POINT [.ONM <2 .RSB> <3 .RSB>]) !.SENTS)>
+					   ;"Start building final RSUBR-ENTRY."
+	 <SET IL <- .IL .SYML 1>>
+	 <SET SYMSP <CONS-SYMBOLS .COD .IL .SYMSP .POINT>>
+	 <SET IL <- .IL .QL>>			  ;"IL is length of real code."
+	 <SET NEWRS 0>
+	 <SET MINENT 0>
+	 <COND
+	  (<AND <G? <- <LENGTH .GLUE-BITS> <SET NINTS </ <+ .IL 17> 18>>> 0>
+		<N==? <CHTYPE <GETBITS <NTH .GLUE-BITS <+ .NINTS 1>>
+				       <BITS 18 18>>
+			      FIX>
+		      262143>>	        ;"Any INTERNAL entries for this RSUBR."
+	   <SET TMP <GET <2 .RSB> .RSBIND>>
+	   <COND
+	    (.NORED
+	     <COND
+	      (<AND .TMP
+		    <NOT <LENGTH? .TMP 3>>
+		    <G? <CHTYPE <GETBITS <NTH .GLUE-BITS <+ .NINTS 1>>
+					 <BITS 18>>
+				FIX>
+			<3 .TMP>>>
+	       <COND (<NOT <MEMQ <2 .RSB> .SURV>>
+		      <SET SURV (<2 .RSB> !.SURV)>)>)
+	      (T
+	    ;"If this guy has any entries for more than 15 args, survivor him."
+	       <MAPF <>
+		<FUNCTION (X "AUX" (N <CHTYPE <GETBITS .X ,LHW> FIX>)) 
+			<COND (<G? .N 15>
+			       <COND (<NOT <MEMQ <2 .RSB> .SURV>>
+				      <SET SURV (<2 .RSB> !.SURV)>)>
+			       <MAPLEAVE>)>>
+		<REST .GLUE-BITS .NINTS>>)>)>
+	   <COND (<AND .NORED
+		       <COND (.VICTIMS
+			      <AND <NOT <MEMQ <2 .RSB> .SURV>>
+				   <MEMQ <2 .RSB> .VICTIMS>>)
+			     (T <NOT <MEMQ <2 .RSB> .SURV>>)>>
+		  <SET FLUSHED? T>		   ;"This rsubr is going away."
+		  <SETG FLUSHED (<2 .RSB> !,FLUSHED)>
+						   ;"Say he's lost entry code."
+		  <SET MINENT <MINIMIZE <REST .GLUE-BITS .NINTS>>>)>
+	   <COND
+	    (.TMP			    ;"Any RSUBR-ENTRYs for this RSUBR?"
+	     <COND (.FLUSHED?
+		    <REPEAT ((L .TMP))
+			    #DECL ((L) <LIST [REST FIX ATOM]>)
+			    <COND (<EMPTY? .L> <RETURN>)
+				  (<NOT <0? <1 .L>>>
+				   <PUT .L 1 <- <1 .L> .MINENT>>)>
+			    <SET L <REST .L 2>>>)>
+	     <REPEAT ((L <UPINT <REST .GLUE-BITS .NINTS> <- .POINT .MINENT>>)
+		      TT)
+		     #DECL ((L) <LIST [REST FIX]> (TT) <PRIMTYPE LIST>)
+		     <REPEAT ((LL .TMP) (LLL <REST .LL 2>))
+			        ;"Associate INTERNAL with corresponding ENTRY."
+			     #DECL ((LL LLL) LIST)
+			     <COND (<OR <L? <2 .L> <+ <1 .LLL> .POINT>>
+					<EMPTY?
+					 <SET LLL <REST <SET LL .LLL> 2>>>>
+				    <COND (<SET TT <GET <2 .LL> .IENTIND>>
+					   <PUT <2 .LL>
+						.IENTIND
+						(<1 .L> <2 .L> !.TT)>)
+					  (ELSE
+					   <PUT <2 .LL>
+						.IENTIND
+						(<1 .L> <2 .L>)>
+					   <SET NEWRS <+ .NEWRS 1>>
+					   <SET IENTS (<2 .LL> !.IENTS)>)>
+				    <RETURN>)>>
+		     <AND <EMPTY? <SET L <REST .L 2>>> <RETURN>>>
+		 ;"Survivor any rsubr-entries that don't have internal entries"
+	     <COND (.NORED
+		    <REPEAT ((L <REST .TMP 2>) NM)
+			    #DECL ((L) <LIST [REST FIX ATOM]> (NM) ATOM)
+			    <COND (<AND <NOT <GET <SET NM <2 .L>> .IENTIND>>
+					<NOT <MEMQ .NM .SURV>>>
+				   <SET SURV (.NM !.SURV)>)>
+			    <COND (<EMPTY? <SET L <REST .L 2>>> <RETURN>)>>)>)
+	    (<SET IENTS (<2 .RSB> !.IENTS)>
+				      ;"No RSUBR-ENTRYs, associate with RSUBR."
+	     <PUT <2 .RSB>
+		  .IENTIND
+		  <UPINT <REST .GLUE-BITS .NINTS> <- .POINT .MINENT>>>
+	     <SET NEWRS 1>)>)
+	  (<AND .NORED
+		<NOT <MEMQ <2 .RSB> .SURV>>
+		<SET SURV (<2 .RSB> !.SURV)>>)>
+	 <COND (<NOT .FLUSHED?>
+		<SET ARGLIST			    ;"Add to final QCALL info."
+		     (!<UPINT <REST .GLUE-BITS .NINTS> <- .POINT .MINENT>>
+		      !.ARGLIST)>)>
+	 <SET GBYTE <REST <BYTER .GLUE-BITS> .MINENT>>
+	 <PUT .RSB 1 #CODE ![!]>
+	 <SET COD
+	      <SUBUV <REST <CHTYPE .COD UVECTOR> .MINENT>
+		     <SET IL <- .IL .MINENT>>>>
+	 <SET OCODP <REST <PUTREST .OCODP ((.IL .COD))>>>
+	 <COND (<AND <NOT <EMPTY? .UNRES>> <NOT <0? .NEWRS>>>
+			        ;"Any unresolved MCALLs that we could resolve."
+		<SET UNRES
+		     <MCALL-RESOLVE .NEWRS
+				    .UNRES
+				    .IENTIND
+				    .UNRESIND
+				    .OCOD
+				    .IENTS
+				    .NGLUBITS>>)>
+	 <REPEAT ((WD 0) (IL .IL) (C 0) (IP .POINT) NM (INDX 0) (TMC 0) (N 0))
+	   #DECL ((WD IL C N INDX) FIX (TMC) <OR FIX FALSE>)
+			        ;"Now simultanesously scan code and glue bits."
+	   <COND (<0? .IL> <RETURN>)>
+	   <SET WD <CHTYPE <1 .COD> FIX>>
+	   <SET INDX <CHTYPE <GETBITS .WD ,INDEX-FIELD> FIX>>
+			       ;"INDX is index register and WD is instruction."
+	   <COND
+	    (<AND <1? <SET C <CHTYPE <1 .GBYTE> FIX>>>
+		  <OR <==? .INDX ,R> <==? .INDX ,M>
+		      <AND <==? ,MUDDLE 106> <==? .WD ,MOVSI-ZERO>>>>
+		        ;"Here for either impure slot or addr to be relocated."
+	     <COND (<==? .WD ,MOVSI-ZERO>
+		    <NEXTBITS 0>
+		    <PUT .GBYTE 2 1>)
+		   (ELSE <NEXTBITS 1>)>	      ;"Put bit into output glue bits."
+	     <COND (<==? .INDX ,M>
+		    <SET WD
+			 <CHTYPE <PUTBITS .WD
+					  <BITS 18>
+					  <+ .WD <- .POINT .MINENT>>>
+				 FIX>>)
+		   (<==? .INDX ,R>
+		    <SET IMPS (<SLOT .RSB .WD> !.IMPS)>
+		    <SET IC <+ .IC 1>>
+		    <SET FINALS (<FINALS-SLOT ,ICL .IC .IP> !.FINALS)>)>)
+	    (<AND <==? .C 2> <==? .INDX ,R>>
+					  ;"Here for possible MCALL reference."
+	     <NEXTBITS 2>
+	     <SET NM <SLOT .RSB .WD>>
+	     <SET N
+		  <COND (<==? <CHTYPE <GETBITS .WD ,INSFLD> FIX> 3> 262143)
+			(ELSE <CHTYPE <GETBITS .WD ,AC> FIX>)>>
+	     <COND
+	      (<SET TMP <GET .NM .IENTIND>>
+				        ;"Does this one have internal entries?"
+	       <REPEAT ((USES .TMP))
+		   ;"Scan internals to see if any require the # of args given."
+		 #DECL ((USES) <LIST [REST FIX]>)
+		 <COND
+		  (<EMPTY? .USES>
+	   ;"No internal entry in this case, leave as MCALL and add to finals."
+		   <COND (<SET TMP1 <GET .NM .MCIND>> <SET TMC .TMP1>)
+			 (ELSE
+			  <SET MCS (.NM !.MCS)>
+			  <PUT .NM .MCIND <SET TMC <SET MC <+ .MC 1>>>>)>
+		   <COND
+		    (<AND .NORED <NOT <MEMQ .NM .SURV>>>
+		     <COND (<MEMQ .NM ,FLUSHED>
+			    <OUT-INFO ,OUTCHAN
+				      <STRING "ERROR:  "
+					      <SPNAME .NM>
+					      " must be mcalled by "
+					      <SPNAME <2 .RSB>>
+					      
+",
+has no entry code.  Is one of your crufties a chomper?">>)>
+						       ;"Make sure it survives"
+		     <SET SURV (.NM !.SURV)>)>
+		   <SET FINALS (<FINALS-SLOT ,MCL .TMC .IP> !.FINALS)>
+		   <RETURN>)>
+		 <COND (<==? <1 .USES> .N>	  ;"A winner, change to PUSHJ."
+			<SET WD <+ ,PJC <2 .USES>>>
+			<ZEROBIT .IP .NGLUBITS>
+			<RETURN>)>
+		 <SET USES <REST .USES 2>>>)
+	      (<SET TMP <GET .NM .UNRESIND>>
+			 ;"Already unresolved references?  If so add this one."
+	       <PUT .NM .UNRESIND (.N .IP !.TMP)>)
+	      (ELSE			   ;"Start unresolved references list."
+	       <SET UNRES (.NM !.UNRES)> <PUT .NM .UNRESIND (.N .IP)>)>)
+	    (<AND <==? .C 3> <==? .INDX ,R>>		   ;"A pure RSUBR slot"
+	     <NEXTBITS 3>
+	     <SET NM <SLOT .RSB .WD>>
+	     <COND (<SET TMC <LOOKUP-ASSOC .NM>>)
+		   (ELSE
+		    <SET PURS (.NM !.PURS)>
+		    <SET TMC <SET PC <+ .PC 1>>>
+		    <INSERT-ASSOC .NM .TMC>)>
+	     <SET FINALS (<FINALS-SLOT ,PCL .TMC .IP> !.FINALS)>)
+	    (<0? .C> <NEXTBITS 0>)
+	    (ELSE
+	     <ERROR BAD-GLUE-BITS!-ERRORS
+		    <2 .RSB>
+		    <STRING "Bit is "
+			    <UNPARSE .C>
+			    " Index is "
+			    <UNPARSE .INDX>
+			    " Word is "
+			    <UNPARSE <CHTYPE .WD WORD>>
+			    " Rel-loc is "
+			    <UNPARSE <- .IP .POINT>>>>)>
+	   <PUT .COD 1 .WD>
+	   <SET COD <REST .COD>>
+	   <SET IL <- .IL 1>>
+	   <SET IP <+ .IP 1>>
+	   <SET GBYTE <REST .GBYTE>>>
+	 <OR <0? .MINENT> <SET FIXES <FIXZER .FIXES .MINENT>>>
+	 <FIXMUNG <REST .FIXES> <- .POINT .MINENT>>
+	 <SET FGP <REST <PUTREST .FGP (<REST .FIXES>)>>>
+	 <SET POINT <+ .POINT .IL>>)>
+       T>
+    .GRP>
+   (.POINT
+    .IMPS
+    .UNRES
+    .PURS
+    .OCODP
+    .FINALS
+    .PC
+    .MC
+    .MCS
+    .SENTS
+    .ONM
+    .WINNERS
+    .QL
+    .ARGLIST
+    .ELNO
+    .NGLUBITS
+    .SURV)>
+
+""
+
+"ROUTINE TO HACK THE FINAL RSUBRS AND RSUBR ENTRYS"
+
+<DEFINE FINAL-RSUBR-ENTRYS (SENTS NORED SURV VICTIMS ARGLIST ONM RSB NGLUBITS) 
+   #DECL ((ONM) ATOM (ARGLIST) <LIST [REST <PRIMTYPE WORD>]>
+	  (SURV VICTIMS) <OR FALSE LIST> (NORED) <OR FALSE ATOM>
+	  (SENTS) <LIST [REST <LIST FIX <VECTOR ATOM ATOM DECL>>]> (RSB) RSUBR
+	  (NGLUBITS) <LIST <PRIMTYPE WORD> [REST <PRIMTYPE WORD>]>)
+   <MAPF <>		       ;"Setup final RSUBR-ENTRYs from the SENTS list."
+	 <FUNCTION (S "AUX" T) 
+		 #DECL ((S) <LIST FIX <VECTOR ATOM ATOM DECL>> (T) ATOM)
+		 <SET T <2 <2 .S>>>
+		 <COND (<0? <1 .S>>
+			    ;"This is the 1st one, it becomes the final RSUBR."
+			<PUT .RSB 2 <2 <2 .S>>>
+			<PUT .RSB 3 <3 <2 .S>>>
+			<SETG .ONM .RSB>
+			<PUT ,.ONM
+			     GLUE
+			     <UVECTOR !<LREVERSE .NGLUBITS>
+				      !<CODUP .ARGLIST>>>
+			<>)
+		       (<OR <NOT .NORED>
+			    <COND (.VICTIMS
+				   <OR <MEMQ .T .SURV>
+				       <NOT <MEMQ .T .VICTIMS>>>)
+				  (<MEMQ .T .SURV>)>>
+			<SETG <2 <2 .S>>
+			      <RSUBR-ENTRY
+			       <PUT <CHTYPE <2 .S> VECTOR> 1 .RSB> <1 .S>>>)>>
+	 .SENTS>>
+
+""
+
+<DEFINE FIXUP-COPY (FG RSB CHN "AUX" OFFS FIXES) 
+	#DECL ((FG) <LIST <UVECTOR [REST FIX]>> (RSB) RSUBR (FIXES) UVECTOR
+	       (OFFS) FIX (CHN) <OR FALSE CHANNEL>)
+	<OUT-INFO .CHN "Copying fixups.">
+	<SET FIXES <IUVECTOR <+ 1 <MAPF ,+ ,LENGTH <REST .FG>>> 0>>
+	<PUT .FIXES 1 ,MUDDLE>
+	<SET OFFS 1>
+	<MAPF <>
+	      <FUNCTION (U) 
+		      #DECL ((U) UVECTOR)
+		      <MAPF <>
+			    <FUNCTION (X) 
+				    #DECL ((X) FIX)
+				    <PUT .FIXES <SET OFFS <+ .OFFS 1>> .X>>
+			    .U>>
+	      <REST .FG>>
+	<PUT .RSB RSUBR .FIXES>>
+
+""
+
+<DEFINE FINAL-GROUP-CLEANUP (CHN GRP ONM NORED SURV VICTIMS SUB "AUX" NMN) 
+	#DECL ((GRP) LIST (ONM) ATOM (SURV VICTIMS) <OR LIST FALSE>
+	       (SUB NORED) <OR ATOM FALSE> (CHN) <OR FALSE CHANNEL>)
+	<OUT-INFO .CHN "Final group cleanup.">
+	<REPEAT (T (G .GRP) OB (FM '<>))
+		#DECL ((G) LIST (FM) FORM)
+		<COND (<EMPTY? .G> <RETURN>)>
+		<COND (<GLUE? <SET OB <1 .G>>>
+		       <SET G <PUTREST .GRP <REST .G>>>)
+		      (<AND <TYPE? .OB FORM>
+			    <==? <LENGTH <SET FM .OB>> 3>
+			    <==? <1 .FM> SETG>
+			    <TYPE? <3 .FM> RSUBR RSUBR-ENTRY>>
+		       <COND (<==? .ONM <2 <3 .FM>>> <SET NMN .G>)>
+		       <COND (<AND .NORED
+				   <NOT <==? <SET T <2 <3 .FM>>> .ONM>>
+				   <OR <NOT <MEMQ .T .SURV>>
+				       <MEMQ .T .VICTIMS>>>
+			      <COND (<NOT <MEMQ .T ,FLUSHED>>
+				     <SETG FLUSHED (.T !,FLUSHED)>)>
+			      <OUT-INFO .CHN
+					"Flushing RSUBR-ENTRY "
+					<2 <3 .FM>>>
+			      <SET G <PUTREST .GRP <REST .G>>>)
+			     (<COND (.SUB
+				     <PUT <3 .FM> GLUE>
+				     <PUT <3 .FM> RSUBR>
+				     <SUBSTITUTE ,<GET <2 .FM> VALUE '<2
+								       .FM>>
+						 <3 .FM>>)
+				    (<PUT .FM
+					  3
+					  ,<GET <2 .FM> VALUE '<2
+								.FM>>>)>)>)>
+		<SET G <REST <SET GRP .G>>>>
+	<AND <EMPTY? .NMN> <SET NMN .GRP>>
+	<PUTREST .NMN
+		 (<FORM AND
+			'<ASSIGNED? GLUE>
+			'.GLUE
+			<FORM PUT <FORM GVAL .ONM> GLUE <GET ,.ONM GLUE>>>
+		  !<REST .NMN>)>>
+
+""
+
+<DEFINE MCALL-RESOLVE (NEWRS UNRES IENTIND UNRESIND OCOD IENTS NGLUBITS
+		       "AUX" TMP)
+   #DECL ((NEWRS) FIX (IENTS OCOD UNRES) LIST (IENTIND RSBIND) <LIST FIX>
+	  (NGLUBITS) <LIST <PRIMTYPE WORD> [REST <PRIMTYPE WORD>]>)
+   <REPEAT ((L .IENTS))
+	   #DECL ((L) <LIST [REST ATOM]>)
+	   <COND
+	    (<SET TMP <GET <1 .L> .UNRESIND>>
+	     <REPEAT ((USES .TMP) (SPEX <GET <1 .L> .IENTIND>))
+		     #DECL ((USES SPEX) <LIST [REST FIX]>)
+		     <COND (<EMPTY? .USES>
+			    <COND (<EMPTY? .TMP>
+					      ;"This one no longer unresolved."
+				   <SET UNRES <SPLOUTN .UNRES <1 .L>>>
+				   <PUT <1 .L> .UNRESIND>)>
+			    <RETURN>)>
+		     <REPEAT ((S .SPEX) (N <1 .USES>))
+			     #DECL ((S) <LIST [REST FIX]> (N) FIX)
+			     <COND (<==? <1 .S> .N>
+				    <CM <REST .OCOD>
+					<2 .S>
+					<2 .USES>
+					T
+					.NGLUBITS>
+				    <PUT <1 .L>
+					 .UNRESIND
+					 <SET TMP <SPLOUT .USES .TMP>>>
+				    <RETURN>)>
+			     <COND (<EMPTY? <SET S <REST .S 2>>> <RETURN>)>>
+		     <SET USES <REST .USES 2>>>)>
+	   <SET L <REST .L>>
+	   <AND <0? <SET NEWRS <- .NEWRS 1>>> <RETURN>>>
+   .UNRES>
+
+""
+
+<DEFINE CONS-SYMBOLS (COD IL SYMSP POINT) 
+	#DECL ((COD) <<PRIMTYPE UVECTOR> [REST FIX]>
+	       (SYMSP) <LIST FIX [REST FIX]> (IL POINT) FIX)
+	<REPEAT ((S <REST .COD .IL>))
+		#DECL ((S) <UVECTOR FIX [REST FIX]>)
+		<COND (<EMPTY? <REST .S>> <RETURN>)>
+		<SET SYMSP		  ;"Add symbols to final symbol table."
+		     <REST <PUTREST .SYMSP (<1 .S> <+ <2 .S> .POINT>)> 2>>
+		<SET S <REST .S 2>>>
+	.SYMSP>
+
+<ENDPACKAGE>

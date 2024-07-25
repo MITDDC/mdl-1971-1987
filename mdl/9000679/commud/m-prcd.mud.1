@@ -1,0 +1,95 @@
+
+<PACKAGE "M-PRCD">
+
+"functions which use process data vector"
+
+<ENTRY GET-PROCESS
+       DEMON-PROCESS
+       GET-ERROR
+       FATAL?
+       PRCVEC
+       PRCNAM
+       PRCFCN
+       PRCERR
+       PRCMSG
+       GET-ELEM
+       FATAL
+       CCCSM>
+
+<USE "M-DEFS">
+
+<PUT PRCVEC
+     DECL
+     '<VECTOR STRING
+	      ATOM
+	      <OR ATOM FALSE>
+	      <OR <VECTOR [REST <OR FIX FALSE>]> FALSE>>>
+
+<MSETG PRCNAM 1>
+
+;"name of process"
+
+<MSETG PRCFCN 2>
+
+;"main function for process"
+
+<MSETG PRCERR 3>
+
+;"error function for process (or false)"
+
+<MSETG PRCMSG 4>
+
+;"error message table for process"
+
+<MSETG FATAL 1>
+
+<MSETG CCCSM 2>
+
+<OR <GASSIGNED? PRCOBL> <SETG PRCOBL <MOBLIST PRCOBL>>>
+
+\ 
+
+<DEFINE GET-PROCESS (STR "AUX" (PRCOBL ,PRCOBL) ATM)
+	#DECL ((STR) STRING (PRCOBL) OBLIST (ATM) <OR ATOM FALSE>)
+	<COND (<SET ATM <LOOKUP .STR .PRCOBL>>
+	       ,.ATM)>>
+
+<DEFINE DEMON-PROCESS (STR F "OPTIONAL" (E <>) (M '[]) "AUX" P (PRCOBL ,PRCOBL)) 
+	#DECL ((STR) STRING (E) <OR FALSE ATOM> (F) ATOM (PRCOBL) OBLIST
+	       (P) <OR VECTOR FALSE> (M) <OR VECTOR FALSE> (VALUE) PRCVEC)
+	<COND (<SET P <GET-PROCESS .STR>>)
+	      (ELSE
+	       <SET P <SETG <INSERT .STR .PRCOBL> <VECTOR <> <> <> <>>>>)>
+	<PUT .P ,PRCNAM .STR>
+	<PUT .P ,PRCFCN .F>
+	<PUT .P ,PRCERR .E>
+	<PUT .P ,PRCMSG .M>>
+
+"GET-ELEM -- given process name and offset, return object at
+  associated spot in data vector"
+
+<DEFINE GET-ELEM (PRC OFFS "AUX" PD) 
+	#DECL ((VALUE) ANY (PRC) STRING (OFFS) FIX (PD) <OR VECTOR FALSE>)
+	<COND (<SET PD <GET-PROCESS .PRC>>
+	       <NTH .PD .OFFS>)>>
+
+"GET-ERROR -- get the error data for a particular error in a process"
+
+<DEFINE GET-ERROR (PVP E "AUX" (V <PRCMSG .PVP>) (OFFS <1 .E>)) 
+	#DECL ((PVP) VECTOR (V) <OR VECTOR FALSE> (E) <FALSE FIX> (OFFS) FIX
+	       (VALUE) <OR FIX FALSE>)
+	<COND (<L=? .OFFS 0> <>)
+	      (<AND .V <G=? <LENGTH .V> .OFFS>> <NTH .V .OFFS>)>>
+
+"FATAL? -- is this a fatal error for this process?"
+
+<DEFINE FATAL? (PRC ERR "AUX" (PD <GET-PROCESS .PRC>) E)
+	#DECL ((PRC) STRING (ERR) <FALSE FIX> (E) <OR FIX FALSE>)
+	<COND (.PD
+	       <COND (<SET E <GET-ERROR .PD .ERR>>
+		      <NOT <0? <CHTYPE <ANDB .E ,FATAL> FIX>>>)
+		     (T)>)
+	      (T)>>
+
+<ENDPACKAGE>
+

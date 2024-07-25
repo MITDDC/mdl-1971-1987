@@ -1,0 +1,71 @@
+<PACKAGE "PRTSTR">
+
+<ENTRY S-TIME S-ADDR S-ADDRL>
+
+<USE "ITIME" "PRTUTI" "USRUTI" "HOSTS" "MADMAN" "M-DEFS">
+
+"S-TIME -- given a time, returns descriptive string"
+
+<DEFINE S-TIME (TI "OPTIONAL" (SP ,SCRATCH-SPACE)
+		"AUX" TIM YY MM DD HR MN DT TM) 
+	#DECL ((TIM) <LIST LIST LIST STRING> (HR MN YY MM DD) FIX
+	       (VALUE) STRING (TI) <OR FIX LIST UVECTOR>
+	       (SP) SPACE (DT TM) <LIST FIX FIX FIX>)
+	<COND (<TYPE? .TI FIX UVECTOR> <SET TIM <LTIME .TI>>)
+	      (ELSE <SET TIM .TI>)>
+	<SET DT <1 .TIM>>
+	<SET TM <2 .TIM>>
+	<SET YY <1 .DT>>
+	<SET MM <2 .DT>>
+	<SET DD <3 .DT>>
+	<SET HR <1 .TM>>
+	<SET MN <2 .TM>>
+	<ASTRING .SP
+		 <ASCII <+ <ASCII !\0> </ .DD 10>>>
+		 <ASCII <+ <ASCII !\0> <MOD .DD 10>>>
+		 " "
+		 <COND (<0? .MM> "??")(ELSE <NTH ,MONTHS .MM>)>
+		 " "
+		 <COND (<==? .YY 77> "77")
+		       (<==? .YY 78> "78")
+		       (ELSE <UNPARSE .YY>)>
+		 " at "
+		 <ASCII <+ <ASCII !\0> </ .HR 10>>>
+		 <ASCII <+ <ASCII !\0> <MOD .HR 10>>>
+		 <ASCII <+ <ASCII !\0> </ .MN 10>>>
+		 <ASCII <+ <ASCII !\0> <MOD .MN 10>>>
+		 " "
+		 <3 .TIM>>>
+
+<DEFINE S-ADDR (ADR "OPTIONAL" (SP ,SCRATCH-SPACE) "AUX" F) 
+	#DECL ((ADR VALUE) STRING (F) <OR FIX STRING> (SP) SPACE)
+	<SET F <EXTRACT-HOST .ADR>>
+	<COND (<TYPE? .F FIX>
+	       <ASTRING .SP <EXTRACT-RCVR .ADR> " at " <HOST .F>>)
+	      (ELSE <ASTRING .SP <EXTRACT-RCVR .ADR> " at " .F>)>>
+
+<DEFINE S-ADDRL (ADRL "OPTIONAL" (CURSPACE ,SCRATCH-SPACE) (FIRST 0)
+		 "AUX" (CUR .FIRST) (H <>) (S .CURSPACE)) 
+	#DECL ((ADRL VALUE) <LIST [REST STRING]> (CURSPACE) <SPECIAL SPACE>
+	       (FIRST CUR) FIX (H) <OR FALSE STRING> (S) SPACE)
+	<MAPR ,ALLIST
+	      <FUNCTION (LL "AUX" SA N) 
+		      #DECL ((LL) <LIST [REST STRING]> (SA) STRING (N) FIX)
+		      <SET SA <S-ADDR <1 .LL>>>
+		      <SET N <+ <LENGTH .SA> 2>>
+		      <COND (<G? <+ .CUR .N> 70>
+			     <SET CUR <+ .FIRST .N>>
+			     <OR .H <SET H <ASTRING .S "
+" <AISTRING .S .FIRST !\ >>>>
+			     <COND (<LENGTH? .LL 1>
+				    <MAPRET .H .SA>)
+				   (ELSE <MAPRET .H .SA <ASTRING .S ", ">>)>)
+			    (ELSE
+			     <SET CUR <+ .CUR .N>>
+			     <COND (<LENGTH? .LL 1> <MAPRET .SA>)
+				   (ELSE <MAPRET .SA <ASTRING .S ", ">>)>)>>
+	      .ADRL>>
+
+<ENDPACKAGE>
+
+

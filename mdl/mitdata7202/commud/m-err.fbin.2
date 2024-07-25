@@ -1,0 +1,92 @@
+'<PCODE "2M-ERR">
+
+<PACKAGE "M-ERR"> 
+
+<ENTRY ERR-TO ERR-REPORT COMMON-ERR ERR-HEADER> 
+
+<USE "M-DEFS" "M-PRCD" "MADMAN" "USRUTI" "PRTUTI" "PRTSTR" "M-DATA" "M-READ" 
+"FIELDS" "M-MSG"> 
+
+<SETG CR <STRING <ASCII 13> <ASCII 10>>> 
+
+<GDECL (CR) STRING> 
+
+\ 
+
+"ERR-TO -- given adr, returns list of string(s), to list for error
+  report.  for receiver-related errors, will include addressee in list
+  only if author of message is not communication-daemon to prevent looping
+
+ -- if reporter wants to send to communication-system-maintainer, and
+     losing message is from communication-daemon to maintainer, delivery
+     should be done 'directly' to prevent looping.  maintainer will not
+     be in the list in this case." 
+
+<SETG ERR-TO  %<RSUBR!- '[ %<PCODE!- "2M-ERR" 0> ERR-TO #DECL ("VALUE" <LIST [
+REST ADDRESS]> ADDRESS) S-ADDRL S-ADDR S-TIME ADDBACK SENDMSG GET-ERROR 
+GET-PROCESS KEYGET AEQUAL? DRD DATUM T "COMSYS-MAINTAINER" 
+"COMMUNICATION-DAEMON" "AUTHOR" "REPLY-TO" CURSPACE %<RGLOC SCRATCH-SPACE T> %<
+TYPE-W SPACE VECTOR> (SPACE) 
+"     An unrecognized error code was returned from the " 
+"
+process.  The error code returned was:
+
+     " %<INTERNAL-RSUBR ASTRING 262143> %<INTERNAL-RSUBR ALIST 262143> 
+"     The " 
+" process, an unknown process, signalled an error
+code of:
+
+     " %<INTERNAL-RSUBR ACONS 3> ": " " Error" 
+"     An error occurred during processing of the message described
+below:
+
+" %<RGLOC CR T> 
+"
+     The problem has also been reported to the message system
+maintainer.  If you do not understand the reasons for the problem,
+send a message to COMMUNICATION-SYSTEM-MAINTAINER@MIT-DMS for help.
+Please include the Message-id of the failing message." "" 
+"     An attempt to apply the " 
+" process failed because no
+such process is known to the demon." 
+" process failed because a MUDDLE error occurred
+during the processing.  This indicates a possible bug, and has been
+reported to the system maintainer(s).  The error was:
+
+" 
+" process is considered to have failed, since
+a non-fatal error has been repeated on several successive attempts.
+This can indicate an internal bug, and has been reported. A
+description of the persistent non-fatal error follows.
+
+" 
+" process failed because the handler returned a
+false with no error code.  This indicates a possible bug and has been
+reported to the system maintainer(s)." "     Message-ID:  " "WHEN-ORIGINATED" 
+"     Sent:        " "     From:        " "     To:          " 
+"     Subject:     "]>> 
+<AND <ASSIGNED? GLUE> .GLUE <PUT ,ERR-TO PGLUE ![715827712 0 0!]>> 
+
+
+\ 
+
+"ERR-REPORT -- given a process, addressee, and error result, reports the
+  error as required by process table, etc." 
+
+<SETG ERR-REPORT %<RSUBR-ENTRY '[ERR-TO ERR-REPORT #DECL ("VALUE" <OR FALSE 
+STRING <LIST [REST STRING]>> STRING <FALSE FIX> ADDRESS "OPTIONAL" <OR ATOM 
+FALSE>)] 190>> 
+
+\ 
+
+<SETG COMMON-ERR %<RSUBR-ENTRY '[ERR-TO COMMON-ERR #DECL ("VALUE" <OR ATOM FALSE
+LIST> STRING FALSE ADDRESS)] 455>> 
+
+\ 
+
+"ERR-HEADER -- returns list of strings describing current message" 
+
+<SETG ERR-HEADER %<RSUBR-ENTRY '[ERR-TO ERR-HEADER #DECL ("VALUE" <LIST [REST 
+STRING]> ADDRESS SPACE)] 603>> 
+
+<ENDPACKAGE> 

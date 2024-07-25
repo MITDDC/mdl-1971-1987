@@ -1,0 +1,20 @@
+<USE "HOSTS" "USRUTI">
+
+<DEFINE TRY (HOST "AUX" (H <HOST .HOST>))
+	<SETG DEMON? T>
+	<INIT>
+	<MAPF <>
+	      <FUNCTION (E)
+		   <COND (<N=? <EXTRACT-HOST <2 .E>> .H>)
+			 (<AND <MREAD <1 .E>> <PROC? <2 .E>>>
+			  <PRINT <1 .E>>
+			  <PRCADD <2 .E> "DELIVERY">
+			  <UPDMSG>)>>
+	      <REST ,PENDING-QUEUE>>>
+
+<DEFINE PROC? (ADR "AUX" (PN <DRD .ADR "PROCESSING-NEEDED">))
+	<MAPF <>
+	      <FUNCTION (E)
+		   <COND (<=? <1 .E> "DELIVERY"> <MAPLEAVE T>)
+			 (ELSE <>)>>
+	      <REST .PN>>>

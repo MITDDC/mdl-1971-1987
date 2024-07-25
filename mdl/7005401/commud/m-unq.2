@@ -1,0 +1,18 @@
+<PACKAGE "M-UNQ">
+
+<ENTRY UNQUEUE>
+
+<USE "M-DEFS" "FIELDS" "ITIME" "MADMAN" "M-READ">
+
+<DEFINE UNQUEUE (ADR "AUX" N (P ,PENDING-QUEUE)
+		 (Q <REST .P>) M (U ()) (MS ,MSG-SPACE))
+	<SET N <DRDMSG "" <GETFIX "MSG-ID">>>
+	<REPEAT ()
+		<COND (<EMPTY? .Q> <RETURN T>)
+		      (<AND <==? .N <QMSG <SET M <1 .Q>>>>
+			    <OR <NOT .ADR> <=? .ADR <QADR .M>>>>
+		       <SET U (<QADR .M> !.U)>
+		       <PUTREST .P <SET Q <REST .Q>>>)
+		      (ELSE <SET P .Q> <SET Q <REST .Q>>)>>>
+
+<ENDPACKAGE>

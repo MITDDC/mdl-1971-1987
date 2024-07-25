@@ -1,0 +1,352 @@
+   THE MUDDLE TABLET FUNCTIONS
+
+GETTING THE TABLET:
+   To get the tablet get a MUDDLE and:
+
+<FLOAD "TJP;MUDTAB NBIN">
+
+This will load the tablet functions, then:
+
+<GETTABL>
+
+This will cause an IMLOAD of the Imlac tablet program.
+It prints "READY" and returns T when it is done.
+NOTE!:
+This can only be done if you are on Imlac #04 which is the only
+terminal that the tablet is interfaced to.
+
+<KILLTABL>
+
+This will cause the tablet program to be replaced with whatever is
+the current default console program (IMLOAD .<cr>).
+
+WRITING ON THE TABLET:
+   The tablet and the associated Imlac program allow for two ways to
+draw lines on the screen of T04, one of which is to draw line as if
+the tablet were a pen and paper.  At the top of the screen when the
+tablet program has been loaded will be a short horizontal line.
+This line shows the resolution of the segments that will appear on the
+screen if the pen is moved over the tablet.  The program will wait
+until the pen has moved (approximately) the distance shown by the line
+before it actually adds the next segment to the present line being
+drawn.  To change this resolution (within limits) depress either the
+right arrow or left arrow function keys.  These keys will either
+double or half the resolution respectively (again, within limits).
+   The other mode by which one can draw lines on the screen is the
+strait line mode.  No switching is necessary between these modes
+but the method the program uses depends on how the pen moves.
+If the pen is placed on the tablet and picked up to a height of less
+then 4 inches then a marker is left on that spot.  If the pen is then moved
+to another spot then a strait line is drawn between the marker and the
+new spot.  When using this mode one may find that putting the pen down
+on the tablet and picking it up will not leave a marker.  This can be
+for two reasons.  One, the pen has moved some distance, enough to draw
+a small segment. This can be seen because the segment drawn should be visible
+as a small figure or a dot.  This can be a problem for the following reason.
+The tablet determines when the pen is touching the surface by a small switch
+in the tip of the pen.  Sometimes when this switch closes it introduces a glitch
+into the system which causes the Imlac to believe that the pen has moved.
+To solve this problem, when drawing strait lines set the resolution
+(right arrow function key) so that it is just large enough to ignore such
+glitches.  The other reason may have been that the pen was lifted to more
+than 4 inches above the tablet.  The program running in the Imlac interprets
+this to mean that a set point was desired there.  These setpoints when not followed
+by a line segment (called a long vector or just vector) are not visible but are
+used for certain purposes which will be described later in this file
+
+ERASING LINES ON THE TABLET:
+   There are ways to erase things on the screen which are single key commands
+(sometimes with SHIFT and/or CONTROL keys depressed).  These commands only
+erase the lines which are stored in the Imlac and they do not effect whatever
+might be buffered in the running MDL which is running on the PDP/10.  Also they
+can only erase from the end of the Imlac's display list backwards and there
+for are generally of use only for erasing mistakes immediately after they
+are made. These key commands are:
+
+CTRL+DEL	deletes one object from the end of the buffer.
+		This object may be either a setpoint or a vector.
+
+CTRL+SHIFT+DEL	deletes an entire line from the end of the buffer along
+		with it's setpoint. This is the key command that should
+		be used to delete strait lines created in the second manner
+		described above.
+
+FORM		deletes the entire display (does not effect MDL buffer).
+
+
+
+MDL FUNCTIONS:
+   The following functions are used in an MDL to effect the display of lines
+on the Imlac, change the lines stored in the MDL buffer and to process the
+information there to a few more convenient forms to work with.
+
+
+READTAB		causes the contents of the Imlac's display list to be
+		converted into ardsmode characters and sent to the main
+		system.  These characters are saved as is in a string
+		which is the GVAL of the atom TABBUF. ,TABBUF is a string
+		which is initialized by READTAB (if it doesn't already
+		exist) to 8000 characters.  This buffer is always used
+		by READTAB and therefore if care is not taken it may be over written.
+		   READTAB takes one optional argument which is either a
+		# FALSE or an atom (default # FALSE).  If this argument
+		is given as an atom then the entire contents of the Imlac's
+		display list is transmitted.  If it is omitted then only
+		those objects which have not been sent by a previous
+		READTAB.  READTAB returns the number of characters sent.
+		READTAB also sets up certain variables used by other functions
+		to reference the buffer.
+
+WIPE		sets a variable to indicate that the MDL tablet buffer is
+		empty and sends a character to the Imlac which causes the
+		screen to be erased (only graphics, not characters).
+		It takes no arguments and returns a number of no particular
+		use.
+
+GETPICT		also takes no arguments.  It does however return an object
+		of type DRAWING which is of PRIMTYPE UVECTOR.  This object
+		contains a number of objects which represent strokes of the
+		pen on the tablet.  Note however that if the display on the
+		Imlac's screen is changed this change may or may not be
+		reflected in the contents of the buffer in the running
+		MDL.  If in doubt doing <READTAB ALL> and then <GETPICT>
+		will assure that the data returned is consistent with what
+		is in the Imlac's display.  The objects in a DRAWING are
+		of TYPE POINT-LIST, PRIMTYPE LIST.  These lists contain
+		two UVECTORS each which themselves contain the X and Y
+		coordinates respectively.  For example the object
+		#POINT-LIST (![500 500 600 600 500] ![500 600 600 500 500])
+		is a square 100 units on a side.
+
+DSPLY		will cause an object of TYPE POINT-LIST to be displayed
+		on the Imlac's screen.  Objects of TYPE POINT-LIST since
+		they are not strings are not stored in the MDL buffer
+		and causing them to be displayed does not enter them
+		there.  DSPLY and DSPLY-PICT only cause the respective
+		objects to be sent to the Imlac's display list and it
+		will not be part of the MDL buffer until the next READTAB
+		is done.  IF however a POINT-LIST or a DRAWING is obtained
+		from the MDL buffer in any way, is then displayed using
+		DSPLY or DSPLY-PICT, and then a READTAB is done this object
+		will then be represented in the buffer twice.
+
+DSPLY-PICT	is the same as DSPLY only it is for causing an entire
+		DRAWING to be sent to the Imlac.
+
+DISPLAY-BUF	is the counter part of <READTAB ALL>.  Whereas the latter
+		forces the MDL buffer to be consistent with what is in the
+		Imlac DISPLAY-BUF causes the Imlac display to be consistent
+		with what is in the MDL buffer.
+
+GETTRACEB	takes a fix (default 1) which is used to reference into
+		the MDL string buffer (,TABBUF) and returns a pointer
+		to the part of the buffer which represents the nth pen
+		stroke.  It returns a LIST of two items.  The first is
+		a string which is a rested version of ,TABBUF the MDL
+		buffer rested to the proper spot and the second item
+		is a fix which gives the number of characters from
+		that point in the representation of that stroke in
+		ardsmode characters.  If a negative argument is given
+		then GETTRACEB will return the list as described above
+		corresponding to the stroke which is the absolute value
+		of the given negative argument places from the end of the
+		buffer.
+
+READTRACE	takes as an argument exactly the type of object returned
+		by GETTRACEB and returns an object of TYPE POINT-LIST
+		which gives the X and Y coordinates of the particular
+		stroke.  <READTRACE <GETTRACE n>> will return the
+		POINT-LIST form of the nth stroke in ,TABBUF.
+		These are the functions that GETPICT use.
+		READTRACE works for any string and fix in the proper
+		form.  If you should have some random string of ards-mode
+		character you can reference into it by using the
+		next function.
+
+GETTRACE	(note the missing b for buffer) takes two arguments, a
+		string and an optional fix. Outside of this difference
+		it is used in the same way as GETTRACEB.  It does not
+		however have use of certain markers set up by READTAB
+		that GETTRACEB does and so must map down the string
+		counting setpoints making it much slower.   It DOES NOT
+		accept negative arguments as GETTRACEB does.
+
+DELTR		takes no arguments.  Executing it in a MDL is the same
+		as depressing CTRL+SHIFT+DEL on the console and does not
+		effect the MDL's buffer.
+
+DEL-FROM-BUF	only effects the MDL's buffer and does not change the visible
+		display.  It takes one argument which is a fix.  If this fix
+		positive then the nth stroke in the buffer is removed and
+		the buffer is compacted over it (actually both are done by
+		SUBSTRUC).  If it is given a negative argument then that many
+		strokes (the absolute value) are deleted from the end of the
+		buffer.  Too large a positive value causes an error but too
+		small a negative value results only in the entire buffer
+		being deleted.  Again this does not effect the visible display.
+
+SPECIAL PEN COMMANDS:
+   The next few commands are used in conjunction with the tablet to do a
+few simple editing of the display.  They all depend on setpoints placed
+in the Imlac's buffer and these set points are used as coordinates. To put
+a setpoint in the Imlac buffer touch the pen to the tablet so that a mark
+appears.  Then lift the pen up until the mark disappear and a setpoint
+will be placed in the Imlac's buffer at that point.  The special pen commands
+use READTAB to get such setpoints and often complain if they are not there.
+They also remove these setpoints from both the Imlac's and the MDL's buffer
+after they store the coordinate values of them.
+
+
+PEN-GET		reads in a setpoint (error if it is not there) and returns
+		the number of the stroke in the MDL's buffer closets to
+		that point.  It uses only the points in the strokes to do
+		this and not the line between them so if long strait lines
+		are on the screen it is best to point the pen at the end-
+		points of the desired line. It also deletes the setpoint
+		from both buffers.
+
+PEN-MOVE	requires two setpoints.  The first one is used to pick a
+		stroke using PEN-GET and the second to provide a new location
+		for the stroke.  The stroke is moved and its ards-mode
+		representation is inserted into the MDL's buffer at the
+		same spot as the old representation.  DISPLAY-BUF is called
+		so that the change is immediately seen.  Both setpoints
+		are deleted from both buffers.
+
+PEN-DEL		is used in the same manner as PEN-MOVE but it deletes
+		the stroke pointed to and calls DISPLAY-BUF.
+
+PEN-COPY	again is used like PEN-MOVE but copys the stroke into
+		the new location without deleting the old.  In this
+		case the new copy is displayed in the Imlac but is
+		not entered into the buffer until the next READTAB
+		thus allowing the new stroke to be deleted via a key
+		command.  Since all the above functions use READTAB
+		this new stroke may be entered into the buffer shortly.
+
+
+
+
+
+STRTN		is used to draw lines perpendicular to the X or Y axis.
+		To draw such a line, approximate it by eye and then call
+		STRTN with either the atom X or the atom Y as an argument
+		and the last segment drawn will be projected onto the line
+		parallel to the appropriate axis that goes through the
+		first point of the segment.  Note that for this to work the
+		last line drawn on the screen must have been in strait line mode.
+
+
+REPRESENTATION FUNNYS:
+   The MUDTAB file also contains a few functions to change the way a
+stroke is represented.  Ards-mode and the object of TYPE POINT-LIST
+have been described.  To change from the former to the later one uses
+READTRACE as described above.  Also one may go in the reverse direction
+by using ARDS-OF-TRACE which takes a POINT-LIST and returns a string
+suitable for inserting into a display.  Ards mode strings are also
+IMPRINTable but only to a SSV program running in an Imlac and they
+can also be put into a file and XGPed in the same manner one would
+XGP a file produced by an SSVMSE session (this requires running
+the program XP and usually DIRED as well).  There are other representations
+available when using MUDTAB and they are described below with the description
+of the functions that change from one form to another following that.
+
+
+   A TRACE is an object of PRIMTYPE VECTOR and has two components.
+The first is a Uvector of FLOATs that represent angles in radians.
+The second is another vector with three components.  The first two
+are FIXes and represent a point in 2-space, the third is a FLOAT
+and represents a distance.  To reconstruct a stroke from this
+representation one would start at the point given by the two
+FIXes and travel, in the direction given by the first FLOAT in
+the first component the distance given by the FLOAT in the second
+component.  From here travel in the direction of the second FLOAT
+in the first component the same distance.  This is repeated until
+the FLOATs in the first component are exhausted and in this way
+the original stroke can be reconstructed.
+  A TRAJECTORY is much like a TRACE in form with one exception.
+It has three components on the top level.  The first and third
+are the same as the two in a TRACE, the second is a FLOAT.
+The FLOATs in the first component of a TRAJECTORY instead of
+representing a direction to travel represent a change from the
+previous heading plus being counter-clockwise minus being clockwise.
+The extra float provided as the second component is the initial
+direction.  The MUDTAB functions provide means to go from any of
+these forms to any other and back again.  A stroke first represented
+as a POINT-LIST changed to a TRACE and then changed to a POINT-LIST
+again is usually indistinguishable from the original by eye but the
+actual contained points may differ due to round off errors.  Note
+that for this to work the stroke must consist of segments of equal
+size such as are produced by the tablet pen.
+   The functions provided for making these changes are given below.
+
+
+FUNCTION:		REPRESENTATION CHANGE:
+
+
+THETA-TRACE		POINT-LIST => TRACE
+
+DEL-THETA		TRACE => TRAJECTORY
+
+DELTHAB			TRAJECTORY => TRACE
+
+THETABACK		TRACE => POINT-LIST
+
+
+
+
+
+
+CONVOLVE		can be used to get the convolution of one uvector and another.
+			The function takes two arguments which must be UVECTORs of
+			UTYPE FLOAT.  The second argument must also be presented to
+			CONVOLVE in reverse order for a true convolution.  The two
+			UVECTORs are convolved as if they were both contained in
+			UVECTOR of larger length proceeded and followed by zeros but
+			only the non zero elements are returned.
+
+REVERSE			for convenience will will take a UVECTOR of FLOATs and reverse
+			the order of its entries in place returning the original
+			structure.
+
+FIL-TRAJ		takes as arguments a TRAJECTORY and a UVECTOR of FLOATs and
+			returns a new trajectory with all the elements of the old except
+			that the UVECTOR of angles (FLOATs representing radians) is
+			CONVOLVEd with the given second argument. Remember that for non
+			symmetrical UVECTORS its reverse must be presented to FIL-TRAJ
+
+
+SHOW-SCALE		In order to test impulse responses that one might to use in
+			conjunction with FIL-TRAJ it is nice to have a visual idea of
+			what is happening because of a particular convolution.  One
+			might want to directly display a TRAJECTORY without converting
+			it back to a 2-D representation.  This is best done using the
+			package PLOTSO and this is recommended.  However since this
+			requires reloading the Imlac with an SSV console program there
+			is an alternative for the most simple cases were one might want
+			to directly display a TRAJECTORY.  SHOW-SCALE causes one and
+			only one very simple scale to be displayed on the screen.
+			It shows an unmarked x axis and a y axis with only the points
+			Pi and minus Pi marked.
+
+PLOT-TRAJ1		will plot a TRAJECTORY so that the values of the first UVECTOR
+			component are displayed in thier proper positions relative to
+			the y axis displayed by SHOW-SCALE.  PLOT-TRAJ1 takes two
+			arguments the first of which is a TRAJECTORY and the second
+			is a fix used to spread the points that displayed out on the
+			x axis.  If the argument given is n then the first point
+			displayed will be at X=n and the second at X=2n, ect.
+
+
+SAVE-PICT		will dump the ards-mode representation of whatever is on the
+			screen into a file.  It takes one argument which must be
+			a file specification in string form.
+
+RESTORE-PICT		first reads an ards-mode file into the unused portion of
+			the MDL's buffer ,TABBUF and then tries to display on the
+			screen.  If there is not enough room in the MDL's buffer then
+			there will be an error.  If the file would fit into the MDL
+			buffer but not the Imlac buffer then the Imlac will eat the
+			extra characters and not do anything with them.
+
+

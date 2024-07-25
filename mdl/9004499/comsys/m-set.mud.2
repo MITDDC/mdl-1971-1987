@@ -1,0 +1,35 @@
+<PACKAGE "M-SET">
+
+<ENTRY DAEMON? BE-DAEMON BE-USER MDBG MDBG?>
+
+<GDECL (DBG? D?) <OR 'T FALSE> (W) <OR WORD FALSE>>
+
+<SETG D? <>> ;"not daemon initially"
+
+<SETG DBG? <>> ;"not debugging either"
+
+"BE-DAEMON -- tells world we are the daemon"
+
+<DEFINE BE-DAEMON ("AUX" (D ,D?)) <SETG D? T> .D>
+
+"BE-USER -- tells world we are a random user"
+
+<DEFINE BE-USER ("AUX" (D ,D?)) <SETG D? <>> .D>
+
+"MDBG -- sets debug flag, default is to turn on debugging"
+
+<DEFINE MDBG ("OPTIONAL" (FLG T) "AUX" (D ,DBG?))
+	#DECL ((VALUE FLG) <OR 'T FALSE>)
+	<SETG DBG? .FLG>
+	.D>
+
+"DAEMON? -- true iff we are daemon"
+
+<DEFMAC DAEMON? ()
+	<FORM GVAL D?>>
+
+"MDBG? -- true iff we are debugging"
+
+<DEFMAC MDBG? () <FORM GVAL DBG?>>
+
+<ENDPACKAGE>

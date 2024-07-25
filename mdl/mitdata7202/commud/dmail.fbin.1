@@ -1,0 +1,79 @@
+'<PCODE "DMAIL">
+
+<PACKAGE "DMAIL"> 
+
+<ENTRY DO-MAIL DO-FORWARD DO-REMIND DO-REPLIED LST-DO> 
+
+<USE "CHAN" "DDEFS" "MADMAN" "ASYLUM" "ITIME"> 
+
+<USE "M-DEFS" "M-READ" "M-DAC" "M-DATA" "M-TIME" "USRUTI" "M-ACK"> 
+
+"DO-MAIL -- what to do when a mail service request is input." 
+
+<SETG DO-MAIL  %<RSUBR!- '[ %<PCODE!- "DMAIL" 0> DO-MAIL #DECL ("VALUE" <OR 
+FALSE <VECTOR <OR FALSE FIX> ADDRESS <OR ADDRESS FALSE>>> DISPATCH) FRATM FRAMES
+ DADD DRMV DAPP DWT NEWMESSAGE COND-SIGNAL EMERGENCY BTIME PRCADD KEYGET MREAD 
+SCROUT WATCH %<TYPE-W DISPATCH VECTOR> "MSG-NO" #FALSE ("Unpaired Data") #FALSE 
+("Bad Message Data") %<RGLOC MSG-SPACE T> %<TYPE-W SPACE VECTOR> IHAN "ERROR" %<
+RGLOC LST-DO-ERR T> %<RGLOC READ-WRITE? T> "Resetting Msg space" 
+%<INTERNAL-RSUBR ARESET 1> %<RGLOC RQLST T> LST-DO-ACT (ACTIVATION) T #FALSE (
+"Improper length") %<INTERNAL-RSUBR ACOPY 2> #FALSE ("Unable to read message.") 
+%<RGLOC DATA-ERRORS T> #FALSE ("Message read failed.") #FALSE (
+"Message number non-fix.") "ADDRESSEE" #FALSE ("No such addressee known.") #
+FALSE ("Addressee non-string.") "ERROR-TO" #FALSE ("No such error-to known.") #
+FALSE ("Error-to non-string.") "SCHEDULE" #FALSE ("Improper Schedule Format") 
+"EMERGENCY" #FALSE ("Improper Emergency Format") "SIGNAL" "STORE" #FALSE (
+"Improper Command Format") "APPEND" "DELETE" "REMOVE" "ADD" #FALSE (
+"Unrecognized command") %<RGLOC IHAN T> ">>> Impossible request: " " <<<" 
+">>>> Error During Initial Request Processing, Args: " " <<<<" 
+LERR\ !-INTERRUPTS OUTCHAN #FALSE ("Error during initial request processing.")]>
+> 
+<AND <ASSIGNED? GLUE> .GLUE <PUT ,DO-MAIL PGLUE ![715827882 0 0 0 0!]>> 
+
+
+"DO-FORWARD -- what to do when a 'forwarding' request is input." 
+
+<SETG DO-FORWARD %<RSUBR-ENTRY '[DO-MAIL DO-FORWARD #DECL ("VALUE" <OR FALSE <
+VECTOR <OR FALSE FIX> ADDRESS <OR ADDRESS FALSE>>> DISPATCH)] 18>> 
+
+"DO-REMIND -- what to do when a reminder request is input." 
+
+<SETG DO-REMIND %<RSUBR-ENTRY '[DO-MAIL DO-REMIND #DECL ("VALUE" <OR FALSE <
+VECTOR <OR FALSE FIX> ADDRESS <OR ADDRESS FALSE>>> DISPATCH)] 36>> 
+
+"DO-REPLIED -- what to do when a 'replied-to-message' request is input." 
+
+<SETG DO-REPLIED %<RSUBR-ENTRY '[DO-MAIL DO-REPLIED #DECL ("VALUE" <OR FALSE <
+VECTOR <OR FALSE FIX> ADDRESS <OR ADDRESS FALSE>>> DISPATCH)] 54>> 
+
+\ 
+
+<SETG MAIL-DISP? %<RSUBR-ENTRY '[DO-MAIL MAIL-DISP? #DECL ("VALUE" <OR DISPATCH 
+!<FALSE STRING!>> DISPATCH)] 72>> 
+
+\ 
+
+"LST-DO -- given a list of commands (instead of file) do them...
+
+-- optional parameter vector gives current state of message, addressee,
+error-to settings.  if message is given, it is assumed to be locked
+already.
+
+-- returns terminal parameter vector if winner, else false containing
+reason string, and parameter vector
+" 
+
+<SETG LST-DO %<RSUBR-ENTRY '[DO-MAIL LST-DO #DECL ("VALUE" <OR <FALSE STRING 
+VECTOR> <VECTOR <OR FALSE FIX> ADDRESS <OR ADDRESS FALSE>>> LIST "OPTIONAL" 
+RQVECTOR)] 170>> 
+
+\ 
+
+<SETG RQLST <VECTOR <> () <>>> 
+
+<GDECL (RQLST) RQVECTOR> 
+
+<SETG LST-DO-ERR %<RSUBR-ENTRY '[DO-MAIL LST-DO-ERR #DECL ("VALUE" ANY "TUPLE" 
+TUPLE)] 757>> 
+
+<ENDPACKAGE> 

@@ -1,0 +1,17 @@
+Compilation record for: DSK:MPROG2;MAIL UDL273
+Output file:  DSK:MBPROG;MAIL NBIN
+
+It is now Wednesday, 18 Mar 1981 16:16 EST
+
+File loaded.
+Precompilation loaded.
+No DEFINEd functions in this file.
+Functions ordered.
+
+
+Total time used is
+	2 min. 58 sec. CPU time,
+	44 sec. garbage collector CPU time,
+	5 min. 19 sec. real time.
+CPU utilization is 55.799373%.
+Number of garbage collects = 6

@@ -1,0 +1,190 @@
+<PACKAGE "PRTEXT">
+
+<ENTRY PRINT-TEXT PRINT-FAX PRINT-GRAPHICS PRINT-VOICE PRINT-IMAGE
+       PRINT-SEQUENTIAL PRINT-SIMULTANEOUS PRINT-INDEPENDENT PRINT-BRANCH>
+
+<ENTRY MEDIA-TYPES PRESENTATION-MODES>
+
+"PRINT-TEXT -- print possibly multi-media text field"
+
+<DEFINE PRINT-TEXT (TXT OUTCHAN "AUX" MODE M)
+	#DECL ((TXT) ANY (OUTCHAN) CHANNEL)
+	<COND (<TYPE? .TXT STRING> <PRINC .TXT>)
+	      (<TYPE? .TXT LIST>
+	       <MAPF <>
+		     <FUNCTION (S)
+			  #DECL ((S) STRING)
+			  <PRINC .S>
+			  <CRLF>>
+		     .TXT>)
+	      (<AND <TYPE? .TXT VECTOR> <==? <LENGTH .TXT> 2>>
+	       <COND (<NOT <SET MODE <1 .TXT>>> <SET MODE "SEQUENTIAL">)>
+	       <COND (<SET M <MEMBER .MODE ,PRESENTATION-MODES>>
+		      <APPLY ,<2 .M> <2 .TXT> .OUTCHAN>)
+		     (<SET M <MEMBER .MODE ,MEDIA-TYPES>>
+		      <APPLY ,<2 .M> <2 .TXT> .OUTCHAN>)
+		     (<=? .MODE "NOTES">
+		      <PRINT-NOTES <2 .TXT> .OUTCHAN>)
+		     (<=? .MODE "ENCLOSURES">
+		      <PRINT-ENCLOSURES <2 .TXT> .OUTCHAN>)
+		     (ELSE
+		      <PRINC ">>Bad mode indicator: ">
+		      <PRINC .MODE>
+		      <PRINC "<<">
+		      <PRINT-TEXT <2 .TXT> .OUTCHAN>)>)
+	      (ELSE
+	       <PRINC ">>Begin unintelligible text field<<">
+	       <PRINT .TXT>
+	       <PRINC ">>End unintelligible text field<<">)>>
+
+<DEFINE PRINT-INDEPENDENT (TXT OUTCHAN)
+	#DECL ((TXT) LIST (OUTCHAN) CHANNEL)
+	<PRINC "[[Beginning of Sender-specified independent presentation]]">
+	<CRLF>
+	<MAPF <>
+	      <FUNCTION (TXT)
+		   <PRINT-TEXT .TXT .OUTCHAN>
+		   <CRLF>>
+	      .TXT>
+	<CRLF>
+	<PRINC "[[End of Sender-specified independent presentation]]">
+	<CRLF>>
+
+<DEFINE PRINT-SIMULTANEOUS (TXT OUTCHAN)
+	#DECL ((TXT) LIST (OUTCHAN) CHANNEL)
+	<PRINC "[[Beginning of Sender-specified simultaneous presentation]]">
+	<CRLF>
+	<MAPF <>
+	      <FUNCTION (TXT)
+		   <PRINT-TEXT .TXT .OUTCHAN>
+		   <CRLF>>
+	      .TXT>
+	<CRLF>
+	<PRINC "[[End of Sender-specified simultaneous presentation]]">
+	<CRLF>>
+
+<DEFINE PRINT-SEQUENTIAL (TXT OUTCHAN)
+	#DECL ((TXT) LIST (OUTCHAN) CHANNEL)
+	<MAPF <>
+	      <FUNCTION (TXT)
+		   <PRINT-TEXT .TXT .OUTCHAN>
+		   <CRLF>>
+	      .TXT>>
+
+<DEFINE PRINT-BRANCH (TXT OUTCHAN)
+	#DECL ((TXT) LIST (OUTCHAN) CHANNEL)
+	<PRINC "[[Beginning of Sender-specified branch presentation]]">
+	<CRLF>
+	<MAPF <>
+	      <FUNCTION (TXT)
+		   <PRINT-TEXT .TXT .OUTCHAN>
+		   <CRLF>>
+	      .TXT>
+	<CRLF>
+	<PRINC "[[End of Sender-specified branch presentation]]">
+	<CRLF>>
+
+<SETG PRESENTATION-MODES
+      '["INDEPENDENT" PRINT-INDEPENDENT
+	"SEQUENTIAL" PRINT-SEQUENTIAL
+	"SIMULTANEOUS" PRINT-SIMULTANEOUS
+	"BRANCH" PRINT-BRANCH]>
+<GDECL (PRESENTATION-MODES) <VECTOR [REST STRING ATOM]>>
+
+<DEFINE PRINT-FAX (TXT OUTCHAN)
+	<PRINC "	[[Beginning of Facsimile presentation]]">
+	<CRLF>
+	<PRINC "	">
+	<COND (<TYPE? .TXT STRING>
+	       <PRINC "From file ">
+	       <PRINC .TXT>)
+	      (<TYPE? .TXT CHANNEL>
+	       <PRINC "From channel open to ">
+	       <CHANPRINT .TXT>)
+	      (<TYPE? .TXT BYTES>
+	       <PRINC "Image contains ">
+	       <PRINC <LENGTH .TXT>>
+	       <PRINT " bytes.">)>
+	<CRLF>
+	<PRINC "	[[End of Facsimile presentation]]">
+	<CRLF>>
+
+<DEFINE PRINT-VOICE (TXT OUTCHAN)
+	<PRINC "	[[Beginning of Voice presentation]]">
+	<CRLF>
+	<PRINC "	">
+	<COND (<TYPE? .TXT STRING>
+	       <PRINC "From file ">
+	       <PRINC .TXT>)
+	      (<TYPE? .TXT CHANNEL>
+	       <PRINC "From channel open to ">
+	       <CHANPRINT .TXT>)
+	      (<TYPE? .TXT BYTES>
+	       <PRINC "Speech contains ">
+	       <PRINC <LENGTH .TXT>>
+	       <PRINT " bytes.">)>
+	<CRLF>
+	<PRINC "	[[End of Voice presentation]]">
+	<CRLF>>
+
+<DEFINE PRINT-IMAGE (TXT OUTCHAN)
+	<PRINC "	[[Beginning of Image presentation]]">
+	<CRLF>
+	<PRINC "	">
+	<COND (<TYPE? .TXT STRING>
+	       <PRINC "From file ">
+	       <PRINC .TXT>)
+	      (<TYPE? .TXT CHANNEL>
+	       <PRINC "From channel open to ">
+	       <CHANPRINT .TXT>)
+	      (<TYPE? .TXT BYTES>
+	       <PRINC "Image contains ">
+	       <PRINC <LENGTH .TXT>>
+	       <PRINT " bytes.">)>
+	<CRLF>
+	<PRINC "	[[End of Image presentation]]">
+	<CRLF>>
+
+<DEFINE PRINT-GRAPHICS (TXT OUTCHAN)
+	<PRINC "	[[Beginning of Graphics presentation]]">
+	<CRLF>
+	<PRINC "	">
+	<COND (<TYPE? .TXT STRING>
+	       <PRINC "From file ">
+	       <PRINC .TXT>)
+	      (<TYPE? .TXT CHANNEL>
+	       <PRINC "From channel open to ">
+	       <CHANPRINT .TXT>)
+	      (<TYPE? .TXT BYTES>
+	       <PRINC "Picture contains ">
+	       <PRINC <LENGTH .TXT>>
+	       <PRINT " bytes.">)>
+	<CRLF>
+	<PRINC "	[[End of Graphics presentation]]">
+	<CRLF>>
+
+<SETG MEDIA-TYPES
+      '["FAX" PRINT-FAX
+	"IMAGE" PRINT-IMAGE
+	"VOICE" PRINT-VOICE
+	"GRAPHICS" PRINT-GRAPHICS]>
+<GDECL (MEDIA-TYPES) <VECTOR [REST STRING ATOM]>>
+
+<DEFINE CHANPRINT (CH "AUX" (OUTCHAN .OUTCHAN))
+	#DECL ((CH OUTCHAN) CHANNEL)
+	<PRINC "#CHANNEL [">
+	<PRINC <1 .CH>>
+	<PRINC !\ >
+	<PRIN1 <2 .CH>>
+	<PRINC " \"">
+	<PRINC <9 .CH>>
+	<PRINC ":<">
+	<PRINC <10 .CH>>
+	<PRINC !\>>
+	<PRINC <7 .CH>>
+	<PRINC !\.>
+	<PRINC <8 .CH>>
+	<PRINC "\"">
+	<PRINC !\]>>
+
+<ENDPACKAGE>

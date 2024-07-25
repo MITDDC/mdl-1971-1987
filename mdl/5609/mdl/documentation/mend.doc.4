@@ -1,0 +1,167 @@
+MEND (Muddle Executer, aNalyzer, and Debugger)		2/6/76 JMB
+							3/4/81 JMB
+
+
+[0] TOPS-20 MEND
+
+	A number of changes have been made in MEND to move it from ITS
+to TOPS-20.  A few commands have been changed and many bugs have been
+fixed.  The major restriction that now exists is that MEND will now
+operate only with VT-100's.
+
+
+[1] Starting MEND
+
+		to start MEND:	<MEND>
+
+	Once MEND is started, the original process will be single
+stepped and monitored.  Type an expression to be evaluated and you will
+see displayed a representation of the control stack as evaluation
+proceeds.  A level number is printed at the beginning of each line
+followed by the object being evaluated at that level in &-printed form.
+This object may contain a diamond-shaped pointer, which is in place of
+the object on the next line.  The pointer will be eventually replaced by
+whatever the latter object returns.
+
+
+[2] Interrupts
+
+	When running, MEND is always listening for certain interrupt
+characters.  The characters and their meanings are as follows.
+
+	^E	End automatic mode
+	^B	Begin automatic mode
+
+	^U	Unprint (stop displaying stack)
+	^P	Print (start displaying stack)
+
+	^N	Next step (used when not in automatic mode)
+	^O	skip Over (completely evaluate) current object
+
+	^X	eXit from current MEND
+
+	In addition, these standard interrupt characters may also be
+useful:
+
+	^L	cLear screen, reprint stack and input
+	^S	return to last LISTEN, ERROR, or EDIT loop
+		(possibly flushing MEND if you return far enough)
+	^F	return to last EDIT loop
+	^G	user-generated ERROR
+
+
+
+[3] Operating modes
+
+	MEND starts in a mode where execution and associated actions
+proceed automatically but it may be stopped and restarted using the
+interrupts ^E and ^B.  When stopped it is in a read-eval-print loop
+and you may do things like <FRAMES> to examine or change the state of
+your process.  MEND itself will be mostly invisible.  Actually you are
+typing at an invocation of EDIT.  You have all of the normal editing
+commands at your disposal and a number of MEND commands.  The new
+commands (and changed old ones) are:
+
+NAME	ARGS	MEANING
+?	none	type out short summary
+??	none	type out this summary
+
+O	1,any	Open object or the value of an atom
+V	none	toggle Verbosity
+
+N	1,FIX	do Next arg steps (like ^N)
+OV	none	skip OVer current object (like ^O)
+
+Q	none	Quit EDIT & return to automatic mode (like ^B)
+QM	none	Quit MEND (like ^Q)
+QT	none	Quit EDIT & return T (useful when EDIT was explicitly called)
+
+SN	1,FIX	Set Number of lines used for stack display
+SV	1,FIX	Set leVel below which MEND will stop 1STEPping
+SD	1,num	Set Delay time between steps
+
+PD	1,FIX	Pprint Displayed object in level #arg
+PO	1,FIX	Pprint Original (actual) object in level #arg
+
+AI	1,any	Add Item to automatic display list
+PI	1,FIX	Pprint display list Item #arg
+DI	1,FIX	Delete Item #arg from display list
+
+
+[4] Displayed objects
+
+	There are two objects associated with each line of the stack
+display, the actual object producing that line and the displayed
+object.  These are initially exactly the same.  The displayed object
+will be altered by argument replacement as each of its arguments is
+evaluated (first with the cursor and then EVAL of the argument).  This
+will normally proceed until all arguments are evaluated and the actual
+object itself returns a value.
+	The normal sequence may be altered in two ways.  If the object
+is something like a PROG or REPEAT that may repeatedly evaluate some
+or all of its arguments, each time the sequence of evaluation is
+logically "backed up" the previously replaced arguments again in line
+for evaluation will be reset to their original values.  The other case
+is when the O command is used to edit the actual object.  Changes in
+the actual object may or may not be reflected in the displayed object,
+depending upon how much of the displayed object has already been
+replaced.
+
+[5] Initial conditions
+
+	MEND originally starts with the following conditions:
+
+1)	automatic mode (^B)
+2)	printing on (^P)
+3)	delay time (SD) = 1 second
+4)	no. of stack lines displayed (SN) = 8
+5)	lowest 1STEPped level (SV) = 100000
+
+
+[6] Breakpoints
+
+	When MEND is running, the behavior of breakpoints (of the EDIT
+variety) is slightly altered.  The change is compatible with the old
+behavior to the extent that breakpoints set with MEND-type arguments
+will "do the right thing" outside of MEND and vice versa.  When a
+breakpoint is encountered in MEND, if its first argument (excluding
+the object object) evaluates to false, execution continues normally.
+If it is one of a special group of atoms or if it is non-false and the
+second argument is a special atom, the associated action will occur,
+any further arguments will be printed with their values, and execution
+will be continued.
+
+	ON	printing will be turned on (like ^P)
+	OFF	   "      "   "    "    off (like ^U)
+	GO	free-run the object object (like ^O)
+	PRINT	sort of a no-op, just print args & continue
+
+Otherwise, all but the first argument are printed with their values
+and automatic mode is stopped (like ^E).  You may continue from the
+break just as if you had typed ^E yourself.
+
+
+[7] Read and Write monitors
+
+	You may instruct MEND to display certain objects while it is
+running by using the AI (Add Item) command and supplying an object to
+display.  For example "AI .N" will produce a line showing ".N" and
+what that currently EVALs to.  For later reference, these lines are
+numbered.
+	Since the lines are normally &-printed, PI (Print Item) may
+be used to PPRINT the monitored object and its value.  DI (Delete
+Item) removes the specified item from the display list.  Both PI
+and DI take the item number as their argument.
+
+
+[8]  State Indicators
+
+	The separation line has three text fields on it showing the
+current state of MEND.  The first says "next" whenever MEND is waiting
+for a new object to operate on.  The second says "print" or "noprint"
+depending upon the state of the printing switch (set by ^P, cleared by
+^U).  The third says "auto" or "noauto" according to whether or not MEND
+is running automatically (begun by ^B, ended by ^E).
+	Initially "next", "print", and "auto" are displayed, meaning
+that MEND is in automatic mode, is printing each step, and is waiting
+for an object to be typed in to evaluate.

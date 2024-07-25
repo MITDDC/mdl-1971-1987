@@ -1,0 +1,117 @@
+
+<PACKAGE "M-TXT">
+
+<ENTRY MAIL-TXT>
+
+<USE "MADMAN"
+     "CHAN"
+     "OPEN-APPEND"
+     "FIELDS"
+     "M-DEFS"
+     "M-TIME"
+     "ITIME"
+     "M-READ"
+     "M-DAC"
+     "M-DOUT"
+     "M-DATA"
+     "M-TEMP"
+     "AP"
+     "PRTUTI"
+     "USRUTI"
+     "M-TAI">
+
+"MAIL-TXT style mail, TOPS-20 only"
+
+<DEFINE MAIL-TXT (ADR "AUX" U CH DATA LST UK FMT
+		       L TCH AFMT DFLT (MS ,MSG-SPACE))
+   #DECL ((ADR) STRING (DATA) ANY (U) <LIST [REST <OR STRING VECTOR>]>
+	  (AFMT) <OR FALSE APPLICABLE> (FMT) <OR STRING LIST> (MS) SPACE
+	  (TCH) <OR CHANNEL FALSE> (L) FIX
+	  (UK HOW) <OR STRING FALSE> (LST DFLT) LIST (CH) <OR FALSE CHANNEL>)
+   <PROG L-ACT ()
+      #DECL ((L-ACT) ACTIVATION)
+      <SET DATA <DRD .ADR <GETFIX "LOGIN-MAIL">>>
+      <COND (<NOT <OK? <GETFIX "LOGIN-MAIL"> .DATA>>
+	     <RETURN <AFALSE 5
+			     <ASTRING .MS "LOGIN-MAIL">
+			     <ASTRING .MS <UNPARSE .DATA>>>>)>
+      <SET LST .DATA>
+      <SET DFLT <DRDFLT "LOGIN-MAIL">>
+      <REPEAT ()
+	 <COND (<EMPTY? .LST> <RETURN T>)
+	       (<NOT <1 .LST>>				 ;"USE DEFAULTS"
+		<SET DATA <DRD .ADR <GETFIX "LOGIN-USERS">>>
+		<COND (<AND .DATA <OK? <GETFIX "LOGIN-USERS"> .DATA>>
+		       <SET U .DATA>)
+		      (.DATA
+		       <RETURN <AFALSE 6
+				       <ASTRING .MS "LOGIN-USERS">
+				       <ASTRING .MS <UNPARSE .DATA>>>>)
+		      (<SET UK <KEYGET .ADR>> ;"NOTHING SUPPLIED"
+		       <SET U (.UK)>)
+		      (ELSE <RETURN <AFALSE 8 <ASTRING .MS .ADR>>>)>)
+	       (<TYPE? <1 .LST> LIST>			 ;"LIST OF USERS GIVEN"
+		<SET U <1 .LST>>)
+	       (ELSE				   ;"ONLY ONE GIVEN, AS STRING"
+		<SET U <LIST <1 .LST>>>)>
+	 <SET LST <REST .LST>>
+	 <COND (<OR <EMPTY? .LST> <NOT <1 .LST>>>
+		<SET DATA <2 .DFLT>>) 
+	       (ELSE <SET DATA <1 .LST>>)>
+	 <COND (<NOT .DATA>)
+	       (<AND <TYPE? .DATA STRING> <=? .DATA "APPEND">>)
+	       (ELSE
+		<RETURN <AFALSE 5
+				<ASTRING .MS "MAIL-TXT">
+				<ASTRING .MS <UNPARSE .DATA>>>>)>
+	 <OR <EMPTY? .LST> <SET LST <REST .LST>>>
+	 <COND (<OR <EMPTY? .LST> <NOT <1 .LST>>>
+		<SET FMT <3 .DFLT>>)
+	       (ELSE <SET FMT <1 .LST>>)>
+	 <OR <EMPTY? .LST> <SET LST <REST .LST>>>
+	 <COND (<AND <NOT <EMPTY? .LST>> <1 .LST>>
+		<SET DATA <DRD .ADR "RECEIVED-FROM-HOST">>
+		<COND (<NOT <HOME? .DATA>> <SET FMT <1 .LST>>)>)>
+	 <OR <EMPTY? .LST> <SET LST <REST .LST>>>
+	 <COND (<SET AFMT <AP? .FMT>>)
+	       (<TYPE? .FMT STRING>
+		<SET DATA <DATUM .FMT>>
+		<OR <TYPE? .DATA LIST>
+		    <RETURN <AFALSE 9
+				    <ASTRING .MS "MAIL-TXT">
+				    <ASTRING .MS <UNPARSE .DATA>>>>>
+		<SET FMT .DATA>)>
+	 <MAPF <>
+	       <FUNCTION (UU "AUX" SNM) 
+		       #DECL ((UU) <OR STRING VECTOR> (SNM) <SPECIAL STRING>)
+		       <COND (<AND <TYPE? .UU STRING> <EMPTY? .UU>>
+			      <SET UU .ADR>)>
+		       <SET SNM .UU>
+		       <COND (<SET CH <OPEN "PRINT" "MAIL.TMP.-1;T">>
+			      <SET DATA
+				   <COND (.AFMT <DO-APPLY .ADR .AFMT .CH>)
+					 (ELSE <DO-OUTPUT .ADR .FMT .CH>)>>
+			      <SET L <17 .CH>>
+			      <CLOSE .CH>
+			      <PUT .CH 2 "READ">
+			      <SET TCH <RESET .CH>> 
+			      <SET CH
+				   <OPEN-APPEND "MAIL.TXT">>
+			      <TOPS-20-HEADER .CH .L>
+			      <FILECOPY .TCH .CH>
+			      <CLOSE .TCH>
+			      <CLOSE .CH>
+			      <OR .DATA <RETURN .DATA .L-ACT>>)
+			     (ELSE
+			      <RETURN <AFALSE 7 <ASTRING .MS <UNPARSE .CH>>>
+				      .L-ACT>)>>
+	       .U>>>>
+
+<DEFINE TOPS-20-HEADER (CH L)
+	<TOPS-20-DATE-TIME <ITIME> .CH>
+	<PRINC !\, .CH>
+	<PRINC .L .CH>
+	<PRINC ";000000000000" .CH>
+	<CRLF .CH>>
+
+<ENDPACKAGE>

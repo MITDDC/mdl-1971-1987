@@ -1,0 +1,39 @@
+<PACKAGE "LSTHLP">
+
+<ENTRY DELQ DELALL DEL2 LADD>
+
+<DEFINE DELQ (X L) #DECL ((L VALUE) LIST)   ;"Like LISP's DELQ"
+	<COND (<EMPTY? .L>())
+	      (<==? .X <1 .L>> <REST .L>)
+	      (<REPEAT ((B .L)) #DECL ((B) LIST)
+		  <COND (<LENGTH? .B 1><RETURN .L>)
+			(<==? <2 .B> .X><PUTREST .B <REST .B 2>><RETURN .L>)
+			(<SET B <REST .B>>)>>)>>
+
+<DEFINE DELALL (X L) #DECL ((L VALUE) LIST)	;"like LISP's DELETE"
+	<REPEAT ()<COND (<EMPTY? .L><RETURN>)
+			(<N==? <1 .L> .X><RETURN>)>
+		  <SET L <REST .L>>>
+	<COND (<EMPTY? .L> ())
+	      (<REPEAT ((B .L)) #DECL ((B) LIST)
+		  <COND (<LENGTH? .B 1><RETURN .L>)
+			(<==? <2 .B> .X><PUTREST .B <REST .B 2>>)
+			(<SET B <REST .B>>)>>)>>
+
+<DEFINE DEL2 (ITM LST) #DECL ((LST) LIST (ITM) ANY)
+	<REPEAT ((RLST .LST)(I 1))
+		#DECL ((RLST) LIST (I) FIX)
+	   <COND (<LENGTH? .RLST 1> <RETURN .LST>)
+	         (<==? .ITM <1 .RLST>>
+		  <COND (<==? .I 1><RETURN <REST .LST 2>>)
+			(ELSE <PUTREST 
+				    <REST .LST <- .I 2>>
+				    <REST .RLST 2>>
+			 <RETURN .LST>)>)			 
+		 (ELSE <SET I <+ .I 2>><SET RLST <REST .RLST 2>>)>>>
+
+<DEFINE LADD (L X POS) #DECL ((L) <PRIMTYPE LIST> (X) ANY (POS) FIX)
+	<COND (<1? .POS> (.X !.L))
+	      (ELSE <PUTREST <REST .L <- .POS 2>> (.X !<REST .L <- .POS 1>>)>)>>
+
+<ENDPACKAGE>

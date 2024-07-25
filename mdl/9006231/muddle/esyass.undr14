@@ -1,0 +1,135 @@
+<PACKAGE "ESYASS">
+
+<USE "CODING">
+
+<USE "JCL">
+
+<ENTRY :SL MAKE-ESYASS EASY-ASSEMBLE>
+
+<DEFINE :SL ()
+	<VALRET <STRING ":SL DSK:SYS1; TS MUD" <UNPARSE ,MUDDLE> <ASCII 13>
+			":VP" <ASCII 13>>>
+	T>
+
+<DEFINE QUESTIONER (LST) 
+   #DECL ((LST) <LIST [REST VECTOR]>)
+   <RESET .INCHAN>
+   <MAPF <>
+    #FUNCTION ((VEC) 
+	       #DECL ((VEC) <VECTOR STRING ATOM ANY>)
+	       <TERPRI>
+	       <PRINTSTRING <1 .VEC>>
+	       <COND (<==? <NEXTCHR> !\>
+		      <READCHR>
+		      <COND (<==? <LENGTH .VEC> 5>
+			     <RETURN <> .<5 .VEC>>)
+			    (<SET <2 .VEC> <EVAL <3 .VEC>>>)>)
+		     (T
+		      <SET <2 .VEC>
+			   <COND (<L? <LENGTH .VEC> 4> <EVAL <READ>>)
+				 (<4 .VEC> <EVAL <READ>>)
+				 (T
+				  <REPEAT ((L ()))
+					  #DECL ((L) LIST)
+					  <COND (<==? <NEXTCHR> !\>
+						 <RETURN .L>)>
+					  <SET L (!.L <READ>)>>)>>
+		      <READSTRING ,JUNKQUEST .INCHAN "">
+		      <READCHR>)>)
+    .LST>
+   <TERPRI>
+   T>
+
+<SETG JUNKQUEST <ISTRING 100 !\ >>
+
+<DEFINE EASY-ASSEMBLE ("AUX" FILEIN FILEOUT QUICK-FORMAT MESSAGE-CHANNEL
+			     LINE-CHANNEL MAKE-SYM-TABLE GLUE)
+	#DECL ((FILEIN FILEOUT QUICK-FORMAT MESSAGE-CHANNEL LINE-CHANNEL
+		MAKE-SYM-TABLE GLUE)
+	       <SPECIAL ANY>)
+	<COND (<REPEAT ESYASS ()
+		#DECL ((ESYASS) <SPECIAL ACTIVATION>)
+		<QUESTIONER '(["File to assemble:  " FILEIN <> T ESYASS]
+			      ["Output file:  " FILEOUT <>]
+			      ["Quick format (default T):  " QUICK-FORMAT T]
+			      ["Assembly Message File (default to TTY):  "
+			       MESSAGE-CHANNEL
+			       "TTY:"
+			       T]
+			      ["Assembly Listing File (default NONE):  "
+			       LINE-CHANNEL
+			       <>
+			       T]
+			      ["Make symbol table (default #FALSE ()):  "
+			       MAKE-SYM-TABLE
+			       #FALSE ()
+			       T]
+			      ["GLUEable output (default T):  " GLUE T T])>
+		<OR .FILEIN <RETURN>>
+		<PRINT <FILE-ASSEMBLE .FILEIN
+				      .FILEOUT
+				      .QUICK-FORMAT
+				      .MESSAGE-CHANNEL
+				      .LINE-CHANNEL>>>)
+	      (<QUIT>)>>
+
+<DEFINE FLAG-SETTER (STR LST) #DECL ((STR) STRING (LST) <LIST [REST VECTOR]>)
+	<MAPF <>
+		#FUNCTION ((VEC) #DECL ((VEC) <VECTOR STRING ATOM ANY>)
+			<COND (<MEMBER <1 .VEC> .STR>
+				<SET <2 .VEC> <EVAL <3 .VEC>>>)>)
+		.LST>>
+
+<DEFINE JCL-ASSEMBLE (JCL-LINE
+		      "AUX" TEMP FILEIN (FILEOUT <>) (QUICK-FORMAT T)
+			    (MESSAGE-CHANNEL .OUTCHAN) (LINE-CHANNEL <>)
+			    (MAKE-SYM-TABLE <>) (PARSE-STRING .JCL-LINE)
+			    (GLUE T))
+	#DECL ((JCL-LINE) STRING
+	       (PARSE-STRING QUICK-FORMAT MESSAGE-CHANNEL LINE-CHANNEL
+		MAKE-SYM-TABLE GLUE) <SPECIAL ANY>)
+	<SET FILEIN <PARSE>>
+	<AND <NOT <EMPTY? .PARSE-STRING>>
+	     <TYPE? <SET TEMP <PARSE>> STRING>
+	     <SET FILEOUT .TEMP>>
+	<FLAG-SETTER <STRING .JCL-LINE !\ >
+		     '(["BINARY" QUICK-FORMAT <>]
+		       ["NBIN" QUICK-FORMAT T]
+		       [" B " QUICK-FORMAT <>]
+		       [" N " QUICK-FORMAT T]
+		       [" QUIET " MESSAGE-CHANNEL <>]
+		       [" Q " MESSAGE-CHANNEL <>]
+		       [" SYMBOL " MAKE-SYM-TABLE T]
+		       [" S " MAKE-SYM-TABLE T]
+		       [" L " LINE-CHANNEL .OUTCHAN]
+		       [" LIST " LINE-CHANNEL .OUTCHAN]
+		       [" GLUE " GLUE T]
+		       [" G " GLUE T]
+		       [" NOGLUE " GLUE <>]
+		       [" NG " GLUE <>])>
+	<SET TEMP <FILE-ASSEMBLE .FILEIN !<OR <AND .FILEOUT (.FILEOUT)> ()>>>
+	<AND .MESSAGE-CHANNEL <PRINT .TEMP>>
+	<LOGOUT>
+	<QUIT>>
+
+
+<DEFINE EASY-ASSEMBLER ("AUX" GOT-JCL)
+	<COND  (<AND <L? ,MUDDLE 100> <NOT <SET GOT-JCL <READJCL>>>>
+		<TERPRI>
+		<PRINTSTRING "MUDDLE Assembler.">
+		<ERRET>)
+		(<AND <L? ,MUDDLE 100> <==? !\" <1 .GOT-JCL>>>
+		 <JCL-ASSEMBLE .GOT-JCL>)
+		(T <EASY-ASSEMBLE> T)>>
+
+<DEFINE MAKE-ESYASS ()
+	<PACKAGE "JSYS">
+	<ENDPACKAGE>
+	<SNAME "">
+	<COND (<L? ,MUDDLE 100>
+	       <SAVE "MUDDLE;ASSEM SAVE">)
+	      (<SAVE "<MDL-LIBRARY>ASSEM.SAVE">
+	       <SNAME <UNAME>>)>
+	<EASY-ASSEMBLER>>
+
+<ENDPACKAGE>

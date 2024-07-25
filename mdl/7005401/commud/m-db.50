@@ -1,0 +1,127 @@
+<PACKAGE "M-DB">
+
+<ENTRY DB-INFO
+       GETTING-FULL?
+       DB-DANGER-POINT
+       DB-INITIAL-SIZE
+       CREATE-NEW-DATA-BASE
+       MAKE-DATA-BASE
+       CHECK-DATA-BASE>
+
+<USE "MADMAN" "ASYLUM" "ASYSTAT" "M-DEFS" "M-DATA" "M-READ" "M-DAC" "M-TIME">
+
+<SETG DB-DANGER-POINT 2048>
+<SETG DB-INITIAL-SIZE 200>
+<GDECL (DB-DANGER-POINT DB-INITIAL-SIZE) FIX>
+
+<DEFINE DB-INFO ("OPTIONAL" (ASY <MVCHAN ,MDB>)
+		 "AUX" A (OUTCHAN .OUTCHAN))
+	#DECL ((ASY) <OR FALSE ASYLUM> (A) <UVECTOR [REST FIX]>
+	       (OUTCHAN) CHANNEL)
+	<COND (.ASY
+	       <SET A <ASYSTAT .ASY>>
+	       <CRLF>
+	       <MAPF <>
+		     <FUNCTION (M F)
+			  #DECL ((M) STRING (F) FIX)
+			  <PRIN1 .F>
+			  <PRINC .M>
+			  <CRLF>>
+		     '[
+"% of the allocator is used."
+"  words is the largest single block available."
+"  words are free in the asylum."
+"  words is the total length of the data area."
+"% of the data area has ever been used."]
+		     .A>
+	       ,NULL)>>
+
+"CHECK-DATA-BASE -- worry about msg data-base filling, fix it"
+
+<DEFINE CHECK-DATA-BASE ("AUX" (MA <DATUM "COMSYS-MSG-ASYLUM">))
+	#DECL ((MA) STRING)
+	<COND (<N=? ,COMSYS-OPEN-MSG-ASYLUM .MA>
+	       #FALSE ("NOT-IN-MSG-ASYLUM"))
+	      (<GETTING-FULL?>
+	       <SCROUT ">>>> Data-base full <<<<">
+	       <DB-INFO>
+	       <UPDMSG>
+	       <DCLOSE>
+	       <COND (<CREATE-NEW-DATA-BASE>
+		      <DOPEN .MA T>
+		      T)>)
+	      (ELSE T)>>
+
+"GETTING-FULL? -- is msg data-base full?"
+
+<DEFINE GETTING-FULL? ("AUX" (ASY <MVCHAN ,MDB>) A)
+	#DECL ((ASY) <OR FALSE ASYLUM> (A) <UVECTOR [REST FIX]>)
+	<COND (.ASY
+	       <SET A <ASYSTAT .ASY>>
+	       <COND (<OR <L? <AMAX .A> ,DB-DANGER-POINT>
+			  <G? <DLEN .A> <* ,DB-INITIAL-SIZE 1024>>>)>)>>
+
+"CREATE-NEW-DATA-BASE -- archive old, build new msg data-base"
+
+<DEFINE CREATE-NEW-DATA-BASE ("AUX" (SS ,SCRATCH-SPACE) (SA ,SYSTEM-ASYLUM)
+			      R (CMM ,COMSYS-MSG-MAP) MAP NDB NUM NAM CMA CAA
+			      DS (MS ,MSG-SPACE) AS NMAP)
+	#DECL ((MAP NMAP) <VECTOR [REST FIX STRING]> (NUM CMM) FIX
+	       (R) <OR ATOM MANIAC <FALSE FIX>>
+	       (MS SS) SPACE (SA) ASYLUM (DS NDB CMA CAA AS NAM) STRING)
+	<SET CAA <DATUM "COMSYS-ARCHIVE-ASYLUM">>
+	<SET CMA <DATUM "COMSYS-MSG-ASYLUM">>
+	<COND (<MAKE-DATA-BASE <SET NDB <STRING .CAA "_TEMP_">>>
+	       <ARESET .SS>
+	       <SET MAP <DATA-AREAD .SA .CMM .SS>>
+	       <SET NUM <1 .MAP>>
+	       <SET NAM <2 .MAP>>
+	       <SET AS <ASTRING .SS .CAA <UNPARSE .NUM> " ASYLUM">>
+	       <SET DS <STRING .AS>>
+	       <OR <SET R <RENAME .CMA TO .AS>>
+		   <ERROR RENAME-FAILED .CMA .AS .R>>
+	       <PUT .MAP 2 .AS>
+	       <SET NUM <CHTYPE <DATA-READW .SA .CMM> FIX>>
+	       <SET NMAP <AVECTOR .SS .NUM .NAM !.MAP>>
+	       <SET NMAP <AGC <ARESET .MS> .NMAP>>
+	       <SET NMAP <AGC <ARESET .SS> .NMAP>>
+	       <ARESET .MS>
+	       <COND (<SET R <DATA-APRINT .SA .CMM .SS .NMAP>>)
+		     (ELSE
+		      <ERROR "ASYLUM MAP PRINT LOST"
+			     .R
+			     <NTH ,DATA-ERRORS <1 .R>>>)>
+	       <RENAME .NDB TO .CMA>
+	       <SETG COMSYS-ASYLUM-MAP <>>
+	       <MSG-LOC .NUM>
+	       <SCROUT ">>>> Archived Data Base: " .DS " <<<<">
+	       .NUM)>>
+
+<DEFINE MAKE-DATA-BASE (STR "OPTIONAL" (N ,DB-INITIAL-SIZE) "AUX" C UV RES)
+	#DECL ((STR) STRING (N) FIX (C) <OR CHANNEL FALSE> (UV) UVECTOR
+	       (RES) <OR STRING FALSE>)
+	<COND (<SET C <OPEN "PRINTB" .STR>>
+	       <SET UV <IUVECTOR 1024 '0>>
+	       <WATCH IHAN "IOC" ,IOCHAND 4>
+	       <SET RES
+		    <COND (<REPEAT DBACT ()
+				   #DECL ((DBACT) <SPECIAL ACTIVATION>)
+				   <PRINTB .UV .C>
+				   <COND (<0? <SET N <- .N 1>>>
+					  <CLOSE .C>
+					  <OFF ,IHAN>
+					  <RETURN .STR>)>>)>>
+	       <OFF ,IHAN>
+	       .RES)>>
+
+<DEFINE IOCHAND (REASON ECHAN "AUX" NACT)
+	#DECL ((REASON) FALSE (ECHAN) CHANNEL (NACT) ACTIVATION)
+	<COND (<AND <ASSIGNED? DBACT>
+		    <LEGAL? <SET NACT .DBACT>>>
+	       <CLOSE .ECHAN>
+	       <RENAME <7 .ECHAN> <8 .ECHAN> <9 .ECHAN> <10 .ECHAN>>
+	       <SCROUT ">>>> Ioc During Data Base Creation: " .REASON " <<<<">
+	       <DISMISS <CHTYPE (14 .REASON) FALSE> .NACT>)
+	      (ELSE T)>>
+
+<ENDPACKAGE>

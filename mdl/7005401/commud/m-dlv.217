@@ -1,0 +1,1140 @@
+
+<PACKAGE "M-DLV">
+
+<ENTRY DELIVERY
+       DLV-ERR
+       MAIL-FILE
+       ONLINE-OUTPUT
+       NET-DELIVERY
+       UPDATE-DEAD-HOSTS
+       TRY-XRCP?
+       LOGIN-MAIL
+       READER-MAIL
+       DLV-HISTORY
+       FTP-CLOSE
+       ICP-TRIES
+       USER-LOSERS
+       FLUSH-NET-MESSAGE>
+
+<USE "MADMAN"
+     "CHAN"
+     "OPEN-APPEND"
+     "FIELDS"
+     "CLOCK"
+     "M-DEFS"
+     "M-TIME"
+     "ITIME"
+     "M-PRCD"
+     "M-READ"
+     "M-DAC"
+     "M-DOUT"
+     "NETFTP"
+     "HOSTS"
+     "M-DATA"
+     "M-TEMP"
+     "M-ACK"
+     "PRTUTI"
+     "PRTSTR"
+     "AP"
+     "M-ERR"
+     "USRUTI"
+     "M-TAI">
+
+"DELIVERY PROCESS"
+
+<DEMON-PROCESS "DELIVERY"
+	       DELIVERY
+	       DLV-ERR
+	       [<+ ,FATAL ,CCCSM>					   ;1
+		,FATAL							   ;2
+		<>							   ;3
+		<+ ,FATAL ,CCCSM>					   ;4
+		,FATAL							   ;5
+		,FATAL							   ;6
+		0							   ;7
+		,FATAL							   ;8
+		,FATAL							   ;9
+		,FATAL							  ;10
+		,FATAL							  ;11
+		,FATAL							  ;12
+		,FATAL							  ;13
+		,FATAL							  ;14
+		0							  ;15
+		<+ ,FATAL ,CCCSM>					  ;16
+		0							  ;17
+		,FATAL							  ;18
+		,FATAL							  ;19
+		0							  ;20
+		0							  ;21
+		0							 ;22]>
+
+\ 
+
+<GDECL (NET-MESSAGE) <OR FALSE CHANNEL>
+       (FTP-CONNECTION) <OR FALSE <LIST [2 CHANNEL]>>
+       (IHAN EHAN) HANDLER
+       (CR EOM) STRING
+       (ICP-TRIES) FIX
+       (DF) FLOAT
+       (NET-RETRY-CODES USER-LOSERS) <UVECTOR FIX>
+       (TRY-XRCP?) <OR ATOM FALSE>>
+
+<SETG ICP-TRIES 2>
+
+<SETG TRY-XRCP? T>		 ;"SHOULD WE TRY USE XRCP?  SURE, IF POSSIBLE"
+
+<SETG NET-MESSAGE <>>
+
+<SETG FTP-CONNECTION <>>
+
+<SETG CR <STRING <ASCII 13> <ASCII 10>>>
+
+<SETG NET-RETRY-CODES '![7 10 11 13 14 17 18 20 21 22!]
+      					   ;"CODES WHICH ARE NON-FATAL ERRORS">
+
+<SETG USER-LOSERS '![450 451]	     ;"TEMPORARY ERRORS TO TREAT AS PERMANENT">
+
+<SETG NET-INC </ 262144 24>		    ;"INITIAL INCREMENT BETWEEN TRIES">
+
+<SETG EOM <STRING <ASCII 13> <ASCII 10> "." <ASCII 13> <ASCII 10>>>
+
+\ 
+
+"DELIVERY -- main message delivery function"
+
+<DEFINE DELIVERY (ADR "AUX" SPECS RES FN AFN DATA (MS ,MSG-SPACE)) 
+   #DECL ((ADR) STRING (VALUE) <OR FALSE ATOM> (DATA RES FN) ANY (MS) SPACE
+	  (SPECS) <LIST [REST LIST]> (AFN) <OR APPLICABLE FALSE>)
+   <PROG ()
+	 <COND (<EMPTY? .ADR> <RETURN <AFALSE 12>>)
+	       (<MEMBER !\@ .ADR> <RETURN <NET-DELIVERY .ADR>>)>
+	 <SET DATA <DRD .ADR <GETFIX "DELIVERY-SPECIFICATIONS">>>
+	 <COND (<AND .DATA <OK? <GETFIX "DELIVERY-SPECIFICATIONS"> .DATA>>
+		<SET SPECS .DATA>)
+	       (.DATA <RETURN <AFALSE 2 <ASTRING .MS <UNPARSE .DATA>>>>)
+	       (ELSE <SET SPECS ()>)>
+	 <DWT <ITIME> .ADR <GETFIX "WHEN-DELIVERED">>
+	 <REPEAT ()
+		 <COND (<EMPTY? .SPECS>
+			<COND-SIGNAL .ADR "DELIVERY">
+			<RETURN T>)
+		       (<AND <SET FN <1 <1 .SPECS>>>
+			     <MEMBER <COND (<TYPE? .FN STRING> .FN)
+					   (ELSE <UNPARSE .FN>)>
+				     <DRDMSG .ADR <GETFIX "DELIVERY-COMPLETED">>>>
+			<SET RES T>)
+		       (<SET AFN <AP? .FN>>
+			<SET RES <APPLY .AFN .ADR !<REST <1 .SPECS>>>>
+			<COND (<NOT .RES>
+			       <COND (<OR <EMPTY? .RES>
+					  <NOT <TYPE? <1 .RES> FIX>>>
+				      <SET RES
+					   <AFALSE 1
+						   <ASTRING .MS
+							    <UNPARSE .RES>>>>)>)
+			      (ELSE
+			       <DADDMSG <ACOPY .MS
+					       <COND (<TYPE? .FN STRING> .FN)
+						     (ELSE <UNPARSE .FN>)>>
+					.ADR
+					<GETFIX "DELIVERY-COMPLETED">>)>)
+		       (ELSE
+			<SET RES <AFALSE 2 <ASTRING .MS <UNPARSE .FN>>>>)>
+		 <COND (<NOT .RES>
+			<MAIL-RESULT .ADR .RES <>>
+			<RETURN .RES>)
+		       (ELSE
+			<SET SPECS <REST .SPECS>>)>>>>
+
+\ 
+
+"interrupt handlers for network delivery"
+
+<DEFINE IOCHND (REASON ECHAN "AUX" NACT (MS ,MSG-SPACE)) 
+	#DECL ((REASON) FALSE (NACT NETOUT) ACTIVATION (ECHAN) CHANNEL (MS) SPACE)
+	<COND (<AND <ASSIGNED? NETOUT>
+		    <LEGAL? <SET NACT .NETOUT>>>
+	       <SCROUT ">>>> Ioc During Net Delivery: " .REASON " <<<<">
+	       <SCROUT ">>>> Channel in Error: " .ECHAN "<<<<">
+	       <DISMISS <AFALSE 14 <ASTRING .MS <1 .REASON>>> .NACT>)
+	      (ELSE T)>>
+
+<DEFINE TIMED-OUT (C "AUX" NACT) 
+	#DECL ((NACT NETOUT) ACTIVATION)
+	<COND (<AND <ASSIGNED? NETOUT> <LEGAL? <SET NACT .NETOUT>>>
+	       <SCROUT ">>>> Transaction timed out: 15 minutes! <<<<">
+	       <DISMISS <AFALSE 22> .NACT>)
+	      (ELSE T)>>
+
+<DEFINE ERRHND ("TUPLE" STUFF "AUX" NACT (MS ,MSG-SPACE) "ACT" ERRACT) 
+	#DECL ((STUFF) TUPLE (OUT-ACT ERRACT NETOUT NACT) ACTIVATION
+	       (MS) SPACE (LERR\ !-INTERRUPTS) <SPECIAL FRAME>)
+	<COND (<AND <ASSIGNED? NETOUT> <LEGAL? <SET NACT .NETOUT>>>
+	       <COND (<==? <2 .STUFF> BAD-CHANNEL!-ERRORS>
+		      <DISMISS
+		        <AFALSE 14
+				<ASTRING .MS
+					 "Channel closed during Net delivery">>
+			.NACT>)
+		     (T
+		      <SCROUT ">>>> Error Inside Net Delivery Area, Args -- "
+			      .STUFF
+			      " <<<<">
+		      <SET LERR\ !-INTERRUPTS <CHTYPE .ERRACT FRAME>>
+		      <FRAMES 20>
+		      <FRATM>
+		      <BUFOUT .OUTCHAN>
+		      <DISMISS <AFALSE 11 <ASTRING .MS <UNPARSE .STUFF>>> .NACT>)>)
+	      (ELSE T)>>
+
+\
+
+"UPDATE-DEAD-HOSTS -- hack for handling dead hosts and checking to
+see if they have come alive."
+
+<SETG LAST-CHECK 0>
+<GDECL (LAST-CHECK) FIX>
+
+<DEFINE UPDATE-DEAD-HOSTS (ODH "AUX" (DH <DATUM "DEAD-HOSTS">)
+			     P (WON? <>) (I <+ <ITIME> 262144>))
+	#DECL ((ODH DH) <OR FALSE VECTOR> (P) LIST (WON?) <OR ATOM FALSE>
+	       (I) FIX)
+	<COND (<AND .DH .ODH
+		    <=? .ODH .DH>
+		    <G? <ITIME> <+ ,LAST-CHECK </ 262144 4>>>>
+	       <SETG LAST-CHECK <ITIME>>
+	       <SET DH
+		    <MAPF ,VECTOR
+			  <FUNCTION (H "AUX" F)
+			       #DECL ((H) FIX
+				      (F) <OR FALSE <LIST [2 CHANNEL]>>)
+			       <SCROUT "Confirming death of " <HOST .H>>
+			       <COND (<SET F <ICP .H 3>>
+				      <SCROUT "!!! It's alive! !!!">
+				      <OR ,FTP-CONNECTION
+					  <SETG FTP-CONNECTION .F>>
+				      <SET WON? T>
+				      <MAPRET>)
+				     (ELSE
+				      <SCROUT ">>> Still dead. <<<">
+				      <MAPRET .H>)>>
+			  .ODH>>
+	       <MAKE-DATUM "DEAD-HOSTS" .DH>)>
+	<COND (.WON?
+	       <REPEAT ()
+		       <SET WON? <>>
+		       <SET P ,PENDING-QUEUE>
+		       <COND
+			(.DH
+			 <MAPF
+			  <>
+			  <FUNCTION (M "AUX" (MSG <QMSG .M>) (ADR <QADR .M>)
+				     PN D)
+			       #DECL ((M) PNQENTRY (ADR) STRING
+				      (PN) <OR FALSE LIST>
+				      (D) <OR FALSE <LIST [REST <FALSE FIX>]>>
+				      (MSG) FIX)
+			       <COND (<AND <NOT <EMPTY? .ADR>>
+					   <NOT <MEMQ <EXTRACT-HOST .ADR> .DH>>
+					   <QTIM .M>
+					   <G? <QTIM .M> .I>
+					   <MREAD .MSG>
+					   <SET PN
+						<DRD .ADR "PROCESSING-NEEDED">>
+					   <MAPF <>
+						 <FUNCTION (N)
+						      #DECL ((N) PRCSTATE)
+						      <COND (<=? <PNAM .N>
+								 "DELIVERY">
+							     <MAPLEAVE T>)>>
+						 <REST .PN>>
+					   <SET D
+						<DRD .ADR
+						     "NET-DELIVERY-ERRORS">>
+					   <NOT <EMPTY? .D>>
+					   <==? 20 <1 <NTH .D <LENGTH .D>>>>>
+				      <SCROUT .MSG
+					      ": Rescheduling DELIVERY to "
+					      .ADR
+					      ".">
+				      <PRCADD .ADR "DELIVERY">
+				      <MSGPNQ>
+				      <SET WON? T>
+				      <MAPLEAVE>)>>
+			  <REST .P>>)>
+		       <COND (<NOT .WON?> <RETURN>)>>
+	       <UPDMSG T>)>>
+
+\ 
+
+"NET-DELIVERY -- network output for message.  Note that this reads
+  'net-delivery-format' from the author rather than receiver area; this
+  is to allow chomps like inquire updating to work, besides, what net
+  receiver would have a tailor, anyway?"
+
+<DEFINE NET-DELIVERY (ADR
+		      "AUX" RES FORMAT DATA TCH AFMT TMPFIL (MS ,MSG-SPACE)
+		      (QSEND? <DRDMSG "" "QSEND">) HST (SPLIT? <>))
+   #DECL ((ADR) STRING (TCH) <OR FALSE CHANNEL> (RES) <OR ATOM FALSE>
+	  (AFMT) <OR FALSE APPLICABLE> (FORMAT) <OR FALSE LIST> (DATA) ANY
+	  (TMPFIL) <OR STRING CHANNEL> (QSEND?) <OR FIX FALSE> (MS) SPACE
+	  (SPLIT?) <OR ATOM FALSE> (HST) FIX)
+   <SET RES
+    <PROG ()
+	  <COND (<BEDRIDDEN? <SET HST <EXTRACT-HOST .ADR>>>
+		 <SCROUT <HOST .HST> " is dead.">
+		 <MAIL-RESULT .ADR #FALSE (20)>)
+		(ELSE
+		 <DWT <ITIME> .ADR <GETFIX "WHEN-DELIVERED">>
+		 <SET SPLIT? <SPLITS? .ADR>>
+		 <COND
+		  (<AND <SET TCH ,NET-MESSAGE>
+			<NOT .SPLIT?>
+			<RESET .TCH>>
+		   <SET TMPFIL .TCH>)
+		  (ELSE
+		   <FLUSH-NET-MESSAGE>
+		   <COND (.QSEND? <SET DATA "DDT-FORMAT">)
+			 (<AND <NOT <HOME? <DRD "" "RECEIVED-FROM-HOST">>>
+			       <NOT <DRD "" "FORWARDING">>
+			       <NOT <ESCAPING-ITS-HEADER? .HST>>>
+			  <SET DATA <DRD "" <GETFIX "NET-FORWARDING-FORMAT">>>)
+			 (ELSE
+			  <SET DATA <DRD "" <GETFIX "NET-DELIVERY-FORMAT">>>)>
+		   <COND (<SET AFMT <AP? .DATA>>)
+			 (<TYPE? .DATA LIST> <SET FORMAT .DATA>)
+			 (ELSE
+			  <RETURN <AFALSE 5
+					  <ASTRING .MS "NETWORK-MAIL">
+					  <ASTRING .MS <UNPARSE .DATA>>>>)>
+		   <COND (<SET TCH <OPEN "PRINTB" <DATUM "COMSYS-NET-TEMP">>>
+			  <SET RES
+			       <COND (.AFMT <DO-APPLY .ADR .AFMT .TCH>)
+				     (ELSE <DO-OUTPUT .ADR .FORMAT .TCH>)>>
+			  <OR .RES <RETURN .RES>>
+			  <CLOSE .TCH>)
+			 (<RETURN <AFALSE 7 <ASTRING .MS <UNPARSE .TCH>>>>)>
+		   <SET TMPFIL <FILCHN .TCH>>)>
+		 <MAIL-FILE .ADR .TMPFIL .QSEND? .SPLIT?>)>>>
+   <COND (.SPLIT? <FLUSH-NET-MESSAGE>)>
+   .RES>
+
+<DEFINE ESCAPING-ITS-HEADER? (HST)
+	#DECL ((HST) FIX)
+	<AND <DRDMSG "" "ITS-HEADER">
+	     <NOT <MEMQ .HST ,ITS-SITES>>>>
+
+"MAIL-RESULT -- update status of message based on result of this attempt"
+
+<DEFINE MAIL-RESULT (ADR R "OPTIONAL" (NET? T) "AUX" RES NDE (MS ,MSG-SPACE))
+	#DECL ((ADR) STRING (R) ANY (RES) <FALSE FIX> (MS) SPACE
+	       (NDE) <OR FALSE LIST>)
+	<COND (.R
+	       <COND (.NET? <COND-SIGNAL .ADR "DELIVERY">)>
+	       T)
+	      (ELSE
+	       <DAPPMSG <ALIST .MS <ITIME>>
+			.ADR
+			<GETFIX "DELIVERY-ATTEMPTS">>
+	       <SET RES <ACOPY .MS .R>>
+	       <COND (<AND <SET NDE
+				<DRDMSG .ADR <GETFIX "NET-DELIVERY-ERRORS">>>
+			   <SET NDE <MEMBER .R .NDE>>>
+		      <SET RES <1 .NDE>>)
+		     (ELSE <SET RES <ACOPY .MS .R>>)>
+	       <DAPPMSG <ALIST .MS .RES> .ADR <GETFIX "NET-DELIVERY-ERRORS">>
+	       <DWT <> .ADR <GETFIX "WHEN-DELIVERED">>
+	       <COND (<AND .NET? <==? <1 .RES> 20>>
+		      <SCROUT "Placing message in hold until host reappears.">)
+		     (ELSE
+		      <SCROUT "Delivery Failure, Code: " !.RES>)>
+	       <COND (<AND .NET? <MEMQ <1 .RES> ,NET-RETRY-CODES>>
+		      <OR <NEXT-DELIVERY-ATTEMPT .ADR> .RES>)
+		     (ELSE .RES)>)>>
+
+"SPLITS? -- returns T if there are any split fields for this addressee"
+
+<DEFINE SPLITS? (ADR "AUX" (L <DRD .ADR "COPY-TO-ADDRESSEE-AREA">))
+	#DECL ((ADR) STRING (L) LIST)
+	<MAPF <>
+	      <FUNCTION (F)
+		   #DECL ((F) <OR STRING FIX>)
+		   <AND <DRD .ADR .F> <MAPLEAVE T>>>
+	      .L>>
+
+"FTP-OPEN -- open an FTP connection"
+
+<DEFINE FTP-OPEN (HST "AUX" (ICPCNT ,ICP-TRIES) FTP)
+	#DECL ((HST) FIX (ICPCNT) FIX
+	       (VALUE FTP) <OR FALSE <LIST [2 CHANNEL]>>)
+	<REPEAT ()
+		<COND (<SET FTP <ICP .HST 3>> <RETURN .FTP>)
+		      (<=? <1 .FTP> "DEVICE NOT READY">
+		       <SCROUT "ARPAnet apparently down">
+		       <RETURN <>>)
+		      (<L? <SET ICPCNT <- .ICPCNT 1>> 0>
+		       <RETURN <>>)
+		      (ELSE
+		       <SLEEP 5>
+		       <SCROUT "Retrying ICP">)>>>
+
+\
+
+"MAIL-FILE -- given addressee and file containing mail, send it"
+
+<DEFINE MAIL-FILE (ADR TMPFIL "OPTIONAL" (QSEND? <>) (SPLIT? <>)
+		   "AUX" RCVR HST RES CH (GW <>) C
+		   LAST? FTP OCH ICH REPLY (MS ,MSG-SPACE))
+	#DECL ((ADR RCVR) STRING (CH) <OR CHANNEL FALSE> (MS) SPACE
+	       (HST) FIX (FTP) <OR FALSE <LIST [2 CHANNEL]>> (C) CINT
+	       (LAST?) <OR ATOM FALSE> (QSEND? REPLY) <OR FIX FALSE>
+	       (ICH OCH) CHANNEL (TMPFIL) <OR STRING CHANNEL> (RES) ANY
+	       (SPLIT?) <OR ATOM FALSE> (GW) <OR <VECTOR [REST STRING]> FALSE>)
+	<PROG MF ()
+	      #DECL ((MF) ACTIVATION)
+	<COND (<SET CH
+		    <OR <AND <TYPE? .TMPFIL CHANNEL> .TMPFIL>
+			<OPEN "READ" .TMPFIL>>>
+	       <SETG NET-MESSAGE .CH>
+	       <SET RES
+		    <PROG NETOUT ()
+		     #DECL ((NETOUT) <SPECIAL ACTIVATION>)
+		     <WATCH EHAN "ERROR" ,ERRHND 4>
+		     <WATCH IHAN "IOC" ,IOCHND 4>
+		     <SET C <ALARM ,TIMED-OUT 900.0>>
+		     <SET HST <EXTRACT-HOST .ADR>>
+		     <COND (<SET GW <GATEWAYS .HST>>
+			    <SET HST <HOST <1 .GW>>>
+			    <SET RCVR .ADR>)
+			   (<SET GW
+				 <REPEAT ((H <HOST .HST>) (P <DATUM "PAIRS">))
+					 #DECL ((H) STRING
+						(P) <OR FALSE VECTOR>)
+					 <COND (<OR <NOT .P>
+						    <LENGTH? .P 1>>
+						<RETURN <>>)>
+					 <COND (<=? .H <1 .P>>
+						<RETURN .P>)>
+					 <SET P <REST .P 2>>>>
+			    <SET HST <HOST <2 .GW>>>
+			    <SET RCVR .ADR>)
+			   (ELSE
+			    <SET RCVR <EXTRACT-RCVR .ADR>>)>
+		     <SET RCVR <ACOPY ,SCRATCH-SPACE .RCVR>>
+		     <COND
+		      (<SET FTP <CONNECTED? .HST .GW>>
+		       <SET ICH <1 .FTP>>
+		       <SET OCH <2 .FTP>>
+		       <SCROUT "FTP connection to "
+			       <COND (.GW "gateway ") (ELSE "")>
+			       <HOST <6 .ICH>>
+			       " exists">
+		       <SET LAST? <OR .SPLIT? <NOT <QPEEK "DELIVERY">>>>)
+		      (ELSE
+		       <FTP-CLOSE>
+		       <COND (.GW <SCROUT "Gating through " <HOST .HST>>)>
+		       <COND (<SET FTP <FTP-OPEN .HST>>
+			      <SCROUT "ICP Successful">
+			      <SLEEP 5>
+			      <SET ICH <1 .FTP>>
+			      <SET OCH <2 .FTP>>)
+			     (ELSE <RETURN <AFALSE 13>>)>
+		       <COND (<SET REPLY <WAITRESP .ICH '(300)>>
+			      <SETG FTP-CONNECTION .FTP>)
+			     (ELSE
+			      <CLOSE .ICH>
+			      <CLOSE .OCH>
+			      <SETG FTP-CONNECTION <>>
+			      <RETURN <AFALSE 21>>)>
+		       <SET LAST? <OR .SPLIT? <NOT <QPEEK "DELIVERY">>>>
+		       <SETG XRCP-R? <>>
+		       <SETG XRCP-T? <>>
+		       <SETG XRCP-T-MAIL? <>>
+		       <SETG XRCP-LIST ()>
+		       <COND (<AND <NOT .LAST?> ,TRY-XRCP? <NOT .QSEND?>>
+			      <PR .OCH "XRSQ R">
+			      <COND
+			       (<SET REPLY <WAITRESP .ICH '(200)>>
+				<SETG XRCP-R? T>)
+			       (ELSE
+				<PR .OCH "XRSQ T">
+				<COND
+				 (<SET REPLY <WAITRESP .ICH '(200)>>
+				  <SETG XRCP-T? T>)>)>)>)>
+		     <COND (<AND ,XRCP-T? <NOT ,XRCP-T-MAIL?>>
+			    <COND
+			     (<AND <SET REPLY <MCMD .ICH .OCH "MAIL">>
+				   <SET REPLY <SEND-MAIL .CH .ICH .OCH>>>
+			      <SETG XRCP-T-MAIL? T>)
+			     (ELSE <RETURN .REPLY>)>)>
+		     <COND (,XRCP-R?
+			    <PR .OCH "XRCP " .RCVR>
+			    <SET REPLY <WAITRESP .ICH '(200 440)>>
+			    <COND (<==? .REPLY 200>
+				   <SETG XRCP-LIST (.ADR !,XRCP-LIST)>)
+				  (<==? .REPLY 440> <SET LAST? T>)
+				  (ELSE
+				   <RETURN
+				     <AFALSE 19 <ACOPY .MS <1 .REPLY>>>>)>
+			    <COND (.LAST?
+				   <COND
+				    (<SET REPLY <MCMD .ICH .OCH "MAIL">>
+				     <SET REPLY <SEND-MAIL .CH .ICH .OCH>>)>
+				   <MAPF <>
+					 <FUNCTION (A)
+					      #DECL ((A) STRING)
+					      <MAIL-RESULT .A .REPLY>>
+					 ,XRCP-LIST>
+				   <SETG XRCP-LIST ()>)>
+			    <RETURN T .MF>)
+			   (<AND .QSEND?
+				 <MCMD .ICH
+				       .OCH
+				       <COND (<L? .QSEND? 0> "XSEN ")
+					     (<0? .QSEND?> "XSEM ")
+					     (ELSE "XMAS ")>
+				       .RCVR>>
+			    <SEND-MAIL .CH .ICH .OCH>)
+			   (,XRCP-T?
+			    <PR .OCH "XRCP " .RCVR>
+			    <COND (<SET REPLY <WAITRESP .ICH '(256)>>)
+				  (ELSE
+				   <AFALSE 19 <ACOPY .MS <1 .REPLY>>>)>)
+			   (<MCMD .ICH .OCH "MAIL " .RCVR>
+			    <SEND-MAIL .CH .ICH .OCH>)>>>
+	       <OFF ,EHAN>
+	       <OFF ,IHAN>
+	       <ALARM-OFF .C>
+	       <MAIL-RESULT .ADR .RES>)
+	      (ELSE
+	       <AFALSE 7 <ASTRING .MS <UNPARSE .CH>>>)>>>
+
+\
+
+"CONNECTED?"
+
+<DEFINE CONNECTED? (HST GW "AUX" (FTP ,FTP-CONNECTION) ICH CHST)
+	#DECL ((HST CHST) FIX (GW) <OR FALSE VECTOR>
+	       (FTP) <OR FALSE <LIST CHANNEL CHANNEL>> (ICH) CHANNEL)
+	<COND (<AND .FTP
+		    <NOT <0? <1 <SET ICH <1 .FTP>>>>>
+		    <NOT <0? <1 <2 .FTP>>>>>
+	       <SET CHST <6 .ICH>>
+	       <COND (.GW
+		      <MAPF <>
+			    <FUNCTION (H)
+				 #DECL ((H) STRING)
+				 <COND (<==? <HOST .H> .CHST>
+					<MAPLEAVE .FTP>)>>
+			    .GW>)
+		     (<==? .HST .CHST>
+		      .FTP)>)>>
+
+"SAME-HOST?"
+
+<DEFINE SAME-HOST? (ADR "AUX" (FTP ,FTP-CONNECTION))
+	#DECL ((ADR) STRING (FTP) <OR FALSE <LIST [2 CHANNEL]>>)
+	<AND .FTP <==? <EXTRACT-HOST .ADR> <6 <1 .FTP>>>>>
+
+"QPEEK -- obscenity to see if the current run of a process is the last one
+currently scheduled for that process.  Used for XRCP disgust to determine
+when to actually send the message."
+
+<DEFINE QPEEK (P "AUX" (PNQ ,PENDING-QUEUE) (MDB ,MDB) (ADR <>)
+	       PN PP PT MSG)
+   #DECL ((ADR) <OR STRING FALSE> (P) STRING (PNQ) <LIST ANY>
+	  (PP) LIST (PN) LIST (MSG PT) <OR FALSE FIX> (MDB) MDBVEC)
+   <SET MSG <COND (<G? <MVMSG .MDB> 0> <MVMSG .MDB>)>>
+   <MAPF <>
+    <FUNCTION (QE "AUX" QT) 
+       #DECL ((QE) PNQENTRY (QT) <OR FALSE FIX>)
+       <SET QT <QTIM .QE>>
+       <COND (<OR <NOT .QT> <L? .QT <ITIME>>>
+	      <COND (<AND .MSG <==? <QMSG .QE> .MSG>>
+		     <SET ADR <2 .QE>>)
+		    (.ADR <MAPLEAVE>)>)
+	     (ELSE <MAPLEAVE>)>>
+    <REST .PNQ>>
+   <COND (<AND .ADR
+	       <NOT <SPLITS? .ADR>>
+	       <SAME-HOST? .ADR>
+	       <SET PN <DRDMSG .ADR <GETFIX "PROCESSING-NEEDED">>>
+	       <NOT <LENGTH? .PN 1>>>
+	  <SET PP <2 .PN>>
+	  <COND (<AND <OR <NOT <SET PT <2 .PP>>> <L? .PT <ITIME>>>
+		      <=? <1 .PP> .P>>)>)>>
+
+"xrcp goodies"
+
+<SETG XRCP-R? <>>	;"in middle of XRCP?"
+<SETG XRCP-T? <>>	;"text first XRCP?"
+<SETG XRCP-T-MAIL? <>>	;"sent mail during XRCP-T?"
+<SETG XRCP-LIST ()>	;"addressees who have had XRCP done for them"
+<GDECL (XRCP-R? XRCP-T? XRCP-T-MAIL?) <OR ATOM FALSE>
+       (XRCP-LIST) <LIST [REST STRING]>>
+
+\
+
+"FTP-CLOSE -- flush ftp connection"
+
+<DEFINE FTP-CLOSE ("AUX" (FTP ,FTP-CONNECTION))
+	#DECL ((FTP) <OR FALSE <LIST CHANNEL CHANNEL>>)
+	<SETG XRCP-R? <>>
+	<SETG XRCP-T? <>>
+	<SETG XRCP-T-MAIL? <>>
+	<COND (.FTP
+	       <CLOSE <1 .FTP>>
+	       <CLOSE <2 .FTP>>
+	       <SCROUT "FTP closed">
+	       <SETG FTP-CONNECTION <>>)>>
+
+"FLUSH-NET-MESSAGE -- get rid of NETMSG file"
+
+<DEFINE FLUSH-NET-MESSAGE ("AUX" (TCH ,NET-MESSAGE))
+	#DECL ((TCH) <OR CHANNEL FALSE>)
+	<COND (.TCH
+	       <CLOSE .TCH>
+	       <RENAME <FILCHN .TCH>>
+	       <SCROUT "Net message flushed">
+	       <SETG NET-MESSAGE <>>
+	       <SETG XRCP-T-MAIL? <>>)>>
+
+\
+
+"SEND-MAIL -- copy mail file open on first arg to ftp."
+
+<DEFINE SEND-MAIL (CH ICH OCH "AUX" RES)
+	#DECL ((CH ICH OCH) CHANNEL)
+	<SET RES
+	     <PROG WAIT-ACT ()
+		   #DECL ((WAIT-ACT) <SPECIAL ACTIVATION>)
+		   <FILECOPY .CH .OCH>
+		   <PRINC ,EOM .OCH>
+		   <NETS .OCH>
+		   <WAITRESP .ICH '(256)>>>
+	<FTP-REPLY .RES 19 17 18>>
+
+"MCMD -- do a standard mail command (used for MAIL and XSEN)"
+
+<DEFINE MCMD (ICH OCH CMD "OPTIONAL" RCVR "AUX" REPLY)
+	#DECL ((ICH OCH) CHANNEL (CMD RCVR) STRING (REPLY) <OR FIX FALSE>)
+	<COND (<ASSIGNED? RCVR> <PR .OCH .CMD .RCVR>)
+	      (ELSE <PR .OCH .CMD>)>
+	<SET REPLY <WAITRESP .ICH '(350 504)>>
+	<COND (<==? .REPLY 350>)
+	      (<==? .REPLY 504>
+	       <PROG ()
+		     <PR .OCH "USER NETML">
+		     <COND (<SET REPLY <WAITRESP .ICH '(330)>>)
+			   (ELSE <RETURN .REPLY>)> 
+		     <PR .OCH "PASS NETML">
+		     <COND (<SET REPLY <WAITRESP .ICH '(230)>>)
+			   (ELSE <RETURN .REPLY>)>
+		     <PR .OCH .CMD .RCVR>
+		     <SET REPLY <WAITRESP .ICH '(350)>>>)>
+	<FTP-REPLY .REPLY 19 17 10>>
+
+"FTP-REPLY -- analyzes an FTP reply and returns an appropriate false
+if it is not a winner."
+
+<DEFINE FTP-REPLY (REPLY PERM TEMP RAND "AUX" (MS ,MSG-SPACE) S CD)
+	#DECL ((REPLY) ANY (S) STRING (PERM TEMP RAND CD) FIX
+	       (MS) SPACE)
+	<COND (.REPLY)
+	      (<AND <NOT <EMPTY? .REPLY>>
+		    <SET S <1 .REPLY>>
+		    <SET CD
+			 <PARSE <STRING <1 .S>
+					<2 .S>
+					<3 .S>>>>
+		    <G=? .CD 400>
+		    <L=? .CD 599>>
+	       <AFALSE <COND (<OR <G=? .CD 500> <MEMQ .CD ,USER-LOSERS>>
+			      .PERM)
+			     (ELSE .TEMP)>
+		       .S>)
+	      (ELSE <AFALSE .RAND <ACOPY .MS ,LAST-RESP>>)>>
+
+"PR -- print message to net channel and script"
+
+<DEFINE PR (CH "TUPLE" STR "AUX" (SOAK? ,SOAK?!-INETFTP) (OUTCHAN .OUTCHAN))
+	#DECL ((CH OUTCHAN) CHANNEL (STR) <TUPLE [REST STRING]>)
+	<OR <0? <14 .OUTCHAN>> <CRLF>>
+	<OR .SOAK? <PRINC "     ">>
+	<MAPF <>
+	      <FUNCTION (S)
+			#DECL ((S) STRING)
+			<PRINC .S .CH>
+			<OR .SOAK? <PRINC .S>>>
+	      .STR>
+	<CRLF .CH>
+	<NETS .CH>
+	<OR .SOAK? <CRLF>>>
+
+\
+
+"NEXT-DELIVERY-ATTEMPT -- schedule next delivery attempt or return false"
+
+<DEFINE NEXT-DELIVERY-ATTEMPT (ADR "AUX" DA DF B?)
+	#DECL ((ADR) STRING (DF) FIX (DA) LIST (B?) <OR ATOM FALSE>)
+	<SET DA <DRDMSG .ADR <GETFIX "DELIVERY-ATTEMPTS">>>
+	<SET B? <BEDRIDDEN? <EXTRACT-HOST .ADR>>>
+	<COND (<AND <NOT <EMPTY? .DA>>
+		    <G? <ITIME> <+ <1 .DA> <* 30 262144>>>>
+	       <SCROUT
+		"Sick of trying this loser, it's been 30 days.  I give up.">
+	       <>)
+	      (ELSE
+	       <COND (.B? <SET DF <* 30 262144> ;"30 DAYS">)
+		     (<LENGTH? .DA 2> <SET DF ,NET-INC>)
+		     (ELSE
+		      <SET DA <REST .DA <- <LENGTH .DA> 2>>>	  ;"GET LAST 2"
+		      <SET DF <- <2 .DA> <1 .DA>>>		   ;"LAST WAIT"
+		      <COND (<AND <L? .DF 262144> <NOT <LENGTH? .DA 10>>>
+			     <SET DF <+ .DF ,NET-INC>>)>)>
+	       <COND (.B?
+		      <SCROUT "Host will someday be up, will try in "
+			      <CHTYPE <GETBITS .DF <BITS 18 18>> FIX>
+			      " days.">)
+		     (ELSE
+		      <SCROUT "Delivery failed, will try in "
+			      </ <CHTYPE <GETBITS <QTIME .DF> <BITS 18>> FIX>
+				 60>
+			      " minutes.">)>
+	       <PRCADD .ADR
+		       "DELIVERY"
+		       <+ <ITIME> .DF>
+		       10
+		       <>>
+	       T)>>
+
+\ 
+
+"LOGIN-MAIL -- login-file output"
+
+<DEFINE LOGIN-MAIL (ADR "AUX" U CH DATA LST UK (INSERT? <>) FMT AFMT DFLT (MS ,MSG-SPACE))
+   #DECL ((ADR) STRING (DATA) ANY (U) <LIST [REST <OR STRING VECTOR>]>
+	  (AFMT) <OR FALSE APPLICABLE> (FMT) <OR STRING LIST> (MS) SPACE
+	  (UK INSERT?) <OR STRING FALSE> (LST DFLT) LIST (CH) <OR FALSE CHANNEL>)
+   <PROG L-ACT ()
+      #DECL ((L-ACT) ACTIVATION)
+      <SET DATA <DRD .ADR <GETFIX "LOGIN-MAIL">>>
+      <COND (<NOT <OK? <GETFIX "LOGIN-MAIL"> .DATA>>
+	     <RETURN <AFALSE 5
+			     <ASTRING .MS "LOGIN-MAIL">
+			     <ASTRING .MS <UNPARSE .DATA>>>>)>
+      <SET LST .DATA>
+      <SET DFLT <DRDFLT "LOGIN-MAIL">>
+      <REPEAT ()
+	 <COND (<EMPTY? .LST> <RETURN T>)
+	       (<NOT <1 .LST>>					 ;"USE DEFAULTS"
+		<SET DATA <DRD .ADR <GETFIX "LOGIN-USERS">>>
+		<COND (<AND .DATA <OK? <GETFIX "LOGIN-USERS"> .DATA>>
+		       <SET U .DATA>)
+		      (.DATA
+		       <RETURN <AFALSE 6
+				       <ASTRING .MS "LOGIN-USERS">
+				       <ASTRING .MS <UNPARSE .DATA>>>>)
+		      (<SET UK <KEYGET .ADR>> ;"NOTHING SUPPLIED"
+		       <SET U (.UK)>)
+		      (ELSE <RETURN <AFALSE 8 <ASTRING .MS .ADR>>>)>)
+	       (<TYPE? <1 .LST> LIST>			  ;"LIST OF USERS GIVEN"
+		<SET U <1 .LST>>)
+	       (ELSE				    ;"ONLY ONE GIVEN, AS STRING"
+		<SET U <LIST <1 .LST>>>)>
+	 <SET LST <REST .LST>>
+	 <COND (<OR <EMPTY? .LST> <NOT <1 .LST>>>
+		<SET DATA <2 .DFLT>>) 
+	       (ELSE <SET DATA <1 .LST>>)>
+	 <COND (<NOT .DATA>)
+	       (<AND <TYPE? .DATA STRING>
+		     <MEMBER .DATA '["INSERT" "APPEND"]>>
+		<AND <=? .DATA "INSERT"> <SET INSERT? "INSERT">>)
+	       (ELSE
+		<RETURN <AFALSE 5
+				<ASTRING .MS "LOGIN-MAIL">
+				<ASTRING .MS <UNPARSE .DATA>>>>)>
+	 <OR <EMPTY? .LST> <SET LST <REST .LST>>>
+	 <COND (<OR <EMPTY? .LST> <NOT <1 .LST>>>
+		<SET FMT <3 .DFLT>>)
+	       (ELSE <SET FMT <1 .LST>>)>
+	 <OR <EMPTY? .LST> <SET LST <REST .LST>>>
+	 <COND (<AND <NOT <EMPTY? .LST>> <1 .LST>>
+		<SET DATA <DRD .ADR "RECEIVED-FROM-HOST">>
+		<COND (<NOT <HOME? .DATA>> <SET FMT <1 .LST>>)>)>
+	 <OR <EMPTY? .LST> <SET LST <REST .LST>>>
+	 <COND (<SET AFMT <AP? .FMT>>)
+	       (<TYPE? .FMT STRING>
+		<SET DATA <DATUM .FMT>>
+		<OR <TYPE? .DATA LIST>
+		    <RETURN <AFALSE 9
+				    <ASTRING .MS "LOGIN-MAIL">
+				    <ASTRING .MS <UNPARSE .DATA>>>>>
+		<SET FMT .DATA>)>
+	 <MAPF <>
+	       <FUNCTION (UU) 
+		       #DECL ((UU) <OR STRING VECTOR>)
+		       <COND (<AND <TYPE? .UU STRING> <EMPTY? .UU>>
+			      <SET UU .ADR>)>
+		       <COND (<SET CH <MAIL-OPEN .UU "MAIL" .INSERT?>>
+			      <SET DATA
+				   <COND (.AFMT <DO-APPLY .ADR .AFMT .CH>)
+					 (ELSE <DO-OUTPUT .ADR .FMT .CH>)>>
+			      <COND (.DATA
+				     <COND (.INSERT? <TEMPAPPEND .CH>)
+					   (ELSE <TEMPCLOSE .CH>)>)
+				    (ELSE
+				     <COND (.INSERT? <CLOSE .CH>)
+					   (ELSE <TEMPDELETE .CH>)>
+				     <RETURN .DATA .L-ACT>)>)
+			     (ELSE
+			      <RETURN <AFALSE 7 <ASTRING .MS <UNPARSE .CH>>>
+				      .L-ACT>)>>
+	       .U>>>>
+
+<DEFINE READER-MAIL (ADR "AUX" CH (MS ,MSG-SPACE) U UU ID)
+	#DECL ((ADR) STRING (U UU) <OR FALSE STRING> (CH) <OR CHANNEL FALSE>
+	       (ID) FIX (MS) SPACE)
+	<COND (<SET U <DRDMSG "" <GETFIX "FROM">>>
+	       <SET UU <KEYGET <COND (<=? .ADR ""> .U) (ELSE .ADR)>>>
+	       <COND (<SET CH <MAIL-OPEN .UU "READER">>
+		      <SET ID <DRDMSG "" "MSG-NO">>
+		      <COND (<AND <=? .ADR ""> <NOT <DRDMSG "" "REMIND">>>
+			     <SET ID <- .ID>>)>
+		      <PRINT .ID .CH>
+		      <CLOSE .CH>
+		      T)
+		     (ELSE <AFALSE 7 <ASTRING .MS <UNPARSE .CH>>>)>)
+	      (ELSE <AFALSE 8 <ASTRING .MS "Author">>)>>
+
+\
+
+"MAIL-OPEN -- open channel to mail file, either explicitly spec'ed
+or the user's normal one in his directory.  If he has no directory,
+then try the common; directory.  If INSERT? is false, try to append to
+existing file, otherwise insert at beginning."
+
+<DEFINE MAIL-OPEN (UU FNM2 "OPTIONAL" (INSERT? <>))
+	#DECL ((UU FNM2) STRING (INSERT?) <OR STRING FALSE>)
+	<PROG ((SNM <HSNAME .UU>) (NM1 .UU) (NM2 .FNM2))
+	      #DECL ((SNM NM1 NM2) <SPECIAL STRING>)
+	      <COND (.INSERT? <TEMPOPEN .UU>)
+		    (<OPEN-APPEND .UU 5 6>)>>>
+
+\ 
+
+"ONLINE OUTPUT -- inform mail arrived via CLI:"
+
+<DEFINE ONLINE-OUTPUT (ADR "OPTIONAL" (SELF? <>)
+		       "AUX" AFMT U CH DATA (LST <>) (FRM ()) (MS ,MSG-SPACE)) 
+	#DECL ((ADR) STRING (DATA) ANY (FRM) <OR STRING LIST>
+	       (LST) <OR FALSE LIST>
+	       (SELF?) <OR FIX FALSE> (MS) SPACE (AFMT) <OR FALSE APPLICABLE>
+	       (U) <LIST [REST <OR STRING VECTOR>]> (CH) <OR FALSE CHANNEL>)
+	<PROG O-ACT ()
+	      #DECL ((O-ACT) ACTIVATION)
+	      <SET DATA <DRD .ADR <GETFIX "ONLINE-OUTPUT">>>
+	      <COND (<SET AFMT <AP? .DATA>>)
+		    (<TYPE? .DATA LIST> <SET LST .DATA>)
+		    (ELSE
+		     <RETURN <AFALSE 5
+				     <ASTRING .MS "ONLINE-OUTPUT">
+				     <ASTRING .MS <UNPARSE .DATA>>>>)>
+	      <COND (.AFMT) (<LENGTH? .LST 1> <RETURN T>)>
+	      <COND (<OR <NOT .LST> <NOT <1 .LST>>>	 ;"USE DEFAULTS"
+		     <SET DATA <DRD .ADR <GETFIX "ONLINE-USERS">>>
+		     <COND (<AND .DATA <OK? <GETFIX "ONLINE-USERS"> .DATA>>
+			    <SET U .DATA>)
+			   (.DATA
+			    <RETURN <AFALSE 6
+					    <ASTRING .MS "ONLINE-OUTPUT">
+					    <ASTRING .MS <UNPARSE .DATA>>>>)
+			   (ELSE <SET U (.ADR)>)>)
+		    (ELSE			    ;"'FILE' LOCATION SPECIFIED"
+		     <SET U
+			  <COND (<TYPE? <1 .LST> LIST> <1 .LST>)
+				(ELSE (<1 .LST>))>>)>
+	      <COND (<DRD "" "REMIND">)
+		    (<SET DATA <DRD .ADR "FROM">>
+		     <SET FRM .DATA>)>
+	      <MAPF <>
+		    <FUNCTION (UU) 
+			    #DECL ((UU) <OR STRING VECTOR>)
+			    <COND (<SET CH
+					<COND (<TYPE? .UU VECTOR>
+					       <OPEN "PRINT" !.UU>)
+					      (<OR <MEMBER !\: .UU>
+						   <MEMBER !\; .UU>>
+					       <OPEN "PRINT" .UU>)
+					      (<OR .SELF?
+						   <COND (<TYPE? .FRM STRING>
+							  <N=? .FRM .UU>)
+							 (<NOT <MEMBER .UU .FRM>>)>>
+					       <OPEN "PRINT"
+						     .UU
+						     "HACTRN"
+						     "CLI"
+						     .UU>)>>
+				   <SET DATA
+					<COND (.AFMT
+					       <DO-APPLY .ADR .AFMT .CH>)
+					      (ELSE
+					       <DO-OUTPUT .ADR <REST .LST> .CH>)>>
+				   <CLOSE .CH>
+				   <OR .DATA <RETURN .DATA .O-ACT>>)>>
+		    .U>
+	      <RETURN T>>>
+
+\ 
+
+"DLV-ERR -- delivery error handler"
+
+<DEFINE DLV-ERR (PRC ERR ADR
+		 "OPTIONAL" (NH? T)
+		 "AUX" L (ECOD <1 .ERR>) (SS ,SCRATCH-SPACE))
+	#DECL ((NH?) <OR FALSE 'T> (ECOD) FIX (L) <OR LIST FALSE> (SS) SPACE
+	       (VALUE) <OR LIST FALSE> (PRC ADR) STRING (ERR) <FALSE FIX>)
+	<SET L <ALIST .SS <ASTRING .SS "">>>
+	<COND (.NH?					     ;"TOP-LEVEL ENTRY"
+	       <COND (<MEMQ .ECOD ,NET-RETRY-CODES>    ;"SOFT ERROR SOLIDIFIED"
+		      <ADDBACK .L
+			       <ALIST .SS
+				      <ASTRING .SS
+					       
+"     DELIVERY has been attempted repeatedly for "
+					       <S-ADDR .ADR>
+					       
+"
+and failed.  A summary of the attempts follows:
+
+">>>
+		      <SET ECOD 0>)
+		     (ELSE
+		      <ADDBACK .L
+			       <ALIST .SS
+				      <ASTRING .SS
+					       "     DELIVERY to "
+					       <S-ADDR .ADR>
+					       " failed because:
+
+">>>)>)>
+	<COND (<==? .ECOD 0> <ADDBACK .L <DLV-HISTORY .ADR>>)
+	      (<==? .ECOD 1>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					
+"A user-specified function returned a failure value of:  " <2 .ERR>>>>)
+	      (<==? .ECOD 2>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					
+"The DELIVERY-SPECIFICATIONS field was not in the correct format.">>>
+	       <COND (<LENGTH? .ERR 1>)
+		     (ELSE				       ;"LOSER REPORTED"
+		      <ADDBACK .L
+			       <ALIST .SS
+				      <ASTRING .SS
+					       
+"
+The unusable specification was:
+
+"
+					       <2 .ERR>>>>)>)
+	      (<==? .ECOD 4>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					
+"The format to use for outputting the message was ill-formed in the way
+described below:
+
+"
+<2 .ERR>>>>)
+	      (<==? .ECOD 5>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					
+"The format to use for " <2 .ERR> " output was ill-formed.
+The format was:
+
+" <3 .ERR>>>>)
+	      (<==? .ECOD 6>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					
+"The format of the " <2 .ERR> " field was ill-formed.  The format was:
+
+" <3 .ERR>>>>)
+	      (<==? .ECOD 7>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					
+"The MAIL output file could not be opened.  The error code returned was:
+
+" <2 .ERR>>>>)
+	      (<==? .ECOD 8>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					
+"The user specified for output did not exist: " <2 .ERR>>>>)
+	      (<==? .ECOD 9>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					
+"The datum specified to contain the output format for " <2 .ERR>
+" was not a valid format:
+
+" <3 .ERR>>>>)
+	      (<==? .ECOD 10>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					
+"The foreign host refused the message.  I.e., the FTP connection was
+made, but no 350 reply was received on attempting to transfer the mail."
+<COND (<LENGTH? .ERR 1> "") (ELSE <ASTRING .SS "
+Last FTP reply: " <2 .ERR>>)>>>>)
+	      (<==? .ECOD 11>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					
+"An MDL error occurred during the network transfer procedure.  This
+indicates a bug in the mailer demon code, and has been reported.  The
+error arguments were:
+
+" <2 .ERR>>>>)
+	      (<==? .ECOD 12>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					
+"It was applied to the author area of the message.">>>)
+	      (<==? .ECOD 13>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					"The ICP attempt was unsuccessful.">>>)
+	      (<==? .ECOD 14>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					
+"An I/O channel error occurred during the network transfer.  Generally
+this occurs when the foreign host or net crashes.  The reason given was:
+"
+					<2 .ERR>>>>)
+	      (<==? .ECOD 15>
+	       <ADDBACK .L <ALIST .SS <ASTRING .SS
+"An IO-channel error occured as the mail was being output:
+
+" <2 .ERR>>>>)
+	      (<==? .ECOD 16>
+	       <ADDBACK .L <ALIST .SS <ASTRING .SS
+"A MDL error occured while the mail was being output.  This indicates
+a bug in one of the mail printing routines and has been reported.  The
+error was:
+
+" <2 .ERR>>>>)
+	      (<==? .ECOD 17>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					
+"The transfer was terminated by a (supposedly) transient error.
+">>>
+	       <COND (<NOT <LENGTH? .ERR 1>>
+		      <ADDBACK .L
+			       <ALIST .SS
+				      <ASTRING .SS
+					       "The FTP error reply was:
+
+"
+					       <2 .ERR>>>>)
+		     (ELSE
+		      <ADDBACK .L
+			       <ALIST .SS
+				      <ASTRING .SS
+					       
+"The probable cause is overloading of the recipient site.">>>)>)
+	      (<==? .ECOD 18>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					
+"The transfer was not acknowledged by the foreign site.  I.e., the
+message was transferred, but no 256 reply was received."
+<COND (<LENGTH? .ERR 1> "") (ELSE <ASTRING .SS "
+Last FTP reply: " <2 .ERR>>)>>>>)
+	      (<==? .ECOD 19>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+					
+"The foreign site refused the message.  ">>>
+	       <COND (<NOT <LENGTH? .ERR 1>>
+		      <ADDBACK .L
+			       <ALIST .SS
+				      <ASTRING .SS
+					       "The FTP error reply was:
+
+"
+					       <2 .ERR>>>>)
+		     (ELSE
+		      <ADDBACK .L
+			       <ALIST .SS
+				      <ASTRING .SS
+					       
+"The probable cause is that
+the specified user does not have a mailbox at the site.">>>)>)
+	      (<==? .ECOD 20>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS
+"The destination host was known to be down.">>>)
+	      (<==? .ECOD 21>
+	       <ADDBACK .L <ALIST .SS <ASTRING .SS
+"An FTP connection was established but no herald was ever received.
+This indicates a problem with the remote site's FTP server.">>>)
+	      (<==? .ECOD 22>
+	       <ADDBACK .L <ALIST .SS <ASTRING .SS
+"Fifteen minutes passed without activity between the hosts involved.">>>)
+	      (ELSE <SET L <>>)>
+	.L>
+
+\
+
+"DLV-HISTORY -- forms a history of delivery attempts"
+
+<DEFINE DLV-HISTORY (ADR "AUX" DA DE L (SS ,SCRATCH-SPACE)) 
+	#DECL ((ADR) STRING (DA DE) <OR FALSE LIST> (SS) SPACE
+	       (VALUE L) <LIST [REST STRING]>)
+	<PROG ()
+	      <SET DA <DRDMSG .ADR <GETFIX "DELIVERY-ATTEMPTS">>>
+	      <SET DE <DRDMSG .ADR <GETFIX "NET-DELIVERY-ERRORS">>>
+	      <COND (<OR <NOT .DA> <NOT .DE> <EMPTY? .DA> <EMPTY? .DE>>
+		     <RETURN <ALIST .SS <ASTRING .SS "No history available, sorry.">>>)>
+	      <SET L <ALIST .SS <ASTRING .SS "">>>
+	      <MAPF <>
+		    <FUNCTION (DT CD "AUX" DE) 
+			    #DECL ((DT) FIX (CD) <FALSE FIX>
+				   (DE) <LIST [REST STRING]>)
+			    <ADDBACK
+			       .L
+			       <ALIST .SS
+				      <ASTRING .SS "
+     Attempt of " <S-TIME .DT> " -- ">>>
+			    <COND (<SET DE <DLV-ERR "DELIVERY" .CD .ADR <>>>
+				   <ADDBACK .L .DE>)>>
+		    .DA
+		    .DE>
+	      <REST .L>>>
+
+<ENDPACKAGE>

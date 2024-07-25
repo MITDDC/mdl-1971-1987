@@ -1,0 +1,52 @@
+;"SYMBOL-TABLE hacking stuff for my compiler."
+
+<PACKAGE "TABLES">
+
+<ENTRY SYMBOL-TABLE MAKE-SYMBOL-TABLE LOOKUP-SYMBOL INSERT-SYMBOL REMOVE-SYMBOL>
+
+<USE "HASH">
+
+<USE "LIST2"> ;"on DLD's directory"
+
+<NEWTYPE SYMBOL-TABLE UVECTOR
+	 '<UVECTOR [REST <LIST 
+			  [REST HASH <LIST <OR ATOM VARIABLE>
+					   <OR ATOM FORM>>]>]>>
+
+<DEFINE MAKE-SYMBOL-TABLE ("OPTIONAL" (SIZE 5))
+	<CHTYPE <IUVECTOR .SIZE ()> SYMBOL-TABLE>>
+
+<DEFINE LOOKUP-SYMBOL (SYM SYMTAB "AUX" H L ENT)
+	#DECL ((VALUE) <OR FALSE ANY> (SYM) STRING (SYMTAB) SYMBOL-TABLE
+	       (H) HASH (L) LIST (ENT) <OR LIST FALSE>)
+	;"looks up string in the symbol-table, returns value if found, FALSE if not."
+	<SET H <HASH .SYM>>
+	<SET L <NTH .SYMTAB <+ <MOD <CHTYPE .H FIX> <LENGTH .SYMTAB>> 1>>>
+	<COND (<SET ENT <MEM2 .H .L>>
+	       <NTH .ENT 2>)>>
+
+<DEFINE INSERT-SYMBOL (SYM VAL DCL SYMTAB "AUX" H L)
+	#DECL ((VALUE) <OR ANY FALSE> (SYM) STRING (VAL) ANY
+	       (SYMTAB) SYMBOL-TABLE (H) HASH (L) LIST)
+	;"returns FALSE if atom is already there." 
+	<SET H <HASH .SYM>>
+	<SET L <NTH .SYMTAB <+ <MOD <CHTYPE .H FIX> <LENGTH .SYMTAB>> 1>>>
+	<COND (<NOT <MEM2 .H .L>>
+	       <PUT .SYMTAB <+ <MOD <CHTYPE .H FIX> <LENGTH .SYMTAB>> 1>
+		    (.H (.VAL .DCL) !.L)>
+	       .VAL)>>
+
+<DEFINE REMOVE-SYMBOL (SYM SYMTAB "AUX" H L VAL ENT)
+	#DECL ((VALUE) <OR ANY FALSE> (SYM) STRING (H) HASH (L) LIST
+	       (VAL) ANY (ENT) <OR LIST FALSE>)
+	;"returns value after removing, FALSE if not there."
+	<SET H <HASH .SYM>>
+	<SET L <NTH .SYMTAB <+ <MOD <CHTYPE .H FIX> <LENGTH .SYMTAB>> 1>>>
+	<COND (<SET ENT <MEM2 .H .L>>
+	       <SET VAL <2 .ENT>>
+	       <PUT .SYMTAB
+		    <+ <MOD <CHTYPE .H FIX> <LENGTH .SYMTAB>> 1>
+		    <DEL2 .H .L>>
+	       .VAL)>>
+
+<ENDPACKAGE>

@@ -1,0 +1,103 @@
+USING TEMPLATES
+
+     As of VERSION 49 of MUDDLE a new feature allowing the use of a
+PRIMTYPE TEMPLATE will be available.  This new primitive type will be
+able to cut down on the need for storage by allowing the user to specify
+exactly what he wants a structured object to contain.  
+
+     To use this new feature one must create a TYPE of PRIMTYPE TEMPLATE.
+This can be accomplished by using the RSUBR TEMPLATE.  The format for
+doing such is:
+
+		<TEMPLATE <-name-> ... <-specs>- ... >
+
+where "name" is the name of the new type and "specs" are specifications
+for each element of the TEMPLATE.  This returns the name of the TEMPLATE
+and creates a creator for TEMPLATEs of type "name", which can be applied
+to arguments to create that type of TEMPLATE.
+
+     The specification for the elements can be of several forms.  It can
+be either:
+
+	 a MUDDLE TYPE:	   <-TYPE>-
+	 a 2 element list: (<-TYPE-> <-length in bits>-)
+	 a 3 element list: (<-TYPE>- <-length in bits>- <-number of elements>-)
+
+     Below are some examples along with explanations:  
+
+LIST		an 18-BIT LIST pointer
+
+(FIX 18)	a halfword FIX (can be both positive and negative and
+		is checked for overflows)
+
+(FLOAT 18)	an 18-BIT FLOAT
+
+(FIX <-N>-)		(where N < 18) assumed to be a positive number of
+		length N bits (is not checked for overflows)
+
+BOOLEAN		not a MUDDLE TYPE; It is a one bit T or #FALSE ()
+		depending on whether the bit is 1 or 0.
+
+(UVECTOR 18 <-N>-) an 18 bit UVECTOR pointer; The UVECTOR is of length N.
+		The same can be done for VECTORS.
+
+(STRING 36 <-N>-)	a 36 bit string byte pointer; The string is of length N
+
+ANY		not a MUDDLE TYPE, rather anything can go here;  This is
+		very inefficient as storage goes since it takes up 2
+		words.
+
+
+     In order to provide more flexibility in using TEMPLATEs, two other
+fields are allowed, an optional field and a rest field.  The optional
+field allows the user to create template types which will have the same
+basic structure but which can have optional elements determined when the
+actual template is created.  The rest field like the optional field
+allows elements to be optional but specifies a repeatable pattern for any
+elements that are added on.  It is analagous to REST in DECLs.
+Separation of fields is accomplished by the use of the strings "REST" and
+"OPTIONAL".  For example:  
+
+   <TEMPLATE FOO FIX "OPTIONAL" LIST BOOLEAN "REST" FLOAT>
+
+This creates a TYPE FOO of PRIMTYPE TEMPLATE which always has a FIX as
+the first element, can have a LIST as a second element, can have a one
+bit T or FALSE () as the third element and can have any number of FLOATs
+from the 4th element on.  
+
+     Below are some scripted examples of the use of TEMPLATEs.  
+
+   <TEMPLATE BAR FIX "OPTIONAL" BOOLEAN "REST" (FIX 18) (FLOAT 18)>
+   BAR
+
+   <BAR 1>
+   #BAR {1}
+
+   <BAR 1 T>
+   #BAR {1 T}
+
+   <BAR 1 <> 1 1.0>
+   #BAR {1 #FALSE () 1 1.0}
+
+   <SET A <BAR 1 <> 1 1.9 2>>
+   #BAR {1 #FALSE () 1 1.8984375 2}
+
+   <PUT .A 1 6>
+   #BAR {6 #FALSE () 1 1.8984375 2}
+
+   <PUT .A 4 1.999>
+   #BAR {6 #FALSE () 1 1.9960937 2}
+
+   <TEMPLATE BAR (STRING 36 4) "REST" ANY>
+   #FALSE ("ALREADY A TEMPLATE")
+
+   <TEMPLATE BAR1 (STRING 36 4) "REST" ANY>
+   BAR1
+
+   <SET A <BAR1 "HELP" 2 () <>>>
+   #BAR1 {"HELP" 2 () #FALSE ()}
+
+   <PUT .A 1 "GOOD">
+   #BAR1 {"GOOD" 2 () #FALSE ()}
+
+

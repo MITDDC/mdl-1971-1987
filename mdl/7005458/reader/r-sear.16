@@ -1,0 +1,42 @@
+<PACKAGE "R-SEARCH">
+
+<ENTRY FIELD-MEMBER>
+
+<USE "R-DEFS" "R-UTIL" "R-IO">
+
+<USE "FIELDS" "NSTR" "M-READ">
+
+"FIELD-MEMBER -- returns T if a message has fields which match the keys
+  takes message number, fields as a vector of strings, and a list of strings
+  which are the partial matches of the values desired; case is ignored and
+  the match does not have to be perfect ('foo' matches 'foobar', e.g.)"
+
+<DEFINE FIELD-MEMBER (M FLD L "AUX" F)
+	#DECL ((FLD) <VECTOR [REST STRING]> (L) <LIST [REST STRING]>
+	       (M) FIX (F) ANY)
+	<COND (<RREAD .M>
+	       <MAPF <>
+		     <FUNCTION (FLD)
+			  #DECL ((FLD) STRING)
+			  <SET F <DRDA ,USER <GETFIX .FLD>>>
+			  <COND (<AND <TYPE? .F LIST>
+				      <MAPF <>
+					    <FUNCTION (S)
+						 #DECL ((S) STRING)
+						 <AND <MEMSNC .S .L>
+						      <MAPLEAVE T>>>
+					    .F>>
+				 <MAPLEAVE T>)
+				(<AND <TYPE? .F STRING> <MEMSNC .F .L>>
+				 <MAPLEAVE T>)>>
+		     .FLD>)>>
+
+<DEFINE MEMSNC (S L)
+	#DECL ((S) STRING (L) <LIST [REST STRING]>)
+	<MAPF <>
+	      <FUNCTION (M)
+		   #DECL ((M) STRING)
+		   <COND (<SUBSNC .M .S> <MAPLEAVE .M>)>>
+	      .L>>
+
+<ENDPACKAGE>

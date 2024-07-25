@@ -1,0 +1,424 @@
+
+(Initial CIF symbol number is 1000) ;
+Define Symbol 1000 250 4;(Name: proto-CONNECT-UP-CUT-0) ;
+Layer NC;Box Length 8 Width 8 Center 0, -10;
+Layer ND;Box Length 16 Width 36 Center 0, 0;
+Definition Finished;
+
+
+
+Define Symbol 1001 250 4;(Name: proto-CONNECT-VERTICAL-0) ;
+Layer ND;Box Length 16 Width 24 Center 0, 0;
+Definition Finished;
+
+
+
+Define Symbol 1002 250 4;(Name: proto-DIFFUSION-CUT-0) ;
+Layer ND;Box Length 16 Width 16 Center 0, 0;
+Layer NC;Box Length 8 Width 8 Center 0, 0;
+Definition Finished;
+
+
+
+Define Symbol 1003 250 4;(Name: proto-PLA-INPUT-PAIR-WEAK-0) ;
+Layer NP;Box Length 8 Width 32 Center -28, -40;
+Layer NP;Box Length 40 Width 8 Center -12, -24;
+Call symbol 1002 Translated to -16, -8;
+Layer ND;Box Length 8 Width 66 Center -16, -5;
+Layer NI;Box Length 24 Width 24 Center -16, -24;
+Layer NP;Box Length 8 Width 48 Center 8, -60;
+Layer ND;Box Length 12 Width 132 Center 22, 6;
+Layer NC;Box Length 8 Width 8 Center 24, 72;
+Layer ND;Box Length 16 Width 16 Center 24, 72;
+Layer NC;Box Length 16 Width 8 Center -16, 36;
+Layer NM;Box Length 24 Width 16 Center -16, 36;
+Layer ND;Box Length 24 Width 32 Center 8, 36;
+Layer ND;Box Length 16 Width 24 Center -12, 32;
+Layer NM;Box Length 24 Width 16 Center -16, -48;
+Layer ND;Box Length 16 Width 24 Center -12, -44;
+Layer NC;Box Length 16 Width 8 Center -16, -48;
+Layer ND;Box Length 24 Width 32 Center 8, -60;
+Layer NP;Box Length 12 Width 16 Center -22, -48;
+Layer NP;Box Length 12 Width 16 Center -22, 36;
+Layer NI;Box Length 24 Width 24 Center -16, 8;
+Layer NM;Box Length 64 Width 16 Center 0, -8;
+Layer NM;Box Length 64 Width 16 Center 0, 72;
+Layer NP;Box Length 24 Width 8 Center -16, 12;
+Layer NP;Box Length 8 Width 36 Center -28, 26;
+Call symbol 1002 Translated to -8, 72;
+Layer NP;Box Length 8 Width 40 Center -24, 64;
+Layer NP;Box Length 8 Width 112 Center 8, 28;
+Definition Finished;
+
+
+
+Define Symbol 1004 250 4;(Name: proto-PLA-AND-CELLS-GND-4X2-0) ;
+Layer NP;Box Length 8 Width 160 Center -56, 0;
+Layer NP;Box Length 8 Width 160 Center -24, 0;
+Layer NP;Box Length 8 Width 160 Center 8, 0;
+Layer NP;Box Length 8 Width 160 Center 40, 0;
+Layer ND;Box Length 16 Width 160 Center -40, 0;
+Layer ND;Box Length 16 Width 160 Center 24, 0;
+Layer NM;Box Length 128 Width 16 Center 0, 68;
+Layer NM;Box Length 128 Width 16 Center 0, 36;
+Layer NM;Box Length 128 Width 16 Center 0, 4;
+Layer NM;Box Length 128 Width 16 Center 0, -28;
+Layer NM;Box Length 128 Width 16 Center 0, -60;
+Layer NC;Box Length 8 Width 8 Center -40, 68;
+Layer NC;Box Length 8 Width 8 Center 24, 68;
+Definition Finished;
+
+
+
+Define Symbol 1005 250 4;(Name: proto-PLA-AND-PULL-1-0) ;
+Layer NM;Box Length 24 Width 16 Center 18, 0;
+Layer NC;Box Length 16 Width 8 Center 18, 0;
+Layer ND;Box Length 16 Width 16 Center 22, 0;
+Layer ND;Box Length 36 Width 8 Center 0, 0;
+Layer NP;Box Length 20 Width 24 Center 8, 0;
+Layer NI;Box Length 36 Width 24 Center 8, 0;
+Call symbol 1002 Translated to -22, 0;
+Definition Finished;
+
+
+
+Define Symbol 1006 250 4;(Name: proto-PLA-AND-PULL-4-0) ;
+Call symbol 1005 Translated to 0, -60;
+Call symbol 1005 Translated to 0, -28;
+Call symbol 1005 Translated to 0, 4;
+Call symbol 1005 Translated to 0, 36;
+Layer NM;Box Length 16 Width 160 Center -22, 0;
+Definition Finished;
+
+
+
+Define Symbol 1007 250 4;(Name: proto-POLY-CUT-0) ;
+Layer NC;Box Length 8 Width 8 Center 0, 0;
+Layer NP;Box Length 16 Width 16 Center 0, 0;
+Definition Finished;
+
+
+
+Define Symbol 1008 250 4;(Name: proto-CONNECT-AND-OR-4-PLA-0) ;
+Layer NM;Box Length 20 Width 16 Center -16, -60;
+Layer NM;Box Length 20 Width 16 Center -16, -28;
+Layer NM;Box Length 20 Width 16 Center -16, 4;
+Layer NM;Box Length 20 Width 16 Center -16, 36;
+Layer NM;Box Length 36 Width 16 Center -8, 68;
+Call symbol 1007 Translated to -14, 36;
+Call symbol 1007 Translated to -14, 4;
+Call symbol 1007 Translated to -14, -28;
+Call symbol 1007 Translated to -14, -60;
+Layer NM;Box Length 16 Width 160 Center 14, 0;
+Layer NP;Box Length 36 Width 8 Center 8, -56;
+Layer NP;Box Length 36 Width 8 Center 8, -24;
+Layer NP;Box Length 36 Width 8 Center 8, 8;
+Layer NP;Box Length 36 Width 8 Center 8, 40;
+Layer ND;Box Length 20 Width 16 Center 16, -40;
+Layer ND;Box Length 20 Width 16 Center 16, 24;
+Layer NC;Box Length 8 Width 8 Center 14, 24;
+Layer NC;Box Length 8 Width 8 Center 14, -40;
+Definition Finished;
+
+
+
+Define Symbol 1009 250 4;(Name: proto-PLA-OR-CELLS--GND-4X4T-0) ;
+Layer NP;Box Length 160 Width 8 Center 0, -8;
+Layer NP;Box Length 160 Width 8 Center 0, -40;
+Layer NP;Box Length 160 Width 8 Center 0, 24;
+Layer NP;Box Length 160 Width 8 Center 0, 56;
+Layer ND;Box Length 160 Width 16 Center 0, 40;
+Layer ND;Box Length 160 Width 16 Center 0, -24;
+Layer NM;Box Length 16 Width 128 Center 68, 0;
+Layer NM;Box Length 16 Width 128 Center 36, 0;
+Layer NM;Box Length 16 Width 128 Center 4, 0;
+Layer NM;Box Length 16 Width 128 Center -28, 0;
+Layer NM;Box Length 16 Width 128 Center -60, 0;
+Layer NC;Box Length 8 Width 8 Center 68, -24;
+Layer NC;Box Length 8 Width 8 Center 68, 40;
+Definition Finished;
+
+
+
+Define Symbol 1010 250 4;(Name: proto-INNER-PLA-OR-CELLS-0) ;
+Call symbol 1009 Translated to 0, -16;
+Layer NM;Box Length 16 Width 32 Center -60, 64;
+Layer NM;Box Length 16 Width 32 Center -28, 64;
+Layer NM;Box Length 16 Width 32 Center 4, 64;
+Layer NM;Box Length 16 Width 32 Center 36, 64;
+Layer NM;Box Length 16 Width 32 Center 68, 64;
+Definition Finished;
+
+
+
+Define Symbol 1011 250 4;(Name: proto-PLA-OR-PULLUP-1-0) ;
+Layer ND;Box Length 16 Width 16 Center 0, -22;
+Layer ND;Box Length 8 Width 36 Center 0, 0;
+Layer NP;Box Length 24 Width 20 Center 0, -8;
+Layer NM;Box Length 16 Width 24 Center 0, -18;
+Layer NC;Box Length 8 Width 16 Center 0, -18;
+Layer NI;Box Length 24 Width 36 Center 0, -8;
+Call symbol 1002 Translated to 0, 22;
+Definition Finished;
+
+
+
+Define Symbol 1012 250 4;(Name: proto-PLA-OR-PULLUPS-4-0) ;
+Call symbol 1011 Translated to -60, 0;
+Call symbol 1011 Translated to -28, 0;
+Call symbol 1011 Translated to 4, 0;
+Call symbol 1011 Translated to 36, 0;
+Layer NM;Box Length 160 Width 16 Center 0, 22;
+Definition Finished;
+
+
+
+
+
+
+
+Define Symbol 1015 250 4;(Name: proto-BUTTING-CONTACT-0) ;
+Layer NM;Box Length 16 Width 24 Center 0, 0;
+Layer NC;Box Length 8 Width 16 Center 0, 0;
+Layer ND;Box Length 16 Width 16 Center 0, -4;
+Layer NP;Box Length 16 Width 12 Center 0, 6;
+Definition Finished;
+
+
+
+Define Symbol 1016 250 4;(Name: proto-PLA-OUTPUT-PAIR-0) ;
+Call symbol 1015Rotated to 0, 1 then  Translated to 16, -76;
+Layer NP;Box Length 8 Width 40 Center 12, -68;
+Layer NI;Box Length 24 Width 24 Center 12, -60;
+Layer ND;Box Length 36 Width 8 Center 6, -60;
+Call symbol 1002 Translated to -12, -48;
+Call symbol 1015Rotated to -1, 0 then  Translated to -16, -16;
+Layer NP;Box Length 8 Width 52 Center -28, -42;
+Layer NP;Box Length 8 Width 28 Center -20, -74;
+Layer NP;Box Length 22 Width 8 Center 1, -20;
+Layer NI;Box Length 24 Width 24 Center 0, -20;
+Layer ND;Box Length 12 Width 8 Center -6, -40;
+Layer ND;Box Length 8 Width 92 Center 24, -26;
+Layer ND;Box Length 8 Width 48 Center -20, 20;
+Layer ND;Box Length 8 Width 48 Center -20, 20;
+Layer ND;Box Length 20 Width 8 Center -14, -8;
+Layer ND;Box Length 20 Width 8 Center -14, -8;
+Layer ND;Box Length 8 Width 40 Center 0, -24;
+Layer ND;Box Length 8 Width 40 Center 0, -24;
+Layer NP;Box Length 8 Width 48 Center 12, 24;
+Layer ND;Box Length 24 Width 32 Center 12, 24;
+Layer ND;Box Length 24 Width 32 Center -8, 48;
+Layer NP;Box Length 8 Width 64 Center -8, 56;
+Call symbol 1002 Translated to 8, 64;
+Layer NP;Box Length 8 Width 36 Center 24, 70;
+Layer NP;Box Length 8 Width 36 Center 24, 70;
+Layer NP;Box Length 20 Width 8 Center 18, 48;
+Layer NP;Box Length 20 Width 8 Center 18, 48;
+Layer NM;Box Length 64 Width 16 Center 0, -48;
+Layer NM;Box Length 64 Width 16 Center 0, 64;
+Definition Finished;
+
+
+
+Define Symbol 1017 250 4;(Name: proto-PHI2-CLOCK-PLA-0) ;
+Call symbol 1002 Translated to 20, 20;
+Call symbol 1002 Translated to -12, 20;
+Layer NP;Box Length 64 Width 8 Center 0, 4;
+Layer ND;Box Length 8 Width 20 Center -12, 2;
+Layer ND;Box Length 8 Width 20 Center 20, 2;
+Layer NM;Box Length 16 Width 24 Center -12, -16;
+Layer NM;Box Length 16 Width 24 Center 20, -16;
+Layer NP;Box Length 16 Width 12 Center 20, -22;
+Layer NP;Box Length 16 Width 12 Center -12, -22;
+Layer ND;Box Length 16 Width 16 Center -12, -12;
+Layer ND;Box Length 16 Width 16 Center 20, -12;
+Layer NC;Box Length 8 Width 16 Center 20, -16;
+Layer NC;Box Length 8 Width 16 Center -12, -16;
+Definition Finished;
+
+
+
+Define Symbol 1018 250 4;(Name: proto-BOTTOM-OR-CELLS-OUTPUTS-4-0) ;
+Call symbol 1010 Translated to 0, 118;
+Call symbol 1017 Translated to -48, 26;
+Call symbol 1017 Translated to 16, 26;
+Call symbol 1016 Translated to -48, -110;
+Call symbol 1016 Translated to 16, -110;
+Layer NP;Box Length 8 Width 20 Center -56, -12;
+Layer NP;Box Length 8 Width 20 Center -24, -12;
+Layer NP;Box Length 8 Width 20 Center 8, -12;
+Layer NP;Box Length 8 Width 20 Center 40, -12;
+Layer NM;Box Length 32 Width 16 Center 64, -46;
+Layer NM;Box Length 32 Width 16 Center 64, -150;
+Layer NM;Box Length 16 Width 84 Center 68, -4;
+Definition Finished;
+
+
+
+Define Symbol 1019 250 4;(Name: proto-CONNECT-RIGHT-CUT-0) ;
+Layer ND;Box Length 36 Width 16 Center 0, 0;
+Layer NC;Box Length 8 Width 8 Center -10, 0;
+Definition Finished;
+
+
+
+Define Symbol 1020 250 4;(Name: proto-CONNECT-LEFT-CUT-0) ;
+Layer NC;Box Length 8 Width 8 Center 8, 0;
+Layer ND;Box Length 32 Width 16 Center 0, 0;
+Definition Finished;
+
+
+
+Define Symbol 1021 250 4;(Name: proto-PLA-CONNECT-0) ;
+Layer ND;Box Length 24 Width 16 Center 0, 0;
+Definition Finished;
+
+
+
+
+Define Symbol 1024 250 4;(Name: proto-CONNECT-DOWN-CUT-0) ;
+Layer ND;Box Length 16 Width 36 Center 0, 0;
+Layer NC;Box Length 8 Width 8 Center 0, 10;
+Definition Finished;
+
+
+
+
+
+Define Symbol 1026 250 4;(Name: proto-COUNTER-PLA-NEW-3) ;
+Call symbol 1000 Translated to 124, 72;
+Call symbol 1000 Translated to 156, 136;
+Call symbol 1000 Translated to 156, 232;
+Call symbol 1000 Translated to 188, 296;
+Call symbol 1001 Translated to 220, 334;
+Call symbol 1003 Translated to -172, -190;
+Call symbol 1003 Translated to -108, -190;
+Call symbol 1003 Translated to -44, -190;
+Call symbol 1003 Translated to 20, -190;
+Call symbol 1004 Translated to -140, -26;
+Call symbol 1004 Translated to -140, 134;
+Call symbol 1004 Translated to -140, 294;
+Call symbol 1004 Translated to -12, -26;
+Call symbol 1004 Translated to -12, 134;
+Call symbol 1004 Translated to -12, 294;
+Call symbol 1006 Translated to -234, 134;
+Call symbol 1006 Translated to -234, 294;
+Call symbol 1007 Translated to -212, -54;
+Call symbol 1007 Translated to -212, -86;
+Layer NM;Box Length 16 Width 168 Center -256, -30;
+Layer NM;Box Length 16 Width 16 Center -212, -86;
+Layer NM;Box Length 16 Width 16 Center -212, -54;
+Layer NM;Box Length 16 Width 80 Center -256, -154;
+Layer NM;Box Length 60 Width 16 Center -234, -198;
+Call symbol 1008 Translated to 78, -26;
+Call symbol 1008 Translated to 78, 134;
+Call symbol 1008 Translated to 78, 294;
+Call symbol 1010 Translated to 184, 134;
+Call symbol 1009 Translated to 184, 278;
+Call symbol 1012 Translated to 184, 372;
+Layer NM;Box Length 232 Width 16 Center -12, 394;
+Layer NM;Box Length 124 Width 16 Center -190, 394;
+Layer NM;Box Length 16 Width 28 Center -256, 388;
+Layer NM;Box Length 36 Width 16 Center 70, -118;
+Layer NM;Box Length 20 Width 16 Center 94, -190;
+Layer NM;Box Length 52 Width 16 Center 78, -302;
+Call symbol 1002 Translated to 92, -158;
+Layer ND;Box Length 8 Width 12 Center 104, -156;
+Call symbol 1018 Translated to 184, -144;
+Layer ND;Box Length 140 Width 20 Center 170, -160;
+Layer NM;Box Length 16 Width 108 Center 60, -244;
+Layer ND;Box Length 8 Width 76 Center 244, -256;
+Call symbol 1002 Translated to 248, -302;
+Layer ND;Box Length 16 Width 76 Center 244, -188;
+Layer NP;Box Length 24 Width 68 Center 244, -256;
+Layer NI;Box Length 24 Width 84 Center 244, -256;
+Layer NM;Box Length 16 Width 24 Center 244, -222;
+Layer NC;Box Length 8 Width 16 Center 244, -222;
+Layer NM;Box Length 16 Width 80 Center 92, -146;
+Call symbol 1015 Translated to 28, -318;
+Call symbol 1015 Translated to -36, -318;
+Layer ND;Box Length 24 Width 32 Center 28, -282;
+Layer ND;Box Length 24 Width 32 Center -36, -282;
+Layer ND;Box Length 24 Width 32 Center -100, -282;
+Call symbol 1015 Translated to -100, -318;
+Call symbol 1015 Translated to -164, -318;
+Layer NP;Box Length 8 Width 32 Center -164, -290;
+Layer NP;Box Length 8 Width 32 Center -100, -290;
+Layer NP;Box Length 8 Width 32 Center -36, -290;
+Layer NP;Box Length 8 Width 32 Center 28, -290;
+Layer ND;Box Length 24 Width 32 Center -164, -282;
+Layer NP;Box Length 232 Width 8 Center -76, -338;
+Layer ND;Box Length 8 Width 20 Center -164, -340;
+Layer ND;Box Length 8 Width 20 Center -100, -340;
+Layer ND;Box Length 8 Width 20 Center -36, -340;
+Layer ND;Box Length 8 Width 20 Center 28, -340;
+Layer ND;Box Length 32 Width 8 Center 40, -350;
+Layer ND;Box Length 16 Width 16 Center 64, -346;
+Layer NP;Box Length 12 Width 16 Center 74, -346;
+Layer NP;Box Length 40 Width 8 Center 100, -342;
+Layer NM;Box Length 24 Width 16 Center 68, -346;
+Layer NC;Box Length 16 Width 8 Center 68, -346;
+Layer ND;Box Length 16 Width 16 Center -20, -358;
+Layer NP;Box Length 12 Width 16 Center -10, -358;
+Layer NM;Box Length 24 Width 16 Center -16, -358;
+Layer NC;Box Length 16 Width 8 Center -16, -358;
+Layer ND;Box Length 12 Width 12 Center -34, -356;
+Layer NP;Box Length 168 Width 8 Center 68, -366;
+Layer NP;Box Length 8 Width 20 Center 148, -352;
+Layer NP;Box Length 8 Width 36 Center 180, -360;
+Layer NP;Box Length 232 Width 8 Center 68, -382;
+Layer NP;Box Length 8 Width 52 Center 212, -368;
+Layer NP;Box Length 264 Width 8 Center 84, -398;
+Layer NP;Box Length 12 Width 16 Center -86, -358;
+Layer NP;Box Length 12 Width 16 Center -150, -358;
+Layer NP;Box Length 8 Width 20 Center -84, -376;
+Layer NP;Box Length 32 Width 8 Center -64, -382;
+Layer NP;Box Length 8 Width 36 Center -148, -384;
+Layer NP;Box Length 96 Width 8 Center -96, -398;
+Layer ND;Box Length 16 Width 16 Center -96, -358;
+Layer ND;Box Length 16 Width 16 Center -160, -358;
+Layer NM;Box Length 24 Width 16 Center -156, -358;
+Layer NM;Box Length 24 Width 16 Center -92, -358;
+Layer NC;Box Length 16 Width 8 Center -92, -358;
+Layer NC;Box Length 16 Width 8 Center -156, -358;
+Call symbol 1019 Translated to -138, 170;
+Call symbol 1020 Translated to -28, 170;
+Call symbol 1020 Translated to -156, 106;
+Call symbol 1020 Translated to -92, 106;
+Call symbol 1021 Translated to -36, 106;
+Call symbol 1019 Translated to -10, 106;
+Call symbol 1021 Translated to -196, 74;
+Call symbol 1020 Translated to 36, 74;
+Call symbol 1019 Translated to -138, 10;
+Call symbol 1020 Translated to 36, 10;
+Call symbol 1019 Translated to -74, -22;
+Call symbol 1020 Translated to 36, -22;
+Call symbol 1005 Translated to -234, -22;
+Call symbol 1005 Translated to -234, 10;
+Call symbol 1021 Translated to -196, 138;
+Call symbol 1020 Translated to -28, 138;
+Call symbol 1020 Translated to -156, 234;
+Call symbol 1020 Translated to -92, 234;
+Call symbol 1021 Translated to -68, 234;
+Call symbol 1020 Translated to -92, 266;
+Call symbol 1021 Translated to -196, 266;
+Call symbol 1020 Translated to -156, 298;
+Call symbol 1021 Translated to -132, 298;
+Call symbol 1021 Translated to -196, 330;
+Call symbol 1001 Translated to 124, -82;
+Call symbol 1001 Translated to 156, -82;
+Call symbol 1001 Translated to 188, -82;
+Call symbol 1001 Translated to 220, -82;
+Call symbol 1024 Translated to 124, -44;
+Call symbol 1024 Translated to 156, -44;
+Call symbol 1024 Translated to 188, -44;
+Call symbol 1024 Translated to 220, -44;
+Call symbol 1001 Translated to 124, -22;
+Call symbol 1024 Translated to 124, 20;
+Call symbol 1024 Translated to 156, 180;
+Call symbol 1001 Translated to 188, 270;
+Call symbol 1024 Translated to 124, 116;
+Definition Finished;
+
+
+END

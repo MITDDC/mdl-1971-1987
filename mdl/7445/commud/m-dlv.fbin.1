@@ -1,0 +1,134 @@
+'<PCODE "2M-DLV">
+
+<PACKAGE "M-DLV"> 
+
+<ENTRY DELIVERY DLV-ERR NET-DELIVERY DLV-HISTORY NET-CLOSE> 
+
+<USE "MADMAN" "CHAN" "FIELDS" "CLOCK" "M-DEFS" "M-TIME" "M-BASE" "ITIME" 
+"M-PRCD" "M-READ" "M-DAC" "M-DATA" "M-ARPANET" "M-CHAOS" "HOSTS" "M-NETS" 
+"M-TEMP" "M-ACK" "PRTUTI" "PRTSTR" "AP" "M-ERR" "USRUTI" "M-TAI"> 
+
+"DELIVERY PROCESS" 
+
+<DEMON-PROCESS "DELIVERY" DELIVERY DLV-ERR [<+ ,FATAL ,CCCSM> ,FATAL <> <+ ,
+FATAL ,CCCSM> ,FATAL ,FATAL 0 ,FATAL ,FATAL ,FATAL ,FATAL ,FATAL ,FATAL ,FATAL 0
+<+ ,FATAL ,CCCSM> 0 ,FATAL ,FATAL 0 0 0 ,FATAL ,FATAL]> 
+
+\ 
+
+"DELIVERY -- main message delivery function" 
+
+<SETG DELIVERY  %<RSUBR!- '[ %<PCODE!- "2M-DLV" 0> DELIVERY #DECL ("VALUE" ANY 
+ADDRESS) S-TIME ADDBACK S-ADDR CHAOS-QUIT ARPANET-QUIT FLUSH-NET-MESSAGE SCROUT 
+DAPPMSG DADDMSG AP? DRDMSG COND-SIGNAL DWT ITIME OK? DRD NET-DELIVERY AFALSE %<
+RGLOC MSG-SPACE T> %<TYPE-W SPACE VECTOR> "DELIVERY-SPECIFICATIONS" 
+%<INTERNAL-RSUBR ASTRING 262143> "DELIVERY" T %<INTERNAL-RSUBR ACOPY 2> 
+%<INTERNAL-RSUBR ALIST 262143> "Delivery Failure, Code: " %<RGLOC SCRATCH-SPACE 
+T> "" %<RGLOC NET-RETRY-CODES T> 
+"     DELIVERY has been attempted repeatedly for " 
+"
+and failed.  A summary of the attempts follows:
+
+" "     DELIVERY to " " failed because:
+
+" "A user-specified function returned a failure value of:  " 
+"The DELIVERY-SPECIFICATIONS field was not in the correct format." 
+"
+The unusable specification was:
+
+" 
+"The format to use for outputting the message was ill-formed in the way
+described below:
+
+" "The format to use for " " output was ill-formed.
+The format was:
+
+" "The format of the " " field was ill-formed.  The format was:
+
+" "The MAIL output file could not be opened.  The error code returned was:
+
+" "The user specified for output did not exist: " 
+"The datum specified to contain the output format for " 
+" was not a valid format:
+
+" 
+"The foreign host refused the message.  I.e., the FTP connection was
+made, but no 350 reply was received on attempting to transfer the mail." 
+"
+Last FTP reply: " 
+"An MDL error occurred during the network transfer procedure.  This
+indicates a bug in the mailer demon code, and has been reported.  The
+error arguments were:
+
+" "It was applied to the author area of the message." 
+"The ICP attempt was unsuccessful." 
+"An I/O channel error occurred during the network transfer.  Generally
+this occurs when the foreign host or net crashes.  The reason given was:
+" "An IO-channel error occured as the mail was being output:
+
+" 
+"A MDL error occured while the mail was being output.  This indicates
+a bug in one of the mail printing routines and has been reported.  The
+error was:
+
+" "The transfer was terminated by a (supposedly) transient error.
+" "The FTP error reply was:
+
+" "The probable cause is overloading of the recipient site." 
+"The transfer was not acknowledged by the foreign site.  I.e., the
+message was transferred, but no 256 reply was received." 
+"The foreign site refused the message.  " 
+"The probable cause is that
+the specified user does not have a mailbox at the site." 
+"The destination host was known to be down." 
+"An FTP connection was established but no herald was ever received.
+This indicates a problem with the remote site's FTP server." 
+"Fifteen minutes passed without activity between the hosts involved." 
+"The addressee contains an inaccessible network." 
+"The mailer cannot talk to that network." "No history available, sorry." 
+"
+     Attempt of " " -- "]>> 
+<AND <ASSIGNED? GLUE> .GLUE <PUT ,DELIVERY PGLUE ![715827882 -23622320128 0 0 0!
+]>> 
+
+
+"DELIVERY-RESULT -- update status of message based on result of this attempt" 
+
+<SETG DELIVERY-RESULT %<RSUBR-ENTRY '[DELIVERY DELIVERY-RESULT #DECL ("VALUE" 
+ANY ADDRESS ANY)] 259>> 
+
+\ 
+
+"NET-DELIVERY -- network output for message." 
+
+<DEFINE NET-DELIVERY (ADR "AUX" (HST <AHOST .ADR>) RES (RCVR <ANAME .ADR>) NETS 
+NET (GW <>) F TMP) #DECL ((ADR) ADDRESS (RCVR HST) STRING (NETS) <OR <UVECTOR 
+FIX> FALSE> (NET) FIX (RES) <OR ATOM FALSE> (TMP) <OR FALSE VECTOR> (GW) <OR 
+VECTOR FALSE>) <DWT <ITIME> .ADR <GETFIX "WHEN-DELIVERED">> <PROG () <COND (<SET
+NETS <SHARE-NET? .HST>> <MAPF <> <FUNCTION (HNET) #DECL ((HNET) FIX) <SET NET <
+CHTYPE <GETBITS .HNET <BITS 8 27>> FIX>> <COND (<SET TMP <MEMQ .NET <DATUM 
+"NET-DELIVERY-METHODS">>> <SET F <AP? <2 .TMP>>>)> <SET RES <COND (.F <COND (.GW
+<SCROUT "Gating through " .HST>)> <APPLY .F .ADR .RCVR <HOST .HST .NET>>) (ELSE 
+<AFALSE 24 .NET>)>> <COND (.RES <MAPLEAVE .RES>) (<OR <EMPTY? .RES> <N==? <1 .
+RES> 13>> <MAPLEAVE .RES>)>> .NETS> <MAIL-RESULT .ADR .RES>) (<AND <NOT .GW> <
+SET GW <FIND-GATEWAY .HST>>> <SET HST <1 <2 .GW>>> <SET RCVR .ADR> <AGAIN>) (
+ELSE <AFALSE 23>)>>> 
+
+<SETG NET-CLOSE %<RSUBR-ENTRY '[DELIVERY NET-CLOSE #DECL ("VALUE" <OR FALSE <
+LIST FIX STRING>>)] 372>> 
+
+\ 
+
+"DLV-ERR -- delivery error handler" 
+
+<SETG DLV-ERR %<RSUBR-ENTRY '[DELIVERY DLV-ERR #DECL ("VALUE" <OR LIST FALSE> 
+STRING <FALSE FIX> ADDRESS "OPTIONAL" <OR FALSE 'T>)] 381>> 
+
+\ 
+
+"DLV-HISTORY -- forms a history of delivery attempts" 
+
+<SETG DLV-HISTORY %<RSUBR-ENTRY '[DELIVERY DLV-HISTORY #DECL ("VALUE" <OR FALSE 
+LIST> ADDRESS)] 1236>> 
+
+<ENDPACKAGE> 

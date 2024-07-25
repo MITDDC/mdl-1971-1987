@@ -1,0 +1,23 @@
+Compilation record for: DSK:COMPIL;CHKDCL 84
+Output file:  DSK:COMPIL;CHKDCL NBIN
+
+It is now THURSDAY, 7 APR 1977 17:33 EST
+
+File loaded.
+Precompilation loaded.
+Functions ordered.
+MUDDLE COMPILER
+COMPILING ACTORT
+Compilation done in 1 minute and 33 seconds cpu time, 
+20 minutes and 13 seconds  real time. 
+Peephole optimization reduced code by 3%.     241 -> 232
+Starting assembler
+Job done in:  1 minute and 42 seconds cpu time, 21 minutes and 46 seconds real time.
+  
+
+Total time used is
+	2 min. 48 sec. CPU time,
+	9 sec. garbage collector CPU time,
+	31 min. 20 sec. real time.
+CPU utilization is 8.9361702%.
+Number of garbage collects = 1

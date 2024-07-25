@@ -1,0 +1,577 @@
+
+<PACKAGE "M-PRS">
+
+<ENTRY PARSING STORE-PARSE PRS-ERR MAIL-PARSE MPARSE-FIELD-TABLE MPDATE ADDFLD>
+
+<USE "FIELDS"
+     "USRUTI"
+     "HOSTS"
+     "PRTUTI"
+     "M-DEFS"
+     "ITIME"
+     "M-PRCD"
+     "M-READ"
+     "M-DAC"
+     "MADMAN"
+     "M-ERR"
+     "VCTSRC"
+     "NSTR">
+
+"PARSING PROCESS"
+
+<DEMON-PROCESS "PARSING" PARSING PRS-ERR [,FATAL			      ;1
+					  <>				      ;2
+					  ,FATAL			      ;3
+					  <>				      ;4
+					  ,FATAL			      ;5
+					  ,FATAL			    ;6]>
+
+\ 
+
+<SETG DC <STRING <ASCII 13> <ASCII 10> <ASCII 13> <ASCII 10>>>
+
+<SETG CR "
+">
+
+<GDECL (DC CR) STRING>
+
+;"PARSING PROCESS"
+
+<DEFINE PARSING (ADR "AUX" TEXT)
+	#DECL ((ADR) ADDRESS (TEXT) ANY)
+	<COND (<NOT <EMPTY? .ADR>> <AFALSE 1>)
+	      (<TYPE? <SET TEXT <DRDMSG () <GETFIX "BODY">>> STRING>
+	       <STORE-PARSE <MAIL-PARSE .TEXT>>)
+	      (ELSE <AFALSE 3>)>>
+
+<DEFINE STORE-PARSE (LST "AUX" FIELD DATA (FM <>) TO HNUM BLIND
+		     (TX <>) (MG <>) (MS ,MSG-SPACE) (SS ,SCRATCH-SPACE))
+	#DECL ((FIELD) <OR FIX STRING> (TX) <OR FALSE STRING> (LST) LIST
+	       (TO BLIND) <OR LIST FALSE> (HNUM MG) <OR FALSE FIX>
+	       (FM) <OR FALSE ADDRESS> (DATA) ANY (MS SS) SPACE)
+	<DWT <ITIME> () <GETFIX "WHEN-RECEIVED">>
+	<COND (<REPEAT ()
+		       <COND (<EMPTY? .LST> <RETURN T>)>
+		       <COND (<OR <NOT <TYPE? <1 .LST> STRING>>
+				  <LENGTH? .LST 1>>
+			      <RETURN <CHTYPE <ALIST .MS 6 .LST> FALSE>>)>
+		       <SET FIELD <GETFIX <1 .LST>>>
+		       <SET DATA <2 .LST>>
+		       <COND (<MEMF .FIELD '("SUBJECT" "MESSAGE-ID")>
+			      <COND (<TYPE? .DATA STRING>)
+				    (<TYPE? .DATA LIST>
+				     <COND (<==? <LENGTH .DATA> 1>
+					    <SET DATA <1 .DATA>>)
+					   (ELSE
+					    <SET DATA <ASTRING .SS !.DATA>>)>)
+				    (ELSE
+				     <SET DATA <UNPARSE .DATA>>)>)>
+		       <COND (<SET DATA <ACOPY .MS .DATA>>
+			      <DWT .DATA () .FIELD>)>
+		       <COND (<F==? .FIELD <GETFIX "BODY">>
+			      <AND <TYPE? .DATA STRING> <SET TX .DATA>>)
+			     (<F==? .FIELD <GETFIX "MESSAGE">> <SET MG .DATA>)>
+		       <SET LST <REST .LST 2>>>
+	       <COND (<AND <SET HNUM <DRDMSG () <GETFIX "RECEIVED-FROM-HOST">>>
+			   <HOME? .HNUM>>
+		      <SET HNUM <>>)>
+	       <COND (<AND .TX .MG>
+		      <DWT <REST .TX .MG> () "MESSAGE">)>
+	       <COND (<AND <SET TO <DRDMSG () <GETFIX "TO">>>
+			   <SET BLIND <DRDMSG () <GETFIX "BLIND">>>>
+		      <DWT <ALIST .MS
+				  <ALIST .MS
+					 <ACOPY .MS .TO>
+					 .BLIND>>
+			   ()
+			   <GETFIX "BLIND">>)>
+	       <HFIX .HNUM <GETFIX "TO">>
+	       <HFIX .HNUM <GETFIX "CARBON-COPY-TO">>
+	       <HFIX .HNUM <GETFIX "BLIND">>
+	       <HFIX .HNUM <GETFIX "FROM">>
+	       <HFIX .HNUM <GETFIX "SENDER">>
+	       <HFIX .HNUM <GETFIX "REPLY-TO">>
+	       <COND (<NOT <DRDMSG () <GETFIX "MESSAGE-ID">>>
+		      <DWT <MID <MVMSG ,MDB>>
+			   ()
+			   <GETFIX "MESSAGE-ID">>)>
+	       T)>>
+
+<DEFINE HFIX (HSTF FLD
+	      "AUX" A (FIX? <>) DATA (MS ,MSG-SPACE) HS) 
+	#DECL ((HSTF) <OR FIX FALSE> (FLD) <OR FIX STRING> (FIX?) <OR ATOM FALSE>
+	       (DATA) <OR FALSE LIST ADDRESS> (MS) SPACE)
+	<COND (<SET DATA <DRDMSG () .FLD>>
+	       <REPEAT ((LST .DATA))
+		       #DECL ((LST) LIST)
+		       <COND (<EMPTY? .LST> <RETURN>)>
+		       <COND (<TYPE? <SET A <1 .LST>> LIST>
+			      <COND (<AND <AHOST .A>
+					  <HOME? <HOST <AHOST .A>>>>
+				     <PUT .A ,AHOST <>>
+				     <SET FIX? T>)
+				    (<AND <NOT <AHOST .A>> .HSTF>
+				     <COND (<NOT <ASSIGNED? HS>>
+					    <SET HS
+						 <ASTRING .MS
+							  <STRING <HOST .HSTF>>>>)>
+				     <PUT .A ,AHOST .HS>
+				     <SET FIX? T>)>)>
+		       <SET LST <REST .LST>>>
+	       <AND .FIX? <DWT .DATA () .FLD>>)>>
+
+\ 
+
+"PRS-ERR -- error analyzer"
+
+<DEFINE PRS-ERR (PRC ERR ADR "AUX" (ECOD <1 .ERR>) L (SS ,SCRATCH-SPACE) PTXT) 
+	#DECL ((ECOD) FIX (VALUE L) <OR LIST FALSE> (PTXT) <OR STRING FALSE>
+	       (PRC) STRING (ADR) ADDRESS (ERR) <FALSE FIX>)
+	<SET L <ALIST .SS <ASTRING .SS 
+"     The parsing process failed because:
+
+">>>
+	<SET PTXT <DRDMSG () <GETFIX "BODY">>>
+	<COND (<==? .ECOD 1>
+	       <ADDBACK .L <ALIST .SS <ASTRING .SS
+"It was applied to the receiver area of the message.">>>)
+	      (<==? .ECOD 3>
+	       <ADDBACK .L <ALIST .SS <ASTRING .SS
+"There was no text to be parsed.">>>)
+	      (<==? .ECOD 5>
+	       <ADDBACK .L <ALIST .SS <ASTRING .SS
+"An error return from MAIL-PARSE occurred.  The value returned was:
+" <UNPARSE <2 .ERR>>  ".  The text being parsed was:
+
+"
+			 <OR .PTXT "--none--">>>>)
+	      (<==? .ECOD 6>
+	       <ADDBACK .L <ALIST .SS <ASTRING .SS
+"A bad data item was returned from MAIL-PARSE.  The item returned was:
+" <UNPARSE <2 .ERR>> ", and the text being parsed was:
+"
+		 <OR .PTXT "--none--">>>>)
+	      (ELSE <SET L <>>)>
+	.L>
+
+\
+
+<DEFINE MAIL-PARSE (TXT
+		    "AUX" FLDLST (FLDTBL ,MPARSE-FIELD-TABLE)
+			  STR VAL MSGLNT (SS ,SCRATCH-SPACE))
+   #DECL ((VALUE FLDLST) LIST (TXT) STRING 
+	  (FLDTBL) <VECTOR [REST STRING <VECTOR STRING APPLICABLE>]> (SS) SPACE
+	  (STR VAL) <OR STRING FALSE> (MSGLNT) FIX)
+   <REPEAT (CHR)
+	   #DECL ((TXT) STRING (CHR) CHARACTER)
+	   <COND (<EMPTY? .TXT> <RETURN>)
+		 (<OR <==? <ASCII 13> <SET CHR <1 .TXT>>> <==? <ASCII 10> .CHR>>
+		  <SET TXT <REST .TXT>>)
+		 (ELSE <RETURN>)>>
+   <SET FLDLST <ALIST .SS <ASTRING .SS "BODY"> .TXT>>
+   <COND (<SET STR <MEMBER ,DC .TXT>>
+	  <SET MSGLNT <- <LENGTH .STR> 2>>
+	  <ADDFLD "MESSAGE" <- <LENGTH .TXT> .MSGLNT -2> .FLDLST>)
+	 (ELSE <SET MSGLNT 0>)>
+   <REPEAT (LIMIT KEY NXTLIN DATLIN DATA TMP LINES)
+	   #DECL ((VAL) <OR STRING FALSE> (TXT KEY NXTLIN DATLIN) STRING
+		  (LINES) <OR ATOM FALSE> (LIMIT) FIX (DATA) ANY
+		  (TMP) <OR <VECTOR STRING> <VECTOR FIX> STRING FALSE>)
+	   <COND (<G? <SET LIMIT <- <LENGTH .TXT> .MSGLNT>> 0>)
+		 (<RETURN .FLDLST>)>
+	   <SET LINES <>>
+	   <REPEAT ((TX .TXT))
+		   #DECL ((TX) STRING)
+		   <SET NXTLIN <SUBSTR ,CR .TX .LIMIT>>
+		   <SET TX <REST .NXTLIN 2>>
+		   <COND (<OR <EMPTY? .TX>
+			      <NOT <MEMQ <1 .TX> " 	">>>
+			  <RETURN>)>
+		   <SET LINES T>>
+	   <SET LIMIT <- <LENGTH .TXT> <LENGTH .NXTLIN>>>
+	   <COND (<SET VAL <SUBSTR ":" .TXT .LIMIT>>
+		  <SET KEY
+		       <ASUBSTRING .TXT
+				   <- <LENGTH .TXT>
+				      <LENGTH .VAL>>>>
+		  <REPEAT (STR)
+			  #DECL ((STR) <OR FALSE STRING>)
+			  <COND (<SET STR
+				      <MEMBER <ASCII 10> .KEY>>
+				 <SET KEY <REST .STR>>)
+				(<RETURN>)>>
+		  <SET VAL <REST .VAL>>)>
+	   <COND
+	    (.VAL
+	     <REPEAT ()
+		     <COND (<EMPTY? .VAL> <RETURN>)
+			   (<MEMQ <1 .VAL> " 	">
+			    <SET VAL <REST .VAL>>)
+			   (ELSE <RETURN>)>>
+	     <SET DATLIN
+		  <ASUBSTRING .VAL <- <LENGTH .VAL> <LENGTH .NXTLIN>>>>
+	     <COND (.LINES
+		    <REPEAT ((TX .DATLIN))
+			    #DECL ((TX) <OR FALSE STRING>)
+			    <COND (<SET TX <MEMBER ,CR .TX>>
+				   <PUT .TX 1 !\ >
+				   <PUT .TX 2 !\ >)
+				  (ELSE <RETURN>)>>)>
+	     <MAPR <>
+		   <FUNCTION (STR "AUX" CN) 
+			#DECL ((STR) STRING (CN) FIX)
+			<COND (<AND <G=? <SET CN <ASCII <1 .STR>>> 97>
+				    <L=? .CN 122>>
+			       <PUT .STR 1 <ASCII <- .CN 32>>>)>>
+		   .KEY>
+	     <COND (<SET TMP <VCTSRC .FLDTBL .KEY>>
+		    <COND (<TYPE? <SET TMP <2 .TMP>> VECTOR>
+			   <SET KEY <1 .TMP>>
+			   <SET DATA <APPLY <2 .TMP> .DATLIN>>)>)
+		   (ELSE
+		    <ADDFLD "MISCELLANEOUS"
+			    <ALIST .SS <ASTRING .SS .KEY>>
+			    .FLDLST>
+		    <SET DATA <ALIST .SS .DATLIN>>)>
+	     <ADDFLD .KEY .DATA .FLDLST>)>
+	   <SET TXT <REST .NXTLIN 2>>>>
+
+<DEFINE ADDFLD (KEY DATA FLDLST
+		"AUX" TMPL ODATA (SS ,SCRATCH-SPACE))
+	#DECL ((KEY) STRING (DATA) ANY (FLDTOP FLDLST) LIST (TMPL) <OR LIST FALSE>
+	       (ODATA) ANY (SS) SPACE)
+	<COND (.DATA
+	       <COND (<SET TMPL <MEMBER .KEY .FLDLST>>
+		      <COND (<MEMBER .KEY '["WHEN-ORIGINATED" "SENDER"]>
+			     ;"ONLY ONE OF THESE ALLOWED")
+			    (<TYPE? <SET ODATA <2 .TMPL>> LIST>
+			     <COND (<TYPE? .DATA LIST>
+				    <PUT .TMPL
+					 2
+					 <ALIST .SS !.ODATA !.DATA>>)
+				   (<PUT .TMPL
+					 2
+					 <ALIST .SS !.ODATA .DATA>>)>)
+			    (<NOT .ODATA> <PUT .TMPL 2 .DATA>)
+			    (<TYPE? .DATA LIST>
+			     <PUT .TMPL 2 (.ODATA !.DATA)>)
+			    (<PUT .TMPL 2 (.ODATA .DATA)>)>)
+		     (ELSE
+		      <PUTREST <REST .FLDLST <- <LENGTH .FLDLST> 1>>
+			       <ALIST .SS
+				      <ACOPY .SS .KEY>
+				      .DATA>>)>)>>
+
+\ 
+
+<DEFINE MPNO-OP (DATA) #DECL ((DATA) ANY) .DATA>
+
+<DEFINE MPKEYWORD (DATA "AUX" (SS ,SCRATCH-SPACE) (WRDLST ()) WLST WRD VAL) 
+	#DECL ((VALUE) <LIST [REST STRING]> (SS) SPACE
+	       (DATA WRD VAL) <OR STRING FALSE> (WLST) LIST
+	       (WRDLST) <LIST [REST STRING]>)
+	<REPEAT ()
+		<COND (<NOT <SET DATA <ANYTHING? .DATA>>> <RETURN .WRDLST>)
+		      (<OR <AND <SET VAL <COMMA? .DATA>>
+				<SET WRD
+				     <ASUBSTRING .DATA
+					      <- <LENGTH .DATA>
+						 <LENGTH .VAL>>>>>
+			   <AND <SET WRD .DATA> <SET VAL '" ">>>
+		       <COND (<EMPTY? .WRD>)
+			     (<EMPTY? .WRDLST>
+			      <SET WLST <SET WRDLST <ALIST .SS .WRD>>>)
+			     (ELSE
+			      <PUTREST .WLST <SET WLST <ALIST .SS .WRD>>>)>
+		       <SET DATA <REST .VAL>>)>>>
+
+<DEFINE COMMA? (DATA "AUX" TMP)
+	#DECL ((DATA) STRING (TMP) <OR STRING FALSE>)
+	<REPEAT ()
+		<COND (<EMPTY? .DATA> <RETURN <>>)
+		      (<AND <==? <1 .DATA> !\">
+			    <SET TMP <MEMQ !\" <REST .DATA>>>>
+		       <SET DATA <REST .TMP>>)
+		      (<==? <1 .DATA> !\,> <RETURN .DATA>)
+		      (ELSE <SET DATA <REST .DATA>>)>>>
+
+<DEFINE NUMBER? (STR "AUX" (N 0) C)
+	#DECL ((STR) STRING (N) FIX (VALUE) <OR FIX FALSE> (C) CHARACTER)
+	<REPEAT () 
+		<COND (<EMPTY? .STR> <RETURN .N>)
+		      (<AND <G=? <ASCII <SET C <1 .STR>>> <ASCII !\0>>
+			    <L=? <ASCII .C> <ASCII !\9>>>
+		       <SET N <+ <- <ASCII .C> <ASCII !\0>> <* .N 10>>>
+		       <SET STR <REST .STR>>)
+		      (ELSE <RETURN <>>)>>>
+
+<DEFINE BREAK? (STR)
+	#DECL ((STR) STRING (VALUE) <OR STRING FALSE>)
+	<REPEAT ()
+		<COND (<EMPTY? .STR> <RETURN <>>)
+		      (<MEMQ <1 .STR> " 	
+"> <RETURN .STR>)>
+		<SET STR <REST .STR>>>>
+
+<DEFINE ANYTHING? (STR)
+	#DECL ((STR) STRING (VALUE) <OR STRING FALSE>)
+	<REPEAT ()
+		<COND (<EMPTY? .STR> <RETURN <>>)
+		      (<NOT <MEMQ <1 .STR> " 	">> <RETURN .STR>)>
+		<SET STR <REST .STR>>>>
+
+<DEFINE BACK-ANYTHING? (STR "AUX" (TSTR <TOP .STR>) BSTR)
+	#DECL ((STR TSTR BSTR VALUE) STRING)
+	<REPEAT ()
+		<COND (<==? .STR .TSTR> <RETURN .STR>)>
+		<SET BSTR <BACK .STR>>
+		<COND (<NOT <MEMQ <1 .BSTR> " 	">> <RETURN .STR>)>
+		<SET STR <BACK .STR>>>>
+
+<DEFINE MACH-ID (STR "AUX" LSTR RSTR)
+	#DECL ((STR VALUE) STRING (LSTR RSTR) <OR FALSE STRING>)
+	<COND (<AND <SET LSTR <MEMQ !\< .STR>>
+		    <SET RSTR <MEMQ !\> .LSTR>>>
+	       <ASUBSTRING <SET LSTR <REST .LSTR>>
+			   <- <LENGTH .LSTR> <LENGTH .RSTR>>>)
+	      (<AND <N==? <1 .STR> !\(>
+		    <SET LSTR
+			 <OR <MEMQ !\  .STR>
+			     <MEMQ !\	.STR>>>
+		    <SET RSTR <MEMQ !\( .LSTR>>
+		    <MEMQ !\) .RSTR>>
+	       <SET RSTR <BACK-ANYTHING? .RSTR>>
+	       <ASUBSTRING .STR
+			   <- <LENGTH .STR> <LENGTH .RSTR>>>)
+	      (.STR)>>
+
+<DEFINE FULL-NAME (STR "AUX" (LSTR <>) (RSTR <>))
+	#DECL ((STR VALUE) STRING (LSTR RSTR) <OR FALSE STRING>)
+	<SET STR <ANYTHING? .STR>>
+	<COND (<AND <SET LSTR <MEMQ !\< .STR>>
+		    <SET RSTR <MEMQ !\> .LSTR>>>
+	       <COND (<G? <LENGTH .STR> <LENGTH .LSTR>>
+		      <SET RSTR .LSTR>
+		      <SET LSTR .STR>)
+		     (ELSE
+		      <SET LSTR .RSTR>
+		      <SET RSTR <REST .LSTR <LENGTH .LSTR>>>)>)
+	      (<AND <N==? <1 .STR> !\(>
+		    <SET RSTR
+			 <OR <MEMQ !\  .STR>
+			     <MEMQ !\	.STR>>>
+		    <SET LSTR <MEMQ !\( .RSTR>>
+		    <SET RSTR <MEMQ !\) .LSTR>>>
+	       <SET LSTR <REST .LSTR>>)>
+	<COND (.LSTR <SET LSTR <ANYTHING? .LSTR>>)>
+	<COND (.RSTR <SET RSTR <BACK-ANYTHING? .RSTR>>)>
+	<COND (<AND .LSTR .RSTR>
+	       <ASUBSTRING .LSTR
+			   <- <LENGTH .LSTR> <LENGTH .RSTR>>>)>>
+
+<DEFINE HOST-NAME (STR "AUX" (HVAL <>) TMP)
+	#DECL ((STR) STRING (HVAL TMP) <OR STRING FALSE>)
+	<COND (<SET TMP <SUBSNC " at " .STR>>
+	       <SET HVAL <REST .TMP 4>>)
+	      (<SET TMP <MEMQ !\@ .STR>>
+	       <SET HVAL <REST .TMP>>)>
+	<COND (<AND .HVAL
+		    <SET TMP
+			 <OR <MEMQ !\  .HVAL>
+			     <MEMQ !\	 .HVAL>>>>
+	       <ASUBSTRING .HVAL <- <LENGTH .HVAL> <LENGTH .TMP>>>)
+	      (ELSE .HVAL)>>
+
+<DEFINE MPAUTHOR (STR "AUX" TMP (SS ,SCRATCH-SPACE) (CURSPACE .SS)
+		  (NAME <>) (HVAL <>) (FNAME <>)) 
+   #DECL ((VALUE) ADDRESS (NAME HVAL FNAME) <OR STRING FALSE>
+	  (CURSPACE) <SPECIAL SPACE> (SS) SPACE (TMP) <OR FALSE FIX STRING>)
+   <SET NAME <MACH-ID .STR>>
+   <SET FNAME <FULL-NAME .STR>>
+   <COND (<==? <NTH .NAME <LENGTH .NAME>> !\:>)
+	 (<AND <==? <1 .NAME> !\">
+	       <SET TMP <MEMQ !\" <REST .NAME>>>>
+	  <SET HVAL <HOST-NAME .TMP>>
+	  <SET NAME <ASUBSTRING .NAME <- <LENGTH .NAME> <LENGTH .TMP>>>>)
+	 (ELSE
+	  <SET HVAL <HOST-NAME .NAME>>
+	  <COND (<SET TMP <OR <MEMQ !\  .NAME> <MEMQ !\	 .NAME>>>
+		 <SET NAME <ASUBSTRING .NAME <- <LENGTH .NAME> <LENGTH .TMP>>>>)>)>
+   <ALIST .SS
+	  .NAME
+	  .HVAL
+	  .FNAME
+	  <>>>
+
+"MPTO -- parse addressee fields"
+
+<DEFINE MPTO (DATA "AUX" VAL) 
+   #DECL ((VALUE) <LIST [REST ADDRESS]>
+	  (VAL) <LIST [REST <OR ADDRESS STRING>]> (DATA) STRING)
+   <COND (<NOT <EMPTY? <SET VAL <MPKEYWORD .DATA>>>>
+	  <MAPR <>
+		<FUNCTION (VAL "AUX" (ADR <MPAUTHOR <1 .VAL>>)) 
+		     #DECL ((VAL) <LIST [REST <OR STRING ADDRESS>]>
+			    (ADR) ADDRESS)
+		     <PUT .VAL 1 .ADR>>
+		.VAL>
+	  .VAL)>>
+
+"MPMAIL-FROM -- parse normal tops-20 received-from-host analog"
+
+<DEFINE MPMAIL-FROM (TXT "AUX" TMP HST)
+	#DECL ((TXT) STRING (TMP) <OR STRING FALSE> (HST) <OR STRING FIX>)
+	<COND (<SET TMP <MEMQ !\  .TXT>>
+	       <COND (<TYPE? <SET HST
+				  <HOST <ASUBSTRING .TXT
+						    <- <LENGTH .TXT>
+						       <LENGTH .TMP>>>>>
+			     FIX>
+		      .HST)>)
+	      (ELSE <HOME?>)>>
+
+\ 
+
+"MPDATE -- parse normal net header date"
+
+<DEFINE MPDATE TOPACT (DATA "OPTIONAL" (DELIM !\ )
+		       "AUX" VAL VAL1 TMP DSIZ (YEAR 0) (MONTH 0) (DAY 0)
+			     (HOUR 0) (MIN 0) (SEC 0) (ZONE <ZONE>) (DATA1 <>)
+			     (SS ,SCRATCH-SPACE)
+			     (DAYLIST
+			      '["SUN" "MON" "TUE" "WED" "THU" "FRI" "SAT"])
+			     (MONTHLIST
+			      '["JAN" 1 "FEB" 2 "MAR" 3 "APR" 4 "MAY" 5 "JUN" 6
+				"JUL" 7 "AUG" 8 "SEP" 9 "OCT" 10 "NOV" 11 "DEC" 12]))
+	#DECL ((VALUE) <OR UVECTOR FIX FALSE>
+	       (TOPACT) ACTIVATION (YEAR MONTH DAY HOUR MIN SEC DSIZ) FIX
+	       (DATA) STRING (ZONE) FIX (VAL VAL1 DATA1) <OR STRING FALSE>
+	       (MONTHLIST) <VECTOR [REST STRING FIX]> (SS) SPACE
+	       (TMP) <OR FALSE FIX STRING VECTOR>
+	       (DAYLIST) <VECTOR [REST STRING]>)
+	<COND (<REPEAT ()
+		       <COND (<EMPTY? .DATA>
+			      <RETURN <CHTYPE <ALIST .SS .DATA> FALSE>>)
+			     (<==? !\  <1 .DATA>> <SET DATA <REST .DATA>>)
+			     (ELSE <RETURN>)>>
+	       <AND <SET VAL <MEMQ !\, .DATA>>
+		    <SET TMP <LC-UC <ASUBSTRING .DATA 3>>>
+		    <MEMBER .TMP .DAYLIST>
+		    <SET DATA <ANYTHING? <REST .VAL>>>>
+	       <COND (<AND <G=? <LENGTH .DATA> 9>
+			   <SET VAL <MEMQ .DELIM .DATA>>
+			   <SET VAL1 <MEMQ .DELIM <REST .VAL>>>
+			   <G? <SET DSIZ <- <LENGTH .DATA> <LENGTH .VAL>>> 0>
+			   <L? .DSIZ 3>
+			   <G=? <- <LENGTH .VAL> <LENGTH .VAL1>> 4>
+			   <OR <AND <G? <LENGTH .VAL1> 5> <==? !\  <6 .VAL1>>>
+			       <==? <LENGTH .VAL1> 5>
+			       <AND <G? <LENGTH .VAL1> 3> <==? !\  <4 .VAL1>>>
+			       <==? <LENGTH .VAL1> 3>>
+			   <SET TMP <ASUBSTRING .DATA .DSIZ>>
+			   <SET TMP <NUMBER? .TMP>>
+			   <SET DAY .TMP>
+			   <SET TMP <ASUBSTRING <REST .VAL> 3>>
+			   <LC-UC .TMP>
+			   <SET TMP <MEMBER .TMP .MONTHLIST>>
+			   <SET MONTH <2 .TMP>>
+			   <COND (<OR <=? <LENGTH .VAL1> 3>
+				      <AND <==? <LENGTH .VAL1> 4> <==? !\  <4 .VAL1>>>>
+				  <SET TMP <ASUBSTRING <SET VAL1 <REST .VAL1>> 2>>)
+				 (<G=? <LENGTH .VAL1> 5>
+				  <COND (<==? !\  <4 .VAL1>>
+					 <SET TMP
+					      <ASUBSTRING <SET VAL1 <REST .VAL1>> 2>>)
+					(ELSE
+					 <SET TMP
+					      <ASUBSTRING <SET VAL1 <REST .VAL1 3>>
+							  2>>)>)>
+			   <SET TMP <NUMBER? .TMP>>
+			   <SET YEAR .TMP>>
+		      <COND (<G? <LENGTH .VAL1> 2> <SET DATA1 <REST .VAL1 3>>)
+			    (ELSE <SET DATA1 "">)>
+		      <COND (<AND .DATA1
+				  <SET DATA1 <PAREN? .DATA1>>
+				  <SET VAL <ANYTHING? .DATA1>>
+				  <SET DATA1 .VAL>
+				  <G? <LENGTH .DATA1> 3>>
+			     <COND (<AND <SET VAL <SUBSNC "at" .DATA1 2>>
+					 <SET VAL <ANYTHING? <REST .VAL 2>>>>
+				    <SET DATA1 .VAL>)>
+			     <COND (<OR <AND <SET VAL <ASUBSTRING .DATA1 2>>
+					     <SET TMP <NUMBER? .VAL>>>
+					<AND <SET VAL <ASUBSTRING .DATA1 1>>
+					     <SET TMP <NUMBER? .VAL>>
+					     <==? <2 .DATA1> !\:>>>
+				    <SET HOUR .TMP>
+				    <SET DATA1 <REST .DATA1 2>>
+				    <COND (<==? <1 .DATA1> !\:>
+					   <SET DATA1 <REST .DATA1>>)>)>
+			     <COND (<AND <SET VAL <ASUBSTRING .DATA1 2>>
+					 <SET TMP <NUMBER? .VAL>>>
+				    <SET MIN .TMP>
+				    <SET DATA1 <REST .DATA1 2>>)>
+			     <COND (<AND <==? <1 .DATA1> !\:>
+					 <SET DATA1 <REST .DATA1>>
+					 <SET VAL <ASUBSTRING .DATA1 2>>
+					 <SET TMP <NUMBER? .VAL>>>
+				    <SET SEC .TMP>
+				    <SET DATA1 <REST .DATA1 2>>)>)>
+		      <COND (<AND .DATA1
+				  <SET VAL <ANYTHING? .DATA1>>
+				  <OR <SUBSNC "am" .VAL 2>
+				      <AND <SUBSNC "pm" .VAL 2>
+					   <SET HOUR <+ .HOUR 12>>>>>
+			     <COND (<AND <SET VAL <REST .VAL 2>>
+					 <SET VAL <ANYTHING? .VAL>>>
+				    <SET DATA1 .VAL>)>)>
+		      <COND (<AND .DATA1
+				  <ANYTHING? .DATA1>
+				  <==? !\- <1 .DATA1>>>
+			     <SET DATA1 <REST .DATA1>>)>
+		      <COND (<AND .DATA1
+				  <G=? <LENGTH .DATA1> 3>
+				  <SET VAL <ASUBSTRING .DATA1 3>>
+				  <LC-UC .VAL>>
+			     <COND (<TYPE? <SET TMP <ZONE .VAL>> FIX>
+				    <SET ZONE .TMP>)>)>
+		      <AUVECTOR .SS
+				<BTIME .YEAR .MONTH .DAY .HOUR .MIN .SEC>
+				.ZONE>)
+		     (ELSE <CHTYPE <ALIST .SS .DATA> FALSE>)>)>>
+
+<DEFINE PAREN? (STR "AUX" DATA)
+	#DECL ((STR VALUE) STRING (DATA) <OR STRING FALSE>)
+	<COND (<AND <NOT <EMPTY? .STR>>
+		    <==? <1 .STR> !\(>
+		    <SET DATA <MEMQ !\) .STR>>
+		    <SET DATA <ANYTHING? <REST .DATA>>>>
+	       .DATA)
+	      (.STR)>>
+
+<DEFINE ASUBSTRING (STR L "OPTIONAL" (SP ,SCRATCH-SPACE)
+		    "AUX" (OSTR <AISTRING .SP .L !\ >))
+	#DECL ((SP) SPACE (OSTR STR VALUE) STRING (L) FIX)
+	<SUBSTRUC .STR 0 .L .OSTR>
+	.OSTR>
+
+\ 
+
+<SETG MPARSE-FIELD-TABLE
+      ["BCC"	     ["BLIND" ,MPTO]
+       "CC"	     ["CARBON-COPY-TO" ,MPTO]
+       "DATE"	     ["WHEN-ORIGINATED" ,MPDATE]
+       "FROM"	     ["FROM" ,MPTO]
+       "IN-REPLY-TO" ["IN-REPLY-TO" ,MPNO-OP]
+       "KEYWORDS"    ["KEYWORDS" ,MPKEYWORD]
+       "MAIL-FROM"   ["RECEIVED-FROM-HOST" ,MPMAIL-FROM]
+       "MESSAGE-ID"  ["MESSAGE-ID" ,MPNO-OP]
+       "REFERENCES"  ["REFERENCES" ,MPKEYWORD]
+       "REPLY-TO"    ["REPLY-TO" ,MPTO]
+       "SENDER"	     ["SENDER" ,MPTO]
+       "SUBJECT"     ["SUBJECT" ,MPNO-OP]
+       "TO"	     ["TO" ,MPTO]]>
+
+<GDECL (MPARSE-FIELD-TABLE) <VECTOR [REST STRING <VECTOR STRING APPLICABLE>]>>
+
+<ENDPACKAGE>

@@ -1,0 +1,163 @@
+EXAMPLES FROM "SPECIFYING QUERIES AS RELATIONAL EXPRESSIONS"
+by Boyce, Chamberlin, Hammer, and King
+SIGPLAN Notices 10,1 / SIGIR Forum IX,3  (January 1975)
+
+Five relations:
+Employees:	EMP (NAME, SAL, MGR, DEPT)
+Sales:		SALES (DEPT, ITEM, VOL)
+Suppliers:	SUPPLY (COMP, DEPT, ITEM, VOL)
+Locations:	LOC (DEPT, FLOOR)
+Classifying:	CLASS (ITEM, TYPE)
+
+Q1. Find the names of employees in the Toy Department.
+    (disjunctive mapping)
+	INITIAL.SET named EMP
+	MAKE.SUBSET with DEPT being EXACTLY TOY
+	PRINT.SET named $ using NAME
+
+Q2. Find the average salary of employees in the Shoe Department.
+    ("bag" mapping)
+	INITIAL.SET named EMP
+	MAKE.SUBSET with DEPT being EXACTLY SHOE
+	COMPUTE.FOR $ the value AVG(SAL)
+
+Q3. Find those items sold by departments on the second floor.
+    (composition of mappings)
+	INITIAL.SET named LOC
+	MAKE.SUBSET with FLOOR being EXACTLY 2
+	RENAME.SET named $ to SECOND-FLOOR
+	INITIAL.SET named SALES
+	MAKE.SUBSET with DEPT being ONE-OF DEPT(SECOND-FLOOR)
+	PRINT.SET named $ using ITEM
+
+Q4. Find the salary of Anderson's manager.
+    (same with compatible domain/range)
+	INITIAL.SET named EMP
+	MAKE.SUBSET with NAME being EXACTLY ANDERSON
+	RENAME.SET named $ to A
+	UP.SUBSET
+	MAKE.SUBSET with NAME being EXACTLY MGR(A)
+	PRINT.SET named $ using SAL
+
+Q5. Find the names of employees who make more than their managers.
+    (free variable)
+	INITIAL.SET named EMP
+	MAKE.SUBSET with SAL being MORE-THAN SAL(MGR(*))
+	PRINT.SET named $ using NAME
+
+Q6. List the name and salary of all managers who manage more than ten
+    employees.
+    (binary relation)
+	INITIAL.SET named EMP
+	COMPUTE.SUBSET with COUNT(MGR) being MORE-THAN 10
+	PRINT.SET named $ using NAME, SAL
+
+Q7. Find those companies, each of which supplies every item.
+    (projection)
+	INITIAL.SET named SUPPLY
+	MAKE.SUBSET with ITEM being ALL-OF ITEM(SUPPLY)
+	REMOVE.DUPLICATES from $ using COMP
+	PRINT.SET named $ using COMP
+
+Q8. Find the volume of guns sold by the Toy Department.
+    (multiple domains)
+	INITIAL.SET named SALES
+	MAKE.SUBSET with DEPT being EXACTLY TOY
+	MAKE.SUBSET with ITEM being EXACTLY GUN
+	PRINT.SET named $ using VOL
+
+Q9. List the names and managers of employees in the Shoe Department
+    with a salary greater than 10000.
+    (numeric comparison)
+	INITIAL.SET named EMP
+	MAKE.SUBSET with DEPT being EXACTLY SHOE
+	MAKE.SUBSET with SAL being MORE-THAN 10000
+	PRINT.SET named $ using NAME, MGR
+
+Q10. Find the names of those employees who make more than any employee
+    in the Shoe Department.
+    (number compared to set)
+	INITIAL.SET named EMP
+	MAKE.SUBSET with DEPT being EXACTLY SHOE
+	RENAME.SET named $ to SHOE-EMPS
+	INITIAL.SET named EMP
+	MAKE.SUBSET with SAL being MORE-THAN MAX(SAL(SHOE-EMPS))
+	PRINT.SET named $ using NAME
+
+Q11. Find companies, each of which supplies every item of type A to
+    some department on the second floor.
+	INITIAL.SET named LOC
+	MAKE.SUBSET with FLOOR being EXACTLY 2
+	RENAME.SET named $ to SECOND-FLOOR
+	INITIAL.SET named CLASS
+	MAKE.SUBSET with TYPE being EXACTLY A
+	RENAME.SET named $ to TYPE-A
+	INITIAL.SET named SUPPLY
+	MAKE.SUBSET with DEPT being ONE-OF DEPT(SECOND-FLOOR)
+	MAKE.SUBSET with ITEM being ALL-OF ITEM(TYPE-A)
+	REMOVE.DUPLICATES from $ using COMP
+	PRINT.SET named $ using COMP
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+PLEASE PAGE-XMIT TO SWG;EX > !
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+MONIT.210
+;LOG SEC
+
+LOGIN: User logged in on another console
+;LOG SEC1
+Password please - ************** password ok.
+
+
+;IMEDIT^K
+
+IMEDIT 173
+
+*^O (Output file specification) SWG;
+*

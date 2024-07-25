@@ -1,0 +1,423 @@
+<PACKAGE "R-IO">
+
+<ENTRY RDEBUG? READER-INIT RINIT CREATE-MESSAGE-TABLE CREATE-READER-ASYLUM>
+
+<ENTRY UPDATE-TABLE UPDATE-IN-ASYLUM LOOKUP-LOCAL>
+
+<ENTRY READER-ASYLUM-FILE USED-READER-FILE>
+
+<ENTRY GET-READER-TAILOR RENUMBER? UPDATE-ALWAYS?>
+
+<ENTRY GET-FOLDER-TABLE GET-DATE DB-INFO>
+
+<ENTRY RDATA RDATAW RDELETE RREAD IRREAD RWRITE RWRITEW WORRY>
+
+<USE "R-DEFS" "R-UTIL">
+
+<USE "MADMAN" "ASYLUM" "M-DEFS" "FIELDS" "M-READ" "M-DATA" "USRUTI"
+     "PRTUTI" "BUF" "FILINF" "ITIME" "MAIL" "ASYSTAT">
+
+<SETG RDEBUG? T>
+<SETG READER-ASYLUM-FILE "FOO">		;"full name of user asylum"
+
+<GDECL (RDEBUG?) <OR ATOM FALSE>
+       (READER-ASYLUM-FILE) STRING>
+
+"SUBTITLE Initialize Message Table, Reader Asylum and Reader Space"
+
+"READER-INIT -- initialize everything"
+
+<DEFINE READER-INIT ("OPTIONAL" (U <XUNAME>) "AUX" (OUTCHAN .OUTCHAN))
+	#DECL ((OUTCHAN) CHANNEL (U) STRING)
+	<COND (<SETG READER-ASYLUM <RINIT .U>>
+	       <SETG MESSAGE-TABLE <RDATA ,M-TABLE ,READER-SPACE>>
+	       <PRINC "Last updated ">
+	       <QUICK-DATE <R-USED ,MESSAGE-TABLE> .OUTCHAN>
+	       <CRLF>
+	       <SETG UPDATE? <>>
+	       <GET-FOLDER-TABLE>
+	       <UPDATE-IN-ASYLUM>)
+	      (ELSE
+	       <CREATE-MESSAGE-TABLE>
+	       <PRINC "[No Reader-Asylum exists for ">
+	       <PRINC ,USER>
+	       <PRINC "]">
+	       <CRLF>)>
+	<CLEAR-BITS <ORB ,R-RECENT ,R-NEW>>
+	T>
+
+"SUBTITLE Reader to Asylum Interface"
+
+<DEFINE RINIT (U "AUX" S)
+	#DECL ((U) STRING (S) <OR ASYLUM FALSE>)
+	<SETG USER .U>
+	<INIT-SPACES>
+	<READER-SPACES>
+	<SOPEN>
+	<MSG-LOC>
+	<CLOSE-DATA-FILE ,SYSTEM-ASYLUM>
+	<SETG READER-ASYLUM-FILE
+	      <STRING <HSNAME ,USER> !\; ,USER !\  "ASYLUM">>
+	<SET S ,SYSTEM-ASYLUM>
+	<SETG SYSTEM-ASYLUM <>>
+	<OPEN-DATA-FILE ,READER-ASYLUM-FILE .S 2 1>>
+
+"GET-FOLDER-TABLE -- get the folder table from the user asylum and set up
+ ,FOLDER-TABLE and ,FOLDER-SYMBOLS"
+
+<DEFINE GET-FOLDER-TABLE ("OPTIONAL" FT)
+	#DECL ((FT) VECTOR)
+	<COND (<OR <ASSIGNED? FT> <SET FT <RDATA ,M-FOLDERS>>>
+	       <SETG FOLDER-TABLE
+		     <MAPF ,VECTOR
+			   <FUNCTION (X)
+				#DECL ((X) <OR STRING FIX>)
+				<COND (<TYPE? .X STRING> <STRING .X>)
+				      (ELSE .X)>>
+			   .FT>>
+	       <SETG FOLDER-SYMBOLS
+		     <MAPF ,VECTOR
+			   <FUNCTION (X)
+				#DECL ((X) <OR STRING FIX>)
+				<COND (<TYPE? .X STRING> .X)
+				      (ELSE <MAPRET>)>>
+			   ,FOLDER-TABLE>>)>>
+
+"CREATE-MESSAGE-TABLE -- build an empty message table"
+
+<DEFINE CREATE-MESSAGE-TABLE ("AUX" MT (RS ,READER-SPACE))
+	#DECL ((RS) SPACE (VALUE) MTABLE (MT) <OR UVECTOR FALSE>)
+	<ARESET .RS>
+	<COND (<SET MT <AIUVECTOR .RS <+ 4 <* 3 500>> 0>>
+	       <SETG MESSAGE-TABLE .MT>
+	       <SETG UPDATE? T>
+	       <PUT .MT ,R-HEADER 4>
+	       <PUT .MT ,R-TUPLE 3>
+	       <PUT .MT ,R-FOLDERS 0>
+	       .MT)
+	      (ELSE <ERROR .MT>)>>
+
+"CREATE-READER-ASYLUM -- build an asylum for this chomper"
+
+<DEFINE CREATE-READER-ASYLUM ("AUX" (RAF ,READER-ASYLUM-FILE)
+			      (U ,USER) RES (OUTCHAN .OUTCHAN))
+	#DECL ((U RAF) STRING (OUTCHAN) CHANNEL (RES) <OR FALSE STRING>)
+	<COND (<OR ,READER-ASYLUM
+		   <SETG READER-ASYLUM <OPEN-DATA-FILE .RAF>>>
+	       <CRLF>
+	       <PRINC "[Reader-Asylum for ">
+	       <PRINC .U>
+	       <PRINC " already exists.]">
+	       <CRLF>)
+	      (ELSE
+	       <CRLF>
+	       <PRINC "Initializing Reader-Asylum for ">
+	       <PRINC .U>
+	       <COND (<SET RES <MAKE-DATA-BASE .RAF 10>>
+		      <PRINC " [Ready]">
+		      <SETG READER-ASYLUM <OPEN-DATA-FILE .RAF>>
+		      <DATA-RESERVE ,READER-ASYLUM 10>
+		      <DATA-APRINT ,READER-ASYLUM ,M-FOLDERS ,SCRATCH-SPACE
+				   <AVECTOR ,SCRATCH-SPACE>>
+		      <SETG FOLDER-TABLE '[]>
+		      <UPDATE-TABLE T>)
+		     (ELSE <CRLF> <PRINC "Failed: "> <PRINC .RES>)>)>>
+
+"UPDATE-TABLE -- write out table and folder if necessary"
+
+<SETG UPDATE-ALWAYS? <>>
+<GDECL (UPDATE-ALWAYS?) <OR ATOM FALSE>>
+<SETG USED-READER-FILE <>>
+<GDECL (USED-READER-FILE) <OR FALSE STRING>>
+
+<DEFINE UPDATE-TABLE ("OPTIONAL" (REALLY? ,UPDATE-ALWAYS?)
+		      "AUX" R (MT ,MESSAGE-TABLE))
+	#DECL ((MT) MTABLE (REALLY? R) <OR ATOM FALSE>)
+	<COND (<NOT .REALLY?> <>)
+	      (,READER-ASYLUM
+	       <COND (,UPDATE?
+		      <PUT .MT ,R-USED <ITIME>>
+		      <RWRITE ,M-TABLE ,READER-SPACE .MT>
+		      <SETG UPDATE? <>>)>
+	       <COND (,USED-READER-FILE
+		      <COND (<NOT <SET R <RENAME ,USED-READER-FILE>>>
+			     <ERROR CANT-DELETE-READER-FILE .R>)>
+		      <SETG USED-READER-FILE <>>)>
+	       T)>>
+
+\
+
+"READER-TAILOR Junk"
+
+<DEFINE GET-READER-TAILOR ("OPTIONAL" (EXP? T)
+			   "AUX" RT NRT (SS ,SCRATCH-SPACE))
+	#DECL ((EXP?) <OR ATOM FALSE> (RT) <OR FALSE VECTOR> (NRT) VECTOR
+	       (SS) SPACE)
+	<COND (<AND .EXP? ,READER-TAILOR>)
+	      (<SET RT <RDATA ,M-TAILOR>>
+	       <COND (.EXP?
+		      <SET NRT <IVECTOR 10 <>>>
+		      <PUT .NRT ,T-LOCAL-FORMAT
+			   <INTERPRET <T-LOCAL-FORMAT .RT>>>
+		      <PUT .NRT ,T-NET-FORMAT
+			   <INTERPRET <T-NET-FORMAT .RT>>>
+		      <PUT .NRT ,T-EDITOR
+			   <INTERPRET <T-EDITOR .RT>>>
+		      <COND (<T-EDITOR .NRT>
+			     <SETG TECO-PROGRAM <T-EDITOR .NRT>>)>
+		      <PUT .NRT ,T-TAILOR <T-TAILOR .RT>>
+		      <SETG UPDATE-ALWAYS?
+			    <NOT <0? <CHTYPE <ANDB <T-TAILOR .RT> ,T-UPDATE>
+					     FIX>>>>
+		      <SETG RENUMBER?
+			    <NOT <0? <CHTYPE <ANDB <T-TAILOR .RT> ,T-RENUMBER>
+					     FIX>>>>
+		      <PUT .NRT ,T-STARTUP <T-STARTUP .RT>>
+		      <SETG READER-TAILOR .NRT>)
+		     (ELSE .RT)>)
+	      (.EXP?
+	       <SETG READER-TAILOR
+		     <VECTOR <> <> <> 0 0 <> <> <> <> <>>>)
+	      (ELSE
+	       <SETG READER-TAILOR
+		     <AVECTOR .SS <> <> <> 0 0 <> <> <> <> <>>>)>>
+
+<DEFINE INTERPRET (X "AUX" A)
+	#DECL ((X) <OR STRING FALSE> (A) ANY)
+	<COND (<TYPE? .X STRING>
+	       <COND (<MEMQ !\; .X> <DATUM .X>)
+		     (<TYPE? <SET A <PARSE .X>> ATOM>
+		      <COND (<AND <GASSIGNED? .A> <APPLICABLE? ,.A>>
+			     ,.A)
+			    (ELSE <STRING .X>)>)
+		     (ELSE <STRING .X>)>)>>
+
+\
+
+"SUBTITLE Updating the Locally-stored Tag"
+
+<DEFINE UPDATE-IN-ASYLUM ("AUX" N IA (UV ,MESSAGE-TABLE) (L <R-TUPLE .UV>)
+			  (OUTCHAN .OUTCHAN))
+	#DECL ((IA) VECTOR (N) FIX (OUTCHAN) CHANNEL (UV) <UVECTOR [REST FIX]>
+	       (L) FIX)
+	<COND (<SET IA <LOCAL-MESSAGE-TABLE T>>
+	       <SET N <RDATAW ,M-ASYLUM>>
+	       <COND (<NOT <0? .N>>
+		      <PRINC .N>
+		      <PRINC " message">
+		      <OR <1? .N> <PRINC !\s>>
+		      <PRINC " copied to the user asylum.">
+		      <RWRITEW ,M-ASYLUM 0>
+		      <CRLF>)>
+	       <SET UV <REST .UV <R-HEADER .UV>>>
+	       <REPEAT ()
+		       <COND (<OR <EMPTY? .UV> <0? <1 .UV>>> <RETURN>)
+			     (<MEMT <MSG .UV> .IA 2> <ONBITS .UV ,R-ASYLUM>)
+			     (ELSE <OFFBITS .UV ,R-ASYLUM>)>
+		       <SET UV <REST .UV .L>>>)>>
+
+<DEFINE MEMT (X Y N)
+	#DECL ((X) <PRIMTYPE WORD> (Y) VECTOR (N) FIX)
+	<REPEAT ()
+		<COND (<LENGTH? .Y <- .N 1>> <RETURN <>>)
+		      (<==? .X <1 .Y>> <RETURN .Y>)
+		      (ELSE <SET Y <REST .Y .N>>)>>>
+
+<DEFINE LOCAL-MESSAGE-TABLE ("OPTIONAL" (NEW? <>) "AUX" V)
+	#DECL ((V) ANY (NEW?) <OR ATOM FALSE>)
+	<COND (<AND <NOT .NEW?> ,LOCAL-MESSAGES>)
+	      (<SET V <RDATA ,M-ASYLUM>>
+	       <COND (<AND <TYPE? .V VECTOR>
+			   <OR <EMPTY? .V> <TYPE? <1 .V> FIX>>>
+		      <SETG LOCAL-MESSAGES <VECTOR !.V>>)>)>>
+
+<DEFINE LOOKUP-LOCAL (M "AUX" (LMT <LOCAL-MESSAGE-TABLE>))
+	#DECL ((M) FIX (LMT) <OR FALSE <VECTOR [REST FIX]>>)
+	<COND (<AND .LMT <SET LMT <MEMQ .M .LMT>> <NOT <EMPTY? .LMT>>>
+	       <2 .LMT>)>>
+
+\
+
+<DEFINE RDATA (M "OPTIONAL" (S ,SCRATCH-SPACE) "AUX" (RA ,READER-ASYLUM))
+	#DECL ((M) <OR STRING FIX> (S) SPACE (RA) <OR ASYLUM FALSE>)
+	<AND .RA <DATA-AREAD .RA .M <ARESET .S>>>>
+
+<DEFINE RDELETE (M "AUX" (RA ,READER-ASYLUM))
+	#DECL ((M) FIX (RA) <OR ASYLUM FALSE>)
+	<AND .RA <DATA-DELETE .RA .M>>>
+
+<DEFINE RDATAW (M "AUX" (RA ,READER-ASYLUM))
+	#DECL ((M) FIX (RA) <OR ASYLUM FALSE>)
+	<AND .RA <CHTYPE <DATA-READW .RA .M> FIX>>>
+
+<DEFINE RWRITEW (M N "AUX" (RA ,READER-ASYLUM))
+	#DECL ((M N) FIX (RA) <OR ASYLUM FALSE>)
+	<AND <NOT ,RDEBUG?> .RA <DATA-PRINTW .RA .M .N>>> 
+
+"RREAD -- read message data from user or system asylum"
+
+<DEFINE RREAD (N "AUX" R)
+	#DECL ((N) FIX (R) <OR FIX FALSE>)
+	<COND (<SET R
+		    <OR <IRREAD .N>
+			<AND <ARESET ,MSG-SPACE>
+			     <RRD .N>
+			     <NOT <EMPTY? <MVDATA ,MDB>>>
+			     .N>>>)
+	      (ELSE
+	       <PUT ,MDB ,MVMSG 0>
+	       <PROG ((OUTCHAN ,OUTCHAN))
+		     #DECL ((OUTCHAN) <SPECIAL CHANNEL>)
+		     <PRINC "Can't read ">
+		     <PMID .N>
+		     <PRINC ": ">
+		     <PRINC <COND (<NOT <EMPTY? .R>>
+				   <COND (<TYPE? <1 .R> STRING>
+					  <1 .R>)
+					 (ELSE
+					  <NTH ,DATA-ERRORS <1 .R>>)>)
+				  (ELSE "(Empty False?)")>>
+		     <CRLF>>
+	       <>)>>
+
+<DEFINE IRREAD (M "AUX" (MDB ,MDB) MSG (RA ,READER-ASYLUM) (MS ,MSG-SPACE) N) 
+	#DECL ((M) FIX (MDB) VECTOR (MSG) <OR VECTOR FALSE> (MS) SPACE
+	       (N) <OR FIX FALSE> (RA) <OR FALSE ASYLUM>)
+	<COND (<==? <MVMSG .MDB> .M> .M)
+	      (<AND .RA <SET N <LOOKUP-LOCAL .M>>>
+	       <ARESET .MS>
+	       <SET MSG <DATA-AREAD .RA .N .MS>>
+	       <PUT .MDB ,MVDATA <OR .MSG '[]>>
+	       <PUT .MDB ,MVMSG <COND (.MSG .M) (ELSE 0)>>
+	       <COND (.MSG .M) (ELSE .MSG)>)>>
+
+"RRD -- special MRD to handle case of MSG ASYLUM creation during session"
+
+<GDECL (COMSYS-ASYLUM-MAP) <OR FALSE <VECTOR [REST FIX STRING]>>
+       (DATA-ERRORS) <VECTOR [REST STRING]>>
+
+<DEFINE RRD (N "AUX" R)
+	#DECL ((N) FIX (R) <OR FALSE FIX>)
+	<COND (<SET R <MRD .N>>)
+	      (<AND <NOT <EMPTY? .R>>
+		    <==? <1 .R> 8>
+		    ,COMSYS-ASYLUM-MAP
+		    <G? .N <1 ,COMSYS-ASYLUM-MAP>>>
+	       <SETG COMSYS-ASYLUM-MAP <>>
+	       <SOPEN>
+	       <MSG-LOC>
+	       <CLOSE-DATA-FILE ,SYSTEM-ASYLUM>
+	       <MRD .N>)>>
+
+"RWRITE -- write data to user asylum"
+
+<DEFINE RWRITE (N SP DATA "AUX" (RA ,READER-ASYLUM) R)
+	#DECL ((N) <OR STRING FIX> (SP) SPACE (DATA) ANY (RA) <OR FALSE ASYLUM>
+	       (R) <OR MANIAC FALSE>)
+	<COND (,RDEBUG?)
+	      (<NOT .RA> <>)
+	      (<AND <SET R <DATA-OPEN "PRINT" .RA .N>>
+		    <OR <TYPE? .N FIX>
+			<G=? <1 .R> 10>
+			<ERROR ABOUT-TO-CLOBBER <1 .R>>>
+		    <SET R <DATA-IPRINT .RA .R .SP .DATA>>
+		    <SET R <DATA-CLOSE .RA .R>>>
+	       <DUMPED? <1 .RA> <>>
+	       .N)
+	      (<NOT .R>
+	       <PROG ((OUTCHAN ,OUTCHAN))
+		     #DECL ((OUTCHAN) <SPECIAL CHANNEL>)
+		     <PRINC "Write of ">
+		     <PRINC .N>
+		     <PRINC " Failed: ">
+		     <PRINC <COND (<NOT <EMPTY? .R>>
+				   <NTH ,DATA-ERRORS <1 .R>>)
+				  (ELSE "(Empty False?)")>>
+	             <CRLF>>
+	       <>)>>
+
+<DEFINE WORRY ("AUX" (RA ,READER-ASYLUM) D N (OUTCHAN .OUTCHAN))
+	#DECL ((RA) <OR FALSE ASYLUM> (D) UVECTOR (N) FIX (OUTCHAN) CHANNEL)
+	<COND (,RDEBUG?)
+	      (.RA
+	       <COND (<NOT <0? <4 <SET D <5 .RA>>>>>
+		      <PRINT <4 .D>>
+		      <PUT .D 4 0>)>
+	       <COND (<L? <SET N <NEXT-MANIAC .RA>> 10>
+		      <ERROR ALLOCATOR-ABOUT-TO-CLOBBER .N>)>)>>
+
+<DEFINE NEXT-MANIAC (D)
+	#DECL ((D) ASYLUM)
+	<ALLOC-MAP .D>
+	<CHTYPE <1 <GET-LOC <+ 1 <* 1024 <ALLOCPAGE!-IASYLUM .D>>>
+			    ,XUV>>
+		FIX>>
+
+<SETG XUV <UVECTOR 0>>
+<GDECL (XUV) <UVECTOR FIX>>
+
+<DEFINE GET-DATE (M "AUX" W)
+	#DECL ((M) <UVECTOR [REST FIX]> (W) <OR FALSE FIX <UVECTOR [2 FIX]>>)
+	<COND (<0? <SET W <2 .M>>>
+	       <COND (<RREAD <MSG .M>>
+		      <SET W <DRDA "" <GETFIX "WHEN-ORIGINATED">>>
+		      <COND (<DRDA "" "REMIND">
+			     <ONBITS .M ,R-REMIND>)>
+		      <COND (<TYPE? .W FIX>)
+			    (<TYPE? .W UVECTOR> <SET W <1 .W>>)
+			    (ELSE <SET W 0>)>
+		      <PUT .M 2 .W>
+		      .W)
+		     (ELSE 0)>)
+	      (ELSE .W)>>
+
+<DEFINE DB-INFO ("OPTIONAL" (ASY <MVCHAN ,MDB>)
+		 "AUX" A (OUTCHAN .OUTCHAN))
+	#DECL ((ASY) <OR FALSE ASYLUM> (A) <UVECTOR [REST FIX]>
+	       (OUTCHAN) CHANNEL)
+	<COND (.ASY
+	       <SET A <ASYSTAT .ASY>>
+	       <CRLF>
+	       <MAPF <>
+		     <FUNCTION (M F)
+			  #DECL ((M) STRING (F) FIX)
+			  <PRIN1 .F>
+			  <PRINC .M>
+			  <CRLF>>
+		     '[
+"% of the allocator is used."
+"  words is the largest single block available."
+"  words are free in the asylum."
+"  words is the total length of the data area."
+"% of the data area has ever been used."]
+		     .A>
+	       ,NULL)>>
+
+<DEFINE MAKE-DATA-BASE (STR "OPTIONAL" (N 200) "AUX" C UV RES)
+	#DECL ((STR) STRING (N) FIX (C) <OR CHANNEL FALSE> (UV) UVECTOR
+	       (RES) <OR STRING FALSE>)
+	<COND (<SET C <OPEN "PRINTB" .STR>>
+	       <SET UV <IUVECTOR 1024 '0>>
+	       <WATCH IHAN "IOC" ,IOCHAND 4>
+	       <SET RES
+		    <COND (<REPEAT DBACT ()
+				   #DECL ((DBACT) <SPECIAL ACTIVATION>)
+				   <PRINTB .UV .C>
+				   <COND (<0? <SET N <- .N 1>>>
+					  <CLOSE .C>
+					  <OFF ,IHAN>
+					  <RETURN .STR>)>>)>>
+	       <OFF ,IHAN>
+	       .RES)>>
+
+<DEFINE IOCHAND (REASON ECHAN "AUX" NACT)
+	#DECL ((REASON) FALSE (ECHAN) CHANNEL (NACT) ACTIVATION)
+	<COND (<AND <ASSIGNED? DBACT>
+		    <LEGAL? <SET NACT .DBACT>>>
+	       <CLOSE .ECHAN>
+	       <RENAME <7 .ECHAN> <8 .ECHAN> <9 .ECHAN> <10 .ECHAN>>
+	       <SCROUT ">>>> Ioc During Data Base Creation: " .REASON " <<<<">
+	       <DISMISS <CHTYPE (14 .REASON) FALSE> .NACT>)
+	      (ELSE T)>>
+
+<ENDPACKAGE>

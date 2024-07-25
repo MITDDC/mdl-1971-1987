@@ -1,0 +1,89 @@
+Compilation record for: DSK:XCOMPI;PASS1 UCR042
+Output file:  DSK:XCOMPI;PASS1 NBIN
+
+It is now Wednesday, 26 Nov 1980 10:56 EST
+
+File loaded.
+Functions ordered.
+COMPILING SRCH-SYM!-IPASS1!-PASS1!-PACKAGE
+===== External variable being referenced:  VARTBL!-COMPDEC!-PACKAGE
+ **** .VARTBL!-COMPDEC!-PACKAGE **** 
+Peephole  0% 33/33
+Job done in:  16 / 28
+  COMPILING ERR-D!-IPASS1!-PASS1!-PACKAGE
+*** WARNING!-ICC!-CC!-PACKAGE	VARIABLE NEVER USED: TYPE 
+Peephole  0% 21/21
+Job done in:  3 / 4
+COMPILING ACT-FIX!-IPASS1!-PASS1!-PACKAGE
+===== Computed decl of variable:  FLG!-IPASS1!-PASS1!-PACKAGE is:  <OR ATOM 
+FALSE>
+Peephole  0% 40/40
+Job done in:  45 / 1:55
+ COMPILING QUOTCH!-IPASS1!-PASS1!-PACKAGE
+Peephole  0% 49/49
+Job done in:  6 / 12
+ COMPILING LISTCH!-IPASS1!-PASS1!-PACKAGE
+Peephole  0% 53/53
+Job done in:  16 / 25
+COMPILING PUT-RES!-IPASS1!-PASS1!-PACKAGE
+===== External variable being referenced:  RES:BOT!-IPASS1!-PASS1!-PACKAGE
+ **** .RES:BOT!-IPASS1!-PASS1!-PACKAGE **** 
+===== External variable being SET:  RES:BOT!-IPASS1!-PASS1!-PACKAGE
+ **** <SET RES:BOT!-IPASS1!-PASS1!-PACKAGE <REST <PUTREST .
+RES:BOT!-IPASS1!-PA ...
+===== External variable being referenced:  ACS:TOP!-IPASS1!-PASS1!-PACKAGE
+ **** .ACS:TOP!-IPASS1!-PASS1!-PACKAGE **** 
+===== External variable being referenced:  NACS!-IPASS1!-PASS1!-PACKAGE
+<L? 5  **** .NACS!-IPASS1!-PASS1!-PACKAGE **** >
+===== External variable being referenced:  ACS:TOP!-IPASS1!-PASS1!-PACKAGE
+ **** .ACS:TOP!-IPASS1!-PASS1!-PACKAGE **** 
+===== External variable being SET: ACS:TOP!-IPASS1!-PASS1!-PACKAGE
+ **** <SET ACS:TOP!-IPASS1!-PASS1!-PACKAGE '(() STACK!-COMPDEC!-PACKAGE)>
+ **** ...
+===== External variable being referenced:  ACS:TOP!-IPASS1!-PASS1!-PACKAGE
+ **** .ACS:TOP!-IPASS1!-PASS1!-PACKAGE **** 
+===== External variable being referenced:  ACS:BOT!-IPASS1!-PASS1!-PACKAGE
+ **** .ACS:BOT!-IPASS1!-PASS1!-PACKAGE **** 
+===== External variable being referenced:  NACS!-IPASS1!-PASS1!-PACKAGE
+ **** .NACS!-IPASS1!-PASS1!-PACKAGE **** 
+===== Not open compiled because type is:  STRUCTURED
+ **** <NTH ,ALLACS!-IPASS1!-PASS1!-PACKAGE .NACS!-IPASS1!-PASS1!-PACKAGE>
+ **** ...
+===== External variable being SET:  ACS:BOT!-IPASS1!-PASS1!-PACKAGE
+ **** <SET ACS:BOT!-IPASS1!-PASS1!-PACKAGE <REST <PUTREST .
+ACS:BOT!-IPASS1!-PA ...
+===== External variable being referenced:  NACS!-IPASS1!-PASS1!-PACKAGE
+<+  **** .NACS!-IPASS1!-PASS1!-PACKAGE ****  1>
+===== External variable being SET:  NACS!-IPASS1!-PASS1!-PACKAGE
+ **** <SET NACS!-IPASS1!-PASS1!-PACKAGE <+ .NACS!-IPASS1!-PASS1!-PACKAGE 1>>
+ * ...
+===== External variable being referenced:  NACS!-IPASS1!-PASS1!-PACKAGE
+<+  **** .NACS!-IPASS1!-PASS1!-PACKAGE ****  2>
+===== External variable being SET:  NACS!-IPASS1!-PASS1!-PACKAGE
+ **** <SET NACS!-IPASS1!-PASS1!-PACKAGE <+ .NACS!-IPASS1!-PASS1!-PACKAGE 2>>
+ * ...
+===== External variable being referenced:  ACS:BOT!-IPASS1!-PASS1!-PACKAGE
+ **** .ACS:BOT!-IPASS1!-PASS1!-PACKAGE **** 
+===== External variable being referenced:  NACS!-IPASS1!-PASS1!-PACKAGE
+<-  **** .NACS!-IPASS1!-PASS1!-PACKAGE ****  2>
+===== Not open compiled because type is:  STRUCTURED
+ **** <NTH ,ALLACS!-IPASS1!-PASS1!-PACKAGE <- .NACS!-IPASS1!-PASS1!-PACKAGE 2>
+ ...
+===== External variable being referenced:  NACS!-IPASS1!-PASS1!-PACKAGE
+<-  **** .NACS!-IPASS1!-PASS1!-PACKAGE ****  1>
+===== Not open compiled because type is:  STRUCTURED
+ **** <NTH ,ALLACS!-IPASS1!-PASS1!-PACKAGE <- .NACS!-IPASS1!-PASS1!-PACKAGE 1>
+ ...
+===== External variable being SET:  ACS:BOT!-IPASS1!-PASS1!-PACKAGE
+ **** <SET ACS:BOT!-IPASS1!-PASS1!-PACKAGE <REST <PUTREST .
+ACS:BOT!-IPASS1!-PA ...
+===== External variable being SET: ACS:TOP!-IPASS1!-PASS1!-PACKAGE
+ **** <SET ACS:TOP!-IPASS1!-PASS1!-PACKAGE '(() STACK!-COMPDEC!-PACKAGE)>
+ **** ...
+*** WARNING!-ICC!-CC!-PACKAGE	 TAG SEEN IN PROG/REPEAT 
+<PROG () #DECL ((VALUE) ATOM) <SET > <COND > <COND >  **** T **** >
+
+ 
+Peephole  1% 209/206
+Job done in:  59 / 1:28
+   

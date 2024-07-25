@@ -1,0 +1,168 @@
+GLUER
+
+;"Functions to enable convenient use of GLUE & PDUMP
+in SYS:TS GLUE."
+
+<GDECL (MUDDLE) FIX>
+<USE "GLUE" "PDUMP">
+
+<DEFINE GLUER ("EXTRA" IN AUXIN OUT PSN SUB GRPNAM GRP GRPE SUR VICTIMS SURPCK
+		       (FIRST? T) SILENT? (OUTCHAN .OUTCHAN)
+		       (EXPFLOAD <AND <ASSIGNED? EXPFLOAD> .EXPFLOAD>) "ACT" GA)
+	#DECL ((IN PSN) STRING (AUXIN SURPCK) <LIST [REST STRING]>
+	       (OUT) <OR ATOM STRING> (SUB FIRST? SILENT?) <OR ATOM FALSE>
+	       (GRPNAM) ATOM (VICTIMS SUR) <OR FALSE LIST> (GRP GRPE) LIST
+	       (GA) ACTIVATION (OUTCHAN) CHANNEL (EXPFLOAD) <SPECIAL ANY>)
+	<REPEAT ()
+		<CRLF>
+		<PROG (X)	;"Attempt to get Name of Primary Input File"
+		      #DECL ((X) <OR FALSE STRING>)
+		      <COND (.FIRST? <SET X <ASK "INPUT FILE NAME: (String) " STRING>>)
+			    (<NOT <SET X
+				       <ASK "ANOTHER INPUT FILE NAME: (String or Alt) "
+					    '<OR FALSE STRING>>>>
+			     <RETURN T .GA>	;"User is Finished")>
+		      <COND (<SET X <GETCHAN .X>>	;"Primary Input Exists ?"
+			     <SET IN .X>)
+			    (ELSE <SET FIRST? T> <AGAIN>	;"Ask Once More")>>
+		<SET AUXIN
+		     <MAPF ,LIST <FUNCTION ("EXTRA" X)
+					#DECL ((X) <OR FALSE STRING>)
+					<SET X
+					 <ASK "ADDITIONAL INPUT FILE NAME: (String) "
+					      '<OR FALSE STRING>>>
+					<COND (<NOT .X> <MAPSTOP>)
+					      (<SET X <GETCHAN .X>>
+						;"This Input File Exists ?")
+					      (ELSE <MAPRET>	;"Continue Asking")>>>>
+				;"Get Names of any Auxillary Input Files"
+		<SET OUT
+		     <OR <ASK "OUTPUT FILE NAME: (String or PDUMP or Alt) "
+			      '<OR FALSE STRING 'PDUMP>>
+			 <PROG ((TMP <CHANNEL "READ" .IN>))
+			   <COND (<G? ,MUDDLE 100> <STRING !\< <6 .TMP> !\> <3 .TMP>>)
+				 (T <STRING <6 .TMP> !\; <3 .TMP>>)>>>>
+		<COND (<==? .OUT PDUMP>
+		       <SET PSN <OR <ASK <STRING "PDUMP DIRECTORY: (String or Alt=\""
+						 <SNAME> "\") ">
+					 '<OR FALSE STRING>>
+				    <SNAME>>>)>
+		<COND (<ASK "SURVIVORS MODE? (T or Alt) " '<OR ATOM FALSE>>
+		       <SET SURPCK ()>	;"Names of Package Entries to Survive"
+		       <REPEAT ((PCK
+				 <ASK "KEEP ALL ENTRYS FROM PACKAGE?: (String or Alt) "
+				      '<OR FALSE STRING>>))
+			       #DECL ((PCK) <OR FALSE STRING>)
+			       <COND (<NOT .PCK> <RETURN>)>
+			       <SET SURPCK (!.SURPCK .PCK)>	;"Include Name"
+			       <SET PCK
+				<ASK "             ANOTHER PACKAGE?: (String or Alt) "
+				      '<OR FALSE STRING>>>>
+		       <SET SUR <OR <ASK "EXPLICIT SURVIVORS?: (List or Alt) "
+					 '<OR FALSE LIST>>
+				    ()>>
+		       <SET VICTIMS <OR <ASK "EXPLICIT VICTIMS?: (List or Alt) "
+					 '<OR FALSE LIST>>
+				    ()>>)
+		      (ELSE <SET VICTIMS <>> <SET SUR <>> <SET SURPCK ()>)>
+		<SET SUB <ASK "SUBSTITUTE?: (T or Alt) " '<OR ATOM FALSE>>>
+		<SET SILENT? <ASK "SILENT?: (T or Alt) " '<OR ATOM FALSE>>>
+		<SET EXPFLOAD <ASK "EXPAND FLOADS?: (T or Alt) " '<OR ATOM FALSE>>>
+		<SETG L-NOISY <NOT .SILENT?>>
+		<REPEAT ((X <ASK "Things to do: (or Alt) ">))
+			<COND (<NOT .X> <RETURN>)>
+			<EVAL .X>		;"Do the Thing"
+			<SET X <ASK <>>>	;"Another Thing ?">
+		<COND (<AND .SILENT?
+			    <L? ,MUDDLE 100>>
+		       <VALRET "
+:PROCED
+">)
+		      (ELSE <PRINC ,MARKER> <CRLF>
+		       <PRINC "Group Load "> <PRIN1 .IN>
+		       <CRLF>)>
+		<SET GRPNAM <GROUP-LOAD .IN>>	;"Load Primary Group"
+		<SET GRPE <SET GRP ..GRPNAM>>
+		<MAPF <> <FUNCTION (X)
+				   #DECL ((X) STRING)
+				   <SET GRPE <REST .GRPE <- <LENGTH .GRPE> 1>>>
+				   <COND (<NOT .SILENT?>
+					  <CRLF>
+					  <PRINC "Additional Group Load ">
+					  <PRIN1 .X>
+					  <CRLF>)>
+				   <PUTREST .GRPE .<GROUP-LOAD .X>>>
+		      .AUXIN>			;"Load Auxilary Groups"
+		<SET .GRPNAM .GRP>	;"Just in case of similar file names"
+		<COND (<NOT .SILENT?> <CRLF>)>
+		<GROUP-GLUE .GRPNAM .SUB <AND <NOT .SILENT?> ,OUTCHAN>
+			    .SURPCK .SUR .VICTIMS>
+		<COND (<TYPE? .OUT STRING>
+		       <COND (<NOT .SILENT?>
+			      <CRLF> <PRINC "Group Dump ">
+			      <PRIN1 .OUT>)>
+		       <PROG ((NM2 "GBIN"))
+			     #DECL ((NM2) <SPECIAL STRING>)
+			     <GROUP-DUMP .OUT .GRPNAM>>)
+		      (<==? .OUT PDUMP>
+		       <COND (<NOT .SILENT?>
+			      <CRLF> <PRINC "Pure Dump ">
+			      <PRIN1 .PSN>)>
+		       <PROG ((OSN <SNAME>))
+			     #DECL ((OSN) STRING)
+			     <SNAME .PSN>	;"PDump with specified SName"
+			     <PDUMP .GRPNAM>
+			     <SNAME .OSN>>)>
+		<COND (<NOT .SILENT?> <PRINC ,MARKER>)>
+		<SET FIRST? <>>>>
+
+<DEFINE ASK (PROMPT "OPTIONAL" (ATYPE <>) "EXTRA" X (OUTCHAN .OUTCHAN)
+	     (INCHAN .INCHAN))
+	#DECL ((PROMPT) <OR FALSE STRING> (ATYPE X) ANY (INCHAN OUTCHAN) CHANNEL)
+	<REPEAT ()
+		<COND (.PROMPT <CRLF> <PRINC .PROMPT> <RESET ,INCHAN>)>
+		<PROG (C)
+		      <COND (<==? <SET C <NEXTCHR>> <ASCII 27>>	;"Null Answer?"
+			     <SET X <>>)
+			    (<OR <==? .C <ASCII 32> ;"Char Space">
+				 <==? .C <ASCII 13> ;"Char C.R.">
+				 <==? .C <ASCII 9> ;"Char Tab">
+				 <==? .C <ASCII 10> ;"Char L.F.">
+				 <==? .C <ASCII 62> ;"Char >">
+				 <==? .C <ASCII 41> ;"Char )">>
+			     <READCHR> <AGAIN>)
+			    (ELSE <SET X <READ>>)>>
+		<COND (<OR <NOT .ATYPE> <DECL? .X .ATYPE>>	;"Acceptable Input?"
+		       <RETURN .X>)>
+		<CRLF> <PRINC "   Answer: ">	;"Complain"
+		<PRIN1 .X> <PRINC "  Not of Type ">
+		<PRINC .ATYPE>>>
+
+<DEFINE GETCHAN (FNAME "EXTRA" (OUTCHAN .OUTCHAN) (NM2 "NBIN") CHN "ACT" GCACT)
+				;"Default File Name Two is made NBIN"
+	#DECL ((FNAME) STRING (VALUE) <OR FALSE STRING> (OUTCHAN) CHANNEL
+	       (NM2) <SPECIAL STRING> (CHN) <OR FALSE CHANNEL>)
+	<COND (<NOT <SET CHN <OPEN "READ" .FNAME>>>	;"Input Exists ?"
+	       <PRINC <ASCII 9> ;"Char Tab"> <PRINT .CHN>
+	       <RETURN <> .GCACT>)>
+	<COND (<G? ,MUDDLE 100>
+	       <SET FNAME <STRING <5 .CHN> ":<" <6 .CHN> !\> <3 .CHN> !\. <4 .CHN>>>)
+	      (<SET FNAME <STRING <5 .CHN> !\: <6 .CHN> !\; <3 .CHN> !\  <4 .CHN>>>)>
+	<CLOSE .CHN>
+	.FNAME>
+
+<SETG MARKER "
+----------">
+
+<GDECL (MARKER) STRING>
+
+<DEFINE SGLUE ("OPTIONAL" (SAVED <COND (<G? ,MUDDLE 100> "<MDL>GLUE.SAVE")
+				       ("MUDDLE;GLUE SAVE")>) (GC? T)
+	       "EXTRA" (SN <SNAME>))			;"Save Gluer"
+	#DECL ((SAVED SN) STRING (GC?) <OR FALSE ATOM>)
+	<SNAME "">
+	<COND (.GC? <GC 0 T> <BLOAT 40000 0 25 300 25>)>
+	<COND (<=? <SAVE .SAVED <>> "SAVED"> <SNAME .SN> .SAVED)
+	      (ELSE
+	       <COND (<==? ,MUDDLE 104> <SNAME <UNAME>>)>
+	       <GLUER> <QUIT>)>>

@@ -1,0 +1,547 @@
+.center
+Research and Development Proposal
+.center
+Michael S. Broos
+.center
+March 21,1978
+.sp 2
+Abstract
+.sp
+     A number of attributes of programming languages and their support
+facilities are examined in light of the need for a program development
+environment which offers the full range of development and debugging
+tools but which imposes no undue overhead on "production" code.
+The issue of transferability of programs between machines of differing
+word lengths and instructions sets is also discussed.
+A scheme is proposed for the development of a programming environment
+which satisfies the specified criteria, consisting  of four parts:
+a small runtime environment; a medium-level procedural language (MIDL);
+a high-level applicative evaluation language (MODL) which compiles
+into MIDL; and a general library of MODL and MIDL programs, which may
+be treated as extensions to the language.
+.sp
+Disclaimer
+.sp
+     This document is a general outline of the programming environment
+being described, and is not intended as a detailed specification.
+Where a number of alternative design decisions may be made, often only
+one is mentioned, by way of example.
+This should not be construed as ignorance of or disdain for the
+unstated alternatives.
+The author assumes the reader to be a knowledgeable computer programmer
+who is capable of extrapolation from basic ideas.
+.sp
+Objectives
+.sp
+     The prime objectives of the proposed language development are: (1)
+transferability of code between differing machines and/or operating systems,
+(2) minimization of the amount of new code which must be written to support
+the language on a new machine/operating system (3) minimizing the size of the
+run-time kernel required to support "production" code (fully compiled) (4) the
+ability to support a family of high-level languages which embody differing
+programming philosophies but which are nonetheless compatible at the lowest
+level.
+.sp
+     To achieve these objectives, we postulate a single environment which
+encompasses a set of abstract data types.
+This abstract environment is then instantiated on each machin/operating
+system being supported.
+The abstract environment may be broken down into:
+.br
+.indent 8
+.undent 4
+1. A lean runtime environment, as small as practicable, consisting of mainly
+the data structure builders and manipulators. (ILIST, NTH, PUT, GC, etc.)
+The runtime environment is written in the machine code, so that there is one
+such for each machine supported.
+A small part of this environment (mainly the I/O handlers) will be operating
+system independent, and will have to be replicated if more than one operating
+system is to be supported for one machine type.
+.br
+.undent 4
+2. A medium level procedural language, called MIDDLE or MIDL (Thanks for the name, PDL),
+which is machine independent, dealing with the same set of abstract entities
+as the runtime environment, plus some others, such as stack variables.
+The level of abstraction visualized for MIDL is that of an assembler with a
+collection of macros to handle bookkeeping, such as the calculation of the
+relative offsets of stack variables at different points in the code.
+Concepts such as DO-LOOPs would probably not be supported, but explicit
+and conditional branches would.
+There would need to be a separate MIDL assembler written for each machine,
+but not necessarily in that machine's assembly language.
+.br
+.undent 4
+3. A number of general support functions, written in MIDL, to provide interpreter
+facilites such as OBLISTs, OPEN, READ, PRINT, EVAL, etc.
+These packages would need to be written only once, except for the operating
+system dependent parts of things like the I/O-related functions.
+.br
+.undent 4
+4. A compiler, written in interpreter code and eventually compiled by itself.
+Unlike the MDL compiler, the analysis and code generation phases would be separate,
+with the compiler producing a MIDL program as the result of its analysis, and the
+MIDL assembler handling the details of code generation and low-level
+optimization.
+.br
+.undent 4
+5. A program library, written in interpreter code, compiled once into MIDL
+code and assembled by the MIDL assembler for each machine.
+This library would contain all of the standard user software packages such as; the
+package system; EDIT; GROUP-LOAD and GROUP-DUMP; etc.
+It would also contain all of the applications software we developed.
+.indent 0
+.sp
+     The basic reason for such an architecture is to correct a fundamental deficiency
+of MDL, i.e., that it imposes an unnecessary and intolerable overhead on "production"
+programs.
+Production code is debugged, compiled, and glued together.
+Except in rare cases, the MDL interpreter is never used by such code, but it is
+inextricably interwoven with the true runtime environment and so occupies valuable
+memory in the running program.
+This is not so critical in a large mainframe where the interpreter is a small fraction
+(1/8 on a PDP-10) of the address space.
+However, we would like to be able to run in smaller machines, such as the PDP-11, where
+the interpreter would occupy an entire address space!
+.sp
+     I believe that the ability to run in a consistent environment on a large variety
+of machines would give us the ability to respond quickly to tenative projects, even to
+the point of writing interpreter programs for demonstration purposes or for feasibility
+studies.
+A number of the problems we have seen could have been implemented, in prototypical
+form, in a man-week or so.
+The runtime environment is small enough that writing new ones for different machines
+should be a simple task, especially after we get a couple under our collective belt.
+The MIDL assembler may be more complex and difficult to generate for each new machine,
+but I believe it would still be a fairly simple job, since all of the design would
+already have been done, and previous implementations could be used for guidance.
+.sp
+     I contend that it would even be possible to shoehorn such an architecture into
+a microcomputer, such as the 8080.
+After all, the address space (64k of 8-bit bytes) is the same size as a PDP-11, 
+although the instruction set is much less powerful, and there are techniques for
+reducing the size of the runtime environment which are discussed in the next section.
+.sp
+     At the other end of the spectrum, I think we should consider the IBM 370 as a
+target machine.  
+Yes, yes, I know I'm a heretic, am violating ideological purity, etc.
+The fact of the matter is, however, that there are a lot of those species of
+creature out there in the real world, and the ability to run on one would be
+a real plus for the language.
+.sp
+     The interpretive language discussed in this section could, of course, be
+a reimplementation of MDL, possibly with some of the less important features
+excised.
+There is certainly a lot to be said for retaining MDL, not the least of which is
+that the new architecture could run existing interpreter code with no modifications.
+I think I can make a case against strict MDL, however, on the basis that there are
+a number of things about MDL I would like to see changed and that some of the changes
+involve fundamental and pervasive principles embodied in MDL.
+What I would prefer is an MDL-like language (tenatively called MODDLE or MODL) which
+is a cleaned-up, leaned-out son of MDL.
+A number of MDL features were added after the fact, patched in or shoehorned in, and
+some of them really aren't integrated into the language as well as they should be.
+Also, the basic orientation and motivation of the MDL designers was very different
+from what we have evolved into, and it shows.
+.sp
+     I won't present all of the arguments for a new language here, since I like to
+argue in person so much more than in prose.
+Let me just say that a number of the motivations will become clear as you read the rest
+of this and that, in any case, the language I have in mind is similar enough to MDL that
+a translator could probably be written with little effort.
+.sp
+      I should reiterate here that my prime objective is the creation of a
+programming tool to be used primarily by us for the production of software
+packages for use by others.
+The creation of a language which will be adopted by a large community of
+users, and which will have to be supported, is not a prime objective.
+Of course, it would be desirable for the language to be supportable if a
+public demand for it should develop in the future.
+Therefore, I feel we should esatblish supportability as a secondary objective
+in the design process.
+.sp
+      One example of the kinds of tradeoffs which will have to be made
+involves the single GC space design of MDL.
+The designers considered the possibility of providing multiple data spaces,
+but rejected the concept because it would violate the MDL principle that the
+MDL user should not be able to write interpreter code which can cause the MDL
+to self-destruct.
+If data in one space points to data in another space, and the second space is
+garbage-collected, the pointers in the first space become invalid, since the
+data they point to may have moved.
+Of course, one could always fixup the pointers in the first space, but such a
+scheme approximates the single-GC space configuration, so it is not very
+attractive.
+However, the multiple space concept has been proven to a very valuable tool,
+given the MADMAN experience.
+It is so valuable that I would provide it in MODL/MIDL, with the caveat that
+the user had better not point to movable things outside a space.
+The naive user could still be protected from himself by making the
+interpreter defaultly put everything into a single space.
+A user who didn't know about multiple spaces would never use them and would,
+therefore, never be victimized by them. 
+.sp
+B. The Runtime Environment
+.sp
+     The purpose of the runtime environment is to provide those facilities needed by
+production code and nothing else except, perhaps, some hooks required by the interpreter
+or other user packages.
+Accordingly, the runtime environment should contain;
+.br
+.indent 8
+.undent 4
+1. runtime initialization code
+.br
+.undent 4
+2. stack management and overflow code
+.br
+.undent 4
+3. interrupt handling code
+.br
+.undent 4
+4. data structure builders and manipulators
+.br
+.undent 4
+5. a garbage collector
+.br
+.undent 4
+6. a simple static variable facility (global, hash-table lookup at load time)
+.indent 0
+.sp
+     Notice that the runtime environment is completely I/O-less.
+The two reasons for not including I/O are;
+.br
+.indent 8
+.undent 4
+1. I/O is operating system dependent and should be implemented as MIDL code.
+.br
+.undent 4
+2. A number of systems do no I/O, or need to handle I/O themselves.
+.indent 0
+.sp
+     The interrupt handling facility should be the bare minimum needed by
+production code, with hooks to allow the interpreter to implement its fancy
+interrupt handling.
+.sp
+     The primitive data types handled should consist of;
+.br
+.indent 8
+.undent 4
+1. WORDs (or BYTEs?)
+.br
+.undent 4
+2. STRINGs
+.br
+.undent 4
+3. LISTs
+.br
+.undent 4
+4. TEMPLATEs (I don't like that word)
+.br
+.undent 4
+5. Repeating UVECTORs
+.indent 0
+.sp
+     You may have noticed that VECTORs are missing from the above list.
+I contend that VECTORs themselves are fairly useless structures.
+VECTORs are used for two purposes, i.e., for fixed-format data structures
+(<VECTOR FIX LIST STRING>) and for tables of diads, triads, etc.
+(<VECTOR [REST STRING FIX]>).
+The TEMPLATE data type takes care of fixed-format objects quite nicely.
+If the concept of a UVECTOR is extended to cover more than unads, it will
+fill the need for a random access structure with a fixed, repeating format.
+Conceptually, the UVECTOR needn't handle diads at all, since the program
+may always build a UVECTOR of TEMPLATEs to handle the data.
+However, a fair degree of computational and storage efficiency is achieved with the
+repeating UVECTOR concept.
+.sp
+     If it is desirable to reduce the size of the runtime environment, as
+when implementing one for a microcomputer, it is possible to fold the three
+structure types (LIST, TEMPLATE, UVECTOR) into one (LIST).
+The tradeoff is between size and complexity of the runtime environment and
+the size of the data stored and the cpu time needed to manipulate it (both
+would be larger).
+For some applications, however, this might be a reasonable tradeoff.
+It would also be reasonable to use this folding technique for a quick and
+dirty implementation of the runtime environment on any machine. 
+.sp
+     The runtime environment would incorporate the MADMAN concept, by having the
+capability of defining a number of independent data spaces where data structures
+may be built.
+The initial state of the runtime environment would have one defined space, called
+the GC space for historical reasons, so that it would act like the current MDL
+unless the programs went to special effort to set up and use other spaces.
+There could be a restriction that only the GC space could undergo a relocating
+garbage collection, and that data structures in other spaces should never point
+to data in the GC space, since it may move in a garbage collection.
+Of course, data in the GC space could point to data in other spaces, since they
+will not move.
+This is essentially the situation that exists now with MDL's single GC space and
+all of the MADMAN spaces.
+I would prefer, however, not to put any such restrictions in the runtime environment. 
+For applications that don't want to be careful about who points to whom, use of the
+standard GC space will ensure that a relocating garbage collection does no harm.
+Applications which use more than one space (DMS uses 13!) have to be careful anyway,
+so there is no point in denying them a possibly useful capability, i.e., the ability
+to perform a relocating garbage collection on a space which is not the GC space.
+.sp
+     I also think it would be useful to have two types of garbage collection.
+The simpler type would be just a mark-phase garbage collection, where all of the
+data pointed to is marked as such and all other data is released to the free storage
+chain.
+This type of garbage collection may be most suitable for a microprocessor
+implementation of the runtime environment, but it would also be reasonable for a
+quick and dirty implementation on any machine.
+There are many applications where such a garbage collection would be all that was
+ever needed, if any was even needed at all.
+.sp
+     The second type of garbage collection would be the full blown, relocating type.
+Even if a particular implementation had this type of garbage collection implemented,
+it would still be useful to retain the capability to perform a mark-phase type of
+garbage collection to see if the needed space is already available before falling
+into the more expensive relocating type.
+.sp
+C. The MIDL Assembler and the MODL Compiler
+.sp
+     MIDL is envisioned as a moderately capable, procedural language which will serve
+as both a reasonable source language and as the intermediate form output by the MODL
+compiler.
+The level of abstraction of MIDL includes all of the abstract objects in the runtime
+environment, such as data structures and their manipulators, plus a knowledge of the
+stack, stack variables, subroutine calls, DECLs, program labels, constants, and
+conditional branches.
+A typical expression in MIDL might have the meaning of "Assign temporary variable X
+the value of the third element of the LIST which is the value of stack variable LST."
+.sp
+     The MIDL assembler would perform such functions as peephole optimization, open
+assembly of expressions where possible, DECL checking at assembly time and reports of
+violations, etc.
+Of course, the quality of the MIDL assembler could be quite variable, while still
+producing code which would execute properly.
+This would make the assembler amenable to first-pass implementations to get something
+off the ground, while it could be made progressively better without change to the
+MIDL sources.
+.sp
+     Having implemented a MIDL assembler, we could proceed to implement entire systems
+written in it, if they needed to be implemented at once without waiting for the
+MODL interpreter and compiler to exist and be debugged.
+The MIDL assembler would also serve to provide a means to escape to assembly code
+for particularly important subroutines, or those not able to be written in MODL.
+Experience with MDL has shown such a capability to be invaluable in a number of cases.
+.sp
+     I have not defined the MIDL language, but have a suggestion for a rational way
+to go about it.
+If we examine the assembly language output of the current MDL compiler, which is quite
+good, and try to generalize sections of code into expressions of the abstract operations
+being performed by that code, we will be assured that MIDL has all of the capabilities
+needed to assemble code output by a MODL compiler.
+We may, of course, want to add some capabilities beyond those defined in this way.
+Lastly, we should take the time, no matter how painful, to generate a set of MIDL
+programs to use as a test of every MIDL assembler implemented.
+We cannot, of course, make the set of test programs exhaustive, but we can make it
+stress the assembler in such a way that every branch is executed at least once.
+Aside:  There ought to be some way in general to examine a program after running it
+to determine what sections of code have/have not been executed.
+Does anyone know of any work done in this area?
+.sp
+     The job of the MODL compiler would be to convert a MODL function from its
+applicative evaluation form to the straight procedural form of MIDL.
+In so doing, the compiler would perform the functions which are embodied in the
+analysis pass of the MDL compiler now, plus some simple code generation into MIDL.
+It should be possible to cause the compiler to produce its MIDL output in the form
+into which the MIDL assembler puts text files preparatory to assembly, saving a
+lot of processing time in printing and parsing.
+.sp
+     The beauty of such a scheme, of course, is that a function need be compiled
+only once, since the MIDL output of the compiler may be assembled by any or all
+of the MIDL assemblers for different machines.
+If hand-optimizing of a critical loop in compiled code needs to be done, it may be
+done on the MIDL source, which, since it deals with abstract objects, would be much
+simpler than hand-optimizing machine code.
+Another advantage is that improvements mays be made independently to either the MODL
+compiler or any of the MIDL assemblers, without any modifications required of
+either MIDL or MODL sources.
+.sp
+     Of course, the MODL compiler need be written only once, in the MODL interpreter
+language.
+It can be used to compile itself into MIDL, and then assembled to run on any machine
+we support.
+We may choose not to try to support a compiler running in a microcomputer, say, but
+that imposes no hardship, since the MODL code may be compiled by any MODL compiler
+on any machine and should produce exactly the same MIDL program.
+.sp
+D. The MODL Interpreter
+.sp
+     The basic MODL interpreter would be written in MIDL, implementing just enough to
+support a MODL compiler.
+Extensions to the MODL language would be written in MODL (They could alse be
+written in MIDL, of course.) and would take two forms;
+.br
+.indent 8
+.undent 4
+1. Facilities which are considered part of the MODL language proper and, as such,
+are recognized by the compiler.  An example might be the ASSOCIATION facility of MDL.
+.br
+.undent 4
+2. Facilities which are normally available in the MODL language, but which are treated
+by the compiler as it would any normal external function. (Such as the package system.)
+.indent 0
+.br
+Clearly, extensions to MODL would be implemented as form #2 and, if warranted, the
+compiler would later be upgraded to recognize them as form #1 extensions.
+.sp
+     Most of the special data types required by a MODL interpreter could be implemented
+as instances of the TEMPLATE data type.
+For example, ATOMs, if used, could be trivially implemented as TEMPLATEs, with little
+or no loss of storage efficiency.
+.sp
+     Again, the MODL interpreter would need to be written only once, except for those
+parts of it which dealt with machine and operating system dependent facilities, such
+as I/O and process control.
+.sp
+E. Other languages
+.sp
+     As a blue sky speculation, I would like to point out that it should be possible,
+at some point in time, to write other compilers and/or interpreters which would also
+produce MIDL output.
+Special purpose languages could be defined, which could still use any of the functions
+in our program library, without regard to their original language.
+All that would be required would be that any new languages believe in the same PRIMITIVE
+data types as MIDL, or a subset of them.
+It should also be possible to fit some of the existing commercial languages into such
+a scheme.
+Imagine what things would be possible if we could compile COBOL, FORTRAN, APL, LISP,
+etc., into MIDL.
+Sure, there are some differences (such as arrays in FORTRAN), but it might be possible
+to fit such languages into the MIDL framework with little loss of performance.
+Again, this is pure speculation and may not be practical at all, but it is certainly
+worth thinking about.
+.pa
+.center
+Notes on MODL, MIDL, etc.
+.sp 2
+     These notes represent little ideas brought up in bull sessions over time.
+I will try to capture all of them here.  Readers are invited to remind me of
+any I have missed.
+.sp
+1/23/79 (MSB) - STRINGs, as implemented in MDL on the PDP-10, are an enormous
+anomaly.  Every other "standard" data type utilizes only the "value" word of
+its type/value double.  The object's type occupies the left half of the type
+word, leaving the right half of the type word available for list cell
+chaining.  STRINGs, however, use the right half of the type word to hold the
+length of the string, while the value word holds a byte pointer to the
+beginning of the string.  Thus, a LIST of STRINGs requires each LIST cell to
+point to another pseudo-LIST cell, called a DEFER, which holds the STRING.
+Additionally, it is impossible to create a UVECTOR of STRINGS (one of the more
+useful constructs), since a UVECTOR has nowhere to put the length half-words.
+.sp
+To remedy both of the above, I propose:
+.indent 8
+.undent 3
+a. The body of a STRING should be right-justified in its core block, so that
+there is never any "slop" space (null bytes, usually) beyond the end of the
+STRING.
+.undent 3
+b. The pointer to a STRING should contain the STRING's length in its left
+half, and pointer to the LAST word of the STRING's body in its right half.
+As with all other MDL types, the right half of the type word is unused.
+.undent 3
+c. A byte pointer to the beginning of such a STRING is obtained by dividing
+the length by 5, subtracting the dividend from the pointer to the last word
+of the STRING, and using the remainder to index a 5-element table of byte
+pointers.
+.indent 0
+.nofill
+.sp
+	A/ $TSTRING,,0
+	B/ length,,pointer to last word of STRING body.
+.sp
+	HLRZ	C,B	;C/ length of STRING in characters
+	IDIVI	C,5	;C/ length of STRING in words
+			;D/ remainder
+	SUB	B,C	;B/ ptr to first word of STRING body
+	ADD	D,BPTBL
+	HRL	B,(D)	;B/ advance byte ptr to first character
+.sp 2
+BPTBL:	010700
+	100700
+	170700
+	260700
+	350700
+.fill
+.indent 0
+.sp
+The advantages of this scheme are:
+.indent 8
+.undent 3
+a. Core-efficient, savings of two words per LIST element where STRINGS
+are involved.
+.undent 3
+b. UVECTORs of STRINGS are possible.
+.undent 3
+c. Code-efficient, no special checks for DEFERs when handling LISTS, no
+special checks for UVECTOR handling.
+.undent 3
+.indent 0
+.sp
+     The single disadvantage is that it requires 5 instructions to get a byte
+pointer to the STRING.  This affects PUT and NTH, but not REST and BACK.
+For a single PUT or NTH, the cost is not excessive.  For multiple PUTs or
+NTHs, as in a MAPF on a STRING, the compiler could be smart enough to
+generate the byte pointer once at the beginning, and just ILDB it every
+time around the loop.  Altogether, I think the benefits far outweigh the
+occasional extra words of code.
+.sp 2
+1/23/79 (TAA) - Tim has proposed a new scheme for handling FALSE.  It consists
+of assigning one bit of the type code field as a TRUE/FALSE bit.  Operators
+such as TYPE? would ignore the bit, but boolean operators, such as AND, OR,
+and COND, would fail if the FALSE bit were set.  A function which wants to
+return an error message would return a STRING with the FALSE bit set.
+Similarly, an error code could consist of a FIX with the FALSE bit set.
+The operators TRUE and FALSE would be created to clear and set the FALSE bit.
+.sp
+     I personally think this is a fine idea, and would like to see it
+incorporated into the MODL/MIDL environment.
+.sp 2
+1/23/79 (MSB,DLD,PDL,TAA) - There seems to be general agreement that the
+whole ATOM/OBLIST scheme is a mess, and that it shouldn't be incorporated
+into MODL/MIDL.  Currently, ATOMs are core-expensive, unwieldy beasts.
+The root of the problem is that ATOMS are used for too many different
+functions.  We propose replacing ATOMS with four constructs in MODL/MIDL.
+.sp
+.indent 8
+.undent 3
+a. Named Static variables, one of the current uses for GVALs.
+.undent 3
+b. Named Constants, currently done with MANIFEST GVALs.  OFFSETs (MDL55)
+would be a special case of Named Constants, as would FUNCTION and SUBR names.
+.undent 3
+c. Local variables, one of the current uses of non-SPECIAL LVALs.  These are
+the variables which exist entirely within one function, and are turned into
+stack variables by the compiler.  MODL/MIDL would consider every variable
+used in a function to be of this type unless specifically told otherwise.
+(MDL defaultly considers them to be SPECIALs.)
+.undent 3
+d. Free variables, SPECIAL LVALs in MDL.  These are relatively rare, but quite
+useful.  These are the only class of variables which have to worry about
+binding and unbinding.  Examples are OUTCHAN, OBLIST, etc.
+.indent 0
+.sp 2
+1/23/79 (MSB,PDL,TAA) - Declarations need to be overhauled in MODL, to cause
+them to be more closely associated with the objects being DECL'd.  The
+proposal is to modify the syntax of argument and variable lists of
+FUNCTIONs so that a variable is followed immediately by its DECL.  For
+example:
+.sp
+.nofill
+<DEFINE FACTORIAL (NUM:FIX "VALUE" FIX)
+	<COND (<L=? .NUM 1>
+	       1)
+	      (<* .NUM <FACTORIAL <- .NUM 1>>>)>>
+.fill
+.sp
+     Of course, similar provisions must be made for static variables and
+constants.
+.indent 0
+.sp 2
+
+.end

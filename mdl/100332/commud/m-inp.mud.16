@@ -1,0 +1,80 @@
+<PACKAGE "M-INP">
+
+<ENTRY RQ-DO RDPAIRS SUCCESS TRY-LATER NONE MOBY>
+
+<GDECL (RDHAN) HANDLER>
+
+<USE "CHAN" "DDEFS" "DPERFORM" "MADMAN" "ASYLUM" "ACHOMP" "ITIME">
+
+<USE "M-DEFS" "M-READ" "M-DAC" "M-DATA" "M-TIME"
+     "RQFILE" "USRUTI" "M-ACK">
+
+"RQ-DO -- processes next request file for daemon
+
+-- returns atom success if file was winner, and may have added stuff for
+queue. in this case, a message will be still locked, and the file will
+be in a 'save' file, to be deleted when the daemon finishes clearing the
+queue.
+
+-- if file encountered temporary failure, it will be renamed and may be
+tried later.  in this case, the return arg is atom TRY-LATER.
+
+-- atom none returned if no request files exist
+
+-- else, renames file to loser, returns false(loser-name reason
+parameter-vect) where loser-name and reason are strings, parameter-vect
+is vector of 3 elements, or false if none was obtained yet
+"
+
+<DEFINE RQ-DO ("AUX" L RES C CC)
+	#DECL ((VALUE) <OR ATOM FALSE> (L) <OR DISPATCH FALSE>
+	       (CC) CHANNEL (C) <OR FALSE ACHANNEL> (RES) <OR FALSE VECTOR>)
+	<UPDMSG>
+	<SET C <RQNEXT>>
+	<COND (<NOT .C> NONE)
+	      (<AND <=? <7 <SET CC <ACCHAN .C>>> "M">
+		    <G? <FILE-LENGTH .CC> <* 4 5 1024>>>
+	       <CLOSE .CC>
+	       <RENAME <7 .CC> <8 .CC> <9 .CC> <10 .CC>
+		       TO <DATUM "COMSYS-MOBY-FILE">>
+	       MOBY)
+	      (ELSE						;"PROCESS FILE"
+	       <SET RES
+		    <COND (<SET L <RDPAIRS .C>>		;"GOT DATA, PROCESS IT"
+			   <PERFORM .L>)>>
+	       <COND (.RES
+		      <RQTEMP .C>
+		      <DMPMSG>
+		      SUCCESS)
+		     (ELSE					 ;"FATAL ERROR"
+		      <RQLOSE .C>
+		      <CHTYPE (<COND (<EMPTY? .RES> "FALSE IN FIELD")
+				     (ELSE <1 .RES>)>
+			       <FILCHN .CC>
+			       <COND (<LENGTH? .RES 1> #FALSE ())
+				     (ELSE <2 .RES>)>)
+			      FALSE>)>)>>
+
+\ 
+
+<DEFINE RDPAIRS (CH "AUX" RES (SS <ARESET ,SCRATCH-SPACE>) CURSPACE)
+	#DECL ((CH) ACHANNEL (VALUE) <OR FALSE DISPATCH> (RES) ANY
+	       (SS) SPACE (CURSPACE) <SPECIAL SPACE>)
+	<AND ,READ-WRITE? <SCROUT "Resetting Scratch space">>
+	<WATCH RDHAN "ERROR" ,RDHAND 4>
+	<SET RES
+	     <PROG RD-ACT (D)
+		   #DECL ((RD-ACT) <SPECIAL ACTIVATION> (D) ANY)
+		   <SETG CURSPACE <SET CURSPACE .SS>>
+		   <COND (<TYPE? <SET D <ACHOMP .CH '<>>> VECTOR>
+			  <SET D <CHTYPE .D DISPATCH>>)
+			 (ELSE #FALSE ("Bad Dispatch"))>>>
+	<OFF ,RDHAN>
+	.RES>
+
+<DEFINE RDHAND ("TUPLE" STUFF) 
+	#DECL ((STUFF) TUPLE)
+	<COND (<AND <ASSIGNED? RD-ACT> <LEGAL? .RD-ACT>>
+	       <DISMISS #FALSE ("ERROR IN READING") .RD-ACT>)>>
+
+<ENDPACKAGE>

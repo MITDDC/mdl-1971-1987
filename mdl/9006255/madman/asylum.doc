@@ -1,0 +1,518 @@
+ASYLUM User Documentation
+
+    This document, like the MADMAN document, is incomplete by design.
+However, what is omitted here are the details of internal routines
+and implementation characteristics which are not required for the
+ASYLUM user.  These obscure bits of information are useful mainly
+to the implementer, who has long ago forgotten it, or to would-be
+maintainers, who wish they had never seen it.
+
+						Marc Blank
+ASYLUM Package
+
+I.  Overview
+
+    The ASYLUM package is the disk-resident 'file' storage facility
+created for, but not exclusively for use by, MUDDLE structures which
+reside in MADMAN SPACEs (see MADMAN;MADMAN DOC for user documentation
+on the MADMAN package).  As has been mentioned in the MADMAN document,
+one of the advantages of the MADMAN system is the ability to perform
+fast I/O of MUDDLE objects.  The ASYLUM system has been created to
+further serve that goal.
+
+    An ASYLUM is a single disk file which has within it numerous
+sub-files which will be called simply 'files' for convenience.  The
+number of possible 'files' in an ASYLUM is virtually unlimited
+(being in actuality nearly 15 million) and the amount of data stored
+within these files is limited only by restrictions imposed by the
+operating system, both in hardware and in software.  On TENEX-like
+systems, this amount of total storage is nearly 212 million machine
+words.
+
+    An ASYLUM 'file' has a name, which may either be a unique integer
+or an ASCII character string of up to 200 characters.  There are
+advantages of using both types of references.  Unique integer
+identifiers have the great advantage of speed, with a simple lookup
+routine being all that is required to find the storage area for that
+identifier.  String identifiers, like DATA-BASE obviously have the
+advantage of being more mnemonic than numbers like 873279.  However,
+the use of string identifiers requires an extra page in core, the
+physical storage of the strings in the ASYLUM file and a much more
+involved lookup procedure.  Six of one, half dozen of the other.
+
+    A further advantage of the ASYLUM system is that it is truly a
+shared data-base, allowing any number of processes to be reading or
+writing data at the same time.  Naturally, the same is not possible
+for each ASYLUM 'file', which only one user may be writing at a given
+time.  Even so, any number of other users will be able to read that
+'file', even while the other user is writing it.  If the reading is
+done before the write is completed, they will read 'old' data, etc.
+much in the same way standard operating systems handle their disk
+resident storage.  Internally, this is performed through the use
+of a specialized locking system, which will be described in some
+detail below.
+
+    A mention should be made at this time of the overhead produced
+in the use of ASYLUMs regarding disk usage.  This can be broken
+down as follows:
+
+	Fixed Overhead -  2 Blocks	     (master directory, etc.)
+
+	Per 'File'        4 and 1/254 words  (directory area)
+			  5 words	     (data area header)
+		          6 words	     (MADMAN header)
+		          2-42 words	     (string identifier)
+			  
+Thus, in the case of a piece of MADMAN structure stored in the ASYLUM,
+there is a minimum overhead of 15 words per 'file', more if string
+identifiers are used.  This overhead is not greatly significant for
+large objects (e.g. messages), but might be overly much for some
+applications and this should be kept in mind should disk usage be
+at a premium.
+
+II. Creating an ASYLUM File
+
+    On ITS, the ASYLUM file must be created before it can be
+activated.  Creating an ASYLUM means creating a disk file of some
+arbitrary length and making it full of zeros.  Since ASYLUMs cannot
+grow dynamically, the ASYLUM should be made of whatever length seems
+to be its maximum allowable size (in the case of the COMSYS demon, 
+this size is 200 disk blocks).  On 10X/20X systems, ASYLUMs are
+dynamically created (if they do not already exist) at the time they
+are activated.
+
+III. Activating/Deactivating ASYLUMs
+
+    Activating an ASYLUM means opening a disk channel to the ASYLUM
+file (see II, above) and setting up pages in core for data transfer
+from the ASYLUM file.  All data transfer to and from ASYLUMs is done
+via page-mapping, and therefore pages in one's core image must be
+used for this purpose.  ASYLUM keeps two caches of core pages for use
+in page-mapping, one for mapping in directories (containing locations
+in the ASYLUM of 'files') and the other for mapping in data stored in
+the 'files'. The number of pages in each cache can be declared by
+the ASYLUM user at the time the ASYLUM is activated.  As a general
+rule of thumb, the more 'files' there are in an ASYLUM, the more
+core pages should be allowed for the directory cache.  In the same
+way, the more data stored in the ASYLUM, the larger the data cache
+should be.  As a default, the directory cache is two pages and the
+data cache four pages.
+
+    One other important note concerning the directory cache should
+be made - that there cannot be more 'files' open for writing (see
+below) than there are pages in the directory cache.  This requirement
+is imposed by the internal locking system.  Please remember this!
+
+    Activating an ASYLUM is done via a call to OPEN-DATA-FILE, 
+
+	<OPEN-DATA-FILE file-name:string
+		        OPTIONAL
+			old-asylum:asylum-or-false (default <>)
+		        data-cache-length:fix (default 4)
+			directory-cache-length:fix (default 2)>
+
+which returns an object of TYPE ASYLUM (PRIMTYPE VECTOR).  If the
+old-asylum is given, the structure which was the old-asylum will be
+reused (saving some garbage-collected storage).  Also, the pages
+used for mapping in old-asylum will be reused, thereby avoiding the
+hoarding of large amounts of core.  This facility is useful if one
+plans to open and close repeatedly the same ASYLUM (as with the
+COMSYS demon).  The meaning of the latter two arguments is described
+above.
+
+    There are two primitives for deactivating an ASYLUM.  The first
+closes the disk channel to the ASYLUM and nothing else.  The second
+gives the pages in the caches back to MUDDLE (for future use), 
+unmaps the pages in the core image (10X/20X only), and then closes the
+disk channel.  The primitives are,
+
+	<CLOSE-DATA-FILE asylum:asylum> and
+
+	<FLUSH-DATA-FILE asylum:asylum>.
+
+III. Opening and Closing ASYLUM 'Files'
+
+    Opening an ASYLUM 'file' requires a 'mode' in which to open the
+'file', the ASYLUM in which that 'file' resides, and an identifier
+for that 'file', either an integer (FIX) or a character string
+(STRING).  The identifier, if a FIX must be greater than zero, with
+the exception of the identifier -1.  If a -1 identifier is given,
+the next highest available FIX identifier is used.  This -1 identifier
+can be used with DATA-OPEN, DATA-APRINT, and DATA-PRINTW (see below).
+Attempting to read from the -1 'file' generates an error.
+
+    There are four modes in which a 'file' can be opened, which are:
+
+    a. READ mode
+
+	As the name implies, a 'file' open in READ mode can be
+    read only, and no writing will be allowed.  The spare directory
+    word (see PRINTW mode, below) can be read from a 'file' open in
+    READ mode.
+
+    b. READNR mode
+
+	Similar in concept to MUDDLE's OPEN-NR SUBR, this mode
+    is functionally equivalent to READ mode except that the reference
+    date for the data in the 'file' is not changed.
+
+    c. PRINT mode
+
+	Print mode is somewhat of a misnomer in that reading and
+    writing can be done from this mode.  However, it is the only
+    mode in which writing of data into a 'file' can be performed.
+
+    d. PRINTW mode
+
+        Associated with each 'file', internally, is a single word of
+    storage which is not used by ASYLUM.  This word can be read and
+    written independently of the actual data stored within that
+    'file'.  PRINTWord mode is used to write that spare word.
+    Note that this operation can be done even if no data exists for
+    that 'file'.  For example, assume that the user wants to store
+    a number in a 'file'.  It is much faster (not to mention saving
+    the overhead alluded to above) to simply read and write this word
+    than to write it into the data area.
+
+To open an ASYLUM 'file', use
+
+	<DATA-OPEN mode:string asylum:asylum identifier:string-or-fix>
+
+where mode is one of "READ", "READNR", "PRINT", or "PRINTW", asylum
+is the asylum in which the 'file' resides, and identifier is the
+identifier of that 'file'.  DATA-OPEN returns an object of TYPE
+MANIAC (PRIMTYPE VECTOR) which must be used in reading/writing the
+'file'.
+
+    To close a 'file', use
+
+	<DATA-CLOSE asylum:asylum maniac:maniac>
+
+where maniac is the MANIAC which DATA-OPEN returned.  Although
+printing into a 'file' may have been previously performed, the 'file'
+itself is not altered until a DATA-CLOSE is done.
+
+IV. I/O Operations
+
+    Once an ASYLUM has been activated (with OPEN-DATA-FILE) and a
+'file' opened (with DATA-OPEN), I/O operations can be performed.
+Two types of I/O operations are possible, those reading/writing
+MUDDLE objects in MADMAN SPACEs and those reading/writing 'word'
+oriented information, i.e. UVECTORs of WORDs.  Each of these is
+described in turn.
+
+V. MADMAN Oriented I/O Operations
+
+    There are two types of these I/O operations, those which merely
+perform MADMAN APRINTing/AREADing and those which encapsulate the
+functions of opening, APRINTing/AREADing and then closing the 'file'.
+
+    The functional equivalent to MADMAN APRINT is called DATA-IPRINT.
+It is called as follows:
+
+	<DATA-IPRINT asylum:asylum
+		     maniac:maniac
+		     space:space
+		     object:any
+		     OPTIONAL
+		     As for APRINT>
+
+where asylum and maniac designate the 'file', and space and object
+designate the data to be printed into the 'file'.  The optional
+argument is the same as for APRINT, for which the MADMAN document
+should be consulted.  APRINT returns the maniac given.
+
+    The equivalent of MADMAN AREAD is called DATA-IREAD, called thus:
+
+	<DATA-IREAD asylum:asylum
+		    maniac:maniac
+		    space:space
+		    OPTIONAL
+		    As for AREAD>
+
+with arguments as above.  The optional arguments are described with
+the MADMAN document.  DATA-IREAD returns the object which was
+DATA-IPRINTed previously.
+
+    Since it is common practice to open a 'file', do some I/O
+operation on that 'file' and then close it, two primitives were
+written which encapsulate these three operations.  These are called
+DATA-APRINT and DATA-AREAD, and have the same arguments as previously
+described for DATA-IPRINT and DATA-IREAD with the exception that an
+identifier (FIX or STRING) is used in place of a MANIAC.  In effect,
+DATA-APRINT performs a DATA-OPEN, DATA-IPRINT, and a DATA-CLOSE.  The
+same idea obtains for DATA-AREAD.  For completeness, the calls are:
+
+	<DATA-APRINT asylum:asylum
+		     identifier:fix-or-string
+		     space:space
+		     object:any
+		     OPTIONAL
+		     As for APRINT>
+
+	<DATA-AREAD asylum:asylum
+		    identifier:fix-or-string
+		    space:space
+		    OPTIONAL
+		    As for AREAD>
+
+V. Word Oriented I/O Operations
+
+    As mentioned above, UVECTORs of WORDs may be stored as data in
+ASYLUM 'files'.  The primitives for writing UVECTORs is:
+
+	<DATA-PRINTB asylum:asylum
+		     maniac:maniac
+		     uvector:uvector
+		     OPTIONAL
+		     amount:fix>
+
+where asylum and maniac describe the 'file', uvector is the UVECTOR
+which is printed, and amount is the number of words to transfer.
+If not given, the entire UVECTOR will be written.  The number of
+words transferred is returned.
+
+    The inverse of this operation is:
+
+ 	<DATA-READB asylum:asylum
+		    maniac:maniac
+		    uvector:uvector
+		    OPTIONAL
+		    amount:fix>
+
+with identical arguments.  DATA-READB returns the number of words
+read.  Note that the number of words read may not be the length of
+the uvector given, since reading will stop at the end of 'file'.
+
+    Two additional primitives can be used for files using word
+oriented I/O, DATA-ACCESS and DATA-RESET.  The former sets an
+'access pointer' to a location within the data area (UVECTOR) in the
+'file' and the second resets the 'access pointer' to zero (start of
+'file').  These are called as follows:
+
+	<DATA-ACCESS asylum:asylum maniac:maniac where:fix>
+
+	<DATA-RESET asylum:asylum maniac:maniac>
+
+DATA-RESET is actually a call to DATA-ACCESS with a third argument
+of zero, so this primitive appeals mostly to the lazy programmer.
+
+VI. The 'Spare' Directory Word
+
+    As noted above (see DATA-OPEN), there is an unused word in the
+directory area of 'files' which can be read and written as data.
+The primitives for performing these operations are:
+
+	<DATA-PRINTW asylum:asylum maniac:maniac word:primtype-word>
+
+	<DATA-READW asylum:asylum maniac:maniac>
+
+DATA-PRINTW returns the maniac given as an argument.  Note that
+although DATA-PRINTW takes any PRIMTYPE WORD as a third argument, 
+DATA-READW always returns a TYPE WORD.  
+
+VII. 'File' Creation Date/Reference Date/Author Information
+
+    Amazingly enough, the data area for ASYLUM 'files' may be used
+to store its 'creation date', 'reference date', and 'author'.  This
+storage is done automatically.  However, the information which is
+stored for these fields must be set manually by the user.  The
+values for these three fields are derived from the GVALs of the
+following ATOMs:
+	
+	DATA-WRITE-WORD
+	DATA-READ-WORD
+	DATA-AUTHOR-WORD
+
+which must be set up by the user.  These are defaultly -1 (thus
+a value of -1 implies that the ASYLUM user did not make GVALs for
+these ATOMs).  Although a number of routines have been independently
+written which return the current date in disk format, none of these
+is available within the ASYLUM package.
+
+    To read these values, the following are used:
+
+	<DATA-CDATE asylum:asylum maniac:maniac> (creation date)
+
+	<DATA-RDATE asylum:asylum maniac:maniac> (reference date)
+
+	<DATA-AUTHOR asylum:asylum maniac:maniac> (author)
+
+Please remember that the 'file' should be opened in READNR mode, 
+if a DATA-RDATE is to be done; otherwise, the reference date will
+be updated at the time of the open!
+
+VIII. Deletion/Renaming of ASYLUM 'Files'
+
+    Deletion of an ASYLUM 'file' is simple:
+
+	<DATA-DELETE asylum:asylum identifier:fix-or-string>
+
+DATA-DELETE returns T.
+
+    Renaming an ASYLUM 'file' is also simple:
+
+	<DATA-RENAME asylum:asylum
+		     from:fix-or-string
+		     to:fix-or-string>
+
+DATA-RENAME returns T.
+
+IX. ASYLUM Errors
+
+    Most of the ASYLUM primitives can generate 'errors', by
+which is not meant MUDDLE ERRORs, but rather the returning of objects
+of type FALSE, always with a FIX as the only element.  These FIXes
+have english equivalents, which may be obtained by getting the FIXth
+element of the GVAL of DATA-ERRORS.
+
+    The possible errors can be divided into the recoverable, the
+non-serious, the serious, and the potentially dangerous.  These
+will each be described in turn.
+
+    a. Recoverable Errors
+
+    The recoverable errors are those which are related to the internal
+locking system and indicate that some process has an item 'locked'.
+It should be mentioned here that some of the characteristics of the
+locking system are user tailorable, these being the number of times
+to retry a failed attempt at locking, and the amount of time to sleep
+(in milliseconds) between attempts to retry the lock.  These are
+stored as the GVALs of the ATOMs
+
+	DATA-LOCK-TRIES (default 10) and
+
+	DATA-LOCK-SLEEP (default 500 = .5 second). 
+
+If after ,DATA-LOCK-TRIES attempts, the item still cannot be locked,
+one of two errors may occur, depending on the item being locked.
+These two errors are:
+	
+	FILE LOCKED
+
+	ALLOCATOR LOCKED
+
+The former means that an open for writing was attempted while another
+process had already opened that 'file' for writing.  The latter lock
+is a global one on the ASYLUM storage allocator, and is locked during
+a number of procedures (assigning identifiers, allocating data storage
+inside the ASYLUM, etc.).  Naturally, if there is only one user of
+the ASYLUM, both of these errors are suspect, indicating that perhaps
+a 'file' which was open for writing was not closed, or that something
+or other interrupted the internal allocator routine.  Fortunately, 
+there is a way of manually unlocking both individual files and the
+allocator itself.
+	
+	<DATA-UNLOCK asylum:asylum identifier:fix-or-string>
+
+will unlock the 'file' specified by identifier.
+
+    	<ALLOC-UNLOCK asylum:asylum>
+
+will unlock the allocator.  Please be sure that there is only one
+user when this call is performed.  Injudicious use of either of the
+two preceding routines is potentially dangerous and might put the
+ASYLUM into an altogether unpleasant state.
+
+    In a totally wedged state with regard to locking (and on ITS only),
+all of the locks in the universe can be unlocked with a call to
+ITSUNLOCK, which takes no arguments.
+
+    b. Non-serious errors
+
+    These are:
+
+	FILE NOT FOUND
+
+indicating that an open of a 'file' failed, i.e. that it does not
+exist.
+
+	NOT LOCKED
+
+indicating that the item which was asked to be unlocked (see above)
+was not locked in the first place.
+
+    c. Serious Errors
+
+     i. Bad Arguments
+
+	ILLEGAL FILE NAME
+
+indicates that the file name given was a FIX either too large to
+be possible (> ca. 15,000,000) or less than 1.
+
+	MODE NOT AVAILABLE
+
+indicates an attempt to open a 'file' in a mode which is not one of
+READ, READNR, PRINT, or PRINTW.
+
+	MEANINGLESS ARGS
+
+indicates that the arguments to some call are inordinately bizarre.
+
+     ii. Illegal Requests
+
+	ATTEMPT TO ACCESS PAST END OF FILE
+
+indicates a DATA-ACCESS greater than the length of the 'file'.
+
+     	ATTEMPT TO READ PAST END OF FILE
+
+indicates that a DATA-READB attempted to read past the end of 'file'.
+
+	ATTEMPT TO ALLOCATE ON READ ONLY MANIAC
+
+indicates that DATA-BLOCK received as an argument a MANIAC which had
+been open for READ, READNR, or PRINTW.
+
+	ATTEMPT TO FLUSH LOCKED DIRECTORY
+
+indicates that an attempt was made to open a 'file' for writing at
+a time in which there is no room in core for that 'file''s internal
+directory.  A limitation described above stated that the size of the
+directory cache must be at least as large as the maximum number of
+'files' which can be opened for writing at one time.  As an example,
+consider that there are two 'files' open for writing, and one tries
+to open a third.  If all three 'files' each live in a different
+directory, then there will be no room to map the directory for that
+'file' without removing from core one of the others.  Since the locks
+for 'files' are stored with the directory, removing a directory with
+a lock activated (i.e. write-opened MANIAC) is dangerous, since the
+lock may never get released properly.  This error occurs in those
+cases.
+
+    d. Potentially Dangerous Errors
+
+	ILLEGAL ASYLUM
+
+indicates that the file opened as an ASYLUM is not in the proper
+format (i.e. has been munged or was not an ASYLUM to begin with).
+
+	CANT GET ALLOCATION PAGE
+
+indicates that an attempt to map into core the ASYLUM's allocation
+page failed.  Why this should happen is beyond me.
+
+	DEALLOCATION OUT OF RANGE
+
+should only occur if part of the ASYLUM's data area is manually
+deallocated.  The procedure for this is in the more complete 
+documentation.
+
+	INTERNAL INCONSISTENCY
+
+indicates some terrible lossage, which I have never seen.
+
+      Getting any of these errors should cause one to pause and
+consider the magnitude of the lossage.  Best would be to get help
+from someone who comprehends the internals of ASYLUMs.  Naturally
+understandable is the fact that few would admit such knowledge.
+
+X. MUDDLE Errors within ASYLUM
+
+    There are some places within ASYLUM's code in which MUDDLE
+errors are called, when something goes awry.  These errors are
+uniformly very serious, and care should be taken to figure out
+what exactly has happened.  Fortunately, these are very rare and
+it is unclear that any have ever been encountered.
+

@@ -1,0 +1,160 @@
+
+<PACKAGE "EXPUTI">
+
+"EXPANSION UTILITIES -- functions to expand addressees lists
+  using data bases, for COMSYS and friends"
+
+<ENTRY LA-EXP P-EXP L-EXP S-EXP GETDB UC?>
+
+<USE "M-DEFS" "M-DATA" "VCTSRC" "USRUTI" "MADMAN">
+
+"LA-EXP -- given a list of addressees (strings/atoms) and
+  a data base specification, does expansion, returning new
+  list.  the data base spec is a list of stage specifiers.
+  at each stage, the previous output is processed to create
+  the new output.  if the stage specifier is a list
+  it is a set of data bases to use in a parallel expansion.
+  otherwise it must be a single data base (vector)
+
+  -- returns new list of addressees, or false if data base
+     specification was in bad form"
+
+<DEFINE LA-EXP (L DBS) 
+	#DECL ((L DBS VALUE) LIST)
+	<PROG EXP-ACT ()
+	      #DECL ((EXP-ACT) ACTIVATION)
+	      <MAPF <>
+		    <FUNCTION (DD) 
+			    #DECL ((DD) ANY)
+			    <COND (<TYPE? .DD VECTOR>	     ;"ACTUAL DATA BASE"
+				   <SET L <L-EXP .L .DD>>)
+				  (<TYPE? .DD LIST>	    ;"SET OF DATA BASES"
+				   <SET L <P-EXP .L .DD>>)
+				  (ELSE
+				   <RETURN #FALSE ("BAD DATA BASE SPEC")
+					   .EXP-ACT>)>>
+		    .DBS>
+	      <RETURN .L>>>
+
+"P-EXP -- carry out a parallel expansion of the input
+  list through data bases supplied
+ -- returns new list, of unique expansions"
+
+<DEFINE P-EXP (L PDB "AUX" (CURSPACE ,SCRATCH-SPACE)) 
+	#DECL ((L) LIST (PDB) LIST (VALUE) <OR FALSE LIST>
+	       (CURSPACE) <SPECIAL SPACE>)
+	<UNIQUIFY <MAPF ,ALLIST
+			<FUNCTION (DD) 
+				#DECL ((DD) VECTOR)
+				<MAPRET !<L-EXP .L .DD>>>
+			.PDB>>>
+
+"L-EXP -- expand a list of addressees using a single data base
+ -- monitors depth of recursion to avoid infintie looping, using
+    special variable depth"
+
+<DEFINE L-EXP (L DB "AUX" (CURSPACE ,SCRATCH-SPACE)) 
+	#DECL ((VALUE L) <LIST [REST <OR STRING ATOM VECTOR>]> (DB) VECTOR
+	       (CURSPACE) <SPECIAL SPACE>)
+	<UNIQUIFY <MAPF ,ALLIST
+			<FUNCTION (EE) 
+				#DECL ((EE) <OR ATOM STRING VECTOR>)
+				<COND (<TYPE? .EE STRING VECTOR>
+				       <MAPRET !<S-EXP .EE .DB>>)
+				      (<MAPRET .EE>)>>
+			.L>>>
+
+"S-EXP -- expand a string using a supplied data base
+ -- increments depth counter for infinite recursion check
+ -- returns list of atoms and strings with no duplicates"
+
+<DEFINE S-EXP (S DB
+	       "OPTIONAL" (DEPTH 0)
+	       "AUX" IV US EV TMP (CURSPACE ,SCRATCH-SPACE))
+	#DECL ((S) STRING (DB) <VECTOR [REST STRING <OR VECTOR LIST>]>
+	       (EV) LIST (VALUE) <LIST [REST <OR STRING ATOM>]>
+	       (US) <OR FALSE STRING> (DEPTH) FIX (IV) <OR VECTOR FALSE>
+	       (CURSPACE) <SPECIAL SPACE>)
+	<COND (<G? .DEPTH 25> <ERROR RECURSION-DEPTH-EXCESSIVE S-EXP>)>
+	<COND (<AND <HOME? <EXTRACT-HOST .S>>
+		    <N==? .S <SET US <EXTRACT-RCVR .S>>>>
+	       <SET S <ASTRING ,SCRATCH-SPACE .US>>)>
+	<COND (<AND <NOT <SET IV <VCTSRC .DB .S>>> <SET US <UC? .S>>>
+	       <SET IV <VCTSRC .DB .US>>)>
+	<COND (.IV
+	       <COND (<TYPE? <SET TMP <2 .IV>> LIST>
+		      <SET EV .TMP>)
+		     (<TYPE? .TMP VECTOR>
+		      <COND (<EMPTY? .TMP> <SET EV ()>)
+			    (<1? <LENGTH .TMP>>
+			     <SET TMP <1 .TMP>>)
+			    (<G=? <LENGTH .TMP> 2>
+			     <SET TMP <2 .TMP>>)>
+		      <COND (<TYPE? .TMP LIST>
+			     <SET EV .TMP>)
+			    (<AND <TYPE? .TMP STRING>
+				  <SET TMP <DATUM .TMP>>
+				  <TYPE? .TMP LIST>>
+			     <SET EV .TMP>)
+			    (ELSE
+			     <ERROR BAD-EXPANSION-FILE S-EXP
+				    <1 .IV> <2 .IV>>)>)>
+	       <UNIQUIFY
+		<MAPF ,ALLIST
+		      <FUNCTION (EE) 
+			   #DECL ((EE) <OR ATOM STRING>)
+			   <COND (<TYPE? .EE ATOM> <MAPRET .EE>)
+				 (ELSE
+				  <MAPRET !<S-EXP .EE .DB
+						  <+ .DEPTH 1>>>)>>
+		      .EV>>)
+	      (ELSE
+	       <ALIST .CURSPACE .S>)>>
+
+"GETDB -- given a data base specification, returns a similar structure
+  with the actual data bases instead of their names
+ -- specification is a list, containing strings or other lists,
+	string elements at all levels are replaced with their corresponding
+	data bases.
+ -- checks on each to make sure data base is syntactically correct,
+	i.e. a <vector [rest string <list [rest <or string atom>]>]>
+ -- if any data base has to be loaded into core, it will not be saved
+	as any gval (e.g. user data bases).  data bases preexisting
+	in core will remain immediately accessible (e.g. the
+	default data base, which may be preloaded)"
+
+<DEFINE GETDB (EX "AUX" (CURSPACE ,SCRATCH-SPACE)) 
+   #DECL ((EX) LIST (VALUE) <OR LIST FALSE> (CURSPACE) <SPECIAL SPACE>)
+   <MAPF ,ALLIST
+	 <FUNCTION (EE "AUX" DD) 
+		#DECL ((EE) <OR STRING LIST> (DD) ANY)
+		<COND (<TYPE? .EE STRING>
+		       <COND (<=? .EE "COMSYS-DEFAULT-EXPANSION-DATA">
+			      <SET DD <DATUM "COMSYS-DEFAULT-EXPANSION-DATA">>)
+			     (ELSE <SET DD <FDATUM .EE <>>>)>
+		       <COND (<TYPE? .DD VECTOR>)
+			     (.DD
+			      <MAPLEAVE <CHTYPE ("Data-Base-Not-a-Vector?" .EE) FALSE>>)
+			     (<MAPLEAVE <CHTYPE ("Data-Base-Not-Found?" .DD) FALSE>>)>
+		       <MAPRET .DD>)
+		      (ELSE <MAPRET <GETDB .EE>>)>>
+	 .EX>>
+
+"UC? -- given string, returns new string of all upper-case, only
+  if original had lower case somewhere"
+
+<DEFINE UC? (S "AUX" (LC? <>)) 
+	#DECL ((S) STRING (LC?) <OR 'T FALSE> (VALUE) <OR STRING FALSE>)
+	<MAPR ,STRING
+	      <FUNCTION (SS "AUX" (C <1 .SS>) (CF <ASCII .C>)) 
+		      #DECL ((SS) STRING (C) CHARACTER (CF) FIX)
+		      <COND (<AND <G=? .CF 97> <L=? .CF 122>>
+			     <SET LC? T>
+			     <MAPRET <ASCII <- .CF 32>>>)>
+		      <COND (<AND <LENGTH? .SS 1>	       ;"LAST CHARACTER"
+				  <NOT .LC?>	     ;"AND NO LOWER CASE FOUND">
+			     <MAPLEAVE <>>)
+			    (ELSE <MAPRET .C>)>>
+	      .S>>
+
+<ENDPACKAGE>

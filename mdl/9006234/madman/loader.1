@@ -1,0 +1,74 @@
+<PRINC "
+Glue?  ">
+<RESET .INCHAN>
+<AND	<MEMQ <READCHR> ![ !"T !"t !"Y !"y !]>
+	<USE "GLUE">>
+<TERPRI>
+
+<DEFINE LOADER (L "OPTIONAL" (DIR "MADMAN") (PRTFLG T) (STRFLG <>)
+		"AUX" (USELST ()) (TYPLST ()) (NUSELST ())
+			(N2 ">") CHAN FILNAM VAL GRPLST GL)
+<SNAME .DIR>
+<SET GRPLST <MAPF ,LIST <FUNCTION (FIL)
+	<COND	(<SET CHAN <OR	<OPEN "READ" <SET FILNAM
+					<FILSTR .FIL "NBIN" "DSK" .DIR>>>
+				<AND <OPEN "READ" <SET FILNAM
+					<FILSTR .FIL .N2 "DSK" .DIR>>>>>>
+		<CLOSE .CHAN>
+		<SET GL <LVAL <GROUP-LOAD .FILNAM>>>
+		<SET GRPLST <MAPF ,LIST <FUNCTION (VAL)
+	<COND	(<TYPE? .VAL STRING>
+		<AND .STRFLG <PRINT .VAL>>
+		<MAPRET>)
+		(<AND	<TYPE? .VAL FORM>
+			<G? <LENGTH .VAL> 0>>
+		<COND	(<OR	<==? USE <1 .VAL>>
+				<==? EXTERNAL <1 .VAL>>>
+			<SET USELST (!<REST .VAL> !.USELST)>
+			<MAPRET>)
+			(<==? NEWTYPE <1 .VAL>>
+			<SET TYPLST (.VAL !.TYPLST)>
+			<MAPRET>)
+			(<==? PACKAGE <1 .VAL>>
+			<USE-TOTAL <2 .VAL>>
+			<SET NUSELST (<2 .VAL> !.NUSELST)>
+			<MAPRET>)
+			(<OR	<==? <1 .VAL> ENTRY>
+				<==? <1 .VAL> ENDPACKAGE>>
+			<MAPRET>)
+			(<AND	.PRTFLG
+				<==? DEFINE <1 .VAL>>>
+			<PRINC "
+Uncompiled function:  ">
+			<PRIN1 <2 .VAL>>
+			.VAL)
+			(.VAL)>)
+		(<LISTEN>)>> .GL>>
+		<MAPRET !.GRPLST>)
+		(<PRINC "
+************* NO SUCH FILE ***********">
+		<PRINT .FIL>
+		<MAPRET>)>> <REST .L>>>
+<SET USELST <MAPR ,LIST <FUNCTION (L)
+	<COND	(<MEMBER <1 .L> <REST .L>> <MAPRET>)
+		(<MEMBER <1 .L> .NUSELST> <MAPRET>)
+		(<1 .L>)>> .USELST>>
+<SET GRPLST (!.TYPLST !.GRPLST)>
+<COND	(<EMPTY? .USELST> <SET <1 .L> .GRPLST>)
+	(ELSE <SET <1 .L> (<FORM USE !.USELST>
+		!.GRPLST)>)>
+<1 .L>>
+
+<SET MADMAN (
+FUBAR
+"MADMAN"
+"MFIXUP"
+"MGC"
+"MRANDM"
+"MSTRUC"
+"MPFIND")>
+
+<SET ASYLUM (
+FUBAR
+"AALLOC"
+"ASYLUM")>

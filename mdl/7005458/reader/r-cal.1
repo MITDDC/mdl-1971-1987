@@ -1,0 +1,40 @@
+<PACKAGE "R-CAL">
+
+<ENTRY CALENDAR>
+
+<USE "MADMAN" "ASYLUM" "M-DEFS" "M-READ" "M-SUM" "R-IO">
+
+<DEFINE CALENDAR ("OPTIONAL" (USER <UNAME>) "AUX" TMP (OUTCHAN .OUTCHAN))
+	#DECL ((N) FIX (OUTCHAN) CHANNEL
+	       (TMP) <OR FALSE LIST>)
+	<SOPEN>
+	<COND (<SET TMP
+		    <DATA-AREAD ,SYSTEM-ASYLUM
+				,COMSYS-PENDING-QUEUE
+				<ARESET ,QUEUE-SPACE>>>
+	       <MAPF <>
+		     <FUNCTION (M)
+			#DECL ((M) PNQENTRY)
+			<COND (<AND <=? <QADR .M> .USER>
+				    <RREAD <QMSG .M>>
+				    <REMINDER? .M>>
+			       <RSUMMARY <QMSG .M>>
+			       <CRLF>)>>
+		     <REST .TMP>>)>
+	<CLOSE-DATA-FILE ,SYSTEM-ASYLUM>>
+
+<DEFINE REMINDER? (M "AUX" (ADR <QADR .M>) (TIM <QTIM .M>))
+	#DECL ((M) PNQENTRY (ADR) STRING (TIM) FIX)
+	<COND (<NOT <DRDMSG "" "REMIND">> <>)
+	      (<REPEAT ((PN <DRDMSG .ADR <GETFIX "PROCESSING-NEEDED">>) P)
+		       #DECL ((PN) <OR LIST FALSE> (P) PRCSTATE)
+		       <COND (<EMPTY? .PN> <RETURN <>>)
+			     (<AND <TYPE? <SET P <1 .PN>> LIST>
+				   <==? .TIM <PTIM .P>>
+				   <=? <PNAM .P> "DELIVERY">>
+			      <RETURN T>)
+			     (ELSE <SET PN <REST .PN>>)>>
+	       <AND <=? <DRDMSG "" <GETFIX "FROM">> .ADR>
+		    <MEMBER .ADR <DRDMSG "" <GETFIX "ACTION-TO">>>>)>>
+
+<ENDPACKAGE>

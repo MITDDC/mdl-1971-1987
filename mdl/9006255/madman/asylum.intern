@@ -1,0 +1,982 @@
+?. Introduction
+
+??. Overview
+
+	The ASYLUM data base system is designed as a file system 
+with complete sharing among processes and with virtually no constraints
+on the number of files (up to 13 million) or the size of the ASYLUM
+file (up to 208 thousand disk blocks of 1024 words).
+	Data may be stored in an ASYLUM sub-file in either of two formats,
+MADMAN-style format (see MADMAN documentation) or in binary format
+(i.e. direct storage of machine words).  A flexible assortment of
+primitives are included with which ASYLUMs can be maintained.
+
+??. Shared Storage
+
+	ASYLUMs allow access in read/write mode to an unlimited number
+of user processes.  Storage allocation/deallocation and identifier
+generation are under control of the Allocator which may be utilized by
+only one user at a given time.  The Allocator is optimized for speed and
+attempts at allocation will rarely, if ever, fail due to use by other
+processes.  Should the case occur, however, the user may handle the
+resultant error and retry the allocation attempt.
+	Each ASYLUM sub-file has associated with it a write-lock which is
+set whenever a process opens the sub-file in write mode.  Only one process
+may have an ASYLUM sub-file opened in write mode at a given time.  However, any
+number of users may read a sub-file which is opened in write mode.  This
+is due to a separate locking mechanism for the Data Area.  Whenever a
+process opens a sub-file for reading a soft-lock is set in the corresponding
+data area.  The storage deallocator checks this lock before deallocating
+a data block, and, if processes have this lock set, will ignore the
+request for deallocation.  Thus, there is never an occasion in which
+a user 'has the rug pulled out from under him' while reading a data item.
+
+??. Overhead
+
+	ASYLUMs require a not inconsiderable amount of 
+overhead in their operation.  
+	
+	Fixed Overhead:
+	 	2 blocks   (ASYLUM Page, Allocator Page)
+	
+	Per Sub-file Overhead:
+		4 words    Directory Area (required)
+		5 words	   Data Area Header (only if data is stored)
+		6 words	   MADMAN Header (only if using MADMAN objects)
+	     2-42 words	   String Storage
+	    1/254 words	   MFD Area
+
+	Thus, in the normal case (data stored in MADMAN format), there
+is an overhead of 15 words per object.  It is obvious, therefore, that
+the ASYLUM system is not ideal for usage with small data objects.  In
+dealing with message systems, libraries, etc., however, in which the
+average object is > 250 words, the overhead is not unacceptable.
+	Note, also, that the use of String Identifiers might greatly
+increase the amount of overhead, perhaps up to 57 words per sub-file.
+This is really not that inefficient, considering that most of those
+words are required simply for storing the name of the sub-file.
+
+??. Conventions
+
+	The following convention will be used throughout to describe
+the use of MUDDLE functions:
+	
+	<NAME-OF-FUNCTION <argument 1> <argument 2> <argument 3>>
+	
+	The arguments will be given in lower case, and will describe
+the MUDDLE TYPE of the correct arguments.  If the string OPTIONAL
+appears before a number of arguments, all arguments listed after
+the OPTIONAL are not required for the function.  Also, the character
+'/' will be used to give the defaults for optional arguments.
+
+	The type 'identifier' will be used to indicate a valid 
+sub-file identifier (a FIX or a STRING).
+
+	The type 'flag' will be used to indicate a flag (FALSE or non-FALSE).
+
+	A description of the arguments will follow as will a description
+of the actions of the primitive.
+
+?. Internal Structure
+
+??. Locking -- General
+
+	ASYLUM uses its own locking procedures in all cases.
+The following calls are used by ASYLUM to lock words in core:
+
+	DHLOCK given a word hard-locks that word
+	DSLOCK given a word soft-locks that word
+	DUNLOCK given a word unlocks that word
+
+	Locking word values have the following meanings:
+
+	-1  Unlocked
+	0   Hard Locked
+	n   Soft Locked by n processes
+
+	In general, any time a DHLOCK is done, the page in which the
+lock exists is 'locked' in core, so that it may not be swapped out
+with an activated lock.
+	In order to insure that locks do not remain locked after system
+crashes, etc. an unlocking procedure exists in which each page that 
+contains locks also contains the time that the system last came up.
+Every time one of these pages is mapped into core, the system up time
+stored in the page is compared to the system up time obtained from the
+system.  If they differ, all locks in the page are unlocked (i.e. the
+page is reset).
+	The ASYLUM page and the Directory Pages
+all have locks which may be reset in this manner.  The functions which
+re-initialize the Pages are MFD-INIT and DIR-INIT, 
+respectively.  They all take the page number in core of the page to be
+re-initialized (if necessary).  These two page types have the following
+internal structure:
+
+	Word		Contents/Description
+	0		Lock for Page
+	1		Last System Up Time
+	2		Last Page Update Time
+	3-1023		Depending on Page Type
+
+	The Last Page Update Time is included to insure that no two
+processes attempt to re-initialize the page simultaneously.
+	Although Page Locks (vide infra) are handled on a bit basis
+(rather than by words), they are all unlocked en masse by this method.
+	MFD-INIT, in addition, formats the ASYLUM the first time it
+is called for an ASYLUM file.
+
+	Soft-locking involves incrementing a word in core (this word is
+normally a usage count) and is used by DATA-OPEN in "READ" or "READNR" mode
+to indicate that a process is pointing to that data block.  A soft-lock
+never fails.
+	Hard-locking involves incrementing a -1 (unlocked) word to zero.
+Hard-locking may fail.  If it does, it will retry the locking according
+to the GVALs of the following ATOMs:
+
+	DATA-LOCK-TRIES -- the number of times to try the lock before failing
+			   (defaults to 10)
+
+	DATA-LOCK-SLEEP -- the time to sleep between tries (in milliseconds)
+			   (defaults to 500, i.e. 1/2 second)
+
+	Both hard and soft locking (DHLOCK and DSLOCK) utilize a table in
+which pointers to the locks are kept.  This table is the GVAL of the
+ATOM DLOCKTABLE, which is a UVECTOR of length 50 (two words per lock).
+Thus, it is illegal to have more than 25 locks active at one time.
+	A lock chain is kept which originates at location *43* in MUDDLEs
+core image.  The contents of *43* is a pointer to a block of two words
+(these words are in the DLOCKTABLE).  The two words have the following
+format:
+
+	1. Location in core of the lock
+	2. LH - Instruction to XCT to unlock the lock
+	   RH - Location of next block of lock information on the chain
+
+	On ITS, killing a process (JOB) will cause all locks to be
+unlocked by XCTing the instructions specified on the locks within the
+chain.
+	On TENEX, a similar unlocking may be performed by using a call
+to ITSUNLOCK (no arguments).
+	
+??. Disk I/O Operations
+
+	Disk I/O operations are all handled with the following two
+functions:
+
+    <DATREAD/DATWRITE <asylum> <fix> <primtype word> <uvector/fix>>
+
+	asylum: the working ASYLUM
+	fix: the length in words of the transfer
+	primtype word: the location in the file (disk address) 
+	uvector/fix: if a uvector, transfer from/into this uvector
+		     if a fix, transfer from/into this core location
+	RETURNS: the last argument
+
+	DATREAD and DATWRITE map in pages from disk as needed and transfer
+information using the BLT instruction.  The actual page mapping is performed
+with calls to MAP-IN (vide infra).
+	Utility routines used in mapping pages are the following:
+
+    <MAP-IN <asylum> <fix>>
+
+	asylum: the working ASYLUM
+	fix: the page number in the ASYLUM to be mapped in
+	RETURNS: the page number in core of the mapped in page
+
+    	MAP-IN is used for mapping in data pages from ASYLUMs.
+  	This function is the one which maintains the page maps for the
+	ASYLUM (both for directories and data pages). MAP-IN uses an LRU
+	algorithm for determining pages to be swapped out of core and in addition
+	attempts to allow pages which will be needed in future transfers to remain
+	in core (the latter takes precedence).  MAP-IN also insures that
+	pages which are 'locked' in core are not swapped out.
+	  
+    <DIRMAP <asylum> <fix>>
+
+	Arguments as above, DIRMAP is equivalent to MAP-IN but is used
+	for mapping directory pages rather than data pages.
+	In fact, DIRMAP is a specialized call to MAP-IN.
+
+    <MAP-PAGE <channel> <fix> <fix>>
+
+	channel: the read channel of the ASYLUM
+	fix: the page in the ASYLUM to be mapped in
+	fix: the page in core to map the page into
+	RETURNS: T
+
+	This function actually performs the mapping.  In effect, MAP-IN
+	and DIRMAP determine which page in core may be used for mapping
+	(swapping out other pages where necessary) and call MAP-PAGE
+	internally to accomplish the page mapping.
+
+    <UNMAP-PAGE <fix>>
+
+	fix: the page in core to be unmapped
+	RETURNS: T
+
+	This function is used on TENEX only to unmap pages from the
+	MUDDLE core image.  On ITS, it is a no-op.
+
+    <PGWRITE <fix>>
+
+	fix: the page in core to be written to disk
+	RETURNS: T or FALSE
+
+	This function is used only on ITS to insure that pages in
+	core have been updated on disk.  It returns after the system
+	has confirmed the disk update operation.  On TENEX, this call
+	is a no-op.
+
+??. ASYLUM Structure
+
+	ASYLUMs are divided into three areas, each of which are treated
+separately by the ASYLUM primitives.  These areas are:
+    
+    1.  Reserved Area	  	Pages 0 and 1
+	This area contains the ASYLUM Page and the Allocator Page,
+	respectively.
+    
+    2.  Data Area		Pages 2 to Page Area
+        This area contains all of the free storage space used for
+	ASYLUM sub-files, and is managed by the Allocator. 
+    
+    3.  Page Area		End of Data Area to End of File
+	This area contains all of the ASYLUM structure requiring entire
+	disk pages.  These are MFD pages, Directory pages, the Hash Page, and String
+	Storage pages.  This area is built backwards (i.e. from the end
+	of the file) for convenience and the boundary of the Data Area
+	is altered as necessitated by the need for new Directories, etc.
+	The allocations required for the Page Area are handled by the
+	Allocator.
+
+??. ASYLUM Page Structure
+
+	The ASYLUM Page (page 0) has the following structure.  
+Information about the internal contents (MFD Pointers or Page Locks)
+may be found in the appropriate sections.
+	Word Number	Contents/Description
+	0		Lock Word (unused)
+	1		Last System Up Time
+	2		Last ASYLUM Page Update Time
+	3		Unused
+	4		Allocator Lock (0 if locked, -1 if unlocked)
+	5		Unused
+	6		Highest Legal Address for Data Area
+	7		Location of the Hash Page (or zero)
+	8		Unused
+	9		Pointer to Free Data Block Chain
+       10		Start of MFD Pointers
+       64		Start of Page Locks
+
+??. Allocator Page Structure
+
+	The Allocator Page contains pairs of entries used by the
+Allocator in giving out storage from the Data Area and Page Area.
+	Word Number	Contents/Description
+	0		AOBJN Pointer to top of the Allocator table
+	1		Highest unique id used + 1 (i.e. next unused)
+	2		400000,,pointer to next id on free chain
+	4-1023		Reserved for Allocation Table
+
+	Information about meanings of these will be found in sections
+on Storage Allocation and Unique Identifier Generation.
+	The Allocation Table starts at the location indicated by the
+last 10 bits of the AOBJN Pointer and consists of pairs of elements
+which indicate the length and the location in the ASYLUM of unallocated
+blocks of free storage.  By definition, the last 2-pair in the table
+(at xx1775 and xx1776 octal) contains the unallocated block corresponding
+to the unused part of the file.  It is this entry which is altered when
+allocations are made for Page Area purposes.
+
+??. MFD/Directory Page Structure
+
+	Files in an ASYLUM are designated by a Unique integer Identifier
+with the first sub-file being number one.  The use of these Unique Identifiers
+allows for rapid lookup of sub-files.
+	The ASYLUM page (page 0) contains 54 slots for master file
+directories, each of which is a page of 1024 directory pointers (see
+ASYLUM Structure section for description of the ASYLUM page).
+The master file directories are numbered from 0-53, but these names
+are not used by user programs.  The directory pointers are to absolute
+locations within the ASYLUM.
+	Each directory in an ASYLUM is a disk page with the following
+format:	
+	Word Number	Contents/Description
+	0		Lock Word  
+	1		Last System Up Time
+	2		Last Directory Update Time
+    (see Locking section for description of these last items)
+	3-6		Unused
+	7-1023 		Directory entries (4 words/entry)
+
+For each sub-file, there are four words of directory space used.  These
+words are used as follows:
+
+	1		Lock Word -- 0 if locked, -1 if unlocked
+	2		Pointer to data stored for this entry
+	3		Length of data stored for this entry 
+			-or-
+			free identifier chain pointer if high bit set
+	4		Data Word  
+
+The lock word is 0 (locked) only if some process has the sub-file opened
+for writing.  Thus, no two processes may be writing a given sub-file at
+any time.
+The pointer to the data area is the absolute address within the ASYLUM
+at which the data is stored and the length is that of the data, not of
+the corresponding data block which may be larger (see Allocation section
+for details).  If the four word directory area is for a previously
+deleted ASYLUM sub-file (i.e. the sub-file is unused), the length word
+is 400000,,next sub-file in the identifier free chain (see Unique 
+Identifier Generation section).
+The data word is user-oriented and may be accessed using the primitives
+DATA-PRINTW(ord) and DATA-READW.
+
+??. Unique Identifier Generation
+
+	Unique Identifiers are generated whenever a process asks for
+storage of a new sub-file (i.e. not an update of an existing sub-file).  First,
+the allocator must be locked, to prevent two processes from utilizing
+the same identifier.  If it cannot be locked, an error (see Errors) is generated.
+Otherwise, the slot in the Allocator Page for the next 
+identifier on the free chain is checked.  If it is zero, the contents
+of the high identifier slot is used and then is incremented.  If the
+free chain slot is non-zero (i.e. there is a non-empty free chain),
+the identifier in that slot is used and is replaced by the contents
+of the free chain pointer slot for that identifier (see Directory
+Structure section). 
+	The maximum number of sub-files in an ASYLUM is determined by
+the number of directories and MFDs which can be created
+(i.e. 54 MFDs * 1024 Directories * 254 Entries = 14,045,184).
+
+??. Hash Page Structure
+
+	The Hash Page structure is as follows:
+
+	Word number	Contents/Description
+	0-2		Unused
+	3		Next Location for String Storage
+	4-44		Free String Storage chains
+	44-300		Hash Bucket Pointers (256 buckets)
+	301-1023	Free String Storage
+
+??. String Identifiers
+
+	A facility exists for the association between identifiers
+of MUDDLE STRINGs and the Unique Identifiers.  
+	All primitives which require an Identifier as an argument will
+take either a STRING (a String Identifier) or a FIX (a Unique Identifier).
+	The usage of String Identifiers increases the overhead for the
+storage of an ASYLUM sub-file by the number of words of packed ASCII
+required for the string plus two words.  Thus, the storage of the null
+string requires two words of storage.
+	String Identifier lookup is facilitated by use of hash coding
+and a Hash Page (which is not created unless String Identifiers are used).
+The structure of the Hash Page is noted elsewhere, and storage for the
+Hash Page is obtained via the Allocator (as with MFD and Directory storage).
+	The first step in Identifier lookup is applying the hash code
+to the string and finding the pointer for the appropriate hash bucket.
+The hash code is obtained by IORing each character into the hash word
+and then ROTCing the hash word by the character.  The code is the
+rightmost 8 bits of the hash word.
+	Each bucket pointer indicates the absolute location within the ASYLUM
+of the next element in that bucket.  In this way, the bucket is searched
+for the correct string.  The creation of new String Identifiers and the
+structure of String Identifiers is discussed in the section on String
+Identifier Storage.
+	The maximum STRING size for a String Identifier is presently
+200 characters.
+
+??. String Identifier Storage
+
+	String Identifiers are stored in the Page Area of the ASYLUM.
+Initially, they are stored, as noted above, in the Hash Page.  However,
+when this storage is exhausted, new pages are taken from the Page Area
+via a call to the Allocator and the free storage pointer in the Hash 
+Page is updated accordingly.
+	The structure of a String Identifier is as follows:
+Word
+	 8 bits           28 bits
+	--------|----------------------------
+1.       length  pointer to next bucket member
+	--------|----------------------------
+2.       unused  Unique Identifier for this STRING (i.e. sub-file #)
+	--------|----------------------------
+3.-n		Packed ASCII String
+	
+	'Length', above, refers to the length in words of the String
+Identifier.  From the 3rd word to the 'length'th word is the packed
+ASCII string.
+
+	Thus,
+	--------|----------------------------
+	   4		75422
+	--------|----------------------------
+	   0             801
+	--------|----------------------------	
+	  S      T      R      I      N
+	------|------|------|------|------|-
+	  G	 S
+	------|------|------|------|------|-
+	
+	is a String Identifier for the STRING 'STRINGS', which has
+a Unique Identifier of 801.  The next Identifier in this bucket is
+at location 75422 of the ASYLUM.
+
+	When String Identifiers are deleted, they are added to a free
+chain which is located at the Free String Storage Chain location (in the Hash
+Page) plus the length of the block (i.e. there is a free chain for every
+possible block length (2-42 words).  The pointer slot connects the deleted
+entries.  In this way, deleted String Identifiers of the correct length
+can be reused.  When a new String Identifier block is needed, the chain
+of free blocks of the correct size is searched before fresh storage
+is allocated.  A larger block will not be used!
+
+??. Free Storage Area
+
+	All free data storage in ASYLUMs have an associated header of 5 words
+the meanings of which follows:
+
+	Word Number		Contents/Description
+	0			Use Count (0 or greater == # of readers)
+	1			Reference Word
+	2			Author Word (squoze)
+				 or 
+				SETZ <Free Data Block Chain Pointer>
+	3			Creation Word
+	4			Actual Length of Block
+
+	The reference word is updated every time a DATA-OPEN of "READ"
+is done on the sub-file pointing to the data block and is replaced with
+the GVAL of DATA-READ-WORD.
+	The creation word is updated when the block is originally 
+created (by the Allocator).  It contains the current GVAL of DATA-WRITE-WORD.
+
+??. Storage Allocation
+
+	The storage allocator is by far the most important aspect of
+the ASYLUM file system.  The storage allocator maintains the Allocator
+Page (page 1) and insures its consistancy.  The Allocator has 
+associated with it a Lock Word in the ASYLUM Page (see ASYLUM Page 
+section).  Allocations can only be made when the process requesting the
+allocation has possession of the Lock.
+	The Allocator is called with the ASYLUM and a PRIMTYPE WORD
+which is interpreted as follows:
+		
+		Bit		Meaning
+		4.9		1=page allocation 
+				0=free storage allocation (RH=# of words)
+		4.8		1=allocator locked 
+				0=allocator unlocked (i.e. should be locked)
+		4.7		unused
+		4.6		1=MFD allocation (RH=MFD#)
+		4.5		1=Directory allocation (RH=Directory #)
+		4.4		1=Random page allocation (RH=0)
+		2.9-1.1 (RH)	As noted above
+
+Only the first of these is directly available to the user via calls
+to DATA-BLOCK (q.v.).  The others are used from the function DIR-FIND
+which maps in the Directory for a given ASYLUM sub-file.
+	The Allocator first attempts to lock the Allocator Lock Word.
+If unsuccessful, it returns an error-code for ALLOCATOR-LOCKED.
+Otherwise, the Allocator attempts to find enough storage to handle the
+request.  The request is handled in the following ways:
+	1. (free storage)
+	The allocator takes the Allocator Pointer (see Allocator Page
+section) which is an AOBJN pointer to the active area in the Allocator
+Page and proceeds to examine every entry in the table using the
+following procedure:
+	    a. If the entry is smaller than is required by the request,
+	       proceed to the next entry.
+	    b. If the entry is within 20 words of the required length
+	       and the block can be locked (vide infra), use this
+	       block immediately and return.
+	    c. If the entry is smaller than the best (i.e. smallest
+	       entry which is adequate for the request) previous entry
+	       and the block can be locked, make this block the best
+	       entry so far and continue.
+When the block to be returned is chosen, a header of five words is
+written into the ASYLUM at the start of the block which contains
+four zero words and the length of the block allocated (note that this
+length may be larger than that requested).  This length is used if/when
+the block is deleted.  If no block meets the request, an error-code for
+DATA-AREA-FULL-OR-LOCKED is returned.
+	2. (full page storage)
+	The allocator finds the last entry in the Allocator Page and
+reduces the location by 1024 words.  If the last entry is not greater
+than 1024 words, an error is returned as above.  If the Allocation was
+for a MFD or a Directory, the ASYLUM Page or MFD is updated in the
+correct manner, respectively.
+	
+	In all successful cases, the Allocator returns the absolute
+address in the ASYLUM of the start of the requested block.
+
+??. Page Locking
+
+	As mentioned above (Storage Allocation), in order for a block
+to be acceptable for allocation, the pages corresponding to that block
+must be locked.  This is to insure that no two processes are writing
+into the same pages simulaneously.  The page locks are located in the
+ASYLUM page (see ASYLUM Page section) and are organized such that
+each bit in the table (960 words) corresponds to 6 pages in the ASYLUM
+(i.e. the high order bit in the first word locks pages 0-5).
+'Locking' the pages consists of placing a 0 in the appropriate bit.
+'Unlocking' the pages consists of placing a 1 in the appropriate bit.
+Thus with no locks in the ASYLUM, the entire table is composed of -1's.
+Before an entry in the Allocation table is chosen, locks corresponding
+to all pages encompassed by the block must be lockable.  When the entry
+is finally decided upon, these locks are set.
+	The maximum number of pages in an ASYLUM is thus set by the
+number of possible page locks (i.e. 960 * 36 * 6 = 207360).
+
+?. Creation of ASYLUMs
+
+	On ITS, create a file of the maximum length for which the
+ASYLUM is needed and fill it with 0's. Eventually, if ITS is blessed 
+with the feature of mapping pages to the ends of files, ASYLUMs will
+be able to grow dynamically.
+        On TENEX, simply create an empty file.  TENEX ASYLUMs are 
+implicitly assumed to be some enormous size.
+	All additional formatting is performed automatically upon
+opening the ASYLUM using the standard primitives.
+
+?. ASYLUM - The TYPE
+
+	An object of TYPE ASYLUM is created when an ASYLUM is activated.
+The structure of an object of TYPE ASYLUM is as follows:
+
+	#  Description					   Mnemonic
+	
+	1. A CHANNEL open in READ mode to the ASYLUM file  DSKCHAN
+	2. The core page of the ASYLUM Page		   MFDPAGE
+	3. The core page of the Allocator Page		   ALLOCPAGE
+	4. The core page of the Hash Page		   HASHPAGE
+	    (- that page if not mapped in)
+	5. The directory page map (see below)		   DIRPAGEMAP
+	6. 0 if the Allocator is mapped in. Else, -1.	   ALLOCFLG
+	7. The data area page map (see below)		   PAGEMAP
+	8. A VECTOR 
+		1. The core page of the current MFD
+		2. The MFD number of the current MFD
+
+	The page maps are UVECTORs containing four FIXes for each
+page in the map (the number of pages is an optional argument to
+OPEN-DATA-FILE, vide infra).  The four FIXes are:
+
+	1. Page number in the ASYLUM file (or 0, if none)
+	2. Page number in core
+	3. Count, used for LRU algorithm
+	4. Lock (-1 or greater).
+
+	The lock is set if data has been changed in the page in core.
+This is to insure that if the page need be swapped out, that it will
+be updated on disk first.  In the case of Directory pages, it is not
+permissible to swap any page which is locked (i.e. there is an object
+in that directory which is locked).  Attempts to do so will result in
+an error.
+	Thus, the maximum number of objects which can be open at the
+same time for printing is set by the length of the directory page map
+area.
+
+?. MANIAC - The TYPE
+
+	Objects of TYPE MANIAC are pointers to sub-files in an ASYLUM
+(naturally).
+	They have the following structure:
+
+	1. The Unique Identifier of the sub-file
+	2. Length of the object in the sub-file or 0
+	3. Location of the sub-file in the ASYLUM
+	4. The print-completed flag.
+	   A DATA-CLOSE of a sub-file open in PRINT mode which does
+	   not have -1 in this slot will cause the directory not to
+	   be updated (i.e. an error occured and the PRINT was not
+	   finished).  This prevents inadvertent lossage.
+	5. The current access pointer into the sub-file
+	6. The mode in which this was opened 1=PRINTW, 0=READ, -1=PRINT
+	7. If non-zero, a String Identifier
+	8. Unused
+
+?. ASYLUM Primitives
+
+??. Opening and Closing ASYLUMs
+
+	The following two functions are used to activate and deactivate
+ASYLUMs.
+
+    <OPEN-DATA-FILE <string> OPTIONAL <asylum-or-false/false> <fix/4> <fix/2>>
+	
+	string: the name of the ASYLUM file
+	asylum-or-false: an ASYLUM, if given, will be recycled.
+	fix: number of pages in core for data
+	fix: number of pages in core for directories
+	RETURNS: the ASYLUM created
+
+	The two FIX arguments determine the number of core pages for
+	transfers from the disk for data (free storage) and directories.
+	The more objects in an ASYLUM, the larger one typically wants
+	the directory core area to be (so that less shuffling of pages
+	occurs).  The larger an ASYLUM is, the larger one typically
+	wants the data core area to be.
+
+    <CLOSE-DATA-FILE <asylum>>
+
+	asylum: the ASYLUM to close
+	RETURNS: the CHANNEL to the ASYLUM
+
+	Closes the CHANNEL to the ASYLUM and gives back the pages taken
+	from the MUDDLE.
+
+    <FLUSH-DATA-FILE <asylum>>
+
+	asylum: the working ASYLUM
+	RETURNS: the ASYLUM, closed and flushed
+
+	Closes the CHANNEL, and unmaps all pages (useful on TENEX).
+
+??. Opening and Closing Sub-Files
+
+    <DATA-OPEN <string> <asylum> <identifier>>
+
+	string: the mode for the open - "READ", "PRINT", "READNR", or "PRINTW"
+	asylum: the working ASYLUM
+	identifier: the sub-file to open
+	RETURNS: maniac or false with reason
+
+	A file opened in either "PRINT" or "PRINTW" mode will cause the
+	sub-file to be locked (i.e. no other person may "PRINT" or "PRINTW"
+	the file until it is unlocked).  This will necessitate 'locking'
+	the appropriate Directory Page into core (using the correct slot
+	in the Directory page map of the ASYLUM).
+	A file opened in "PRINTW" mode may only be DATA-PRINTWed into.
+	A file opened in "READ" mode will soft-lock the data area for the
+	sub-file.  In addition, it will update the reference word.
+	A file opened in "READNR" mode will act like a "READ" but the
+	reference word is unchanged.
+
+    <DATA-CLOSE <asylum> <maniac>>
+
+	asylum: the working ASYLUM
+	maniac: the sub-file to be closed
+	RETURNS: the maniac
+
+
+
+??. Creation/Reference Dates
+
+	The following functions read the Creation Date, Reference Date,
+ or Author field of a sub-file.
+
+    <DATA-CDATE <asylum> <maniac>>
+    <DATA-RDATE <asylum> <maniac>>
+    <DATA-AUTH <asylum> <maniac>>
+
+	Note that one should open the sub-file in READNR mode when about
+to do a DATA-RDATE to avoid updating the Reference word.
+
+??. MADMAN Oriented I/O Operations
+
+    <DATA-APRINT <asylum> <identifier> <space> <any> OPTIONAL <flag/false>>
+	
+	asylum: the working ASYLUM
+	identifier: the sub-file to print into
+	space: the space containing the object to be APRINTed
+	any: the object to be APRINTed
+	flag: the FIXUP flag (see MADMAN documentation for APRINT)
+	RETURNS: the maniac for the sub-file
+
+   <DATA-IPRINT <asylum> <maniac> <space> <any> OPTIONAL <flag/false>>
+
+	As above, except that a MANIAC is given instead of an identifier.
+	This implies that a DATA-OPEN was done previously to create the
+	correct MANAIC.
+
+    <DATA-AREAD <asylum> <identifier> <space> OPTIONAL <fix/3> <flag/false>>
+
+	asylum: the working ASYLUM
+	identifier: the sub-file to read from
+	space: the space to read into
+	fix: the speed setting (see MADMAN documentation for AREAD)
+	flag: the CHAIN falg (see MADMAN documentation for AREAD)
+	RETURNS: the object in the sub-file
+
+    <DATA-IREAD <asylum> <maniac> <space> OPTIONAL <fix/3> <flag/false>>
+
+	Analogous to DATA-IPRINT.
+
+??. Word Oriented I/O Operations
+
+    <DATA-PRINTB <asylum> <maniac> <uvector> OPTIONAL <fix/length of uvector>>
+
+	asylum: the working ASYLUM
+	maniac: the sub-file maniac
+	uvector: the uvector to print
+	fix: the number of words to print
+	RETURNS: the number of words printed
+
+    <DATA-READB <asylum> <maniac> <uvector> OPTIONAL <fix/length of uvector>>
+
+	As above, for reading.
+	RETURNS: the number of words read
+
+	Note that the number returned may not be the argument given, since
+	the read will stop at end-of-sub-file.
+
+    <DATA-ACCESS <asylum> <maniac> <fix>>
+
+	asylum: the working ASYLUM
+	maniac: the sub-file maniac
+	fix: the location within the sub-file to access
+	RETURNS: the new access pointer
+
+    <DATA-RESET <asylum> <maniac>>
+
+	asylum: the working ASYLUM
+	maniac: the sub-file maniac
+	RETURNS: the new access pointer (i.e. 0)
+
+	DATA-RESET is really a <DATA-ACCESS <asylum> <maniac> 0>
+
+
+??. The Data Word
+
+	The fourth word of the directory area for a sub-file may
+be arbitrarily written and read by the user.  The following routines
+may be used for these operations:
+
+    <DATA-PRINTW <asylum> <maniac> <primtype word>>
+
+	asylum: the working ASYLUM
+	maniac: the sub-file maniac
+	primtype word: the word to store
+	RETURNS: the sub-file maniac
+
+    <DATA-READW <asylum> <maniac>>
+
+	asylum: the working ASYLUM
+	maniac: the sub-file maniac
+	RETURNS: the stored Data Word
+
+??. Storage Allocation
+
+	The following functions are the user's only direct interface
+to the storage allocator.
+
+    <DATA-BLOCK <asylum> <maniac> <fix>>
+
+	asylum: the working ASYLUM
+	maniac: the sub-file maniac
+	fix: the length of the required block
+	RETURNS: the location of the start of the block
+
+    <DATA-BLOCK-FREE <asylum> <fix>>
+
+	asylum: the working ASYLUM
+	fix: the start of the block to be deleted
+
+	Be very careful about using this function, or better still,
+	don't use it.
+
+??. Deletion/Renaming of Sub-Files
+
+    <DATA-DELETE <asylum> <identifier>>
+
+	asylum: the working ASYLUM
+	identifier: the identifier of the sub-file to be deleted
+	RETURNS: T
+
+    <NAME-BLOCK-FREE <asylum> <identifier>>
+
+	asylum: the working ASYLUM
+	identifier: the identifier of the sub-file to be added to
+	  the free identifier chain
+	RETURNS: a useless item
+
+	This is equivalent to deleting the entry for a sub-file without
+	deleting its data.  DATA-DELETE does a NAME-BLOCK-FREE and a
+	DATA-BLOCK-FREE.
+
+    <DATA-RENAME <asylum> <identifier> <identifier>>
+
+	asylum: the working ASYLUM
+	identifier: the identifier of the sub-file to be renamed
+	identifier: the new name for the sub-file
+	RETURNS: the new maniac
+
+??. GVALs of Interest
+
+    DATA-LOCK-TRIES
+	FIX: Number of times to try a hard lock (DHLOCK)
+
+    DATA-LOCK-SLEEP
+	FIX: Time to sleep between lock tries (in milliseconds)
+
+    DATA-READ-WORD
+	WORD: Word used for updating Reference word of data block
+
+    DATA-WRITE-WORD
+	WORD: Word used for updating Creation word of data block
+
+??. Internal Routines
+
+	The following routines are not for general consumption.
+They need not ever be used by the average user, except in extreme
+emergency.
+
+    <DATA-FIND <asylum> <identifier>>
+	
+	asylum: the working ASYLUM
+	identifier: the identifier of the sub-file to be looked up.
+	RETURNS: a UVECTOR of the four word directory area for the sub-file.
+	
+    <DATA-PUT <asylum> <identifier> <uvector>>
+
+	asylum: the working ASYLUM
+	identifier: the identifier of the sub-file to be written
+	uvector: the new four word directory area for the sub-file
+	RETURNS: a useless FIX
+
+    <DIR-FIND <asylum> <identifier>>
+
+	asylum: the working ASYLUM
+	identifier: the identifier for a sub-file
+	RETURNS: the page number in core of the directory that contains
+	   the directory entry for the sub-file
+
+    <DATA-ALLOC <asylum> <fix>>
+    <DATALLOC <asylum> <fix>>
+
+	asylum: the working ASYLUM
+	fix: number of words needed
+	RETURNS: the location of the start of a block of the requested size
+
+	DATA-ALLOC makes sure the Allocator is around first.
+
+    <DATA-DEALLOC <asylum> <fix> <fix>>
+    <DATDEALLOC <asylum> <fix> <fix>>
+    <SALVDEALLOC <asylum> <fix> <fix>>
+
+	asylum: the working ASYLUM
+	fix: length of block
+	fix: location of block
+	RETURNS: something useless
+
+	DATA-DEALLOC makes sure the Allocator is around first.
+	SALVDEALLOC is like DATDEALLOC, except the Allocator Lock is
+	assumed to be set already. 
+
+    <ALLOC-MAP <asylum>>
+
+	asylum: the working ASYLUM
+	RETURNS: the ASYLUM after mapping in the Allocator
+
+	DATA-ALLOC and DATA-DEALLOC do an ALLOC-MAP.
+
+    <NEW-ID <asylum>>
+
+	asylum: the working ASYLUM
+	RETURNS: the Unique Identifier for a new sub-file
+
+    <GEN-ID <asylum> <identifier> <flag/false>>
+
+	asylum: the working ASYLUM
+	identifier: the identifier for a sub-file
+	flag: the print flag -- false for reading
+	RETURNS: a maniac for this identifier
+
+	GEN-ID makes MANIACs for general consumption and keeps around
+	defunct ones for recycling.
+
+    <NAME-FIND-ADD <asylum> <string>>
+    <NAME-FIND <asylum> <string>>
+    <NAME-FIND-DELETE <asylum> <string>>
+
+	asylum: the working ASYLUM
+	string: the String Identifier
+	RETURNS: the Unique Identifier for this String or FALSE
+
+    	These three functions manipulate String Identifiers.
+	NAME-FIND simply performs a lookup operation.
+	NAME-FIND-ADD performs a lookup and inserts a new entry if it fails.
+	NAME-FIND-ADD performs a lookup and deleted the entry if found.
+    
+    <PGFLUSH <asylum> <fix> <fix>>
+
+	asylum: the working ASYLUM
+	fix: the length of the data block
+	fix: the start of the data block
+	RETURNS: T
+
+	PGFLUSH unlocks Page Locks for the data block
+
+    <PGUNLOCK <fix> <fix> <fix>>
+
+	fix: the core location of the ASYLUM page
+	fix: the length of the block
+	fix: the location of the block
+
+	Unlocks all Page Locks for this data block.  PGFLUSH calls
+	PGUNLOCK with appropriate arguments.
+
+    <ITSUNLOCK>
+
+	Unlock all locks in core (see Locking section)
+
+??. ERRORS
+
+	Most of the primitives can get errors in certain situations,
+mostly due to user mistake.  Other than those, most will be non-fatal
+errors due to the failure of locks to be set.
+	When a primitive recognizes an error condition, it returns a
+FALSE with an error code.  The printed versions of the error codes
+may be obtained by doing <NTH ,DATA-ERRORS <fix = the code>>.
+The error messages are all self-explanatory. 
+	The non-fatal errors are:
+	
+	#FALSE (5) -- FILE LOCKED
+	#FALSE (6) -- ALLOCATOR LOCKED
+
+??. Maintenance of ASYLUMs
+
+	A separate package of functions used for checking the insides
+of ASYLUMs exists (on ITS in MADMAN;ALIST NBIN).
+	These include the following:
+
+    <LISTM <asylum>>
+	   
+	asylum: the working ASYLUM
+
+	LISTM prints interesting information which is contained in the
+	ASYLUM page.  This information includes the status of the
+	Allocator (usage and lock), the High Unique Identifier, 
+	locations of the MFDs and Directories, and the presence of
+	used Page Locks.
+
+    <LISTF <fix> <asylum>>
+	   
+	fix: the directory number
+	asylum: the working ASYLUM
+
+	Lists the 4 word name areas for each sub-file within the
+	given directory.  The low directory is Directory 0.
+
+    <LISTA <asylum>>
+	   
+	asylum: the working ASYLUM
+
+	Lists the contents of the Allocation table.
+
+    <LISTB <asylum> "OPTIONAL" <flag/false> <flag/false> <flag/false>>
+	   
+	asylum: the working ASYLUM
+	flag: Verbose switch.  If non-false, print out an accounting
+	     of every word in the data area of the ASYLUM.
+	flag: Salvage switch.  If non-false, deallocates blocks which
+	     nobody points to.  A message is printed whenever a block
+	     is deallocated.
+	flag: Free Word switch.  If non-false, checks the number of
+	     unaccounted-for words in the ASYLUM and prints the total at the end.
+		    
+	Grovels over the ASYLUM checking for such things as 
+	overlapping blocks, shared blocks, and other data base
+	errors.
+

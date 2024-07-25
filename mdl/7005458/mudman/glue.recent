@@ -1,0 +1,46 @@
+MUDMAN;DSK:GLUE RECENT
+
+MONDAY  MARCH 28,1977  06:33:09
+
+For those of you who do not know already, use the GLUE program
+to do your gluing for you (easiest way is GLUE^K).  It will ask
+questions much as COMBAT does, and is relatively tasteful.
+
+
+June 2,1976
+
+	Several changes have been made to GROUP-GLUE.  GROUP-GLUE will now be able to
+flush internal entries from groups and packages.  This is done via PACKAGE and
+SURVIVOR modes similar to that in the compiler.
+
+	There are two advantages to flushing internal entries.  The group is made
+smaller since internal entries will not have RSUBR-ENTRY's associated with them.  Also
+the code for the group is reduced.  In general only the ENTRY's need to be kept for a
+PACKAGE.  This can be done by specifying the package using PACKAGE mode. SURVIVOR mode
+should be used if the user wishes to explicitly state which entries are to be kept.
+
+	To use GROUP-GLUE  do a <USE "GLUE"> and then GROUP-LOAD the group you wish to
+glue. The call to GROUP-GLUE is as follows:
+
+	<GROUP-GLUE <-group-> <-substitute-> <-output channel-> <-package-> <-survivors-> >
+
+where the first argument is the group you wish to glue.  If the second argument,
+"substitute", is provided and is non-false than a MUDDLE SUBSTITUTE is done to 
+reflect the changes in the group in the MUDDLE.  This is useful when interrupt handlers
+or PRINTTYPES are used.  If a third argument is given and is non-false  information
+about the state of the gluing will be printed.  The third argument should be the
+CHANNEL to print this information on.  
+
+	If the fourth argument, "package", is provided and is non-false then PACKAGE
+mode will be used.  This argument should be a string specifying the package that is
+being glued.  In PACKAGE mode only the ENTRY's will be preserved and all internal
+entries will be flushed.  This option can also be used by setting the ATOM PKG to the
+name of the package.
+
+	If the fifth argument, "survivors", is provided the SURVIVOR mode will be used.
+This argument should be a list of those entries to be preserved.  All other
+entries will be flushed. This option overrides PACKAGE mode.  This option can also be
+used by setting the ATOM SURV to the list of entries being preserved.
+
+
+

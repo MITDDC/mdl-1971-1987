@@ -1,0 +1,2013 @@
+<PACKAGE "MAIL">
+
+<ENTRY SAVE-MAIL>
+
+"For Reader"
+
+<ENTRY FIELD-TABLE COMPOSING? IN-READER? MAIL-CHRTABLE MUDDLE-ESCAPE
+       MAILER MAILER-INIT OPEN-FAILED FLIP-EDITOR SKIP-MSG-NO>
+
+<ENTRY MSG-NO IN-REPLY-TO ID-IRT SUBJECT CARBON-COPY-TO TEXT>
+
+<SURVIVOR EDIT-COMMAND SEND-TABLE PRESENTATION-TABLE MEDIUM-TABLE>
+
+"Use the universe..."
+
+<USE "FORMS" "SCRATCH" "BUF" "BUFTECO" "SCR" "NSTR"
+     "ITIME" "JCL" "HOSTS" "LSRTNS"
+     "CHKADR" "DID" "NEWSTRUC">
+
+<USE "COMMAND" "INPUT" "SPEC" "SYMPARSE" "FILE-PARSE"
+     "C-PARSE" "R-WINDOW" "WINDOW">
+
+\ 
+
+"Constant (more or less) GVALS"
+
+<SETG COMPOSING? <>>
+
+<SETG IN-READER? <>>
+
+<SETG MORE-MSGS <>>
+
+<SETG REQUEST-FILE "<COMSYS>M.DSP">
+
+<SETG DUMP-FILE "DRAFT.MAIL">
+
+<GDECL (CONSOLE-START) FIX
+       (CPU-START) FLOAT>
+
+<GDECL (NOTES-LIST) LIST>
+
+<SETG SAVE-WHERE "<COMMUD>">
+
+;"default directory for save file"
+
+<SETG DIVERT-HAND
+      <HANDLER <SETG DIVERT-INT <EVENT "DIVERT-AGC" 1000>>
+	       <FUNCTION (AMT REASON) <BLOAT <+ .AMT 4000>>>>>
+
+<OFF ,DIVERT-HAND>
+
+<SETG INITED <>>
+
+\ 
+
+<DEFINE SAVE-MAIL (VERNUM "OPTIONAL" (DIR ,SAVE-WHERE))
+    #DECL ((VERNUM) <OR FIX FALSE> (DIR) STRING)
+    <MAILER-INIT>
+    <SETG BUF-CTL-G? <>>
+    <COND (<AND .VERNUM
+		<SNAME "">
+		<HANDLER ,DIVERT-INT ,DIVERT-HAND>
+		<RESET .INCHAN>
+		<=? <SAVE <STRING .DIR "MAIL" <UNPARSE .VERNUM>>>
+		    "SAVED">>
+	   "SAVED")
+	  (ELSE
+	   <SETG BUF-CTL-G? T>
+	   <MAILER>)>>
+
+<DEFINE MUDDLE-ESCAPE ("AUX" (OLD ,BUF-CTL-G?))
+	#DECL ((OLD) <OR ATOM FALSE>)
+	<SETG BUF-CTL-G? T>
+	<INTERRUPT "CHAR" <ASCII 7> .INCHAN>
+	<SETG BUF-CTL-G? .OLD>>
+
+<DEFINE MAILER-INIT ("OPTIONAL" (REINIT? T))
+	#DECL ((REINIT?) <OR ATOM FALSE>)
+	<COND (<NOT ,INITED>
+	       <SCR-INIT>
+	       <INIT-FIELDS <SINPUT ,EDIT-SCREEN> ,FIELD-TABLE>
+	       <MAPF <>
+		     <FUNCTION (INFO "AUX" (B <FBUF .INFO>))
+			  #DECL ((INFO) FIELD (B) BUFFER)
+			  <COND (<BTEST ,BLFP .INFO>
+				 <BUF-BITS .B ,BUF-BIT-PROMPT T>)>
+			  <COND (<NOT <BTEST ,BCRLF .INFO>>
+				 <BUF-BITS .B 35 T>)>>
+		     ,FIELD-TABLE>
+	       <SETG NOTES-LIST ()>
+	       <INIT-MESSAGE>
+	       <SETG MAIL-CHRTABLE <LIST ,MAIL-CHRS ,INPUT-CHRS>>
+	       <SETG FORMS-CHRTABLE ,MAIL-CHRTABLE>
+	       <SETG EDIT-CHRTABLE <LIST ,EDIT-CHRS ,INPUT-CHRS>>
+	       <SETG INITED T>)
+	      (ELSE <ALLCLEAR> <INIT-MESSAGE .REINIT?>)>>
+
+<DEFINE MAILER ("OPTIONAL" (JNAM <JNAME>) "AUX" J)	   
+	#DECL ((J JNAM) <OR FALSE STRING>)
+	<INIT>				;"set up BUF defaults"
+	<COND (.JNAM
+	       <SETG COMPOSING? T>
+	       <COND (<MEMBER "FEA" .JNAM> <SETG FEATURE T>)
+		     (<MEMBER "BUG" .JNAM> <SETG BUG T>)
+		     (<MEMBER "REM" .JNAM> <SETG REMIND T>)
+		     (<MEMBER "MSG" .JNAM> <SETG MSG T>)
+		     (<MEMBER "FOR" .JNAM> <SETG FORWARD T>)
+		     (<MEMBER "ANS" .JNAM> <SETG ANSWER T>)
+		     (<MEMBER "COR" .JNAM> <SETG FORWARD T> <SETG CORRECT T>)>
+	       <AND <NOT ,IN-READER?> <SET J <READJCL <>>> <HACK-JCL .J>>
+	       <BUFCLEAR <FBUF ,FROM>>
+	       <COND (<NOT ,FORWARD> <ADDSTRING <FBUF ,FROM> <XUNAME>>)>)>
+	<COND (<NOT .JNAM> <MESSAGE-LOOP -1>)
+	      (,JCL-CTRL-C <MESSAGE-LOOP 1>)
+	      (<MESSAGE-LOOP 0>)>>
+
+\ 
+
+"Main message composing and sending loop:
+       -1 -- reentering from reader
+	0 -- Composing/Editing Level
+	1 -- Sending level
+	2 -- Editing level (after aborted Send)
+"
+
+<DEFINE MESSAGE-LOOP ANOTHER-MSG (CLEVEL)
+	#DECL ((ANOTHER-MSG) <SPECIAL ACTIVATION> (CLEVEL) <SPECIAL FIX>)
+	<COND (<G=? .CLEVEL 0>
+	       <SETG ASK-ME ,MAIL-ASK-ME>
+	       <COND (,REMIND <REMIND-HACK 0>)
+		     (,MSG
+		      <SETG ASK-ME ,MSG-ASK-ME>
+		      <SETG ALWAYSFIELDS ,MSGALWAYS>)
+		     (<OR ,BUG ,FEATURE>
+		      <SETG SKIP-SUBJECT T>
+		      <SETG ALWAYSFIELDS ,BUGALWAYS>
+		      <SETG ASK-ME ,BUG-ASK-ME>)
+		     (,FORWARD
+		      <SETG ASK-ME ,FORWARD-ASK-ME>
+		      <SETG ALWAYSFIELDS ,FWDALWAYS>)
+		     (,ANSWER
+		      <SETG ASK-ME <LIST !,MAIL-ASK-ME>>
+		      <COND (<NOT <0? <BUFLENGTH <FBUF ,IN-REPLY-TO>>>>
+			     <PUTREST <REST ,ASK-ME>
+				      (IN-REPLY-TO !<REST ,ASK-ME 2>)>)>
+		      <COND (<NOT <0? <BUFLENGTH <FBUF ,CARBON-COPY-TO>>>>
+			     <PUTREST ,ASK-ME
+				      (CARBON-COPY-TO !<REST ,ASK-ME>)>)>
+		      <SETG ANSWER <>>)>
+	       <SETG CPU-START <TIME>>
+	       <SETG CONSOLE-START <ITIME>>)
+	      (ELSE <SET CLEVEL 0>)>
+	<KLUDGE-IT>>
+
+<DEFINE KLUDGE-IT ()
+	<REPEAT LERR\ !-INTERRUPTS (CLOOP)
+		#DECL ((LERR\ !-INTERRUPTS CLOOP) <SPECIAL ACTIVATION>)
+		<SET CLOOP .LERR\ !-INTERRUPTS>
+		<COND (<0? .CLEVEL> <LAZY-MSG ,ASK-ME ,COMPOSING?>)>
+		<COND (<1? .CLEVEL>
+		       <COND (,JCL-CTRL-C
+			      <COND (<SENDER>)
+				    (ELSE
+				     <PROG ((OUTCHAN .OUTCHAN))
+					   #DECL ((OUTCHAN) CHANNEL)
+					   <CRLF>
+					   <PRINC "ERROR">>
+				     <SET CLEVEL 2>)>
+			      <SETG JCL-CTRL-C <>>)>)>
+		<COND (<==? .CLEVEL 2>
+		       <EDIT-LOOP>)>>>
+
+\ 
+
+"Here to initiate another message:
+	If MORE-MSGS is T, clears out volatile buffers, sets level to 0 again.
+	If MORE-MSGS is <>, QUITs.
+"
+
+<DEFINE NEXT-MSG ()
+	#DECL ((ANOTHER-MSG) ACTIVATION)
+	<SETG COMPOSING? <>>
+	<COND (,IN-READER? <RETURN T .ANOTHER-MSG>)
+	      (,MORE-MSGS
+	       <ALLCLEAR>
+	       <INIT-MESSAGE T>
+	       <SET CLEVEL 0>
+	       <AGAIN .ANOTHER-MSG>)
+	      (ELSE <QUIT>)>>
+
+<DEFINE QUITIT ()
+	<SETG COMPOSING? <>>
+	<COND (,IN-READER? <RETURN <> .ANOTHER-MSG>)
+	      (ELSE <QUIT>)>>
+
+"Redo the Message loop at a given level"
+
+<DEFINE GO-TO-LEVEL (N "AUX" CL)
+	#DECL ((N) FIX (CL) ANY)
+	<SET CLEVEL .N>
+	<AND <ASSIGNED? CLOOP>
+	     <LEGAL? <SET CL .CLOOP>>
+	     <AGAIN .CL>>>
+
+<DEFINE NEXT-LEVEL ("OPTIONAL" X Y)
+	#DECL ((CLEVEL) FIX)
+	<COND (,IN-READER?
+	       <SETG ON-SCREEN ,READER-SCREEN>
+	       <RETURN <> .ANOTHER-MSG>)
+	      (ELSE <EDIT-LEVEL>)>>
+
+<DEFINE EDIT-LEVEL ("OPTIONAL" X Y)
+	<GO-TO-LEVEL 2>>
+
+<DEFINE EDIT-LOOP () 
+	<REPEAT LERR\ !-INTERRUPTS ()
+		#DECL ((LERR\ !-INTERRUPTS) <SPECIAL ACTIVATION>)
+		<PROG COMMAND-LOOP-ACTIVATION ()
+		      #DECL ((COMMAND-LOOP-ACTIVATION) <SPECIAL ACTIVATION>)
+		      <EDIT-COMMANDS>>>>
+
+<DEFINE EDIT-ONCE (BUF CH "AUX" (OLD .OUTCHAN))
+	#DECL ((BUF) BUFFER (CH) CHARACTER (OLD) CHANNEL)
+	<EDIT-COMMANDS>
+	<SET OUTCHAN <SELECT .OLD>>>
+
+<DEFINE EDIT-SEND (BUF CH)
+	#DECL ((BUF) BUFFER (CH) CHARACTER)
+	<EDIT-COMMANDS>
+	<GO-TO-LEVEL .CLEVEL>>
+
+\ 
+
+"Initialize buffers and top-level variables"
+
+<DEFINE INIT-MESSAGE ("OPTIONAL" (REINIT <>))
+	#DECL ((REINIT) <OR ATOM FALSE>)
+	<COND (<NOT .REINIT>		;"one-time initialization"
+	       <SETG BUG <>>		;"T if its :BUG"
+	       <SETG FEATURE <>>	;"T if its :FEATURE"
+	       <SETG REMIND <>>		;"T if its :REMIND"
+	       <SETG MSG <>>		;"T if its :MSG"
+	       <SETG FORWARD <>>	;"T if its :FORWARD"
+	       <SETG CORRECT <>>	;"T if its :CORRECT"
+	       <SETG ANSWER <>>)>
+	<PUT ,ACK-CONDS 1 <>>
+	<PUT ,ACK-CONDS 2 <>>
+	<SETG ALWAYSFIELDS ,TOALWAYS>	;"fields that must be included"
+	<SETG EXPIRES <>>	;"When a :MSG expires, default one week"
+	<SETG SKIP-TO <>>	;"T if To specified in JCL"
+	<SETG SKIP-SUBJECT <>>	;"T if Subject to be skipped (as in BUG)"
+	<SETG SKIP-MSG-FILE <>>	;"T if MSG file given in JCL"
+	<SETG SKIP-MSG-NO <>>
+	<SETG JCL-CTRL-C <>>	;"T if ^C encountered on JCL line"
+	<SETG JCL-TEXT <>>	;"T if text on JCL line"
+	<SETG STIME <>>		;"When to deliver message:  <> ==> ASAP"
+	"DONE">
+
+\ 
+
+"**************** AUTOMATIC MESSAGE COMPOSER ************************"
+
+"Simple message sender"
+
+<DEFINE LAZY-MSG (LFLDS PREFER "AUX" INFO RES L)
+	#DECL ((LFLDS) LIST (INFO) <OR FALSE FIELD>)
+	<SET L
+	     <MAPR ,LIST
+		   <FUNCTION (V "AUX" (F <1 .V>))
+			#DECL ((V) LIST (F) <OR ATOM FIELD>)
+			<COND (<TYPE? .F ATOM>
+			       <SET INFO ,.F>
+			       <PUT .V 1 .INFO>)
+			      (ELSE <SET INFO .F>)>
+			<FBUF .INFO>>
+		   .LFLDS>>
+	<WDATA <GET-WINDOW <SINPUT ,EDIT-SCREEN>>
+	       <CHTYPE <VECTOR .L <1 .L>> SCRATCH>>
+	<SET OUTCHAN <SELECT <SINPUT ,EDIT-SCREEN>>>
+	<REDISPLAY-ALL .OUTCHAN ,REDISPLAY <>>
+	<GETSTR <1 .L> ,FORMS-CHRTABLE>>
+
+"Back up one in Lazy-MSG"
+
+<DEFINE LAZY-PREVIOUS (A B) 
+	<REENTER-COMMAND-LOOP>>
+
+<DEFINE LAZY-NEXT (B C)
+	<TERM <CONTROL ,EOL>>>
+
+\ 
+
+"*********************** 'EDIT' MODE COMMANDS ********************"
+
+"Edit-level commands dispatch to here --
+	 Each of these functions is a command handler"
+
+"Exit command mode"
+
+<DEFINE EDIT-FLUSH ()
+	<PRINTSTRING "(Done)" .OUTCHAN>>
+
+"Here to set ^E function -- either Teco or Imedit"
+
+<DEFINE FLIP-EDITOR (FIL "AUX" (OUTCHAN .OUTCHAN))
+	#DECL ((FIL) STRING (OUTCHAN) CHANNEL)
+	<SET FIL <UPPERCASE .FIL>>
+	<SETG TECO-PROGRAM .FIL>
+	<PRINTSTRING "Using TECO (as 'TS " .OUTCHAN>
+	<PRINTSTRING .FIL .OUTCHAN>
+	<PRINTSTRING "')" .OUTCHAN>>
+
+\ 
+
+"Print out a mail file onto a channel"
+
+<SETG ACK-CONDS (<> <>)>
+<GDECL (ACK-CONDS) <LIST [REST <OR FALSE STRING>]>>
+
+<SETG HERE "MIT-XX">
+<GDECL (HERE) STRING>
+
+<DEFINE PRMAIL ("OPTIONAL" (OUTCHAN .OUTCHAN) "AUX" DID) 
+	#DECL ((OUTCHAN) <SPECIAL CHANNEL> (DID) <UVECTOR [REST FIX]>)
+	<PRINC !\[>
+	<PRIN1 <SET DID <DISPATCH-ID>>>
+	<PRINT <2 .DID>>
+	<CRLF>
+	<PRIN1 '("MAILER")>
+	<CRLF>
+	<PRINC !\(>
+	<PRIN1 <XUNAME>>
+	<PRINC ")">
+	<PRINT <COND (,REMIND "REMIND")
+		     (,FORWARD "FORWARD")
+		     (,CORRECT "CORRECT")
+		     (ELSE "MAIL")>>
+	<PRINT '"ROUTINE">
+	<PRINT '()>
+	<CRLF>
+	<PRINC !\(>
+	<COND (<NOT ,FORWARD>
+	       <PRINT "WHEN-ORIGINATED">
+	       <PRINT <2 .DID>>
+	       <PRINT "SENDER">
+	       <PRINT <XUNAME>>)>
+	<MAPF <>
+	      <FUNCTION (INFO)
+	           #DECL ((INFO) FIELD)
+		   <AND <PFIELD .INFO>
+			<APPLY <PFIELD .INFO> .INFO>>>
+	      ,FIELD-TABLE>
+	<COND (,EXPIRES <PRINT "EXPIRES"> <PRIN1 ,EXPIRES>)>
+	<COND (<OR? !,ACK-CONDS>
+	       <PRINT "ACKNOWLEDGE">
+	       <PRINT <MAPF ,LIST
+			    <FUNCTION (S) 
+				    #DECL ((S) <OR STRING FALSE>)
+				    <COND (<NOT .S> <MAPRET>)
+					  (<=? .S "FAILED">
+					   <LIST "DELIVERY" ,FAILED 1>)
+				          (<LIST .S <> 2>)>>
+							 ;"STANDARD ACK FCN #2"
+			    ,ACK-CONDS>>)>
+	<COND (<NOT ,FORWARD>
+	       <PRINT "CONSOLE-MINUTES">
+	       <PRINC <- <2 .DID> ,CONSOLE-START>>
+	       <PRINT "CPU-SECONDS">
+	       <PRINC <- <TIME> ,CPU-START>>)>
+	<PRINC "
+)]
+">>
+
+\ 
+
+"PTO -- print to-lists; deals with all to-style lists"
+
+<DEFINE PTO (INFO
+	     "AUX" TOL BLOL CCTOL (NOTESTO ()) (HAS-TO? T) (OUTCHAN .OUTCHAN)) 
+	#DECL ((INFO) FIELD (FORWTO TOL BLOL CCTOL NOTESTO) LIST
+	       (HAS-TO?) <OR ATOM FALSE> (OUTCHAN) CHANNEL)
+	<SET TOL <FINDHOSTS ,TO>>
+	<COND (<OR ,BUG ,FEATURE>
+	       <SET TOL
+		    <LIST !.TOL
+			  !<FINDHOSTS ,PROGRAM
+				      <COND (,BUG "BUG-")
+					    (ELSE "FEATURE-")>>>>)> 
+	<SET BLOL <FINDHOSTS ,BLIND>>
+	<SET CCTOL <FINDHOSTS ,CARBON-COPY-TO>>
+	<REPEAT ((NL ,NOTES-LIST) A NT)
+		#DECL ((NL) <LIST LIST> (BEG A NT) LIST)
+		<COND (<EMPTY? .NL> <RETURN>)
+		      (<0? <BUFLENGTH <2 <1 .NL>>>>)
+		      (ELSE
+		       <PUT ,NOTES ,FBUF <1 <1 .NL>>>
+		       <COND (<EMPTY? <SET A <FINDHOSTS ,NOTES>>>)
+			     (<COND (<EMPTY? .NOTESTO> <SET NOTESTO .A>)
+				    (ELSE <PUTREST .NT .A>)>
+			      <SET NT <REST .A <- <LENGTH .A> 1>>>)>)>
+		<SET NL <REST .NL>>>
+	<COND (<AND ,FORWARD <NOT <EMPTY? .TOL>>>
+	       <PFORWARD .TOL .NOTESTO>)
+	      (<NOT <AND <EMPTY? .TOL>
+			 <EMPTY? .CCTOL>
+			 <EMPTY? .BLOL>
+			 <EMPTY? .NOTESTO>>>
+	       <PRINT <SPNAME <FLDNM .INFO>>>
+	       <CRLF>
+	       <PRINC !\(>
+	       <PUNIQUE !.TOL !.CCTOL !.BLOL !.NOTESTO>
+	       <PRINC !\)>)
+	      (ELSE <SET HAS-TO? <>>)>
+	<COND (<AND <NOT ,FORWARD> <NOT <EMPTY? .TOL>>>
+	       <PRINT "ACTION-TO">
+	       <PRINT .TOL>)>
+	<COND (<NOT <EMPTY? .CCTOL>> <PRINT "CARBON-COPY-TO"> <PRINT .CCTOL>)>
+	<COND (<NOT <EMPTY? .BLOL>>
+	       <PRINT "BLIND">
+	       <PRINT <MAPF ,LIST
+			    <FUNCTION (A)
+				      #DECL ((A) STRING)
+				      ((.A) (.A))>
+			    .BLOL>>)>
+	<COND (,CORRECT
+	       <PRINT "EMERGENCY">
+	       <PRINT '("CORRECTION")>)
+	      (.HAS-TO?
+	       <COND (<AND ,REMIND ,STIME>
+		      <PRINT '"REMIND">
+		      <PRIN1 ,STIME>)>
+	       <CRLF>
+	       <PRINC "\"SCHEDULE\" (\"SENDING\"">
+	       <PRINC !\)>)>>
+
+\
+
+<DEFINE PFROM (INFO "AUX" (X <XUNAME>) FR L F S UNDER?)
+     #DECL ((INFO) FIELD (FR) BUFFER (L) <LIST [REST STRING]>
+	    (UNDER?) <OR ATOM FALSE> (X F S) STRING)
+     <SET UNDER?
+	  <AND <==? <1 .X> !\_>
+	       <==? <2 .X> !\_>
+	       <==? <3 .X> !\_>>>
+     <REPEAT ()
+	     <COND (<AND .UNDER?
+			 <SET L <BUFLEX <SET FR <FBUF .INFO>>>>
+			 <NOT <EMPTY? .L>>
+			 <SET F <1 .L>>
+			 <==? <1 .F> !\_>
+			 <==? <2 .F> !\_>
+			 <==? <3 .F> !\_>>
+		    <SET S 
+			 <CORRECT-ADDRESS <PR1 .INFO>
+					  "You must give your name instead of"
+					  .F
+					  "Real name">>
+		    <PUT .L 1 .S>
+		    <REMAKE .FR .L>)
+		   (ELSE
+		    <PONE .INFO>
+		    <RETURN>)>>>
+
+\
+
+"PFORWARD -- print special to-list for forwarding message"
+
+<DEFINE PFORWARD (TOL NOTESTO "AUX" (OUTCHAN .OUTCHAN) X)
+	#DECL ((TOL NOTESTO) LIST (OUTCHAN) CHANNEL (X) STRING)
+	<PRINT "MORE-TO">
+	<CRLF>
+	<PRINC !\(>
+	<PUNIQUE !.TOL !.NOTESTO>
+	<PRINC !\)>
+	<CRLF>
+	<COND (<NOT ,CORRECT>
+	       <PRINC "(\"FORWARDING\" \"APPEND\")">
+	       <CRLF>
+	       <PRINC "(((">
+	       <PRIN1 <SET X <XUNAME>>>
+	       <PRINC !\ >
+	       <PUNIQUE !.TOL !.NOTESTO>
+	       <PRINC ") ((">
+	       <PRIN1 .X>
+	       <PRINC !\ >
+	       <PRIN1 .TOL>
+	       <PRINC !\ >
+	       <PRIN1 <ITIME>>
+	       <PRINC "))))">)>>
+
+<DEFINE PMSG-FILE (INFO "AUX" (BUF <FBUF .INFO>)) 
+	#DECL ((INFO) FIELD (BUF) BUFFER)
+	<COND (<NOT <0? <BUFLENGTH <FBUF .INFO>>>>
+	       <PROG ((OUTCHAN .OUTCHAN))
+		     #DECL ((OUTCHAN) CHANNEL)
+		     <PRINT "MSG-FILE">
+		     <BUFSPRINT .BUF>>)>>
+
+\ 
+
+"Printers for fields which are message ids"
+
+<DEFINE PIDS (INFO "AUX" X (OUTCHAN .OUTCHAN)) 
+	#DECL ((INFO) FIELD (X) <OR FALSE <LIST [REST STRING]>>
+	       (OUTCHAN) CHANNEL)
+	<COND (<SET X <FINDIDS .INFO>> 
+	       <PRINT <SPNAME <FLDNM .INFO>>>
+	       <PRINC .X>)>>
+
+<DEFINE PID (INFO "AUX" X (OUTCHAN .OUTCHAN)) 
+	#DECL ((INFO) FIELD (X) <OR FALSE <LIST [REST STRING]>>
+	       (OUTCHAN) CHANNEL)
+	<COND (<AND <SET X <FINDIDS .INFO>>
+		    <==? <LENGTH? .X 1> 1>>
+	       <PRINT <SPNAME <FLDNM .INFO>>>
+	       <PRINC <1 .X>>)>>
+
+<DEFINE FINDIDS (INFO "OPTIONAL" (P? T) "AUX" (BUF <FBUF .INFO>) XX) 
+	#DECL ((INFO) FIELD (BUF) BUFFER (XX) <LIST [REST STRING]>
+	       (P?) <OR ATOM FALSE>)
+	<PROG ()
+	      <COND (<OR <0? <BUFLENGTH .BUF>>
+			 <EMPTY? <SET XX <BUFLEX .BUF>>>>
+		     <>)
+		    (<MAPR <>
+			   <FUNCTION (X "AUX" S)
+				#DECL ((X) <LIST [REST STRING]>
+				       (S) <OR STRING FALSE>)
+				<COND (<CHECK-FIX <1 .X>>)
+				      (ELSE
+				       <SET S <CORRECT-ADDRESS
+					          <AND .P? <PR1 .INFO>>
+						  "Message id is not a number"
+						  <1 .X>
+						  "Message id">>
+				       <PUT .X 1 .S>
+				       <REMAKE .BUF .XX>
+				       <MAPLEAVE <>>)>>
+			   .XX>
+		     .XX)
+		    (ELSE <AGAIN>)>>>
+
+<DEFINE CHECK-FIX (S)
+	#DECL ((S) STRING)
+	<MAPF <>
+	      <FUNCTION (C)
+		   #DECL ((C) CHARACTER)
+		   <COND (<AND <G=? <ASCII .C> <ASCII !\0>>
+			       <L=? <ASCII .C> <ASCII !\9>>>)
+			 (ELSE <MAPLEAVE <>>)>>
+	      .S>>
+
+\
+
+"General message field printers for various sorts of fields"
+
+<DEFINE PUNIQUE ("TUPLE" TL "AUX" (OUTCHAN .OUTCHAN))
+	#DECL ((TL) <TUPLE [REST STRING]> (OUTCHAN) CHANNEL)
+	<MAPR <>
+	      <FUNCTION (A "AUX" (A1 <1 .A>))
+		   #DECL ((A) <TUPLE [REST STRING]> (A1) STRING)
+		   <COND (<NOT <MEMBER .A1 <REST .A>>>
+			  <PRIN1 .A1> <PRINC !\ >)>>
+	      .TL>>
+
+<DEFINE PTEXT (INFO "AUX" (NM <FLDNM .INFO>) BUF
+	       (ANY? <>) C W (OUTCHAN .OUTCHAN) (PRE <>) INS) 
+	#DECL ((INFO) <OR FALSE FIELD> (BUF) BUFFER (C) <OR CHANNEL FALSE>
+	       (NM) ATOM (OUTCHAN) CHANNEL (W) <OR WINDOW FALSE>
+	       (ANY? PRE) <OR ATOM FALSE> (INS) <OR FALSE VECTOR>)
+	<REPEAT ()
+		<COND (<OR <NOT .INFO> <N==? <FLDNM .INFO> .NM>>
+		       <COND (.ANY? <PRINC ")]"> <CRLF>)>
+		       <RETURN>)>
+		<COND (<0? <BUFLENGTH <SET BUF <FBUF .INFO>>>>)
+		      (ELSE
+		       <COND (<NOT .ANY?>
+			      <PRINT <SPNAME <FLDNM .INFO>>>
+			      <PRINC "[<> (">
+			      <SET ANY? T>)>
+		       <COND (<SET INS <FDATA .INFO>>
+			      <COND (<AND .PRE <N==? <2 .INS> .PRE>>
+				     <PRINC ")] [">
+				     <PRIN1 <SPNAME <2 .INS>>>
+				     <PRINC " (">)>
+			      <SET PRE <2 .INS>>
+			      <PRINC !\[>
+			      <PRIN1 <SPNAME <1 .INS>>>
+			      <PRINC !\ >
+			      <BUFSPRINT .BUF>
+			      <PRINC !\]>)
+			     (ELSE
+			      <BUF-PARA-PRINT .BUF>)>
+		       <CRLF>)>
+		<COND (<AND <SET C <FWIN .INFO>>
+			    <SET W <GET-WINDOW .C>>
+			    <SET C <WNEXT .W>>
+			    <SET W <GET-WINDOW .C>>>
+		       <SET INFO <WDATA .W>>)
+		      (ELSE <SET INFO <>>)>>>
+
+<SETG CRCR "
+
+">
+<GDECL (CRCR) STRING>
+
+<DEFINE BUF-PARA-PRINT (BUF "OPTIONAL" (OUTCHAN .OUTCHAN)
+			"AUX" (TOP <BTOP .BUF>) (STR .TOP)
+			(LEND <LENGTH <BEND .BUF>>) SS LL)
+	#DECL ((BUF VALUE) BUFFER (LEND LL) FIX (STR TOP) STRING
+	       (SS) <OR STRING FALSE> (OUTCHAN) <SPECIAL CHANNEL>)
+	<PRINC !\(>
+	<REPEAT ()
+		<SET LL <- <LENGTH .STR> .LEND>>
+		<COND (<SET SS <SUBSTR ,CRCR .STR .LL>>
+		       <BUFSPRINT .BUF .OUTCHAN
+				  <- <LENGTH .TOP> <LENGTH .STR>>
+				  <- <LENGTH .STR> <LENGTH .SS>>>
+		       <PRINC !\ >
+		       <SET STR <REST .SS 4>>)
+		      (<G? .LL 0>
+		       <BUFSPRINT .BUF .OUTCHAN
+				  <- <LENGTH .TOP> <LENGTH .STR>>
+				  .LL>
+		       <RETURN T>)>>
+	<PRINC !\)>
+	.BUF>
+
+<DEFINE PSTR (INFO "AUX" (BUF <FBUF .INFO>)) 
+	#DECL ((INFO) FIELD (BUF) BUFFER)
+	<COND (<0? <BUFLENGTH .BUF>>)
+	      (ELSE
+	       <PRINT <SPNAME <FLDNM .INFO>>>
+	       <BUFSPRINT .BUF>)>>
+
+<DEFINE PLST (INFO "AUX" (BUF <FBUF .INFO>)) 
+	#DECL ((INFO) FIELD (BUF) BUFFER)
+	<COND (<0? <BUFLENGTH .BUF>>)
+	      (<PROG ((OUTCHAN .OUTCHAN))
+		     #DECL ((OUTCHAN) CHANNEL)
+	       <PRINT <SPNAME <FLDNM .INFO>>>
+	       <PRINT <BUFLEX .BUF>>>)>>
+
+<DEFINE PONE (INFO "AUX" (BUF <FBUF .INFO>) L)
+	#DECL ((INFO) FIELD (BUF) BUFFER (L) <LIST [REST STRING]>)
+	<COND (<OR <0? <BUFLENGTH .BUF>>
+		   <EMPTY? <SET L <BUFLEX .BUF>>>>)
+	      (<PROG ((OUTCHAN .OUTCHAN))
+		     #DECL ((OUTCHAN) CHANNEL)
+	       <PRINT <SPNAME <FLDNM .INFO>>>
+	       <PRINT <1 .L>>>)>>
+\ 
+
+"Printers for specific sorts of fields"
+
+<DEFINE PSUBJ (INFO
+	       "AUX" (SBUF <FBUF .INFO>) (BEMPTY? <0? <BUFLENGTH .SBUF>>)
+		     (TOBUF <FBUF ,TO>) (PBUF <FBUF ,PROGRAM>))
+	#DECL ((INFO) FIELD (SBUF TOBUF PBUF) BUFFER
+	       (BEMPTY?) <OR ATOM FALSE>)
+	<COND (<AND .BEMPTY? <OR ,BUG ,FEATURE ,REMIND>>
+	       <COND (<OR ,BUG ,FEATURE>
+		      <ADDSTRING .SBUF <COND (,BUG "BUG")(ELSE "FEATURE")>>
+		      <COND (<NOT <0? <BUFLENGTH .PBUF>>>
+			     <ADDSTRING .SBUF " => ">
+			     <ADDSTRING .SBUF <1 .PBUF> <BUFLENGTH .PBUF>>)>)
+		     (,REMIND
+		      <ADDSTRING .SBUF "REMINDER">
+		      <COND (<NOT <0? <BUFLENGTH .TOBUF>>>
+			     <ADDSTRING .SBUF
+					" for "
+					<1 .TOBUF>
+					<BUFLENGTH .TOBUF>>)>)>
+	       <SET BEMPTY? <>>)>
+	<COND (<NOT .BEMPTY?>
+	       <PRINT <SPNAME <FLDNM .INFO>>>
+	       <BUFSPRINT .SBUF>)>>
+
+<DEFINE PEXPUSING (INFO)
+	#DECL ((INFO) FIELD)
+	<PEXPAND <GET-FILES .INFO>>>
+
+<DEFINE PEXPAND (LF)
+	#DECL ((LF) <LIST [REST STRING]>)
+	<REPEAT ()
+		<COND (<EMPTY? .LF> <RETURN>)
+		      (<PROG ((OUTCHAN .OUTCHAN))
+			     #DECL ((OUTCHAN) CHANNEL)
+			     <PRINT '("EXPAND-USING" "ADD")>
+			     <PRINT <1 .LF>>>)>
+		<SET LF <REST .LF>>>>
+
+
+"The notes list consists of a list of two element lists.  Each of
+the two elements is a buffer.  The first is the addressee buffer,
+the second the text buffer.  NOTE!!!!! The list is circular, with
+the current last buffer edited being the pointer into it.  BE
+CAREFUL GROVELLING OVER THIS CROCK!!!!!!! "
+
+<DEFINE PNOTES (INFO "AUX" (NL ,NOTES-LIST) (PL ()) AL N P
+		(OUTCHAN .OUTCHAN) (ANN <>)) 
+	#DECL ((INFO) FIELD (NL) LIST (OUTCHAN) CHANNEL
+	       (PL) <LIST [REST <OR STRING LIST> LIST]>
+	       (AL) <LIST [REST STRING]> (N) <LIST BUFFER BUFFER>
+	       (ANN) <OR FALSE BUFFER> (P) <OR FALSE LIST>)
+	<PROG ()
+	      <COND (<AND <EMPTY? .NL>
+			  <0? <BUFLENGTH <SET ANN <FBUF ,ANNOTATION>>>>>
+		     <RETURN>)>
+	      <COND (<EMPTY? .NL>)
+		    (<EMPTY? <REST .NL>>
+		     <COND (<0? <BUFLENGTH <2 <SET N <1 .NL>>>>>)
+			   (ELSE
+			    <PUT .INFO ,FBUF <1 .N>>
+			    <SET PL (<FINDHOSTS .INFO> (<2 .N>))>)>)
+		    (<REPEAT ()
+			     <SET NL <REST .NL>>
+			     <COND (<0? <BUFLENGTH <2 <SET N <1 .NL>>>>>)
+				   (ELSE
+			     <PUT .INFO ,FBUF <1 .N>>
+			     <SET AL <FINDHOSTS .INFO>>
+			     <MAPF <>
+				   <FUNCTION (A) 
+					#DECL ((A) STRING)
+					<COND (<SET P <MEMBER .A .PL>>
+					       <PUT .P 2 (<2 .N> !<2 .P>)>)
+					      (<SET PL (.A (<2 .N>) !.PL)>)>>
+				   .AL>)>
+			     <COND (<EMPTY? .NL> <RETURN>)>>)>
+	      <COND (<AND <EMPTY? .PL> <NOT .ANN>>
+		     <RETURN>)>
+	      <CRLF>
+	      <AND ,FORWARD <PRINC !\(>>
+	      <PRIN1 <SPNAME <FLDNM .INFO>>>
+	      <AND ,FORWARD <PRINC " \"APPEND\")">>
+	      <CRLF>
+	      <PRINC !\(>
+	      <COND (.ANN
+		     <PRINC !\(>
+		     <PRIN1 (<XUNAME> !<FINDHOSTS ,TO>)>
+		     <CRLF>
+		     <PRINC !\(>
+		     <PRINC "\"[From ">
+		     <PRINC <XUNAME>>
+		     <PRINC "]\" ">
+		     <CRLF>
+		     <BUFSPRINT .ANN>
+		     <PRINC "))">)>
+	      <REPEAT (P1)
+		      #DECL ((P1) LIST)
+		      <COND (<EMPTY? .PL> <PRINC !\)> <CRLF> <RETURN>)>
+		      <COND (<TYPE? <1 .PL> LIST> <SET P1 <1 .PL>>)
+			    (ELSE <SET P1 (<1 .PL>)>)>
+		      <COND (<SET P <NEMBER <2 .PL> <REST .PL 2>>>
+			     <COND (<TYPE? <1 .P> LIST>
+				    <PUT .P 1 (!.P1 !<1 .P>)>)
+				   (ELSE <PUT .P 1 (<1 .P> !.P1)>)>)
+			    (ELSE
+			     <CRLF>
+			     <PRINC !\(>
+			     <PRIN1 <COND (,FORWARD (<XUNAME> !.P1))
+					  (ELSE .P1)>>
+			     <CRLF>
+			     <PRINC !\(>
+			     <COND (,FORWARD
+				    <PRINC "\"[From ">
+				    <PRINC <XUNAME>>
+				    <PRINC "]\" ">)>
+			     <MAPF <> ,BUFSPRINT!-BUF!-PACKAGE <2 .PL>>
+			     <PRINC "))">)>
+		      <SET PL <REST .PL 2>>>>>
+
+"Pseudo-MEMBER for notes list.  Check for a message entry that
+is like the one we have.  Like means same length and notes
+buffers in it.  Message entries are even numbered elements of
+the structure and consist of lists of buffers."
+
+<DEFINE NEMBER (X S "AUX" M (LX <LENGTH .X>))
+	#DECL ((LX) FIX (S) <LIST [REST ANY <LIST [REST BUFFER]>]>
+	       (VALUE) <OR FALSE LIST> (X M) <LIST [REST BUFFER]>)
+	<REPEAT ()
+		<COND (<EMPTY? .S> <RETURN <>>)>
+		<SET M <2 .S>>
+		<AND <==? .LX <LENGTH .M>>
+		     <MAPF <>
+			   <FUNCTION (M1 X1)
+				     #DECL ((M1 X1) BUFFER)
+				     <COND (<==? .M1 .X1>)
+					   (ELSE <MAPLEAVE <>>)>>
+			   .M .X>
+		     <RETURN .S>>
+		<SET S <REST .S 2>>>>
+
+\ 
+
+<DEFINE FNAME (STR "AUX" (CH <CHANNEL "READ" .STR>))
+    #DECL ((STR) STRING (CH) CHANNEL)
+    <STRING <7 .CH> !\  <8 .CH> !\  <9 .CH> !\: <10 .CH> !\;>>
+
+<DEFINE PENCLOSURES (INFO "AUX" (FL <GET-FILES .INFO>))
+	#DECL ((FL) <LIST [REST STRING]> (INFO) FIELD)
+	<COND (<EMPTY? .FL>)
+	      (<PROG ((OUTCHAN .OUTCHAN))
+		     #DECL ((OUTCHAN) CHANNEL)
+	       <PRINT <SPNAME <FLDNM .INFO>>>
+	       <PRINC !\(>
+	       <MAPF <>
+		     <FUNCTION (X "AUX" C)
+			  #DECL ((X) STRING (C) <OR CHANNEL FALSE>)
+			  <COND (<SET C <CHANNEL "READ" <UPPERCASE .X>>>
+				 <PRINC !\[>
+				 <PRIN1 <7 .C>>
+				 <PRINC !\ >
+				 <PRIN1 <8 .C>>
+				 <PRINC !\ >
+				 <PRIN1 <9 .C>>
+				 <PRINC !\ >
+				 <PRIN1 <10 .C>>
+				 <PRINC !\]>
+				 <CRLF>)>>
+		     .FL>
+	       <PRINC !\)>>)>>
+
+<DEFINE PFILE-OUTPUT (INFO)
+	#DECL ((INFO) FIELD)
+	<PFILES <GET-FILES .INFO <>>>>
+
+<DEFINE PFILES (FL)
+    #DECL ((FL) <LIST [REST STRING]>)
+    <COND (<EMPTY? .FL>)
+	  (ELSE
+	   <PROG ((OUTCHAN .OUTCHAN))
+		 #DECL ((OUTCHAN) CHANNEL)
+		 <PRINT "SCHEDULE">
+	   <PRINT '("FILE-OUTPUT" #FALSE ())>
+	   <PRINT '("AUTHOR-FILE-OUTPUT" "APPEND")>
+	   <PRINC !\(>
+	   <MAPF <>
+		<FUNCTION (X)
+		    #DECL ((X) STRING)
+		    <TERPRI>
+		    <PRINC !\(>
+		    <PRIN1 <FNAME .X>>
+		    <PRINC !\ >
+		    <PRIN1 "APPEND">
+		    <PRINC !\)>>
+		.FL>
+	   <PRINC !\)>
+	   <TERPRI>>)>>
+
+"Returns a LIST of File names for FILE-OUTPUT"
+
+<DEFINE GET-FILES (INFO "OPTIONAL" (EXIST? T) "AUX" (BF <FBUF .INFO>)) 
+	#DECL ((EXIST?) <OR ATOM FALSE> (VALUE) <LIST [REST STRING]>
+	       (INFO) FIELD (BF) BUFFER)
+	<MAPF ,LIST
+	      <FUNCTION (S "AUX" R)
+		  #DECL ((S) STRING (R) <OR ATOM <FALSE STRING>>)
+		  <PROG ()
+			<COND (<NOT <GOOD-FILE-NAME? .S>>
+			       <SET S <CORRECT-ADDRESS <PR1 .INFO>
+						       "File name incomprehensible?"
+						       .S
+						       "File"
+						       <>
+						       ,FILEBRKS>>
+			       <AGAIN>)
+			      (<AND .EXIST? <NOT <SET R <FILE-EXISTS? .S>>>>
+			       <SET S <CORRECT-ADDRESS <PR1 .INFO>
+						       <1 .R>
+						       .S
+						       "File"
+						       <>
+						       ,FILEBRKS>>
+			       <AGAIN>)
+			      (ELSE .S)>>>
+	      <BUFLEX .BF ,FILEBRKS>>>
+
+<SETG FILEBRKS ",
+">
+
+<GDECL (FILEBRKS) STRING>
+
+<DEFINE GOOD-FILE-NAME? (ST "AUX" (SP 0) (CL 0) (SM 0) C)
+	#DECL ((ST) <OR FALSE STRING> (SP CL SM) FIX (C) CHARACTER)
+	<COND (<ANYTHING .ST>
+	       <REPEAT ()
+		       <COND (<OR <NOT .ST> <EMPTY? .ST>>
+			      <RETURN <AND <L? .CL 2> <L? .SM 2> <L? .SP 2>>>)
+			     (<AND <==? <SET C <1 .ST>> !\> <NOT <LENGTH? .ST 2>>>
+			      <SET ST <REST .ST 2>>)
+			     (<==? .C !\ >
+			      <SET SP <+ .SP 1>>
+			      <SET ST <ANYTHING <REST .ST>>>)
+			     (<==? .C !\:>
+			      <SET CL <+ .CL 1>>
+			      <SET ST <ANYTHING <REST .ST>>>)
+			     (<==? .C !\;>
+			      <SET SM <+ .SM 1>>
+			      <SET ST <ANYTHING <REST .ST>>>)
+			     (ELSE <SET ST <REST .ST>>)>>)>>
+
+\ 
+
+"Buffer parser"
+
+<DEFINE BUFLEX (BF
+		"OPTIONAL" (BRKS ,TOBRKS) (ENDS "")
+		"AUX" (BAL <>) (LL ("")) (L .LL) (S <BPRS .BF>) (S1 .S)
+		(SX <BCUR .BF>) ST (Q? <NOT <MEMQ !\/ .BRKS>>)
+		(ADR? <OR <==? .BRKS ,JCLBRKS> <==? .BRKS ,TOBRKS>>) C CC)
+   #DECL ((BF) BUFFER (C ST) <OR STRING FALSE> (S S1 SX BRKS ENDS CC) STRING
+	  (BAL Q?) <OR ATOM FALSE> (VALUE) <OR FALSE LIST>
+	  (ADR?) <OR FALSE ATOM> (LL L) <LIST [REST STRING]>)
+   <REPEAT ()
+	   <COND (<AND .ADR?
+		       <G? <LENGTH .S1> <LENGTH .SX>>
+		       <OR <AND <MEMQ <1 .S1> " 	">
+				<SET C <ANYTHING .S1 .SX>>
+				<MEMQ <1 .C> "@%">>
+			   <MEMQ <1 <SET C .S1>> "@%">>>
+		  <SET S1 .C>
+		  <AND <SET C <ANYTHING <REST .S1> .SX>>
+		       <SET S1 .C>>
+		  <AGAIN>)>
+	   <COND (<OR <==? <LENGTH .S1> <LENGTH .SX>>
+		      <MEMQ <1 .S1> .BRKS>
+		      <MEMQ <1 .S1> .ENDS>
+		      <AND .Q? <==? <1 .S1> !\/>>>
+		  <AND <N==? .S .S1>
+		       <PUTREST .L
+				<SET L
+				     (<CONSTRUC .S .S1 .ADR?>)>>>
+		  <COND (<==? <LENGTH .S1> <LENGTH .SX>>
+			 <RETURN <REST .LL>>)
+			(<MEMQ <1 .S1> .ENDS>
+			 <COND (<AND <SET ST <ANYTHING .S1 .SX>>
+				     <SET S1 .ST>
+				     <NOT <AND .Q? <==? <1 .S1> !\/>>>>
+				<SET CC <SUBSTRUC .S1 0 <- <LENGTH .S1> <LENGTH .SX>>>>
+				<COND (<EMPTY? .CC> <RETURN <REST .LL>>)
+				      (ELSE
+				       <PUT .LL 1 .CC>
+				       <RETURN <CHTYPE .LL FALSE>>)>)>)>
+		  <SET BAL <>>
+		  <SET S <COND (<AND .Q? <==? <1 .S1> !\/>> .S1)(<REST .S1>)>>)
+		 (<==? <1 .S1> %<ASCII *134*>> <SET S1 <REST .S1>>)>
+	   <COND (<AND <NOT .BAL>
+		       <NOT <EMPTY? .S>>
+		       <SET C <MEMQ <1 .S> "([{">>
+		       <SET C <BALANCED? .S .SX>>>
+		  <SET S1 .C>
+		  <SET BAL T>)>
+	   <OR <EMPTY? .S1> <SET S1 <REST .S1>>>>>
+
+<DEFINE CONSTRUC (S S1 ADR? "AUX" TMP (AT? <>))
+	#DECL ((S S1) STRING (ADR? AT?) <OR ATOM FALSE>
+	       (TMP) <OR FALSE STRING>)
+	<MAPR ,STRING
+	      <FUNCTION (ST "AUX" (C <1 .ST>))
+		   #DECL ((ST) STRING (C) CHARACTER)
+		   <COND (<==? .ST .S1> <MAPSTOP>)
+			 (<AND .ADR? <MEMQ .C "@%">>
+			  <SET AT? T>
+			  <MAPRET !\@>)
+			 (<AND .ADR?
+			       <MEMQ .C " 	">
+			       <SET TMP <ANYTHING .ST .S1>>
+			       <OR .AT? <MEMQ <1 .TMP> "@%">>>
+			  <MAPRET>)
+			 (<==? .C %<ASCII *134*>> <MAPRET>)
+			 (ELSE <SET AT? <>> <MAPRET .C>)>>
+	      .S>>
+
+<DEFINE BALANCED? (L "OPTIONAL" (R <REST .L <LENGTH .L>>)
+		   "AUX" (OP <STRSRC <REST .L> "([{">) (BR <1 .L>) RB CL)
+	#DECL ((R) STRING (L) STRING (OP CL VALUE) <OR STRING FALSE>
+	       (BR RB) CHARACTER)
+	<REPEAT ((L .L))
+		#DECL ((L) STRING)
+		<COND (<SET CL <MEMQ <SET RB <COND (<==? .BR !\(> !\))
+						   (<==? .BR !\[> !\])
+						   (<==? .BR !\{> !\})>>
+				     <REST .L>>>
+		       <AND <N==? <1 <BACK .CL>> %<ASCII *134*>>
+			    <RETURN T>>
+		       <SET L .CL>)
+		      (<RETURN <>>)>>
+	<COND (<OR <NOT .OP> <AND .CL <L? <LENGTH .OP> <LENGTH .CL>>>>
+	       <AND <G? <LENGTH .CL> <LENGTH .R>> .CL>)
+	      (.CL
+	       <AND <SET L <BALANCED? .OP .R>>
+		    <MEMQ .RB <REST .L>>>)>>
+
+<DEFINE ADDBREAK (BF CHR) 
+	#DECL ((VALUE BF) BUFFER (CHR) CHARACTER)
+	<COND (<OR <==? <LENGTH <BPRS .BF>> <LENGTH <BCUR .BF>>>	    ;"nothing in buffer"
+		   <MEMQ <1 <BACK <BCUR .BF>>> ,KEYBREAKS>>
+	       .BF)					       ;"already broken"
+	      (<ADDCHR .BF .CHR>)>>
+
+<DEFINE MAILCRLF (BF CHR)
+	#DECL ((BF) BUFFER (CHR) CHARACTER (OUTCHAN) CHANNEL)
+	<COND (<NOT <BUF-BITS .BF 35>>	;"terminate on crlf"
+	       <PUT .OUTCHAN 14 0>
+	       <TERM <CONTROL ,EOL .CHR>>)
+	      (ELSE
+	       <ADDCRLF .BF .CHR>
+	       <COND (<BUF-BITS .BF ,BUF-BIT-PROMPT>
+		      <PADDSTRING .BF "    ">)>)>>
+
+"Keyword extractors"
+
+<DEFINE KEYWEX (BUF CHR
+		"AUX" (BST ,KEYBREAKS) (IK <FBUF ,KEYWORDS>) (L <BUFLENGTH .BUF>)
+		      (BB <2 .BUF>) CH)
+	#DECL ((BUF VALUE IK) BUFFER (CHR CH) CHARACTER (BST BB) STRING (L) FIX)
+	<COND (<0? .L> .BUF)
+	      (ELSE
+	       <REPEAT ((LC .L))
+		       #DECL ((LC) FIX)
+		       <SET CH <1 <SET BB <BACK .BB>>>>
+		       <COND (<MEMQ .CH .BST>
+			      <ADDBREAK .IK !\ >			   ;"sp"
+			      <ADDSTRING .IK
+					 <REST .BB>
+					 <- <LENGTH .BB> <LENGTH <2 .BUF>> 1>>
+			      <RETURN .BUF>)
+			     (<0? <SET LC <- .LC 1>>>
+			      <ADDBREAK .IK !\ >
+			      <ADDSTRING .IK .BB .L>
+			      <RETURN .BUF>)>>)>>
+
+\ 
+
+"Sending methods"
+
+<DEFINE SEND-MESSAGE (HOW)
+	<COND (<NOT .HOW> <SENDER> <NEXT-MSG>)	;"NORMAL"
+	      (<TYPE? .HOW ATOM> <SENDER <> <>>) ;"TTY"
+	      (ELSE <SENDER .HOW <>>)	;"FILE">>
+
+<DEFINE SENDER ("OPTIONAL" (FILE ,REQUEST-FILE) (ALL? T)
+		"AUX" CH (OUTCHAN .OUTCHAN) (OLD .OUTCHAN))
+	#DECL ((ALL?) <OR FALSE ATOM> (CH) <OR FALSE CHANNEL>
+	       (OUTCHAN OLD) CHANNEL
+	       (FILE) <OR FALSE <VECTOR [REST STRING]> STRING>)
+	<MAPF <>
+	      <FUNCTION (F "AUX" (INFO ,.F)) 
+			#DECL ((F) ATOM (INFO) FIELD)
+			<SET OUTCHAN <SELECT .OLD>>
+			<COND (<0? <BUFLENGTH <FBUF .INFO>>>
+			       <WINOP .OUTCHAN ,FRESH>
+			       <PRINTSTRING "'" .OUTCHAN>
+			       <PRINTSTRING <ANYTHING <PR1 .INFO>> .OUTCHAN>
+			       <PRINTSTRING
+				  "' empty? Specify it before sending."
+				  .OUTCHAN>
+			       <FILL-FIELD .INFO ,EDIT-SCREEN ,LINE>)>>
+	      ,ALWAYSFIELDS>
+	<COND (<NOT .FILE>
+	       <SET CH <SET OUTCHAN <SELECT <SOUTPUT ,EDIT-SCREEN>>>>
+	       <WINOP .CH ,CLEAR>)
+	      (<SET CH
+		    <COND (<TYPE? .FILE STRING> <OPEN "PRINT" .FILE>)
+			  (ELSE <OPEN "PRINT" !.FILE>)>>)
+	      (ELSE
+	       <OPEN-FAILED .CH .FILE>
+	       <EDIT-LEVEL>)>
+	<PRMAIL .CH>
+	<COND (.FILE <CLOSE .CH>)
+	      (ELSE <SET OUTCHAN <SELECT .OLD>>)>
+	<COND (<AND .ALL? <NOT ,JCL-CTRL-C>>
+	       ;<DEMSIG "COMSYS">)>
+	"SENT">
+
+"Beautiful error messages"
+
+<DEFINE OPEN-FAILED (CH FILE "AUX" (OUTCHAN .OUTCHAN)) 
+	#DECL ((CH) FALSE (FILE) ANY (OUTCHAN) CHANNEL)
+	<PRINTSTRING "Open of " .OUTCHAN>
+	<PRINTSTRING .FILE .OUTCHAN>
+	<PRINTSTRING " failed" .OUTCHAN>
+	<PRINTSTRING <COND (<LENGTH? .CH 1>
+			    <PRINTSTRING ": " .OUTCHAN>
+			    <1 .CH>)
+			   (".")>
+		     .OUTCHAN>
+	<WINOP .OUTCHAN ,FRESH>>
+
+\
+
+"READ-FILE"
+
+<DEFINE TEXT-FILE (BUF "OPTIONAL" CHR "AUX" (OLD ,ON-SCREEN) FIL)
+	#DECL ((VALUE BUF BB) BUFFER (CHR) CHARACTER
+	       (FIL) <OR FALSE STRING> (OUTCHAN) CHANNEL)
+    <SETG ON-SCREEN ,READER-SCREEN>
+    <SET OUTCHAN <SELECT <SINPUT ,READER-SCREEN>>>
+    <COND (<SET FIL <READ-FILE "File-name: ">>
+	   <WINOP .OUTCHAN ,FRESH>
+	   <INSERT-FILE TEXT SEQUENTIAL .FIL>)>
+    <SETG ON-SCREEN .OLD>
+    <SET OUTCHAN <SELECT <SINPUT .OLD>>>
+    .BUF>
+
+<DEFINE READ-FILE (STR "AUX" V)
+	#DECL ((STR) STRING (VALUE) <OR STRING FALSE>)
+	<WINOP .OUTCHAN ,FRESH>
+	<ADDPROMPT ,INPBUF .STR>
+	<AND <SET V <INPUT ,IFILE>>
+	     <1 .V>>>
+
+<DEFINE INSERT-FILE (M LOC FIL
+		     "AUX" (C <SINPUT ,EDIT-SCREEN>) (W <GET-WINDOW .C>)
+		     (F <WDATA .W>) NF (BUF <FBUF .F>) FL CH PTR)
+	#DECL ((M) ATOM (FIL) STRING (C) CHANNEL (W) WINDOW (BUF) BUFFER
+	       (F NF) FIELD (CH) <OR CHANNEL FALSE> (PTR) STRING
+	       (FL) <OR FALSE FIX>)
+	<COND (<SET CH <OPEN "READ" .FIL>>
+	       <COND (<==? .M TEXT>
+		      <COND (<SET FL <FILE-LENGTH .CH>>
+			     <COND (<G? .FL <LENGTH <BCUR .BUF>>>
+				    <BUFGROW .BUF
+					     <- .FL
+						<LENGTH <BCUR .BUF>>
+						-100>>)>
+			     <SET PTR <BCUR .BUF>>
+			     <COND (<SET FL <READSTRING .PTR .CH .FL>>
+				    <BCUR .BUF <REST .PTR .FL>>)>
+			     <CLOSE .CH>
+			     <SET OUTCHAN <SELECT <SHELP ,ON-SCREEN> T>>
+			     <WINOP .OUTCHAN ,CLEAR>
+			     <PRINTSTRING "[DONE]" .OUTCHAN>
+			     <SET OUTCHAN <SELECT .C>>
+			     <PRINTSTRING .PTR .OUTCHAN .FL>)>)
+		     (<BTEST ,BTEXT .F>
+		      <CLOSE .CH>
+		      <COND (<0? <BUFLENGTH <FBUF .F>>>
+			     <SET NF .F>)
+			    (ELSE
+			     <SET NF <CHTYPE <VECTOR !,CONSTANT> FIELD>>
+			     <FLDNM .NF <FLDNM .F>>
+			     <FHIGH .NF 2>)>
+		      <PR1 .NF <STRING "
+" <SPNAME .M> " FILE">>
+		      <PRD .NF ,SPACE>
+		      <COND (<N==? .F .NF> <MAIL-BUF .NF>)
+			    (ELSE
+			     <ADDPROMPT <FBUF .NF> <PR1 .NF> <PRD .NF>>)>
+		      <FDATA .NF <VECTOR .M .LOC .FIL>>
+		      <ADDSTRING <FBUF .NF> .FIL>
+		      <COND (<N==? .F .NF> <SPLICE-FIELD .F .NF>)
+			    (ELSE <WINOP <FWIN .F> ,REDISPLAY>)>
+		      <SET F <CHTYPE <VECTOR !.F> FIELD>>
+		      <FLDNM .F <FLDNM .NF>>
+		      <PR1 .F "
+">
+		      <PRD .F <PR1 .F>>
+		      <MAIL-BUF .F>
+		      <SPLICE-FIELD .NF .F>
+		      <RETURN .F .COMMAND-LOOP-ACTIVATION>)
+		     (ELSE
+		      <SET OUTCHAN <SELECT <SHELP ,ON-SCREEN> T>>
+		      <WINOP .OUTCHAN ,CLEAR>
+		      <PRINTSTRING "[DONE]" .OUTCHAN>
+		      <PRINTSTRING
+"Multi-media files may only be inserted into text fields." .OUTCHAN>)>)
+	      (ELSE
+	       <SET OUTCHAN <SELECT <SHELP ,ON-SCREEN> T>>
+	       <WINOP .OUTCHAN ,CLEAR>
+	       <PRINTSTRING "[DONE]" .OUTCHAN>
+	       <PRIN1 .FIL>
+	       <PRINTSTRING " " .OUTCHAN>
+	       <PRINTSTRING <1 .CH> .OUTCHAN>)>>
+
+\ 
+
+"***********************JCL LINE INTERPRETATION***********************"
+
+<DEFINE ANYTHING (STR "OPTIONAL" (STEND <>)) 
+	#DECL ((STR) STRING (VALUE STEND) <OR STRING FALSE>)
+	<MAPR <>
+	      <FUNCTION (X)
+			#DECL ((X) STRING)
+			<COND (<==? .X .STEND> <MAPLEAVE <>>)
+			      (<G? <ASCII <1 .X>> 32> <MAPLEAVE .X>)>>
+	      .STR>>
+
+<SETG JCLBRKS ",">
+<GDECL (JCLBRKS) STRING>
+
+<DEFINE HACK-JCL (STR
+		  "OPTIONAL" (ENDS " 	")
+		  "AUX" (X <ANYTHING .STR>) L LX TRM (TMP <FBUF ,TEMPORARY>)
+			(TBUF <FBUF ,TEXT>) (TOBUF <FBUF ,TO>)
+			(PROGRAM <FBUF ,PROGRAM>) (MSGBUF <FBUF ,MSG-FILE>))
+	#DECL ((STR ENDS) STRING (X) <OR FALSE STRING> (TRM) CHARACTER
+	       (L) <OR <FALSE [REST STRING]> <LIST [REST STRING]>>
+	       (PROGRAM TMP TBUF TOBUF MSGBUF) BUFFER (LX) FIX)
+	<PROG ()
+	      <COND (<OR <NOT .X> <EMPTY? .X>> <RETURN <>>)>
+	      <BUFCLEAR .TMP>
+	      <ADDSTRING .TMP .X>
+	      <COND (<NOT <SET L <BUFLEX .TMP ,JCLBRKS .ENDS>>>
+		     <SET LX <LENGTH <SET X <1 .L>>>>
+		     <SET L <REST .L>>
+		     <SET TRM <1 <REST .X <- .LX 1>>>>
+		     <COND (,MSG
+			    <ADDSTRING <FBUF ,SUBJECT> .X <- .LX 1>>)
+			   (ELSE
+			    <ADDSTRING .TBUF .X <- .LX 1> ,END-OF-LINE>
+			    <SETG JCL-TEXT T>
+			    <COND (<OR <==? <ASCII 3> .TRM>
+				       <==? <ASCII *37*> .TRM>>
+				   <SETG JCL-CTRL-C T>)
+				  (ELSE <SETG JCL-CTRL-C <>>)>)>
+		     <SETG SKIP-SUBJECT T>)>
+	      <MAPR <>
+		    <FUNCTION (XX "AUX" (X <1 .XX>) (XEND <LENGTH? .XX 1>)) 
+			 #DECL ((X) STRING (XX) LIST (XEND) <OR FALSE FIX>)
+			 <COND (<==? <1 .X> !\/> <FLAG-HACK <REST .X>>)
+			       (,BUG
+				<SETG SKIP-TO T>
+				<ADDSTRING .PROGRAM .X>
+				<OR .XEND <ADDCHR .PROGRAM !\,>>)
+			       (,FEATURE
+				<SETG SKIP-TO T>
+				<ADDSTRING .PROGRAM .X>
+				<OR .XEND <ADDCHR .PROGRAM !\,>>)
+			       (,MSG
+				<ADDSTRING .MSGBUF .X>
+				<SETG SKIP-MSG-FILE T>)
+			       (ELSE
+				<SETG SKIP-TO T>
+				<ADDADDR .TOBUF .X>
+				<OR .XEND <ADDCHR .TOBUF !\,>>)>>
+		    .L>>>
+
+"Search a string for a 'winner' or a 'loser'.  If a loser is
+found return #FALSE(loser)."
+
+<DEFINE STRSRC (STR TERM "OPTIONAL" (CTRLOSS <>))
+	#DECL ((STR TERM) STRING (CTRLOSS) <OR ATOM FALSE>)
+	<REPEAT ()
+		<COND (<EMPTY? .STR> <RETURN <>>)
+		      (<MEMQ <1 .STR> .TERM> <RETURN .STR>)
+		      (<AND .CTRLOSS <L=? <ASCII <1 .STR>> 32>>
+		       <RETURN .STR>)>
+		<SET STR <REST .STR>>>>
+
+\ 
+
+"******SWITCH HACKERY*******"
+
+<DEFINE SWITCH-HACK (JCL)
+	#DECL ((JCL) STRING)
+	<COND (<EMPTY? .JCL>)
+	      (ELSE
+	       <SETG ACK-CONDS ()>
+	       <FLAG-HACK .JCL>)>>
+
+<DEFINE FLAG-HACK (X "AUX" X1 (OUTCHAN .OUTCHAN))
+	#DECL ((X) STRING (X1) CHARACTER)
+	<REPEAT ()
+		<COND (<EMPTY? .X> <RETURN .X>)
+		      (<AND <G? <ASCII <SET X1 <1 .X>>> *140*>
+			    <L? <ASCII .X1> *173*>>
+		       <SET X1 <ASCII <- <ASCII .X1> 32>>>)>
+		<COND (<OR <MEMQ .X1 "/ ,">
+			   <L? <ASCII .X1> 32>>
+		       <RETURN <REST .X>>)
+		      (<==? .X1 !\L>
+		       <LOAD-FROM-FILE "">)
+		      (<==? .X1 !\D> <ACK-DELIVERY>)
+		      (<==? .X1 !\F> <FAIL-HACK 0>)
+		      (<==? .X1 !\C> <SETG FORWARD T> <SETG CORRECT T>)
+		      (<OR <==? .X1 !\M> <==? .X1 !\#>>
+		       <SETG FORWARD T>)
+		      (ELSE
+		       <WINOP .OUTCHAN ,FRESH>
+		       <PRINTSTRING "Uninterpreted switch ignored:  " .OUTCHAN>
+		       <PRINTSTRING .X1 .OUTCHAN>)>
+		<SET X <REST .X>>>>
+
+\ 
+
+"***************************APPEND TO NOTES****************************"
+
+"Special routine to hack notes fields"
+
+<DEFINE HACK-NOTES ("AUX" (NADD ,NOTES) (NTXT ,NOTE-TEXT))
+	#DECL ((NADD NTXT) FIELD)
+	<MAIL-BUF <SET NADD <CHTYPE <VECTOR !.NADD> FIELD>>>
+	<SPLICE-FIELD .NTXT .NADD>
+	<MAIL-BUF <SET NTXT <CHTYPE <VECTOR !.NTXT> FIELD>>>
+	<SPLICE-FIELD .NADD .NTXT>
+	<SETG NOTES-LIST ((<FBUF .NADD> <FBUF .NTXT>) !,NOTES-LIST)>
+	<RETURN .NADD .COMMAND-LOOP-ACTIVATION>>
+
+\ 
+
+"Buffer clearing functions"
+
+<DEFINE ALLCLEAR ("OPTIONAL" (ALL? <>) (FLDS ,FIELD-TABLE)) 
+	#DECL ((FLDS) <UVECTOR [REST FIELD]> (ALL?) <OR ATOM FALSE>)
+	<MAPF <>
+	      <FUNCTION (INFO)
+		   #DECL ((INFO) FIELD)
+		   <COND (<AND <FBUF .INFO>
+			       <OR .ALL? <NOT <BTEST ,BSAVE .INFO>>>>
+			  <BUFCLEAR <FBUF .INFO>>)>>
+	      .FLDS>
+	<SETG NOTES-LIST ()>>
+
+\ 
+
+<DEFINE FILE-CURRENT-STATE (FIL "AUX" CH (OUTCHAN .OUTCHAN)) 
+   #DECL ((FIL) STRING (CH) <OR CHANNEL FALSE> (OUTCHAN) CHANNEL)
+   <COND
+      (<SET CH <OPEN "PRINT" .FIL>>
+       <SET OUTCHAN .CH>
+       <MAPF <>
+	     <FUNCTION (V) #DECL ((V) ATOM) <PRINT <FORM SETG .V ,.V>>>
+	     ,INTERESTING-GVALS>
+       <MAPF <>
+	     <FUNCTION (F) 
+		  #DECL ((F) FIELD)
+		  <COND (<AND <FBUF .F> <NOT <0? <BUFLENGTH <FBUF .F>>>>>
+			 <CRLF>
+			 <PRINC !\(>
+			 <PRIN1 <FLDNM .F>>
+			 <PRINC !\ >
+			 <BUFSPRINT <FBUF .F> .OUTCHAN>
+			 <PRINC !\)>)>>
+	     ,FIELD-TABLE>
+       <COND (<NOT <EMPTY? ,NOTES-LIST>>
+	      <CRLF>
+	      <PRINC !\[>
+	      <PRIN1 NOTES-LIST>
+	      <PRINC " (">
+	      <MAPF <>
+		    <FUNCTION (N) 
+			    #DECL ((N) <LIST [2 BUFFER]>)
+			    <CRLF>
+			    <PRINC !\(>
+			    <BUFSPRINT <1 .N> .OUTCHAN>
+			    <PRINC !\ >
+			    <BUFSPRINT <2 .N> .OUTCHAN>
+			    <PRINC !\)>>
+		    ,NOTES-LIST>
+	      <PRINC ")]">)>
+       <CLOSE .OUTCHAN>)
+      (ELSE <OPEN-FAILED .CH .FIL>)>>
+
+<DEFINE LOAD-FROM-FILE (FIL "AUX" CH OBJ B TMP (OUTCHAN .OUTCHAN)) 
+	#DECL ((FIL) STRING (CH) <OR CHANNEL FALSE> (B) BUFFER (TMP) LIST
+	       (OUTCHAN) CHANNEL)
+	<COND
+	 (<SET CH <OPEN "READ" .FIL>>
+	  <ALLCLEAR T>
+	  <REPEAT ()
+		  <COND
+		   (<SET OBJ <READ .CH '<>>>
+		    <COND (<TYPE? .OBJ FORM> <EVAL .OBJ>)
+			  (<AND <TYPE? .OBJ LIST>
+				<==? <LENGTH .OBJ> 2>
+				<TYPE? <1 .OBJ> ATOM>
+				<TYPE? <2 .OBJ> STRING>>
+			   <SET B <FBUF ,<1 .OBJ>>>
+			   <ADDSTRING .B <2 .OBJ>>)
+			  (<AND <TYPE? .OBJ VECTOR>
+				<==? <LENGTH .OBJ> 2>
+				<==? <1 .OBJ> NOTES-LIST>
+				<TYPE? <2 .OBJ> LIST>>
+			   <MAPF <>
+				 <FUNCTION (L "AUX" B N) 
+				      #DECL ((L) LIST (B) BUFFER)
+				      <COND (<TYPE? <SET N <1 .L>> STRING>
+					     <SET B
+						  <MAIL-BUF ,NOTES>>
+					     <ADDSTRING .B .N>
+					     <PUT .L 1 .B>)>
+				      <COND (<TYPE? <SET N <2 .L>> STRING>
+					     <SET B
+						  <MAIL-BUF ,NOTE-TEXT>>
+					     <ADDSTRING .B .N>
+					     <PUT .L 2 .B>)>>
+				 <SET TMP <2 .OBJ>>>
+			   <SETG NOTES-LIST .TMP>)
+			  (ELSE
+			   <WINOP .OUTCHAN ,FRESH>
+			   <PRINTSTRING "[Illegal object of type " .OUTCHAN>
+			   <PRINTSTRING <SPNAME <TYPE .OBJ>> .OUTCHAN>
+			   <PRINTSTRING " in MAIL dump file]" .OUTCHAN>
+			   <RETURN>)>)
+		   (ELSE <RETURN>)>>
+	  <WINOP .OUTCHAN ,FRESH>
+	  <CLOSE .CH>
+	  <EDIT-LEVEL>)
+	 (ELSE <OPEN-FAILED .CH .FIL>)>>
+
+<DEFINE MAIL-BUF (INFO "AUX" B)
+	#DECL ((INFO) FIELD (B) BUFFER)
+	<SET B <INIT-BUF .INFO>>
+	<COND (<BTEST ,BLFP .INFO>
+	       <BUF-BITS .B ,BUF-BIT-PROMPT T>)>
+	<COND (<NOT <BTEST ,BCRLF .INFO>>
+	       <BUF-BITS .B 35 T>)>
+	.B>
+
+<SETG INTERESTING-GVALS
+      '![BUG
+	 FEATURE
+	 REMIND
+	 MSG
+	 FORWARD
+	 CORRECT
+	 ACK-CONDS
+	 ASK-ME
+	 ALWAYSFIELDS
+	 EXPIRES
+	 STIME
+	 TECO-PROGRAM!]>
+
+<GDECL (INTERESTING-GVALS) <UVECTOR [REST ATOM]>>
+
+\ 
+
+"Set up Forwarding, and edit Msg-no field"
+
+<DEFINE FORWARD-HACK ()
+	<COND (<NOT ,FORWARD>
+	       <SETG FORWARD T>
+	       <SETG ASK-ME ,FORWARD-ASK-ME>
+	       <SETG ALWAYSFIELDS ,FWDALWAYS>)>
+	<FILL-FIELD ,MSG-NO ,EDIT-SCREEN ,LINE>>
+
+"If :REMIND, then ask for a delivery date"
+
+<DEFINE REMIND-HACK (DT "AUX" (TOBUF <FBUF ,TO>))
+	#DECL ((DT) FIX (TOBUF) BUFFER)
+	<SETG STIME .DT>
+	<SETG FAILED <- <+ .DT <* 262144 2>> <ITIME>>>
+	<PUT ,ACK-CONDS 2 "FAILED">
+	<AND <0? <BUFLENGTH .TOBUF>> <ADDSTRING .TOBUF <XUNAME>>>
+	<SETG SKIP-TO T>>
+
+<DEFINE ACK-DELIVERY ("AUX" (AC ,ACK-CONDS))
+	#DECL ((AC) LIST)
+	<COND (<NOT <1 .AC>>
+	       <PUT .AC 1 "DELIVERY">)
+	      (ELSE
+	       <PUT .AC 1 <>>
+	       <PRINTSTRING "Disabled." .OUTCHAN>)>>
+
+"If ACK on failure, ask for how long to wait"
+
+<DEFINE FAIL-HACK (DT "AUX" (AC ,ACK-CONDS))
+    #DECL ((DT) <OR FALSE FIX> (AC) <LIST [REST <OR FALSE STRING>]>)
+    <COND (<NOT <2 .AC>>
+	   <SETG FAILED <- .DT <ITIME>>>
+	   <PUT .AC 2 "FAILED">)
+	  (ELSE
+	   <PUT .AC 2 <>>
+	   <PRINTSTRING "Default failure acknowledgment (two days)."
+			.OUTCHAN>)>>
+
+"Expiration date for :MSG"
+
+<DEFINE EXPIRES-HACK (DT)
+	#DECL ((DT) <OR FALSE FIX>)
+	<SETG EXPIRES .DT>>
+
+\
+
+<DEFINE CHECKER (BUF CHAR "AUX" ADRS (DBS ()) (EXP ,EXPUSING) INFO)
+	#DECL ((BUF) BUFFER (CHAR) CHARACTER (ADRS DBS) LIST
+	       (INFO EXP) FIELD)
+	<COND (<AND <SET INFO <FIND-BUF .BUF>>
+		    <BTEST ,BADDR .INFO>>
+	       <SET ADRS <BUFLEX .BUF>>
+	       <COND (<NOT <0? <BUFLENGTH <FBUF .EXP>>>>
+		      <SET DBS <GET-FILES .EXP>>)>
+	       <SET DBS ("COMEXP" !.DBS)>
+	       <CHECK-ADDRESSEES .ADRS .DBS>
+	       <CRLF>
+	       <BUFPRINT .BUF>)>>
+
+<DEFINE FIND-BUF (BUF "AUX" (FT ,FIELD-TABLE))
+	#DECL ((BUF) BUFFER (FT) <UVECTOR [REST FIELD]>)
+	<MAPF <>
+	      <FUNCTION (INFO)
+		   #DECL ((INFO) FIELD)
+		   <COND (<==? <FBUF .INFO> .BUF> <MAPLEAVE .INFO>)>>
+	      .FT>>
+
+\ 
+
+"************************ HOST NAME HACKING *************************"
+
+"Check any hosts specified, ask for corrections if some are losers"
+
+<DEFINE FINDHOSTS (INFO "OPTIONAL" (PREFIX <>)
+		   "AUX" (BF <FBUF .INFO>) LX (LOSER <>) FIXP NML HST LP)
+	#DECL ((INFO) FIELD (BF) BUFFER (LX VALUE) <LIST [REST STRING]>
+	       (FIXP) <OR FALSE STRING> (SYMB PREFIX) <OR STRING FALSE>
+	       (LOSER) <OR ATOM FALSE> (NML) FIX (LP) LIST (HST) ANY (VALUE) STRING)
+	<SET LX <BUFLEX .BF>>
+	<COND (.PREFIX
+	       <MAPR <>
+		     <FUNCTION (L)
+			  #DECL ((L) <LIST [REST STRING]>)
+			  <PUT .L 1 <STRING .PREFIX <1 .L>>>>
+		     .LX>)>
+	<MAPR <>
+	      <FUNCTION (L "AUX" (S <1 .L>))
+		#DECL ((L) LIST (S) STRING)
+		<REPEAT ()
+			<COND (<SET FIXP <ATSIGN? .S>>
+			       <SET NML <- <LENGTH .S> <LENGTH .FIXP>>>
+			       <SET FIXP <REST .FIXP>>)
+			      (ELSE
+			       <PUT .L 1 .S>
+			       <RETURN>)>
+			<COND (<SET HST <HOST <UPPERCASE .FIXP>>>
+			       <PUT .L 1 .S>
+			       <RETURN>)
+			      (<AND <NOT <EMPTY? <SET LP <LPARSE .FIXP>>>>
+				    <TYPE? <SET HST <1 .LP>> FIX>
+				    <G? .HST 0>
+				    <L? .HST 256>>
+			       <PUT .L 1 .S>
+			       <RETURN>)
+			      (ELSE
+			       <SET S <CORRECT-ADDRESS <PR1 .INFO>
+						       "Unknown host given in addressee"
+						       .S
+						       "Host"
+						       .NML>>
+			       <SET LOSER T>)>>>
+	      .LX>
+	<COND (.LOSER <REMAKE .BF .LX>)>
+	.LX>
+
+<DEFINE ATSIGN? (KEY "AUX" C (SKIP <>) (BEST <>)) 
+	#DECL ((KEY) STRING (C) CHARACTER (SKIP) <OR ATOM FALSE>
+	       (BEST) <OR STRING FALSE>)
+	<MAPR <>
+	      <FUNCTION (S) 
+		      #DECL ((S) STRING)
+		      <COND (.SKIP <SET SKIP <>>)
+			    (<==? <SET C <1 .S>> !\@>
+			     <SET BEST .S>)
+			    (<==? .C !\> <SET SKIP T>)
+			    (ELSE <SET SKIP <>>)>>
+	      .KEY>
+	.BEST>
+
+<DEFINE CORRECT-ADDRESS (WHO PROMPT S PR1
+			 "OPTIONAL" (NML <>) (BRKS ,TOBRKS)
+			 "AUX" TMP (OUTCHAN .OUTCHAN))
+	#DECL ((WHO) <OR STRING FALSE> (PROMPT PR1 S BRKS) STRING (NML) <OR FALSE FIX>
+	       (TMP) <LIST [REST STRING]>)
+	<PROG ()
+	      <WINOP .OUTCHAN ,FRESH>
+	      <COND (.WHO
+		     <PRINTSTRING "'" .OUTCHAN>
+		     <PRINTSTRING .WHO .OUTCHAN>
+		     <PRINTSTRING "' field: " .OUTCHAN>)>
+	      <PRINTSTRING .PROMPT .OUTCHAN>
+	      <PRINTSTRING ": '" .OUTCHAN>
+	      <PRINTSTRING .S .OUTCHAN>
+	      <PRINTSTRING "'." .OUTCHAN>
+	      <WINOP .OUTCHAN ,FRESH>
+	      <SET TMP
+		   <COND (.NML
+			  <GET-ADDR .PR1 .BRKS .S <+ .NML 1>>)
+			 (ELSE
+			  <GET-ADDR .PR1 .BRKS>)>>
+	      <COND (<NOT <EMPTY? .TMP>> <1 .TMP>)
+		    (ELSE <AGAIN>)>>>
+
+<DEFINE GET-ADDR (P1
+		  "OPTIONAL" (BRKS ,DBRKS) (ST "") (STL <LENGTH .ST>)
+		  "AUX" (TMP ,TEMPORARY) (BUF <FBUF .TMP>))
+	#DECL ((TMP) FIELD (BRKS) <OR FALSE STRING> (P1 ST) STRING (BUF) BUFFER
+	       (STL) FIX (VALUE) <OR STRING <LIST [REST STRING]>>)
+	<PUT .BUF ,BPRMPT1 .P1>
+	<BUFCLEAR .BUF>
+	<AND <NOT <EMPTY? .ST>> <ADDADDR .BUF .ST .STL>>
+	<FILL-FIELD .TMP ,EDIT-SCREEN ,LINE>
+	<COND (.BRKS <BUFLEX .BUF .BRKS>)(ELSE <BUFTOS .BUF>)>>
+
+<DEFINE REMAKE (BUF TMP)
+	#DECL ((BUF) BUFFER (TMP) <LIST [REST STRING]>)
+	<BUFCLEAR .BUF>
+	<MAPF <>
+	      <FUNCTION (X)
+			#DECL ((X) STRING)
+			<ADDADDR .BUF .X>
+			<ADDCHR .BUF !\,>>
+	      .TMP>>
+
+<DEFINE ADDADDR (BUF X "OPTIONAL" (L <LENGTH .X>) "AUX" (BRKS ,TOBRKS))
+	#DECL ((BUF) BUFFER (X BRKS) STRING (L) FIX)
+	<REPEAT ()
+		<COND (<OR <EMPTY? .X> <0? .L>> <RETURN .BUF>)>
+		<COND (<MEMQ <1 .X> .BRKS>
+		       <ADDCHR .BUF %<ASCII *134*>>)>
+		<ADDCHR .BUF <1 .X>>
+		<SET L <- .L 1>>
+		<SET X <REST .X>>>>
+
+<DEFINE MORE-MESSAGES ("AUX" (OUTCHAN .OUTCHAN))
+	#DECL ((OUTCHAN) CHANNEL)
+	<COND (<SETG MORE-MSGS <NOT ,MORE-MSGS>>
+	       <PRINTSTRING "More messages to come" .OUTCHAN>)
+	      (ELSE <PRINTSTRING "No more messages" .OUTCHAN>)>>
+
+\ 
+
+"Various breaks and things"
+
+<SETG TOBRKS " ,
+">
+
+<SETG KEYBREAKS <MAPF ,STRING ,ASCII (13 9 10 32 <ASCII !\,> <ASCII !\.>)>>
+
+<SETG END-OF-LINE "
+">
+
+<SETG SP <ISTRING 15 '<ASCII 32>>>
+
+<SETG DBRKS ".,/ 	
+">
+
+<GDECL (DBRKS SP TOBRKS KEYBREAKS END-OF-LINE) STRING>
+
+\ 
+
+"**************************FIELD INFORMATION*************************"
+
+<SETG ASK-ME <SETG MAIL-ASK-ME '(TO SUBJECT TEXT)>>
+<SETG MSG-ASK-ME '(MSG-FILE SUBJECT TO TEXT)>
+<SETG FORWARD-ASK-ME '(MSG-NO TO ANNOTATION)>
+<SETG BUG-ASK-ME '(PROGRAM SUBJECT TEXT)>
+<GDECL (ASK-ME TO-ASK-ME MSG-ASK-ME FORWARD-ASK-ME BUG-ASK-ME)
+       <LIST [REST ATOM]>>
+
+"Fields that are always printed, whether empty or not"
+
+<SETG ALWAYSFIELDS <SETG TOALWAYS '(TO FROM TEXT)>>
+<SETG MSGALWAYS (MSG-FILE SUBJECT !,ALWAYSFIELDS)>
+<SETG FWDALWAYS '(MSG-NO TO)>
+<SETG BUGALWAYS '(PROGRAM FROM TEXT)>
+<GDECL (ALWAYSFIELDS TOALWAYS MSGALWAYS FWDALWAYS BUGALWAYS)
+       <LIST [REST ATOM]>>
+
+\
+
+"BFLAGS bits"
+
+<MSETG BSAVE 1>		;"1=save buffer between messages"
+<MSETG BFORWARD 2>	;"1=field can legally be given in forwarding"
+<MSETG BLFP 4>		;"1=prompt on new lines"
+<MSETG BCRLF 8>		;"1=terminate on crlf"
+<MSETG BADDR 16>	;"1=field is an addressee field"
+<MSETG BTEXT 32>	;"1=field is a text field"
+
+\ 
+
+"Field information uvector"
+
+<SETG FIELD-TABLE
+      <UVECTOR
+       <FIELD FROM
+	 <>
+	 <+ ,BSAVE ,BCRLF ,BADDR>
+	 ,PFROM
+	 "From"
+	 ,SPACE
+	 "Type the name of the principal author.">
+	<FIELD FULL-NAME
+	 <>
+	 ,BCRLF
+	 ,PSTR
+	 "Full name"
+	 ,SPACE
+"Type the full name of the author; it will
+be printed in addition to the mailbox name
+in the 'From' field.  (This is not necessary
+if you are known to INQUIR.)">
+	<FIELD REPLY-TO
+	 <>
+	 <+ ,BLFP ,BADDR>
+	 ,PLST
+	 "Reply-to"
+	 ,SPACE
+	 "The return address, if it is different from the From
+or Sender fields.  Separated by space, 'CR'
+or comma.">
+	<FIELD PROGRAM
+	 <>
+	 <+ ,BLFP ,BFORWARD>
+	 <>
+	 "Programs"
+	 ,SPACE
+	 "List the programs, separated by
+space, 'CR' or comma.">
+	<FIELD TO
+	 <>
+	 <+ ,BLFP ,BFORWARD ,BADDR>
+	 ,PTO
+	 "To"
+	 ,SPACE
+	 "List the action addressees, separated by
+space, 'CR' or comma.">
+	
+	<FIELD CARBON-COPY-TO
+	 <>
+	 <+ ,BLFP ,BADDR>
+	 <>
+	 "Carbon-copy-to"
+	 ,SPACE
+	 
+"List the names of recipients of a carbon
+copy.  Separate the names by space, 'CR' or
+comma.">
+	
+	<FIELD BLIND
+	 <>
+	 <+ ,BLFP ,BADDR>
+	 <>
+	 "Blind-copy-to"
+	 ,SPACE
+	 
+"List the names of recipients of 'Blind'
+carbons.  The people in the 'Carbon-copy'
+list will not be apprised of the names in
+the 'Blind' list.">
+	<FIELD SUBJECT
+	 <>
+	 ,BCRLF
+	 ,PSUBJ
+	 "Subject"
+	 ,SPACE
+	 "Type a short description of the contents
+of the message.">
+	<FIELD IN-REPLY-TO
+	 <>
+	 ,BLFP
+	 ,PSTR
+	 "In reply to"
+	 ,SPACE
+	 
+"Type the Message id number(s) of the
+message(s) to which this is a reply.">
+	<FIELD FILES
+	 <>
+	 ,BLFP
+	 ,PFILE-OUTPUT
+	 "Output to"
+	 ,SPACE
+	 
+"List the names of files to which you
+want the message to be sent, in addition
+to the primary addressees, using the
+FILE-OUTPUT process.  The names should be
+separated by 'CR' or comma.">
+	<FIELD MSG-FILE
+	 <>
+	 ,BCRLF
+	 ,PMSG-FILE
+	 "Msg. File Name"
+	 ,SPACE
+	 
+"Give the file-name-one, file-name-two
+pair to use for this message.  Name-one
+defaults to 'MSG->', name-two to '>'">
+	<FIELD MSG-NO
+	 <>
+	 <+ ,BFORWARD ,BCRLF>
+	 ,PID
+	 "Message to forward"
+	 ,SPACE
+"Type the Message id number of the message
+being forwarded.">
+	<FIELD ID-IRT
+	 <>
+	 ,BLFP
+	 ,PID
+	 "ID In reply to"
+	 ,SPACE
+	 
+"Type the Message id number(s) of the
+message(s) to which this is a reply.">
+	<FIELD EXPUSING
+	 <>
+	 ,BLFP
+	 ,PEXPUSING
+	 "Expand-using"
+	 ,SPACE
+	 
+"Type the names of additional expansion
+data base files to use in expanding the
+addressees of the message.">
+	<FIELD NOTES
+	 <>
+	 <+ ,BLFP ,BFORWARD ,BADDR>
+	 ,PNOTES
+	 "
+Note to"
+	 ,SPACE
+	 
+"Addressee(s) for this note, separated by
+space, carriage return, or comma.">
+	<FIELD NOTE-TEXT
+	 <>
+	 ,BFORWARD
+	 <>
+	 "Note text"
+	 ,SPEOL
+"Text of this note.  It will be sent only
+to the addressees for this note.">
+	<FIELD ANNOTATION
+	 <>
+	 ,BFORWARD
+	 <>
+	 "
+Annotation"
+	 ,SPEOL
+"Type an annotation to the message.  You may
+edit it by typing 'Control E', or insert a
+file by typing 'Control Y'.">
+	<FIELD TEXT
+	 <>
+	 ,BTEXT
+	 ,PTEXT
+	 "
+Message"
+	 ,SPEOL
+	 
+"Type the text of the message.  You may
+edit the message by typing 'Control E',
+or insert a file by typing 'Control Y'.">
+	<FIELD KEYWORDS
+	 <>
+	 ,BLFP
+	 ,PLST
+	 "Keywords"
+	 ,SPACE
+	 
+"List any keywords, separated by comma,
+'CR' or space.  The keywords will be
+available for searching the data-base">
+	<FIELD ENCLOSURES
+	 <>
+	 ,BLFP
+	 ,PENCLOSURES
+	 "Enclosures"
+	 ,SPACE
+	 
+"List any files which are to be treated
+as enclosures, separated by 'CR' or comma.
+Enclosures will be copied to the message
+file at delivery time by the Daemon.">
+	<FIELD TEMPORARY
+	 <>
+	 <+ ,BFORWARD ,BCRLF ,BADDR>
+	 <> "" ,SPACE "">
+	<FIELD CONSTANT
+	 <>
+	 0
+	 <> "" ,SPACE "">>>
+
+<GDECL (FIELD-TABLE) <UVECTOR [REST FIELD]>
+       (TO PROGRAM FROM SUBJECT TEXT ANNOTATION CARBON-COPY-TO BLIND FULL-NAME
+	TEMPORARY CONSTANT NOTE-TEXT NOTES EXPUSING ENCLOSURES FILES MSG-NO
+	KEYWORDS IN-REPLY-TO ID-IRT REPLY-TO MSG-FILE)
+       FIELD>
+
+\
+
+"******************* 'EDIT' MODE DISPATCH TABLE ******************"
+
+"Dispatch for 'Edit:' mode"
+
+<SETG EDITBUF <BUFMAKE 80 "Edit: ">>
+
+<DEFINE EDIT-COMMANDS ()
+	<INPUT ,EDITCMDS
+	       ,MAIL-SCREEN
+	       ,EDIT-CHRTABLE
+	       ,EDITBUF>>
+
+<DEFINE EDIT-COMMAND (BUF CHR)
+	<COMMAND .BUF .CHR
+	 ["Edit-flush" - <EDIT-FLUSH>]
+	 ["Reader" - <NEXT-LEVEL>]
+;"fields"
+	 ["To" - <EDIT-FIELD ,TO>]
+	 ["Carbon-copy-to" - <EDIT-FIELD ,CARBON-COPY-TO>]
+	 ["c" - <EDIT-FIELD ,CARBON-COPY-TO>]
+	 ["cc" - <EDIT-FIELD ,CARBON-COPY-TO>]
+	 ["Blind-carbon-copy-to" - <EDIT-FIELD ,BLIND>]
+	 ["bcc" - <EDIT-FIELD ,BLIND>]
+	 ["Subject" - <EDIT-FIELD ,SUBJECT>]
+	 ["From" - <EDIT-FIELD ,FROM>]
+	 ["Reply-to" - <EDIT-FIELD ,REPLY-TO>]
+	 ["Message" - <EDIT-FIELD ,TEXT>]
+	 ["Keywords" - <EDIT-FIELD ,KEYWORDS>]
+	 ["Note" - <HACK-NOTES>]
+	 ["Enclosures" - <EDIT-FIELD ,ENCLOSURES>]
+	 ["In-reply-to" - <EDIT-FIELD ,IN-REPLY-TO>]
+	 ["Full-name-of-sender" - <EDIT-FIELD ,FULL-NAME>]
+	 ["File-output-to" - <EDIT-FIELD ,FILES>]
+	 ["Program" - <EDIT-FIELD ,PROGRAM>]
+	 ["Annotation" - <EDIT-FIELD ,ANNOTATION>]
+	 ["Msg-file" - <EDIT-FIELD ,MSG-FILE>]
+	 ["Msg-expiration" TIME-OUT - <EXPIRES-HACK <ARG 1>>]
+	 ["Forward-message" - <FORWARD-HACK>]
+;"commands"
+	 ["Set-switches" LINE  - <SWITCH-HACK <ARG 1>>]
+	 ["Select-editor" LINE - <FLIP-EDITOR <ARG 1>>]
+	 ["Expansion-data-bases" - <EDIT-FIELD ,EXPUSING>]
+	 ["Insert" MEDIUM PRESENTATION IFILE
+	  		 - <INSERT-FILE <ARG 1> <ARG 2> <ARG 3>>]
+	 ["Send" SENDERS - <SEND-MESSAGE <ARG 1>>]
+	 ["Save-mail" OFILE - <FILE-CURRENT-STATE <ARG 1>>]
+	 ["Load-mail" IFILE  - <LOAD-FROM-FILE <ARG 1>>]
+	 ["Acknowledge-delivery" - <ACK-DELIVERY>]
+	 ["Acknowledge-failure" TIME-OUT - <FAIL-HACK <ARG 1>>]
+	 ["Muddle" - <MUDDLE-ESCAPE>]
+	 ["Quit" - <QUITIT>]>>
+
+<SETG SENDERS <CIRCLE [<ARC SEND-TABLE> <ARC>] "how">>
+
+<DEFINE SEND-TABLE (BUF CHR)
+	<COMMAND .BUF .CHR 
+	["Normally" - <>]
+	["File" OFILE - <ARG 1>]
+	["Tty" - T]>>
+
+<SETG MEDIUM
+      <CIRCLE [<ARC MEDIUM-TABLE>
+	       <ARC>]
+	      "medium"
+	      'TEXT>>
+
+<DEFINE MEDIUM-TABLE (BUF CHR)
+	<COMMAND .BUF .CHR 
+	["Image" - 'IMAGE]
+	["Graphics" - 'GRAPHICS]
+	["Fax" - 'FAX]
+	["Text-file" - 'TEXT]
+	["Voice" - 'VOICE]>>
+
+<SETG PRESENTATION
+      <CIRCLE [<ARC PRESENTATION-TABLE>
+	       <ARC>]
+	      "presentation"
+	      'SEQUENTIAL>>
+
+<DEFINE PRESENTATION-TABLE (BUF CHR)
+	<COMMAND .BUF .CHR 
+	["Branch" - 'BRANCH]
+	["Simultaneous" - 'SIMULTANEOUS]
+	["Sequential" - 'SEQUENTIAL]
+	["Independent" - 'INDEPENDENT]>>
+
+\
+
+<SETG EDITCMDS
+      <CIRCLE [<ARC EDIT-COMMAND>] "edit command">>
+
+<SETG LINE <CIRCLE [<ARC LINE-PARSE>] "text">>
+
+<SETG DATE-NODE <CIRCLE [<ARC DATE-PARSE>] "date-time">>
+
+<SETG TIME-OUT <CIRCLE [<ARC DATE-PARSE>] "time-out">>
+
+<SETG IFILE <CIRCLE [<ARC INPUT-FILE>] "file">>
+
+<SETG OFILE <CIRCLE [<ARC OUTPUT-FILE>] "file">>
+
+\ 
+
+"********************* BUFFER SPECIAL CHARACTERS ********************"
+
+"Buffer special character tables for Mail Composer"
+
+<SETG EDIT-CHRS
+      [!\	EDIT-LEVEL]>
+
+<SETG REENTER-TECO-CHAR !\>
+
+<SETG MAIL-CHRS
+      [!\	ADDCHR				     ;"IN READER, INSERT FIELD"
+       !\	BUFTECO					;"BACK TO TECO"
+       !\	BUFTECO					  ;"ENTER TECO"
+       ;!\	;CHECKER				    ;"CHECK ADDRESSEES"
+       !\	KEYWEX					   ;"KEYWORD EXTRACTOR"
+       <ASCII 13> MAILCRLF				     ;"CARRIAGE RETURN"
+       !\	LAZY-NEXT
+       !\	LAZY-PREVIOUS			    ;"RETURN TO PREVIOUS FIELD"
+       !\	TEXT-FILE					;"SNARF A FILE"
+       !\	EDIT-ONCE				;"PUSH TO EDIT LEVEL"
+       !\	LAZY-NEXT]>
+
+<GDECL (MAIL-CHRS EDIT-CHRS SEND-CHRS) <VECTOR [REST CHARACTER ANY]>>
+
+<ENDPACKAGE>

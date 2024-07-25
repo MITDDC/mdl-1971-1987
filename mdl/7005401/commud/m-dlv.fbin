@@ -1,0 +1,285 @@
+'<PCODE "M-DLV">
+
+<PACKAGE "M-DLV"> 
+
+<ENTRY DELIVERY DLV-ERR MAIL-FILE ONLINE-OUTPUT NET-DELIVERY UPDATE-DEAD-HOSTS 
+TRY-XRCP? LOGIN-MAIL READER-MAIL DLV-HISTORY FTP-CLOSE ICP-TRIES USER-LOSERS 
+FLUSH-NET-MESSAGE> 
+
+<USE "MADMAN" "CHAN" "OPEN-APPEND" "FIELDS" "CLOCK" "M-DEFS" "M-TIME" "ITIME" 
+"M-PRCD" "M-READ" "M-DAC" "M-DOUT" "NETFTP" "HOSTS" "M-DATA" "M-TEMP" "M-ACK" 
+"PRTUTI" "PRTSTR" "AP" "M-ERR" "USRUTI" "M-TAI"> 
+
+"DELIVERY PROCESS" 
+
+<DEMON-PROCESS "DELIVERY" DELIVERY DLV-ERR [<+ ,FATAL ,CCCSM> ,FATAL <> <+ ,
+FATAL ,CCCSM> ,FATAL ,FATAL 0 ,FATAL ,FATAL ,FATAL ,FATAL ,FATAL ,FATAL ,FATAL 0
+<+ ,FATAL ,CCCSM> 0 ,FATAL ,FATAL 0 0 0]> 
+
+\ 
+
+<GDECL (NET-MESSAGE) <OR FALSE CHANNEL> (FTP-CONNECTION) <OR FALSE <LIST [2 
+CHANNEL]>> (IHAN EHAN) HANDLER (CR EOM) STRING (ICP-TRIES) FIX (DF) FLOAT (
+NET-RETRY-CODES USER-LOSERS) <UVECTOR FIX> (TRY-XRCP?) <OR ATOM FALSE>> 
+
+<SETG ICP-TRIES 2> 
+
+<SETG TRY-XRCP? T> 
+
+<SETG NET-MESSAGE <>> 
+
+<SETG FTP-CONNECTION <>> 
+
+<SETG CR <STRING <ASCII 13> <ASCII 10>>> 
+
+<SETG NET-RETRY-CODES '![7 10 11 13 14 17 18 20 21 22!]> 
+
+<SETG USER-LOSERS '![450 451!]> 
+
+<SETG NET-INC </ 262144 24>> 
+
+<SETG EOM <STRING <ASCII 13> <ASCII 10> "." <ASCII 13> <ASCII 10>>> 
+
+\ 
+
+"DELIVERY -- main message delivery function" 
+
+<SETG DELIVERY  %<RSUBR!- '[ %<PCODE!- "M-DLV" 0> DELIVERY #DECL ("VALUE" <OR 
+ATOM FALSE> STRING) S-TIME ADDBACK S-ADDR OPEN-APPEND TEMPOPEN HSNAME TEMPDELETE
+ TEMPCLOSE TEMPAPPEND KEYGET DRDFLT QTIME ALARM-OFF PR WAITRESP EXTRACT-RCVR 
+GATEWAYS ALARM WATCH DAPPMSG FILCHN DO-OUTPUT DO-APPLY HOME? BEDRIDDEN? UPDMSG 
+MSGPNQ PRCADD MREAD EXTRACT-HOST MAKE-DATUM ICP HOST DATUM FRATM FRAMES SCROUT 
+DADDMSG AP? DRDMSG COND-SIGNAL DWT ITIME OK? DRD AFALSE %<RGLOC MSG-SPACE T> %<
+TYPE-W SPACE VECTOR> "DELIVERY-SPECIFICATIONS" %<INTERNAL-RSUBR ASTRING 262143> 
+"DELIVERY" T %<INTERNAL-RSUBR ACOPY 2> NETOUT ">>>> Ioc During Net Delivery: " 
+" <<<<" ">>>> Channel in Error: " "<<<<" 
+">>>> Transaction timed out: 15 minutes! <<<<" BAD-CHANNEL!-ERRORS 
+"Channel closed during Net delivery" 
+">>>> Error Inside Net Delivery Area, Args -- " LERR\ !-INTERRUPTS OUTCHAN 
+"DEAD-HOSTS" %<RGLOC LAST-CHECK T> "Confirming death of " "!!! It's alive! !!!" 
+%<RGLOC FTP-CONNECTION T> ">>> Still dead. <<<" %<RGLOC PENDING-QUEUE T> 
+"PROCESSING-NEEDED" "NET-DELIVERY-ERRORS" ": Rescheduling DELIVERY to " "." "" 
+"QSEND" " is dead." #FALSE (20) %<RGLOC NET-MESSAGE T> "DDT-FORMAT" 
+"RECEIVED-FROM-HOST" "FORWARDING" "NET-FORWARDING-FORMAT" "NET-DELIVERY-FORMAT" 
+"NETWORK-MAIL" "PRINTB" "COMSYS-NET-TEMP" "ITS-HEADER" %<RGLOC ITS-SITES T> 
+%<INTERNAL-RSUBR ALIST 262143> "Placing message in hold until host reappears." 
+"Delivery Failure, Code: " %<RGLOC NET-RETRY-CODES T> "COPY-TO-ADDRESSEE-AREA" 
+%<RGLOC ICP-TRIES T> "DEVICE NOT READY" "ARPAnet apparently down" "Retrying ICP"
+ %<TYPE-W CINT VECTOR> "READ" (ACTIVATION) EHAN "ERROR" %<RGLOC ERRHND T> IHAN 
+"IOC" %<RGLOC IOCHND T> %<RGLOC TIMED-OUT T> "PAIRS" %<RGLOC SCRATCH-SPACE T> 
+"FTP connection to " "gateway " " exists" "Gating through " "ICP Successful" (
+300) %<RGLOC XRCP-R? T> %<RGLOC XRCP-T? T> %<RGLOC XRCP-T-MAIL? T> %<RGLOC 
+XRCP-LIST T> %<RGLOC TRY-XRCP? T> "XRSQ R" (200) "XRSQ T" "MAIL" "XRCP " (200 
+440) "XSEN " "XSEM " "XMAS " (256) "MAIL " %<RGLOC EHAN T> %<RGLOC IHAN T> %<
+RGLOC MDB T> "FTP closed" "Net message flushed" WAIT-ACT %<RGLOC EOM T> (350 504
+) "USER NETML" (330) "PASS NETML" (230) (350) %<RGLOC USER-LOSERS T> %<RGLOC 
+LAST-RESP T> %<RGLOC SOAK?!-INETFTP T> "     " 
+"Sick of trying this loser, it's been 30 days.  I give up." %<RGLOC NET-INC T> 
+"Host will someday be up, will try in " " days." "Delivery failed, will try in "
+ " minutes." "LOGIN-MAIL" "LOGIN-USERS" ["INSERT" "APPEND"] "INSERT" "READER" 
+"MSG-NO" "REMIND" "Author" SNM (STRING) NM1 NM2 "ONLINE-OUTPUT" "ONLINE-USERS" 
+"FROM" "PRINT" "HACTRN" "CLI" "     DELIVERY has been attempted repeatedly for "
+ "
+and failed.  A summary of the attempts follows:
+
+" "     DELIVERY to " " failed because:
+
+" "A user-specified function returned a failure value of:  " 
+"The DELIVERY-SPECIFICATIONS field was not in the correct format." 
+"
+The unusable specification was:
+
+" 
+"The format to use for outputting the message was ill-formed in the way
+described below:
+
+" "The format to use for " " output was ill-formed.
+The format was:
+
+" "The format of the " " field was ill-formed.  The format was:
+
+" "The MAIL output file could not be opened.  The error code returned was:
+
+" "The user specified for output did not exist: " 
+"The datum specified to contain the output format for " 
+" was not a valid format:
+
+" 
+"The foreign host refused the message.  I.e., the FTP connection was
+made, but no 350 reply was received on attempting to transfer the mail." 
+"
+Last FTP reply: " 
+"An MDL error occurred during the network transfer procedure.  This
+indicates a bug in the mailer demon code, and has been reported.  The
+error arguments were:
+
+" "It was applied to the author area of the message." 
+"The ICP attempt was unsuccessful." 
+"An I/O channel error occurred during the network transfer.  Generally
+this occurs when the foreign host or net crashes.  The reason given was:
+" "An IO-channel error occured as the mail was being output:
+
+" 
+"A MDL error occured while the mail was being output.  This indicates
+a bug in one of the mail printing routines and has been reported.  The
+error was:
+
+" "The transfer was terminated by a (supposedly) transient error.
+" "The FTP error reply was:
+
+" "The probable cause is overloading of the recipient site." 
+"The transfer was not acknowledged by the foreign site.  I.e., the
+message was transferred, but no 256 reply was received." 
+"The foreign site refused the message.  " 
+"The probable cause is that
+the specified user does not have a mailbox at the site." 
+"The destination host was known to be down." 
+"An FTP connection was established but no herald was ever received.
+This indicates a problem with the remote site's FTP server." 
+"Fifteen minutes passed without activity between the hosts involved." 
+"No history available, sorry." "
+     Attempt of " " -- "]>> 
+<AND <ASSIGNED? GLUE> .GLUE <PUT ,DELIVERY PGLUE ![715827882 -22906492246 
+-22906491905 -1 -1 -1 -1 -1 -1 -1 -1 -64 0 0!]>> 
+
+
+\ 
+
+"interrupt handlers for network delivery" 
+
+<SETG IOCHND %<RSUBR-ENTRY '[DELIVERY IOCHND #DECL ("VALUE" ANY FALSE CHANNEL)] 
+257>> 
+
+<SETG TIMED-OUT %<RSUBR-ENTRY '[DELIVERY TIMED-OUT #DECL ("VALUE" ANY ANY)] 325>
+> 
+
+<SETG ERRHND %<RSUBR-ENTRY '[DELIVERY ERRHND #DECL ("VALUE" ANY "TUPLE" TUPLE)] 
+362>> 
+
+\ 
+
+"UPDATE-DEAD-HOSTS -- hack for handling dead hosts and checking to
+see if they have come alive." 
+
+<SETG LAST-CHECK 0> 
+
+<GDECL (LAST-CHECK) FIX> 
+
+<SETG UPDATE-DEAD-HOSTS %<RSUBR-ENTRY '[DELIVERY UPDATE-DEAD-HOSTS #DECL (
+"VALUE" <OR ATOM FALSE> <OR FALSE VECTOR>)] 464>> 
+
+\ 
+
+"NET-DELIVERY -- network output for message.  Note that this reads
+  'net-delivery-format' from the author rather than receiver area; this
+  is to allow chomps like inquire updating to work, besides, what net
+  receiver would have a tailor, anyway?" 
+
+<SETG NET-DELIVERY %<RSUBR-ENTRY '[DELIVERY NET-DELIVERY #DECL ("VALUE" <OR ATOM
+FALSE> STRING)] 756>> 
+
+"MAIL-RESULT -- update status of message based on result of this attempt" 
+
+"SPLITS? -- returns T if there are any split fields for this addressee" 
+
+"FTP-OPEN -- open an FTP connection" 
+
+\ 
+
+"MAIL-FILE -- given addressee and file containing mail, send it" 
+
+<SETG MAIL-FILE %<RSUBR-ENTRY '[DELIVERY MAIL-FILE #DECL ("VALUE" <OR ATOM FALSE
+> STRING <OR STRING CHANNEL> "OPTIONAL" <OR FIX FALSE> <OR ATOM FALSE>)] 1280>> 
+
+\ 
+
+"CONNECTED?" 
+
+"SAME-HOST?" 
+
+"QPEEK -- obscenity to see if the current run of a process is the last one
+currently scheduled for that process.  Used for XRCP disgust to determine
+when to actually send the message." 
+
+"xrcp goodies" 
+
+<SETG XRCP-R? <>> 
+
+<SETG XRCP-T? <>> 
+
+<SETG XRCP-T-MAIL? <>> 
+
+<SETG XRCP-LIST ()> 
+
+<GDECL (XRCP-R? XRCP-T? XRCP-T-MAIL?) <OR ATOM FALSE> (XRCP-LIST) <LIST [REST 
+STRING]>> 
+
+\ 
+
+"FTP-CLOSE -- flush ftp connection" 
+
+<SETG FTP-CLOSE %<RSUBR-ENTRY '[DELIVERY FTP-CLOSE #DECL ("VALUE" <OR FALSE <
+LIST [2 CHANNEL]>>)] 2245>> 
+
+"FLUSH-NET-MESSAGE -- get rid of NETMSG file" 
+
+<SETG FLUSH-NET-MESSAGE %<RSUBR-ENTRY '[DELIVERY FLUSH-NET-MESSAGE #DECL (
+"VALUE" <OR ATOM FALSE>)] 2295>> 
+
+\ 
+
+"SEND-MAIL -- copy mail file open on first arg to ftp." 
+
+"MCMD -- do a standard mail command (used for MAIL and XSEN)" 
+
+"FTP-REPLY -- analyzes an FTP reply and returns an appropriate false
+if it is not a winner." 
+
+"PR -- print message to net channel and script" 
+
+<SETG PR %<RSUBR-ENTRY '[DELIVERY PR #DECL ("VALUE" ATOM CHANNEL "TUPLE" <TUPLE 
+[REST STRING]>)] 2588>> 
+
+\ 
+
+"NEXT-DELIVERY-ATTEMPT -- schedule next delivery attempt or return false" 
+
+\ 
+
+"LOGIN-MAIL -- login-file output" 
+
+<SETG LOGIN-MAIL %<RSUBR-ENTRY '[DELIVERY LOGIN-MAIL #DECL ("VALUE" <OR ATOM 
+FALSE> STRING)] 2802>> 
+
+<SETG READER-MAIL %<RSUBR-ENTRY '[DELIVERY READER-MAIL #DECL ("VALUE" <OR ATOM 
+FALSE> STRING)] 3292>> 
+
+\ 
+
+"MAIL-OPEN -- open channel to mail file, either explicitly spec'ed
+or the user's normal one in his directory.  If he has no directory,
+then try the common; directory.  If INSERT? is false, try to append to
+existing file, otherwise insert at beginning." 
+
+\ 
+
+"ONLINE OUTPUT -- inform mail arrived via CLI:" 
+
+<SETG ONLINE-OUTPUT %<RSUBR-ENTRY '[DELIVERY ONLINE-OUTPUT #DECL ("VALUE" <OR 
+ATOM FALSE> STRING "OPTIONAL" <OR FIX FALSE>)] 3462>> 
+
+\ 
+
+"DLV-ERR -- delivery error handler" 
+
+<SETG DLV-ERR %<RSUBR-ENTRY '[DELIVERY DLV-ERR #DECL ("VALUE" <OR LIST FALSE> 
+STRING <FALSE FIX> STRING "OPTIONAL" <OR FALSE 'T>)] 3797>> 
+
+\ 
+
+"DLV-HISTORY -- forms a history of delivery attempts" 
+
+<SETG DLV-HISTORY %<RSUBR-ENTRY '[DELIVERY DLV-HISTORY #DECL ("VALUE" <OR FALSE 
+LIST> STRING)] 4621>> 
+
+<ENDPACKAGE> 

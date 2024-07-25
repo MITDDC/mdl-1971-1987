@@ -1,0 +1,91 @@
+This file documents the CHAOS package found in MDLLIB, written by PDL
+Documentation by Steve Barber, and it is not necessarily accurate.
+
+This package was written to implement a mail system, so the functions
+lean heavily towards this service of the Chaosnet.
+
+Additional documentation on the Chaosnet, its protocols, and how to
+use it with 10s, 20s, ITS, LispMachines, or VAXes is contained in AI
+Memo 628, "Chaosnet", by David A. Moon.  It assumes familiarity with
+the machines at assembly language level (sometimes even lower!).
+
+------------
+
+Use of the package:
+===================
+
+Get a MDL and type <USE "CHAOS">.  You now have all the following
+functions at your command.
+
+Functions and how to use them:
+==============================
+
+<CHAOS-OPEN string "OPT" fix>
+
+opens a Chaosnet connection
+
+returns: either a fix representing the JFN for the  open connection or
+         a false with an error message inside of it.
+
+args:  string --  this is a string in TOPS20 filename format. Only the
+                  first and second name attributes are significant.
+                  The string is of the form 'hostname'.'service'.
+
+                  The hostname is something like AI, or CADR-11 or
+                  any other recognized Chaos host.
+
+                  'Service' represents the high-level protocol used by
+                  the net to handle your transaction and is something
+                  like MAIL, TELNET, DOVER, FINGER, TIME, etc.  See
+                  [MOON] for details and options.
+
+
+        fix --    this represents 'wait-time' and defaults to *7000*.
+                  I'm not quite sure what this is used for.
+
+
+<CHAOS-OUT info jfn:fix "OPT" count:fix>
+
+outputs 'info' to the net
+
+returns: <OR FIX FALSE>
+         if its a fix, its the JFN
+         if its a false, it indicates an error
+
+args:    info -- can be either a string or a <PRIMTYPE WORD>
+         jfn --  the number returned by CHAOS-OPEN for this connection
+         count -- number of characters to be output. Default (I think)
+                  is the number of chars in the string.
+
+
+<CHAOS-RESP string fix>
+
+reads Chaos buffer into 'string' using the 'fix' as a JFN.
+
+returns: fix representing God-knows-what, or a false with the error.
+
+
+<CHAOS-OPER jfn function-code>
+
+does a Chaosnet operation using the MTOPR jsys.
+
+returns:  fix - the JFN (why?), or the usual error message
+
+args:     jfn - a fix
+          function-code  -- a fix indicating what operation is
+                            to be performed.  See [MOON] and DEC
+                            monitor calls manual for more info.
+
+
+<CHAOS-CLOSE jfn>
+
+closes the channel represented by the JFN and returns the jfn.
+
+
+
+
+Notes:  These functions do not constitute a general Chaosnet
+interface. Status codes can not be returned, nor can the operation
+codes.  Also, reading is not general enough either.
+
+5/31/82

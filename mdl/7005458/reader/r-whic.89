@@ -1,0 +1,511 @@
+<PACKAGE "R-WHICH">
+
+<ENTRY WHICH WHICH-TAG SCANNING?>
+
+<ENTRY I-RECENT I-NEW I-ALL I-IN-BOX I-DISCARDED OPEN-INV>
+
+<ENTRY OPEN-BIN REST-BIN CURRENT-MESSAGE MOVE-NEXT MOVE-PREVIOUS MOVE-TOP>
+
+<USE "R-DEFS" "R-UTIL" "R-IO" "R-SHOW" "R-FOLD" "R-MAIL" "R-SEARCH">
+
+<USE "MAIL" "SYMBOLS" "BUF" "PARSE-DATE" "LEXER" "ITIME">
+
+<USE "CTABLE">
+
+"SUBTITLE 'Which' mode Dispatch Tables"
+
+<SETG SCANNING? <>>
+
+<GDECL (SCANNING?) <OR FIX FALSE>>
+
+<SETG WHICH-CHRS
+      [!\
+       ,RETURN-TO-MAILER]>
+
+<SETG WHICH-CHRTABLE <LIST ,WHICH-CHRS ,SYMBOL-CHRS>>
+
+<GDECL (WHICH-CHRS) VECTOR>
+
+<DEFINE WHICH ("OPTIONAL" (PRMPT "which ") "AUX" I)
+	#DECL ((I) <OR INVERSION FALSE> (PRMPT) STRING)
+	<COND (,SCANNING? <SET I <CURRENT-MESSAGE <>>>)
+	      (ELSE
+	<SETG SYMBOL-CHRTABLE ,WHICH-CHRTABLE>
+	<COND (<SET I <CTABLE .PRMPT "" 
+
+"Selection:
+
+	'Current' message (the default)
+	'Next' message from open bin
+	'Previous' message from open bin
+	'Top' message in open bin
+	'Rest' of the messages in the open bin
+	'Open' folder or bin (initially New, Unread, or In-Box)
+	'Last' to get the last selection again
+	'Search-result' for the last result of a 'Find'
+	'in-folder' for all messages in folders
+	(or the name of a folder to get its contents,
+	 or a list of message numbers)
+
+	'All' for all messages
+	 'File' for all filed messages
+	 'Workspace' for all messages not filed
+	  'In-Box'
+	  'Out-Box' for messages recently sent
+	  'Pending'
+	 'Discarded'
+
+	'Summary-not-seen' or 'sns'
+	'Text-not-seen' or 'tns'
+	'Recently-received' or 'rr' (since last session)
+	'Received-during-session' or 'rds'
+	'Action-completed' or 'ac'
+	 'Answered' and 'Forwarded'
+	'Sent' by the user
+	'From' a given sender or senders (searches 'Open')
+	'Locally-stored' or 'ls' messages actually in the user's asylum
+
+	'Before' 'Since' 'On' a date or 'Between' two dates
+	 or 'Today' 'Yesterday', and (last) 'Sunday' through 'Saturday'
+
+	'not' 'and' 'or' of any of the above"
+
+      * "Current"	<CURRENT-MESSAGE <>>
+	"Next"		<MOVE-NEXT <>>
+	"Previous"	<MOVE-PREVIOUS <>>
+	"Top"		<MOVE-TOP <>>
+	"Rest"		<REST-BIN>
+	"Open"		<GET-INV ,OPEN-INV "Nothing is open?">
+	"Last"		<GET-INV ,LAST-INV "No previous selection exists?">
+	"Search-result" <GET-INV ,SEARCH-INV "No previous searches?">
+
+	"All"		,I-ALL
+	 "File"		,I-FILE
+	 "Workspace"	,I-WORKSPACE
+	  "In-Box"	,I-IN-BOX
+	  "ib"		,I-IN-BOX
+	  "Out-Box"	,I-OUT-BOX
+	  "ob"		,I-OUT-BOX
+	  "Pending"	,I-PENDING
+	 "Discarded"	,I-DISCARDED
+
+	"Summary-not-seen" ,I-UNSUMMARIZED
+	"sns"		,I-UNSUMMARIZED
+	"Text-not-seen"	,I-UNREAD
+	"tns"		,I-UNREAD
+	"Recently-received" ,I-RECENT
+	"rr"		,I-RECENT
+	"Received-during-session" ,I-NEW
+	"rds"		,I-NEW
+	"Action-completed" ,I-ACTION
+	"ac"		,I-ACTION
+	"Answered"	,I-ANSWERED
+	"Forwarded"	,I-FORWARDED
+	"Sent"		,I-SENT
+	"Reminders"	,I-REMIND
+	"Locally-stored" ,I-ASYLUM
+	"ls"		,I-ASYLUM
+	"To"		<FIELD-SEARCH '["ADDRESSED-TO"
+					"ACTION-TO"
+					"CARBON-COPY-TO"
+					"BLIND"]
+				      " addressees">
+	"From"		<FIELD-SEARCH '["FROM"] " senders">
+	"Subject"	<FIELD-SEARCH '["SUBJECT"] " containing">
+	"Text"		<FIELD-SEARCH '["TEXT"] " containing">
+	"in-folder"	<IN-FOLDER>
+	"and"		<BOOL-AND-OR AND "and ">
+	"or"		<BOOL-AND-OR OR "or ">
+	"not"		<BOOL-NOT <WHICH "">>
+	"before"	<BOOL-DATE BEFORE>
+	"after"		<BOOL-DATE AFTER>
+	"since"		<BOOL-DATE AFTER>
+	"between"	<BOOL-DATE BETWEEN>
+	"on"		<BOOL-DATE ON>
+	(,DAYS		<BOOL-DAY <NTH ,DAYS .SVALUE>>)		
+	(,FOLDER-SYMBOLS <READ-FOLDER .SVALUE>)
+	(FAIL-HOOK ,READ-MESSAGE-NUMBERS)>>
+	       <SETG LAST-INV .I>)>)>
+	.I>
+
+<DEFINE WHICH-TAG ("OPTIONAL" (PRMPT "tag "))
+	#DECL ((PRMPT) STRING)
+	<SETG SYMBOL-CHRTABLE ,WHICH-CHRTABLE>
+	<CTABLE .PRMPT "" 
+
+"Tags:	'Search-result' for the last result of a 'Find'
+	'Summary-not-seen' or 'sns'
+	'Text-not-seen' or 'tns'
+	'Recently-received' or 'rr' (since last session)
+	'Received-during-session' or 'rds'
+	'Action-completed' or 'ac'
+	 'Answered' and 'Forwarded'
+	'Sent' by the user
+	'Reminders'"
+
+	"Search-result" <GET-INV ,SEARCH-INV "No previous searches?">
+	"Summary-not-seen" ,I-UNSUMMARIZED
+	"sns"		,I-UNSUMMARIZED
+	"Text-not-seen"	,I-UNREAD
+	"tns"		,I-UNREAD
+	"Recently-received" ,I-RECENT
+	"rr"		,I-RECENT
+	"Received-during-session" ,I-NEW
+	"rds"		,I-NEW
+	"Action-completed" ,I-ACTION
+	"ac"		,I-ACTION
+	"Answered"	,I-ANSWERED
+	"Forwarded"	,I-FORWARDED
+	"Sent"		,I-SENT
+	"Reminders"	,I-REMIND>>
+
+\
+
+<DEFINE BOOL-AND-OR (AND-OR PRMPT "AUX" BODY (FIRST ""))
+	#DECL ((AND-OR) ATOM (BODY) <OR FALSE LIST> (PRMPT) STRING
+	       (FIRST) <OR STRING FALSE>)
+	<COND (<SET BODY
+		    <MAPF ,LIST
+			  <FUNCTION ("AUX" (K <WHICH <OR .FIRST .PRMPT>>))
+			       #DECL ((K) <OR FALSE INVERSION>)
+			       <SET FIRST <>>
+			       <COND (<==? .K ,EMPTY-LINE> <MAPSTOP>)
+				     (.K <MAPRET <I-KEY .K>>)
+				     (ELSE <MAPLEAVE .K>)>>>>
+	       <PUT ,BOOL-INV ,I-NAME <SPNAME .AND-OR>>
+	       <PUT ,BOOL-INV ,I-KEY <FORM .AND-OR !.BODY>>)>>
+
+<DEFINE BOOL-NOT (N "AUX" (NI ,BOOL-INV))
+	#DECL ((N) <OR FALSE INVERSION> (NI) INVERSION)
+	<COND (.N
+	       <PUT .NI ,I-NAME <STRING "Not-" <I-NAME .N>>>
+	       <PUT .NI ,I-KEY <FORM NOT <I-KEY .N>>>
+	       .NI)>>
+
+"IN-FOLDER -- make an inversion that will match any message in a folder"
+
+<DEFINE IN-FOLDER ("AUX" (FT ,FOLDER-TABLE) (B #WORD 0))
+	#DECL ((FT) <VECTOR [REST STRING FIX]> (B) WORD)
+	<REPEAT ()
+		<COND (<EMPTY? .FT>
+		       <PUT <I-KEY ,IN-FOLDER-INV> 2 .B>
+		       <RETURN ,IN-FOLDER-INV>)>
+		<SET B <ORB .B <2 .FT>>>
+		<SET FT <REST .FT 2>>>>
+
+"FIELD-SEARCH -- create inversion describing search"
+
+<DEFINE FIELD-SEARCH (FLD PRMPT
+		      "AUX" L I)
+	#DECL ((I) INVERSION (L) <LIST [REST STRING]>
+	       (PRMPT) STRING (FLD) <VECTOR [REST STRING]>)
+	<SET L <GET-TEMP .PRMPT>>
+	<SET I <INVERSION "Search" <FORM MEMBER .FLD .L>>>>
+
+\
+
+"Day-date hacking"
+
+<DEFINE BOOL-DATE (WHEN "AUX" DT DT1)
+	#DECL ((WHEN) ATOM (DT DT1) <OR FIX FALSE>)
+	<COND (<SET DT <READ-DATE "when">>
+	       <COND (<==? .WHEN BETWEEN>
+		      <COND (<SET DT1 <READ-DATE "and">>
+			     <INVERSION <SPNAME .WHEN>
+					<COND (<L? .DT .DT1>
+					       <FORM .WHEN .DT .DT1>)
+					      (ELSE
+					       <FORM .WHEN .DT1 .DT>)>>)>)
+		     (ELSE
+		      <INVERSION <SPNAME .WHEN>
+				 <FORM .WHEN .DT>>)>)>>
+
+<DEFINE BOOL-DAY (DAY "AUX" DT)
+	#DECL ((DAY) STRING (DT) <OR FALSE FIX>)
+	<COND (<SET DT <PARSE-DATE <VECTOR .DAY> <>>>
+	       <INVERSION .DAY
+			  <FORM ON <CHTYPE <ANDB .DT *777777000000*> FIX>>>)>>
+
+<DEFINE READ-DATE (PRMPT "AUX" STR DT (OUTCHAN .OUTCHAN))
+    #DECL ((STR) STRING (DT) <OR FIX FALSE> (OUTCHAN) CHANNEL
+	   (PRMPT) STRING (WHEN) ATOM (TWO?) <OR ATOM FALSE>)
+    <SET STR <GET-TEMP .PRMPT <>>>
+    <COND (<SET DT <PARSE-DATE <LEXER .STR> <>>>
+	   <COND (<L? .DT <ITIME>>
+		  <CHTYPE <ANDB .DT *777777000000*> FIX>)
+		 (ELSE
+		  <PRINC "That date is in the future?">
+		  <>)>)
+	  (ELSE
+	   <PRINC "Can't understand that date.">
+	   <>)>>
+
+\
+
+"SUBTITLE 'Inversion' of message numbers given by user"
+
+"READ-MESSAGE-NUMBERS -- read a tuple of message ids"
+
+<DEFINE READ-MESSAGE-NUMBERS (BUF BUILD? "AUX" (I ,USER-INV) (N 0)
+			      BB (BEG <>) (NUM? <>) C)
+	#DECL ((BUF) BUFFER (BUILD?) <OR CHARACTER FALSE> (N BB B) FIX
+	       (BEG) <OR FIX FALSE> (C) CHARACTER
+	       (NUM?) <OR ATOM FALSE> (I) INVERSION)
+	<AND .BUILD? <CLEAR-BITS ,R-USER>>
+	<REPEAT ((B <1 .BUF>) (E <2 .BUF>))
+		#DECL ((B E) STRING)
+		<COND (<==? .B .E>
+		       <COND (<AND .BUILD? .NUM?>
+			      <COND (.BEG <NUM-RANGE .BEG .N>)
+				    (ELSE <MARK .N ,R-USER>)>)>
+		       <RETURN .I>)>
+		<COND (<AND <G=? <ASCII <SET C <1 .B>>> <ASCII !\0>>
+			    <L=? <ASCII .C> <ASCII !\9>>>
+		       <SET N <+ <* .N 10> <- <ASCII .C> 48>>>
+		       <SET NUM? T>)
+		      (<OR <AND <==? .C !\>>
+				<SET BB <CHTYPE <MIN> FIX>>>
+			   <AND <==? .C !\<>
+				<SET BB <CHTYPE <MAX> FIX>>>>
+		       <COND (<AND .BUILD? .NUM?>
+			      <COND (.BEG
+				     <NUM-RANGE .BEG .N>)
+				    (ELSE <MARK .N ,R-USER>)>)>
+		       <SET BEG .BB>
+		       <SET N 0>
+		       <SET NUM? <>>)
+		      (<==? .C !\->
+		       <SET BEG .N>
+		       <SET N 0>
+		       <SET NUM? <>>)
+		      (<OR <==? .C !\ > <==? .C !\,>>
+		       <COND (<AND .BUILD? .NUM?>
+			      <COND (.BEG
+				     <NUM-RANGE .BEG .N>
+				     <SET BEG <>>)
+				    (ELSE <MARK .N ,R-USER>)>)>
+		       <SET N 0>
+		       <SET NUM? <>>)
+		      (ELSE <RETURN <>>)>
+		<SET B <REST .B>>>>
+
+<DEFINE MARK (N B "AUX" (MT ,MESSAGE-TABLE) (UV <REST .MT <R-HEADER .MT>>))
+	#DECL ((N) FIX (B) WORD (MT) MTABLE (UV) <OR UVECTOR FALSE>)
+	<COND (<SET UV <FIND <CANONIZE .N> .UV <R-TUPLE .MT>>>
+	       <ONBITS .UV .B>)>> 
+
+<DEFINE FIND (N UV L)
+	#DECL ((N) FIX (UV) <UVECTOR [REST FIX]> (L) FIX)
+	<REPEAT ()
+		<COND (<OR <EMPTY? .UV> <0? <1 .UV>>> <RETURN <>>)
+		      (<==? .N <MSG .UV>> <RETURN .UV>)
+		      (ELSE <SET UV <REST .UV .L>>)>>>
+
+<DEFINE NUM-RANGE (BEG END "AUX" N FB FE (MT ,MESSAGE-TABLE) UV
+		   (TUP <R-TUPLE .MT>) (OUTCHAN .OUTCHAN))
+	#DECL ((BEG END N TUP) FIX (FB FE) VECTOR
+	       (MT UV) <UVECTOR [REST FIX]> (OUTCHAN) CHANNEL)
+	<COND (<==? .BEG <CHTYPE <MAX> FIX>> <SET END <- .END 1>>)
+	      (<==? .BEG <CHTYPE <MIN> FIX>> <SET END <+ .END 1>>)>
+	<COND (<G? .BEG .END> <SET N .END> <SET END .BEG> <SET BEG .N>)>
+	<COND (<AND <OR <==? .BEG <CHTYPE <MAX> FIX>> <G? .BEG 50000>>
+		    <G? .END 50000>>
+	       <SET UV <REST .MT <R-HEADER .MT>>>
+	       <REPEAT ()
+		       <COND (<OR <EMPTY? .UV> <0? <1 .UV>>> <RETURN>)
+			     (<AND <G=? <SET N <MSG .UV>> .BEG>
+				   <L=? .N .END>>
+			      <MARK .N ,R-USER>)>
+		       <SET UV <REST .UV .TUP>>>)
+	      (<AND <L? .BEG 50000>
+		    <OR <L? .END 50000> <==? .END <CHTYPE <MIN> FIX>>>>
+	       <SET FB <SET FE ,FIX-TABLE>>
+	       <COND (<G=? <LENGTH .FE> .END> <SET FE <REST .FE .END>>)
+		     (ELSE <SET FE <REST .FE <LENGTH .FE>>>)>
+	       <COND (<AND <G=? <LENGTH .FB> .BEG>
+			   <N==? .BEG <CHTYPE <MAX> FIX>>>
+		      <SET FB <REST .FB <- .BEG 1>>>)>
+	       <MAPR <>
+		     <FUNCTION (F "AUX" (N <1 .F>))
+			  #DECL ((F) VECTOR (N) <OR FIX FALSE>)
+			  <COND (<OR <NOT .N> <==? .F .FE>> <MAPLEAVE>)
+				(ELSE <MARK .N ,R-USER>)>>
+		     .FB>)
+	      (ELSE <PRINC " [Can't mix small and large IDs]">)>
+	T>
+
+\
+
+"CURRENT-MESSAGE -- return current message in inversion or as msg-no"
+
+<DEFINE CURRENT-MESSAGE ("OPTIONAL" (MSGNO? T) "AUX" I S CI)
+	#DECL ((S) <OR FALSE UVECTOR> (I) <OR FALSE INVERSION>
+	       (MSGNO?) <OR ATOM FALSE> (CI) INVERSION)
+	<COND (<AND <SET I ,OPEN-INV>
+		    <SET S <I-TUPLE .I>>
+		    <NOT <EMPTY? .S>>>
+	       <PUT <SET CI ,CURRENT-INV> ,I-KEY <MSG .S>>
+	       <COND (.MSGNO? <MSG .S>)
+		     (ELSE <SETG LAST-INV .CI>)>)>>
+
+<DEFINE GET-INV (I MSG "AUX" (OUTCHAN .OUTCHAN))
+	#DECL ((I) <OR FALSE INVERSION> (OUTCHAN) CHANNEL (MSG) STRING)
+	<COND (.I <PRINC "("> <PRINC <I-NAME .I>> <PRINC ") ">)
+	      (ELSE <PRINC .MSG> <CRLF>)>
+	.I>
+
+\
+
+"OPEN-BIN -- open a bin or folder"
+
+<DEFINE OPEN-BIN (N "OPTIONAL" (SCAN? <>) "AUX" (OUTCHAN .OUTCHAN))
+	#DECL ((N) <OR FALSE INVERSION> (OUTCHAN) CHANNEL
+	       (SCAN?) <OR FIX FALSE>)
+	<AND .SCAN? <SETG SCANNING? .SCAN?>>
+	<COND (.N
+	       <COND (<AND <NOT .SCAN?> <==? .N ,OPEN-INV>>
+		      <PRINC "[Already open]">)
+		     (ELSE
+		      <PUT .N ,I-TUPLE <>>
+		      <SETG OPEN-INV .N>
+		      <COND (.SCAN? <MOVE-NEXT>)>)>)>>
+
+<DEFINE REST-BIN ("AUX" (N ,OPEN-INV) (R ,REST-INV) (OUTCHAN .OUTCHAN)
+		  (TUP <I-TUPLE .N>))
+	#DECL ((N) <OR FALSE INVERSION> (R) INVERSION (OUTCHAN) CHANNEL
+	       (TUP) MTABLE)
+	<COND (.N
+	       <COND (<OR <EMPTY? .TUP> <0? <1 .TUP>>>)
+		     (ELSE
+		      <SET TUP <REST .TUP <R-TUPLE ,MESSAGE-TABLE>>>)>
+	       <PUT .R ,I-TUPLE .TUP>
+	       <PUT .R ,I-NAME <I-NAME .N>>
+	       <PUT .R ,I-KEY <CHTYPE (<I-KEY .N>) FALSE>>
+	       .R)
+	      (ELSE <PRINC "[No open inversion?]"> <>)>>
+
+"MOVE-NEXT -- move pointer to next msg in open inversion"
+
+<DEFINE MOVE-TOP ("OPTIONAL" (N? T)
+		  "AUX" M (I ,OPEN-INV) (OUTCHAN .OUTCHAN))
+	#DECL ((N?) <OR ATOM FALSE> (I) <OR FALSE INVERSION>
+	       (M) <OR FALSE UVECTOR> (OUTCHAN) CHANNEL)
+	<COND (.I
+	       <PUT .I ,I-TUPLE <>>
+	       <COND (<SET M <MATCH .I>>
+		      <COND (<ON? .M ,R-UNREAD> <READ-MESSAGE .M>)
+			    (.N? <PMID <MSG .M>>)>
+		      <CURRENT-MESSAGE <>>)
+		     (ELSE
+		      <PRINC "Inversion is empty?">
+		      <CRLF>
+		      <>)>)
+	      (ELSE <PRINC "Nothing is open?"> <>)>>
+
+<DEFINE MOVE-NEXT ("OPTIONAL" (N? T)
+		   "AUX" M OLD (I ,OPEN-INV) (OUTCHAN .OUTCHAN)
+		   (SCANNING? ,SCANNING?))
+	#DECL ((N?) <OR ATOM FALSE> (SCANNING?) <OR FIX FALSE>
+	       (I) <OR FALSE INVERSION>
+	       (OLD M) <OR FALSE UVECTOR> (OUTCHAN) CHANNEL)
+	<COND (.I
+	       <AND <SET OLD <I-TUPLE .I>>
+		    <PUT .I
+			 ,I-TUPLE
+			 <REST <I-TUPLE .I>
+			       <R-TUPLE ,MESSAGE-TABLE>>>>
+	       <COND (<SET M <MATCH .I>>
+		      <COND (<==? .SCANNING? 0>
+			     <RSUMMARIZE .M>)
+			    (<OR <==? .SCANNING? 1>
+				 <ON? .M ,R-UNREAD>>
+			     <COND (<NOT <0? <CHTYPE
+					      <ANDB
+					        <T-TAILOR <GET-READER-TAILOR>>
+						,T-CLEAR>
+					      FIX>>>
+				    <PRINC "C">)>
+			     <READ-MESSAGE .M>)
+			    (.N? <PMID <MSG .M>>)>
+		      <CURRENT-MESSAGE <>>)
+		     (ELSE
+		      <PUT .I ,I-TUPLE .OLD>
+		      <COND (.SCANNING? <SETG SCANNING? <>>)
+			    (ELSE <PRINC "No more messages."> <CRLF>)>
+		      <>)>)
+	      (ELSE <PRINC "Nothing is open?"> <>)>>
+
+"MOVE-PREVIOUS -- move to previous message in open inversion"
+
+<DEFINE MOVE-PREVIOUS ("OPTIONAL" (N? T)
+		       "AUX" (I ,OPEN-INV) (OUTCHAN .OUTCHAN)
+		       R M N OLD O (T <R-TUPLE ,MESSAGE-TABLE>))
+	#DECL ((N? R) <OR ATOM FALSE> (I) <OR FALSE INVERSION>
+	       (T N) FIX (OLD O M) <OR UVECTOR FALSE> (OUTCHAN) CHANNEL)
+	<COND (.I
+	       <SET OLD <I-TUPLE .I>>
+	       <SET O .OLD>
+	       <PUT .I ,I-TUPLE <>>
+	       <REPEAT ()
+		       <SET M <MATCH .I>>
+		       <COND (<NOT .M>
+			      <PUT .I ,I-TUPLE .O>
+			      <RETURN <SET R <>>>)
+			     (<==? <I-TUPLE .I> .OLD>
+			      <PUT .I ,I-TUPLE .O>
+			      <RETURN <SET R <N==? .OLD .O>>>)
+			     (ELSE
+			      <SET O <I-TUPLE .I>>
+			      <PUT .I ,I-TUPLE <REST .O .T>>)>>
+	       <COND (.N?
+		      <SET N <MSG <I-TUPLE .I>>>
+		      <COND (<OR <==? .O .OLD> <0? .N>>
+			     <PRINC "No previous messages.">
+			     <CRLF>
+			     <>)
+			    (ELSE <PMID .N>)>)>
+	       <COND (.R <CURRENT-MESSAGE <>>)>)
+	      (ELSE <PRINC "Nothing is open?"> <>)>>
+
+\
+
+"pre-existing inversions"
+
+<SETG I-ALL <INVERSION "All" T>>
+<SETG I-FILE
+      <INVERSION "File"
+		 <FORM NOT
+		       <ORB ,R-IN-BOX ,R-OUT-BOX ,R-PENDING ,R-DISCARDED>>>>
+<SETG I-WORKSPACE
+      <INVERSION "Workspace" <ORB ,R-IN-BOX ,R-OUT-BOX ,R-PENDING>>>
+<SETG I-IN-BOX <INVERSION "In-Box" ,R-IN-BOX>>
+<SETG I-OUT-BOX <INVERSION "Out-Box" ,R-OUT-BOX>>
+<SETG I-PENDING <INVERSION "Pending" ,R-PENDING>>
+<SETG I-DISCARDED <INVERSION "Discarded" ,R-DISCARDED>>
+<SETG I-UNSUMMARIZED <INVERSION "Summary-not-seen" ,R-UNSUMMARIZED>>
+<SETG I-UNREAD <INVERSION "Text-not-seen" ,R-UNREAD>>
+<SETG I-RECENT <INVERSION "Recently-received" ,R-RECENT>>
+<SETG I-NEW <INVERSION "Received-during-session" ,R-NEW>>
+<SETG I-SENT <INVERSION "Sent" ,R-SENT>>
+<SETG I-ASYLUM <INVERSION "Locally-stored" ,R-ASYLUM>>
+<SETG I-ACTION <INVERSION "Action-completed" ,R-ACTION>>
+<SETG I-ANSWERED <INVERSION "Answered" ,R-ANSWERED>>
+<SETG I-FORWARDED <INVERSION "Forwarded" ,R-FORWARDED>>
+<SETG I-REMIND <INVERSION "Reminders" ,R-REMIND>>
+
+"CURRENT-INV -- inversion to hold current message"
+
+<SETG CURRENT-INV <INVERSION "Current" T>>
+<SETG BOOL-INV <INVERSION "Not" '<NOT T>>>
+<SETG USER-INV <INVERSION "User's" ,R-USER>>
+<SETG OPEN-INV <>>
+<SETG LAST-INV <>>
+<SETG REST-INV <INVERSION "Rest" T>>
+<SETG SEARCH-INV <INVERSION "Search-result" ,R-SEARCH>>
+<SETG IN-FOLDER-INV <INVERSION "In-folder" [2 0]>>
+
+<GDECL (SEARCH-INV CURRENT-INV BOOL-INV
+	USER-INV REST-INV IN-FOLDER-INV) INVERSION
+       (OPEN-INV LAST-INV) <OR FALSE INVERSION>>
+
+<ENDPACKAGE>

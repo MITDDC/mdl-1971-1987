@@ -1,0 +1,219 @@
+<PACKAGE "R-SHOW">
+
+<ENTRY READER-READ
+       READER-SUMMARIZE
+       READER-PRINT
+       READER-APPEND
+       READER-HISTORY
+       READ-MESSAGE
+       RSUMMARIZE
+       MORE
+       MORE-MSG>
+
+<USE "R-DEFS" "R-UTIL" "R-IO" "R-FOLD" "R-WHICH">
+
+<USE "M-FORM" "M-DEFS" "M-DATA" "M-SUM" "M-READ" "M-DOUT" "M-HIST"
+     "MAIL" "SYMBOLS" "BUF" "FIELDS">
+
+"SUBTITLE Reading Commands"
+
+"READER-HISTORY -- show message history"
+
+<DEFINE READER-HISTORY (N)
+	#DECL ((N) <OR FALSE INVERSION>)
+	<COND (.N
+	       <CRLF>
+	       <ITERATE (M .N)
+			<COND (<ON? .M <ORB ,R-SENT ,R-FORWARDED>>
+			       <PMID <MSG .M>>
+			       <CRLF>
+			       <HISTORY <MSG .M>>)
+			      (ELSE
+			       <PMID <MSG .M>>
+			       <PRINC " was not a message you sent.">
+			       <CRLF>)>>)>>
+
+"READER-READ -- show message in appropriate format"
+
+<DEFINE READER-READ (N)
+	#DECL ((N) <OR FALSE INVERSION>)
+	<COND (.N
+	       <CRLF>
+	       <ITERATE (M .N) <READ-MESSAGE .M>>)>>
+
+"READ-MESSAGE -- print a message"
+
+<DEFINE READ-MESSAGE (M)
+	#DECL ((M) UVECTOR)
+	<OR <0? <14 .OUTCHAN>> <CRLF>>
+	<COND (<RPRINT .M <>>
+	       <GET-DATE .M>
+	       <OFFBITS .M <ORB ,R-UNSUMMARIZED ,R-UNREAD>>)>>
+
+"RPRINT -- print message to a file or channel"	       
+
+<DEFINE RPRINT (M "OPTIONAL" OCH (CID? <>) "AUX" (N <MSG .M>) CH (TCH ,OUTCHAN)
+		(TAILOR <GET-READER-TAILOR>) O)
+	#DECL ((N) FIX (OCH) <OR FALSE CHANNEL> (CH TCH) CHANNEL
+	       (O) <OR FALSE LIST APPLICABLE> (CID?) <OR ATOM FALSE>
+	       (M) UVECTOR (TAILOR) VECTOR)
+	<COND (<RREAD .N>
+	       <PROG MORE-ACTIVATION ()
+		     #DECL ((MORE-ACTIVATION) <SPECIAL ACTIVATION>)
+	       <COND (<SET CH <OR .OCH .OUTCHAN>>
+		      <PMID .N .CH .CID?>
+		      <MESSAGE-FOLDERS .M .CH>
+		      <CRLF .CH>
+		      <COND (<NOT <SET O <1 .TAILOR>>>
+			     <DO-APPLY ,USER ,DDT-FORMAT .CH>)
+			    (ELSE
+			     <COND (<AND <2 .TAILOR>
+					 <HOME? <DRDA ,USER
+						    <GETFIX "RECEIVED-FROM-HOST">>>>
+				    <SET O <2 .TAILOR>>)>
+			     <COND (<TYPE? .O LIST>
+				    <DO-OUTPUT ,USER .O .CH>)
+				   (<APPLICABLE? .O>
+				    <DO-APPLY ,USER .O .CH>)
+				   (ELSE <PRINC "****BAD TAILOR DATA****">)>)>
+		      .N)>>)>>
+
+\
+
+<DEFINE MORE (X "OPTIONAL" Y "AUX" A C (OUTCHAN .OUTCHAN))
+	#DECL ((X) <OR CHANNEL FIX> (Y) CHANNEL (A) ACTIVATION (C) CHARACTER
+	       (OUTCHAN) CHANNEL)
+	<COND (<NOT <ASSIGNED? Y>>
+	       <COND (<N==? <SET C <MORE-MSG>> <ASCII 32>>
+		      <PRINC "Flushed">
+		      <CRLF>
+		      <INT-LEVEL 0>
+		      <COND (<AND <N==? .C <ASCII 127>>
+				  <ASSIGNED? MORE-ACTIVATION>
+				  <LEGAL? <SET A .MORE-ACTIVATION>>>
+			     <RETURN <> .A>)
+			    (ELSE <REENTER-COMMAND-LOOP>)>)
+		     (ELSE <CRLF>)>)>>
+
+<DEFINE MORE-MSG ("OPTIONAL" (MSG "--More--") "AUX" C (OUTCHAN .OUTCHAN))
+	<PRINC .MSG>
+	<SET C <IOT *24000*>> ;"%TIPEK+%TIACT"
+	<COND (<OR <==? .C <ASCII 32>> <==? .C <ASCII 127>>>
+	       <IOT *4000*>)>
+	.C>
+
+\
+
+"READER-SUMMARIZE -- Summarize Messages"
+
+<DEFINE READER-SUMMARIZE (I "OPTIONAL" (ST 0) "AUX" (OUTCHAN .OUTCHAN))
+	#DECL ((OUTCHAN) CHANNEL (I) <OR FALSE INVERSION> (ST) FIX)
+	<COND (.I
+	       <COND (<0? .ST>
+		      <ITERATE (M .I) <RSUMMARIZE .M>>)
+		     (ELSE
+		      <ITERATE (M .I) <> <RSUMMARIZE .M>>)>)>>
+
+<DEFINE RSUMMARIZE (M "OPTIONAL" (OUTCHAN .OUTCHAN) (CID? <>)
+		    "AUX" (N <MSG .M>) SID)
+	#DECL ((N SID) FIX (OUTCHAN) <SPECIAL CHANNEL> (CID?) <OR ATOM FALSE>
+	       (M) <UVECTOR [REST FIX]>)
+	<OR <0? <14 .OUTCHAN>> <CRLF>>
+	<COND (<RREAD .N>
+	       <SET SID <DECANONIZE .N>>
+	       <COND (.CID?
+		      <COND (<N==? .N .SID>
+			     <COND (<L? .SID 10> <PRINC "  ">)
+				   (<L? .SID 100> <PRINC " ">)>
+			     <PRINC !\[> <PRINC .SID> <PRINC !\]>)
+			    (ELSE <PRINC "     ">)>
+		      <PRINC !\ >)>
+	       <PTAGS .M>
+	       <PSUMMARY <COND (.CID? .N)(ELSE .SID)>>
+	       <OFFBITS .M ,R-UNSUMMARIZED>
+	       <CRLF>)>>
+
+"PTAGS -- print tags on a message"
+
+<DEFINE PTAGS (M "AUX" (N <MSG .M>) (OUTCHAN .OUTCHAN))
+	#DECL ((M) <UVECTOR [REST FIX]> (N) FIX (OUTCHAN) CHANNEL)
+	<PRINC <COND (<==? .N <CURRENT-MESSAGE>> !\*)(ELSE !\ )>>
+	<PRINC <COND (<ON? .M ,R-NEW> !\n)
+		     (<ON? .M ,R-RECENT> !\r)
+		     (ELSE !\ )>>
+	<PRINC <COND (<ON? .M ,R-UNSUMMARIZED> !\s)
+		     (<ON? .M ,R-UNREAD> !\t)
+		     (<ON? .M ,R-ANSWERED> !\a)
+		     (<ON? .M ,R-FORWARDED> !\f)
+		     (ELSE !\ )>>
+	<PRINC <COND (<ON? .M ,R-IN-BOX> !\ )
+		     (<ON? .M ,R-OUT-BOX> !\O)
+		     (<ON? .M ,R-DISCARDED> !\D)
+		     (<ON? .M ,R-PENDING> !\P)
+		     (ELSE !\F)>>
+	<PRINC !\ >>
+
+\
+
+"READER-PRINT -- print messages to a file"
+
+<DEFINE READER-PRINT (I "AUX" (OUTCHAN .OUTCHAN) FIL CH)
+	#DECL ((I) <OR FALSE INVERSION>
+	       (OUTCHAN) CHANNEL (FIL) <OR STRING FALSE>
+	       (CH) <OR CHANNEL FALSE>)
+	<COND (<AND .I
+		    <PROG ()
+			  <SET FIL <GET-TEMP "File to write to" <> "TPL:">>
+			  <COND
+			   (<EMPTY? .FIL>
+			    <PRINC "[Aborted]">
+			    <RETURN <>>)
+			   (<SET CH <OPEN "PRINT" .FIL>>)
+			   (ELSE <OPEN-FAILED .CH .FIL> <RETURN <>>)>>>
+	       <COND (<G? <ITERATE (M .I) <RSUMMARIZE .M .CH T>> 1>
+		      <PRINC <ASCII 12> .CH>)
+		     (ELSE
+		      <CRLF .CH>)>
+	       <CRLF .CH>
+	       <ITERATE (M .I) <RPRINT .M .CH T>>
+	       <CLOSE .CH>)>>
+
+<SETG APPSTR <ISTRING 5>>
+<GDECL (APPSTR) STRING>
+
+<DEFINE READER-APPEND (I "AUX" (OUTCHAN .OUTCHAN) FIL CH L CNT
+		       (APPSTR ,APPSTR))
+	#DECL ((I) <OR FALSE INVERSION> (OUTCHAN) CHANNEL (FIL) STRING
+	       (APPSTR) STRING (CNT L) FIX (CH) <OR CHANNEL FALSE>)
+	<COND (<AND .I
+		    <PROG ()
+			  <SET FIL <GET-TEMP "File to append to" <>>>
+			  <COND
+			   (<EMPTY? .FIL>
+			    <PRINC "[Aborted]">
+			    <RETURN <>>)
+			   (<SET CH <OPEN "READB" .FIL>>
+			    <COND (<NOT <0? <SET L <FILE-LENGTH .CH>>>>
+				   <ACCESS .CH <- .L 1>>
+				   <SET CNT
+					<READSTRING .APPSTR
+						    .CH
+						    %<STRING <ASCII 3>>>>)
+				  (<SET CNT 0>)>
+			    <CLOSE .CH>
+			    <COND (<SET CH <OPEN "PRINTO" .FIL>>
+				   <ACCESS .CH <- <FILE-LENGTH .CH> 1>>
+				   <OR <0? .CNT>
+				       <PRINTSTRING .APPSTR .CH .CNT>>)
+				  (ELSE <OPEN-FAILED .CH .FIL> <RETURN <>>)>)
+			   (<SET CH <OPEN "PRINT" .FIL>>)
+			   (ELSE <OPEN-FAILED .CH .FIL> <RETURN <>>)>>>
+	       <PRINC <ASCII 12> .CH>
+	       <CRLF .CH>
+	       <ITERATE (M .I) <RSUMMARIZE .M .CH T>> 
+	       <PRINC <ASCII 12> .CH>
+	       <CRLF .CH>
+	       <ITERATE (M .I) <RPRINT .M .CH T>>
+	       <CLOSE .CH>)>>
+
+<ENDPACKAGE>

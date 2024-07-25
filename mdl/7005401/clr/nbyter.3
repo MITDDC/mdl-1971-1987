@@ -1,0 +1,139 @@
+
+	<TITLE	BYTER>
+	<DECLARE ("VALUE" <BYTES 2 0> <UVECTOR [REST <PRIMTYPE WORD>]>)>
+	<DPUSH	TP* (AB)>
+	<PUSHJ	P* IBYTER>
+	<JRST	FINIS>
+
+	<INTERNAL-ENTRY IBYTER 1>
+	<HLRE	A* (TP)>
+	<IMUL	A* [<(-1) -18.>]>
+	<HRLI	A* <TYPE-CODE BYTES>>
+	<MOVE	B* (TP)>
+	<HRLI	B* *000200*>
+	<SUBI	B* 1>
+	<SUB	TP* [<2 (2)>]>
+	<POPJ	P*>
+
+	<TITLE	SUBUV>
+	<DECLARE ("VALUE" UVECTOR UVECTOR FIX)>
+	<DPUSH	TP* (AB)>
+	<DPUSH	TP* 2 (AB)>
+	<PUSHJ	P* ISUBUV>
+	<JRST	FINIS>
+
+	<INTERNAL-ENTRY ISUBUV 2>
+	<SUBM	M* (P)>
+	<MOVE	A* (TP)>
+	<HLRE	B* -2 (TP)>
+	<HRRZ	C* -2 (TP)>
+	<ADDI	C* -1 (A)>		; "C point to first word to move."
+	<HRLI	C* (A)>
+	<ADDI	B* (A)>
+	<MOVNS	B>
+	<JUMPE	A* BDONE>
+	<HRLI	B* C>
+BTB	<POP	C* @ B>
+	<TLNE	C* -1>
+	<JRST	BTB>
+BDONE	<HRLI	B* (B)>
+	<ADD	B* -2 (TP)>
+	<MOVSI	A* <TYPE-CODE UVECTOR>>
+	<SUB	TP* [<4 (4)>]>
+	<JRST	MPOPJ>
+
+	<TITLE	FIXMUNG>
+	<DECLARE	("VALUE" ANY UVECTOR FIX)>
+	<DPUSH	TP* (AB)>
+	<DPUSH	TP* 2 (AB)>
+	<PUSHJ	P* FIXM1>
+	<JRST	FINIS>
+
+	<INTERNAL-ENTRY FIXM1 2>
+
+	<MOVE	B* (TP)>	; "Get offset to mung by."
+	<MOVE	A* -2 (TP)>	; "Get pointer to uv of fixups."
+
+FIX1	<SKIPGE	E* (A)>
+	<JRST	FIX6>		; "Jump if a normal fixup."
+	<HRLI	E* (E)>		; "Make into thing to skip over with."
+	<ADD	A* E>		; "Skip over name of type."
+FIX6	<AOBJP	A* FIX2>
+	<MOVEI	O* 0>		; "Flag for which half."
+FIX4	<JUMPE	O* FIXRH>	; "Jump if getting rh."
+	<MOVEI	O* 0>		; "Next time will get rh."
+	<AOBJP	A* FIX2>	; "Done?"
+	<HLRE	C* (A)>		; "Get lh."
+	<JUMPE	C* FIX3>	; "0 terminates."
+FIX5	<JUMPL	C* [<SUBI C* (B)>
+		    <JRST FIX51>]>
+	<ADDI	C* (B)>		; "Update the fixup location."
+FIX51	<HRLM	C* (A)>		; "Put it back into fixup vector."
+	<JRST	FIX4>
+
+FIXRH	<MOVEI	O* 1>		; "Change flag."
+	<HRRE	C* (A)>		; "Get it."
+	<JUMPE	C* FIX3>	; "Jump if end of fixups."
+	<JUMPL	C* [<SUBI C* (B)> ; "Hack for negative offset"
+		    <JRST FIXRH1>]>
+	<ADDI	C* (B)>		; "Update fixup loc."
+FIXRH1	<HRRM	C* (A)>		; "And put it back."
+	<JRST	FIX4>
+
+FIX3	<AOBJN	A* FIX1>	; "Do next one."
+
+FIX2	<SUB	TP*[<4 (4)>]>
+	<POPJ	P*>
+
+	<TITLE	MAKE-CODE>
+	<DECLARE	("VALUE" <UVECTOR [REST FIX]> FIX
+				 <LIST [REST <LIST FIX <UVECTOR [REST FIX]>>]>
+				 <LIST [REST <PRIMTYPE WORD>]> FIX)>
+	<DPUSH	TP* <ARG 1>>
+	<DPUSH	TP* <ARG 2>>
+	<DPUSH	TP* <ARG 3>>
+	<DPUSH	TP* <ARG 4>>
+	<PUSHJ	P* MAKE-CODE1>
+	<JRST	FINIS>
+
+	<INTERNAL-ENTRY MAKE-CODE1 4>
+
+	<SUBM	M* (P)>
+	<INTGO>
+	<MOVE	A* -6 (TP)>	; "Get length of final vector."
+	<MOVEI	O* IBLOCK>	; "Setup call to get block."
+	<PUSHJ	P* RCALL>	; "Get it."
+	<DPUSH	TP* A>		; "Save it."
+	<SKIPN	E* -6 (TP)>	; "List pointer to E."
+	<JRST	D1>
+
+; "Now loop through code vectors BLT into main vector."
+
+L1	<MOVE	A* 1 (E)>	; "Get sub list pointer."
+	<MOVE	C* 1 (A)>	; "Length of vector."
+	<HRRZ	A* (A)>
+	<HRL	D* 1 (A)>	; "Pointer to code."
+	<HRRI	D* (B)>		; "BLT pointer."
+	<ADDI	B* (C)>		; "Final dest."
+	<BLT	D* -1 (B)>	; "Zap.!"
+	<HRRZ	E* (E)>		; "Next hunk of code."
+	<JUMPN	E* L1>
+
+D1	<SKIPN	E* -4 (TP)>	; "List of fixes."
+	<JRST	D2>
+
+L2	<MOVE	A* 1 (E)>	; "Get it."
+	<MOVEM	A* (B)>
+	<HRRZ	E* (E)>		; "CDR the list."
+	<SKIPE	E>
+	<AOJA	B* L2>
+
+D2	<MOVE	A* -2 (TP)>
+	<MOVEM	A* 1 (B)>
+	<MOVEI	A* <TYPE-CODE FIX>>
+	<PUTYP	A* 2 (B)>
+	<MOVE	B* (TP)>
+	<SUB	TP* [<10 (10)>]>
+	<MOVSI	A* <TYPE-CODE UVECTOR>>
+	<JRST	MPOPJ>
+

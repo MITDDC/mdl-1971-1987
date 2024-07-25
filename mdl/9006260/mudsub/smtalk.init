@@ -1,0 +1,7 @@
+<PROG ()
+	<TERPRI>
+	<PRINC "SMTALK is now being loaded.  Please be patient.">
+	<SETG L-NOISY <>>
+	<SM-TALK>
+	<QUIT>>
+

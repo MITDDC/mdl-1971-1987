@@ -1,0 +1,8 @@
+<DEFINE F (N M K "AUX" D P)
+	#DECL ((N M D P) FLOAT (K) FIX)
+	<SET D <- 1.0 </ 1.0 .M>>>
+	<SET P 1.0>
+	<* <+ <REPEAT () <SET P <* .P </ <+ <* .N .D> 1 <- .K>>
+						 <+ .N 1 <- .K>>>>>
+				<COND (<L=? <SET K <- .K 1>> 0>
+					<RETURN .P>)>> -1.0> .M>>

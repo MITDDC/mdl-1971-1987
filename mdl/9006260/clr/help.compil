@@ -1,0 +1,23 @@
+<MAPF <> ,REMOVE (
+       DEBUGSW
+       IRSUBR
+       NOTE
+       WARNING
+       ERRS
+       WARNS
+       NOTES
+       DEBUG-COMPILE
+       REASONABLE
+       CAREFUL
+       PRECOMPILED
+       HAIRY-ANALYSIS
+       SRC-FLG
+       BIN-FLG
+       GLOSP
+       ANALY-OK
+       VERBOSE
+       COMPILER)>
+
+<FLOAD "COMPDEC.NBIN">
+
+<SETG L-LOADER ,CLOSE>

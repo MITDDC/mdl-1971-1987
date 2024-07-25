@@ -1,0 +1,274 @@
+<PACKAGE "M-CONV">
+
+<ENTRY CONVERT-COMSAT>
+
+<USE "HOSTS" "M-MSG" "M-DEFS" "ITIME" "FILINF" "NSTR" "M-TIME" "M-DATA">
+
+<DEFINE CONVERT-COMSAT ("OPTIONAL" (DEBUG? <>) "AUX" C I (N 0)
+			(FILE <DATUM "COMSAT-INPUT-FILE">))
+	#DECL ((SNM) <SPECIAL STRING> (C) <OR CHANNEL FALSE>
+	       (N) FIX (I) <OR FALSE LIST>)
+	<REPEAT ()
+		<COND (<SET C <OPEN "READ" .FILE>>
+		       <SET N <+ .N 1>>
+		       <SETG COMSAT-CHAN .C>
+		       <SET I <READ-FILE .C>>
+		       <COND (<OR .DEBUG? <NOT .I>>
+			      <RENAME <FILCHN .C> TO "OMAIL >">)
+			     (ELSE <RENAME <FILCHN .C>>)>
+		       <COND (<AND .I
+				   <OR <AND .DEBUG? <SET C .OUTCHAN>>
+				       <SET C <RQOPEN>>>>
+			      <MAPF <>
+				    <FUNCTION (F)
+					 #DECL ((F) ANY)
+					 <TPRINT .F .C>>
+				    .I>
+			      <OR .DEBUG? <RQCLOSE .C>>)>)
+		      (ELSE
+		       <COND (<G? .N 0>
+			      <SCROUT "Converted " .N " COMSAT format input files.">)>
+		       <RETURN .N>)>>>
+
+<DEFINE TPRINT (OBJ OUTCHAN "AUX" L)
+	#DECL ((OBJ) ANY (OUTCHAN) CHANNEL (L) FIX)
+	<COND (<AND <TYPE? .OBJ STRING>
+		    <NOT <0? <SET L <LENGTH .OBJ>>>>
+		    <==? <NTH .OBJ .L> <ASCII 0>>>
+	       <SET L <- .L 1>>
+	       <REPEAT ()
+		       <COND (<OR <0? .L> <N==? <NTH .OBJ .L> <ASCII 0>>>
+			      <RETURN>)
+			     (ELSE <SET L <- .L 1>>)>>
+	       <SET OBJ
+		    <SUBSTRUC .OBJ 0 .L <REST .OBJ <- <LENGTH .OBJ> .L>>>>)>
+	<PRINT .OBJ .OUTCHAN>>
+
+<SETG CR <STRING <ASCII 13>>>
+<SETG BUF <ISTRING 100>>
+
+<DEFINE EATCRLF (CH)
+	#DECL ((CH) CHANNEL)
+	<COND (<READCHR .CH <>>
+	       <AND <==? <NEXTCHR .CH <>> <ASCII 10>>
+		    <READCHR .CH <>>>)>>
+
+<DEFINE READHOST (BUF "AUX" (N 0))
+	#DECL ((BUF) STRING (N) FIX)
+	<MAPF <>
+	      <FUNCTION (C)
+		   #DECL ((C) CHARACTER)
+		   <COND (<AND <G=? <ASCII .C> <ASCII !\0>>
+			       <L=? <ASCII .C> <ASCII !\9>>>
+			  <SET N <+ <* .N 8> <- <ASCII .C> <ASCII !\0>>>>
+			  .N)
+			 (ELSE <MAPLEAVE .N>)>>
+	      .BUF>>
+
+<DEFINE SKIPNUMBER (BUF "AUX" (CNT 0))
+	#DECL ((BUF) STRING (CNT) FIX)
+	<MAPF <>
+	      <FUNCTION (C)
+		   #DECL ((C) CHARACTER)
+		   <COND (<OR <L? <ASCII .C> <ASCII !\0>>
+			      <G? <ASCII .C> <ASCII !\9>>>
+			  <MAPLEAVE .CNT>)
+			 (ELSE <SET CNT <+ .CNT 1>>)>>
+	      .BUF>>
+
+<DEFINE READTEXT (CNT CH "AUX" STR)
+	#DECL ((CNT) FIX (CH) CHANNEL (STR) STRING)
+	<COND (<L? .CNT 0>
+	       <SET CNT <- <FILE-LENGTH .CH> <17 .CH>>>)>
+	<READSTRING <SET STR <ISTRING .CNT>> .CH>
+	.STR>
+
+<DEFINE READ-FIELD (CH "AUX" (V <>) (F <>) (BUF ,BUF)
+		    B C L CS CNT TMP)
+   #DECL ((CH) CHANNEL (V) <OR STRING FALSE FIX> (F B) <OR STRING FALSE>
+	  (BUF CS) STRING (L) <OR FALSE FIX> (CNT) FIX
+	  (C) <OR CHARACTER FALSE>)
+   <PROG ()
+	 <COND (<0? <1 .CH>> <RETURN <>>)
+	       (<SET C <NEXTCHR .CH <>>>
+		<AND <==? .C <ASCII 13>> <EATCRLF .CH>>)
+	       (ELSE <RETURN <>>)>
+	 <COND (<SET L <READSTRING .BUF .CH ":;" <>>>
+		<COND (<G? .L 0>
+		       <SET F <PARSE-FIELD <SUBSTRUC .BUF 0 .L>>>
+		       <COND (<NOT <SET C <READCHR .CH <>>>> <>)
+			     (<==? .C !\:>
+			      <SET L <READSTRING .BUF .CH ,CR>>
+			      <COND (<AND <G? .L 0>
+					  <SET TMP
+					       <PARSE-STRING .BUF .L .F>>>
+				     <SET F <1 .TMP>>
+				     <SET V <2 .TMP>>)>
+			      <EATCRLF .CH>)
+			     (<==? .C !\;>
+			      <SET L <READSTRING .BUF .CH ,CR>>
+			      <COND (<G? .L 0>
+				     <SET CS <SUBSTRUC .BUF 0 .L>>
+				     <SET CNT <PARSE .CS>>
+				     <EATCRLF .CH>
+				     <SET V <READTEXT .CNT .CH>>)>)>
+		       <COND (<AND .V .F> <LIST .F .V>)>)>)>>>
+
+<DEFINE PARSE-FIELD (F)
+	#DECL ((F) STRING)
+	<SET F <UPPERCASE .F>>
+	<COND (<=? .F "RCPT"> <SET F "ACTION-TO">)
+	      (<=? .F "TO"> <SET F "ACTION-TO">)
+	      (<=? .F "FROM-XUNAME"> <SET F "SENDER">)
+	      (<=? .F "AUTHOR"> <SET F "FROM">)
+	      (<=? .F "NET-MAIL-FROM-HOST"> <SET F "RECEIVED-FROM-HOST">)>
+	.F>
+
+<DEFINE PARSE-STRING (BUF L F "AUX" (V <>) (HOST <>) SKIP
+		      B C LST TMP CS CNT)
+	#DECL ((V) <OR STRING FALSE FIX> (F B) <OR STRING FALSE>
+	       (BUF CS) STRING (HOST SKIP L) <OR FALSE FIX> (CNT) FIX
+	       (C) <OR CHARACTER FALSE> (LST) LIST (TMP) ATOM)
+	<SET HOST <>>
+	<COND (<==? <1 .BUF> !\">
+	       <SET BUF <REST .BUF>>
+	       <SET L <- .L 1>>)>
+	<COND (<==? <1 .BUF> !\(>
+	       <SET LST <PARSE <SUBSTRUC .BUF 0 .L>>>
+	       <SET V <CSTR <1 .LST>>>
+	       <COND (<AND <NOT <LENGTH? .LST 1>>
+			   <TYPE? <2 .LST> LIST>
+			   <==? <LENGTH <2 .LST>> 2>
+			   <TYPE? <1 <2 .LST>> ATOM>
+			   <=? <CSTR <1 <2 .LST>>>
+			       "R-OPTION">>
+		      <SET TMP <2 <2 .LST>>>
+		      <COND (<=? <CSTR .TMP> "CC">
+			     <SET F "CARBON-COPY-TO">)
+			    (<=? <CSTR .TMP> "BCC">
+			     <SET F "BLIND">)>)>)
+	      (ELSE
+	       <COND (<=? .F "FROM">
+		      <COND (<SET B <SUBSTR "\"" .BUF .L>>
+			     <SET L
+				  <- .L
+				     1
+				     <- <LENGTH .BUF>
+					<LENGTH .B>>>>
+			     <SET BUF <REST .B>>)>)
+		     (<OR <=? .F "ACTION-TO">
+			  <=? .F "RECEIVED-FROM-HOST">>
+		      <SET HOST <READHOST .BUF>>
+		      <COND (<G? <SET SKIP <SKIPNUMBER .BUF>> 0>
+			     <SET BUF <REST .BUF .SKIP>>
+			     <SET L <- .L .SKIP>>)>
+		      <COND (<=? .F "ACTION-TO">
+			     <SET F <FIELD-TYPE .BUF>>)>
+		      <COND (<SET B <SUBSTR "\"" .BUF .L>>
+			     <SET B <REST .B>>
+			     <SET L <- .L <- <LENGTH .BUF>
+					     <LENGTH .B>>>>
+			     <SET BUF .B>)>)>
+	       <SET V <SUBSTRUC .BUF 0 .L>>)>
+	<COND (<AND .HOST <NOT <0? .HOST>>>
+	       <COND (<=? .F "RECEIVED-FROM-HOST">
+		      <SET V .HOST>)
+		     (ELSE
+		      <SET V <STRING .V !\@ <HOST .HOST>>>)>)>
+	<LIST .F .V>>
+
+<DEFINE FIELD-TYPE (BUF)
+	#DECL ((BUF) STRING)
+	<COND (<==? <1 .BUF> !\C> "CARBON-COPY-TO")
+	      (ELSE "ACTION-TO")>>
+
+<DEFINE READ-FILE (CH "AUX" (MM (T)) (FROM? <>) (SEND? <>)
+		   (TO? ()) L TOK (WO <ITIME <CREATION-DATE .CH>>))
+	#DECL ((CH) CHANNEL (MM) LIST (L FROM? SEND?) <OR LIST FALSE>
+	       (VALUE) <OR LIST FALSE> (WO) FIX (TO?) LIST (TOK) STRING)
+	<PROG CNVACT ()
+	      #DECL ((CNVACT) <SPECIAL ACTIVATION>)
+	      <WATCH EHAN "ERROR" ,CNVHND 4>
+	      <REPEAT ()
+		      <COND (<SET L <READ-FIELD .CH>>
+			     <ADD-FIELD .MM .L>)
+			    (ELSE <RETURN>)>>
+	      <REPEAT ((MM <REST .MM>))
+		      <COND (<EMPTY? .MM> <RETURN>)
+			    (<OR <=? <SET TOK <1 .MM>> "SENT-BY">
+				 <=? .TOK "FROM">>
+			     <PUT .MM 1 "SENDER">
+			     <SET SEND? .MM>)
+			    (<=? .TOK "CLAIMED-FROM">
+			     <PUT .MM 1 "FROM">
+			     <SET FROM? .MM>)
+			    (<MEMBER .TOK '["ACTION-TO" "CARBON-COPY-TO" "BLIND"]>
+			     <COND (<NOT <TYPE? <2 .MM> LIST>>
+				    <PUT .MM 2 <LIST <2 .MM>>>)>
+			     <SET TO? (!<2 .MM> !.TO?)>
+			     <COND (<=? .TOK "BLIND">
+				    <PUT .MM 2
+					 <MAPF ,LIST
+					       <FUNCTION (N)
+						    #DECL ((N) STRING)
+						    <LIST <LIST .N> <LIST .N>>>
+					       <2 .MM>>>)>)>
+		      <COND (<LENGTH? <SET MM <REST .MM>> 1>
+			     <COND (<NOT <EMPTY? .TO?>>
+				    <PUTREST .MM <SET MM ("TO" .TO?)>>
+				    <SET MM <REST .MM>>)>
+			     <PUTREST .MM ("WHEN-ORIGINATED" .WO
+					   "SCHEDULE" '("SENDING"))>
+			     <RETURN>)>
+		      <SET MM <REST .MM>>>
+	      <COND (<AND <NOT .FROM?> .SEND?> <PUT .SEND? 1 "FROM">)>
+	      <OFF ,EHAN>
+	      <REST .MM>>>
+
+<DEFINE CNVHND ("TUPLE" STUFF "AUX" NACT "ACT" ERRACT) 
+	#DECL ((STUFF) TUPLE (OUT-ACT ERRACT NETOUT NACT) ACTIVATION
+	       (LERR\ !-INTERRUPTS) <SPECIAL FRAME>)
+	<COND (<AND <ASSIGNED? CNVACT> <LEGAL? <SET NACT .CNVACT>>>
+	       <AND <TYPE? ,COMSAT-CHAN CHANNEL>
+		    <CLOSE ,COMSAT-CHAN>>
+	       <SCROUT ">>>> Error while converting COMSAT file, Args -- "
+		       .STUFF
+		       " <<<<">
+	       <SET LERR\ !-INTERRUPTS <CHTYPE .ERRACT FRAME>>
+	       <FRAMES 20>
+	       <FRATM>
+	       <BUFOUT .OUTCHAN>
+	       <DISMISS <> .NACT>)
+	      (ELSE T)>>
+
+<DEFINE ADD-FIELD (OLD NEW "AUX" (TOKEN <1 .NEW>) (VAL <2 .NEW>) OVAL)
+	#DECL ((OLD NEW) LIST (TOKEN) STRING (VAL) ANY (OVAL) ANY)
+	<REPEAT ()
+		<COND (<LENGTH? .OLD 1>
+		       <PUTREST .OLD .NEW>
+		       <RETURN>)
+		      (<=? <2 .OLD> .TOKEN>
+		       <SET OLD <REST .OLD 2>>
+		       <SET OVAL <1 .OLD>>
+		       <COND (<TYPE? .OVAL LIST>
+			      <COND (<TYPE? .VAL LIST>)
+				    (ELSE <SET VAL <LIST .VAL>>)>
+			      <PUTREST <REST .OVAL <- <LENGTH .OVAL> 1>>
+				       .VAL>)
+			     (<TYPE? .VAL LIST>
+			      <SET OVAL <LIST .OVAL>>
+			      <PUTREST <REST .VAL <- <LENGTH .VAL> 1>>
+				       .OVAL>
+			      <PUT .OLD 1 .VAL>)
+			     (ELSE
+			      <PUT .OLD 1 <LIST .OVAL .VAL>>)>
+		       <RETURN>)
+		      (ELSE <SET OLD <REST .OLD 2>>)>>>
+
+<DEFINE CSTR (X)
+	#DECL ((X) <OR ATOM STRING>)
+	<COND (<TYPE? .X ATOM> <SPNAME .X>)
+	      (ELSE .X)>>
+
+<ENDPACKAGE>
+

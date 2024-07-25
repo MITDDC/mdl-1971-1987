@@ -1,0 +1,100 @@
+'<PCODE "1M-TRA">
+
+<PACKAGE "M-TRA"> 
+
+<ENTRY SENDING SND-ERR TRANSMISSION TRA-ERR CORRECTION CORR-ERR> 
+
+<USE "M-READ" "M-DAC" "M-ACK" "M-PRCD" "M-ERR" "M-TIME" "M-DATA" "PRTUTI" 
+"PRTSTR" "USRUTI" "FIELDS" "M-DEFS" "HOSTS" "ITIME" "MADMAN" "SORTX"> 
+
+<DEMON-PROCESS "TRANSMISSION" TRANSMISSION TRA-ERR [,FATAL ,FATAL ,FATAL]> 
+
+<DEMON-PROCESS "SENDING" SENDING SND-ERR [,FATAL]> 
+
+<DEMON-PROCESS "CORRECTION" CORRECTION CORR-ERR [,FATAL ,FATAL]> 
+
+\ 
+
+<SETG TRANSMISSION  %<RSUBR!- '[ %<PCODE!- "1M-TRA" 0> TRANSMISSION #DECL (
+"VALUE" <OR ATOM FALSE> ADDRESS) S-ADDR ADDBACK DRMV SCROUT SET-CONDITIONS DAPP 
+ALVECTOR PRCADD DATUM DRD FILE? HOME? HOST DADD KEYGET DWT DRDMSG AFALSE %<RGLOC
+MSG-SPACE T> %<TYPE-W SPACE VECTOR> CURSPACE (SPACE) 
+"MORE-EXPANDED-ADDRESSEE-LIST" "TO" %<INTERNAL-RSUBR ACOPY 2> %<INTERNAL-RSUBR 
+ASTRING 262143> ".MSGS.;" "NEW" "APPEND" "RECEIVED-FROM-HOST" 
+"FILE-OUTPUT-FORMAT" "NET-FILE-OUTPUT-FORMAT" %<INTERNAL-RSUBR ALIST 262143> (
+"FILSRV") "RECEIVER-FILE-OUTPUT" "FILE-OUTPUT" "RECEIVER-PROCESSING" "REMIND" %<
+RGLOC HOSTAGE T> "DELIVERY" %<INTERNAL-RSUBR ARELEASE 2> ">>>> Losers: " " <<<<"
+ T "UNKNOWN" "EXPANSION" "AUTHOR-PROCESSING" "PARSING" "TRANSMISSION" "SENDING" 
+%<RGLOC SCRATCH-SPACE T> "     The TRANSMISSION process failed because " 
+"one or more of the
+addressees was unknown at this site." 
+"
+
+     The unprocessable addressee(s) were:
+" "
+
+     The message was processed however for:
+" 
+" the message has no
+usable addressee list.  This situation could occur if there were
+originally no addressees, or if the list of addressees contained
+no names of valid mailboxes." "it was applied to
+the " " receiver area of the message." "
+     " " -- " "     The " " process failed because " "it was applied to the " 
+"
+area of the message, rather than the author area." 
+"     The CORRECTION process failed because " 
+"there were no unprocessable
+addressees to correct."]>> 
+<AND <ASSIGNED? GLUE> .GLUE <PUT ,TRANSMISSION PGLUE ![715827882 -23622320128 0 
+0 0!]>> 
+
+
+\ 
+
+<SETG HOSTAGE %<RSUBR-ENTRY '[TRANSMISSION HOSTAGE #DECL ("VALUE" <OR ATOM FALSE
+> ADDRESS ADDRESS)] 370>> 
+
+"grovel over 'from' and 'sender' to try to find a reasonable return address" 
+
+<SETG RETURN-ADDRESS %<RSUBR-ENTRY '[TRANSMISSION RETURN-ADDRESS #DECL ("VALUE" 
+<OR FALSE <LIST [REST STRING <OR FALSE STRING> <OR FALSE STRING> <OR FALSE 
+STRING> <OR FALSE STRING>]>>)] 430>> 
+
+\ 
+
+"SUBTITLE Sending and Correction" 
+
+"sending process" 
+
+<SETG SENDING %<RSUBR-ENTRY '[TRANSMISSION SENDING #DECL ("VALUE" <OR ATOM FALSE
+> ADDRESS)] 563>> 
+
+"correction process -- flushes lossage created by having a bad addressee" 
+
+<SETG CORRECTION %<RSUBR-ENTRY '[TRANSMISSION CORRECTION #DECL ("VALUE" <OR ATOM
+FALSE> ADDRESS)] 624>> 
+
+\ 
+
+"SUBTITLE Error Analyzers for Transmission, Sending, Correction" 
+
+<SETG TRA-ERR %<RSUBR-ENTRY '[TRANSMISSION TRA-ERR #DECL ("VALUE" <OR FALSE LIST
+> STRING <FALSE FIX> ADDRESS)] 702>> 
+
+<SETG ADR-LIST %<RSUBR-ENTRY '[TRANSMISSION ADR-LIST #DECL ("VALUE" <OR FALSE 
+LIST> LIST SPACE LIST)] 885>> 
+
+\ 
+
+"SND-ERR -- errors in SENDING process" 
+
+<SETG SND-ERR %<RSUBR-ENTRY '[TRANSMISSION SND-ERR #DECL ("VALUE" <OR FALSE LIST
+> STRING <FALSE FIX> ADDRESS)] 980>> 
+
+"CORR-ERR -- errors in SENDING process" 
+
+<SETG CORR-ERR %<RSUBR-ENTRY '[TRANSMISSION CORR-ERR #DECL ("VALUE" <OR FALSE 
+LIST> STRING <FALSE FIX> ADDRESS)] 1067>> 
+
+<ENDPACKAGE> 

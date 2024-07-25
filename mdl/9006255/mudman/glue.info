@@ -1,0 +1,77 @@
+
+
+GLUE Information:____ ____________ (clr 3/14/75)
+
+	A new MUDDLE facility has been implemented to allow separately
+compiled and assembled RSUBRs to be "glued" together.  This gives the
+entire group of RSUBRs a much faster calling sequence and almost the
+speed of group compilation.  It has the two major advantages over
+group compilation:
+
+	1)	The RSUBRs can be run unglued for simpler tracing and
+		debugging.  After debugging, they can be glued together
+		and run much faster.
+
+	2)	Individual functions can be recompiled without the
+		overhead of a full group compilation.  After the
+		recompilation, the entire set can be reglued.
+
+	In order to be able to glue RSUBRs together,  additional
+relocation information must be produced with the output from the
+compiler or assembler.  See MUDMAN;COMBAT RECENT for information about
+how to produce the extra information with compiled code.  In the case
+of the assembler, a new argument hase been added to both ASSEMBLE and
+FILE-ASSEMBLE.  It is a flag saying whether or not to produce glue bits.
+The default value is the current LVAL of the atom GLUE!- which is
+#FALSE () in a virgin assembler.
+
+	Certain conventions must be followed when writing hand coded
+RSUBRs in order to get the most benefit from glueing.  If the RSUBR
+(or RSUBR-ENTRY) has "TUPLE" in its decl, it is already in the best
+shape possible.  In all other cases, the code after the TITLE or
+SUB-ENTRY macro should simply push the arguments onto the TP stack
+and PUSHJ P* to one of the internal entries based on the number of
+items on the stack.  After the PUSHJ it should do a JRST FINIS.
+An internal entry is setup by using the new INTERNAL-ENTRY macro which
+takes two args:  a symbol and a number.  The symbol acts as if it were
+a label on the next instruction and may be used as a label, the number
+specifies how many items (type-value pairs) are on the stack at this
+internal entry.  In the simple case where there are no optional arguments,
+only one internal entry exists and its number argument is exactly the
+required number of arguments.  If optional arguments exist some kind of
+dispatch will have to be done.
+
+	In the rest of the body of the RSUBR, no references to AB or TB
+(through the ARG or STACK macros or directly) can be made because after
+glueing, their contents may be meaningless.  All references to the TP
+stack must be made indexed off of TP.  The usual precautions concerning
+the possible movement of code if an INTGO or MCALL is done also apply
+(i.e. the use of SUBM M* (P) at the beginning and JRST MPOPJ at the end
+of the code are recommended).
+
+How to GLUE___________:
+
+	GLUE is a package and it may be obtained by doing a <USE "GLUE">.
+The call to glue a group of RSUBRS and/or RSUBR-ENTRYs is:
+
+	<GROUP=GLUE <-group-name>- <-substitute>- <-channel>- >
+
+where:
+	<-group-name>-		is ana atom as returned by GROUP-LOAD
+					 and it is the only required arg.
+
+	<-substitute>-		is a flag, if it is true, the current
+					 RSUBRs and RSUBR-ENTRYs will be fixed
+					 so that they may still run in the current
+					 MUDDLE, this is expensive but necessary
+					 if PRINTTYPEs or interrupt handlers are
+					 among the RSUBRs in the group.  If the flag
+					 is false or not supplied, the group must be
+					 GROUP-DUMPed and reloaded befor use.
+
+
+
+	<-channel>-		if it is supplied and a channel, GROUP-GLUE
+					 will print out its progress through its task.
+
+

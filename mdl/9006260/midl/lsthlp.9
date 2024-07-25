@@ -1,0 +1,33 @@
+<PACKAGE "LSTHLP">
+
+<ENTRY DELQ DELALL TAILCONS>
+
+<DEFINE DELQ (X L) #DECL ((L VALUE) LIST)   ;"Like LISP's DELQ"
+	<COND (<EMPTY? .L>())
+	      (<==? .X <1 .L>> <REST .L>)
+	      (<REPEAT ((B .L)) #DECL ((B) LIST)
+		  <COND (<LENGTH? .B 1><RETURN .L>)
+			(<==? <2 .B> .X><PUTREST .B <REST .B 2>><RETURN .L>)
+			(<SET B <REST .B>>)>>)>>
+
+<DEFINE DELALL (X L) #DECL ((L VALUE) LIST)	;"like LISP's DELETE"
+	<REPEAT ()<COND (<EMPTY? .L><RETURN>)
+			(<N==? <1 .L> .X><RETURN>)>
+		  <SET L <REST .L>>>
+	<COND (<EMPTY? .L> ())
+	      (<REPEAT ((B .L)) #DECL ((B) LIST)
+		  <COND (<LENGTH? .B 1><RETURN .L>)
+			(<==? <2 .B> .X><PUTREST .B <REST .B 2>>)
+			(<SET B <REST .B>>)>>)>>
+
+<DEFMAC TAILCONS ('L1 'L2)
+	<FORM PROG ((LSAVE .L1))
+	      <FORM COND (<FORM EMPTY? .L1>
+			  .L2)
+			 (<FORM PUTREST
+				<FORM REST .L1
+				      <FORM - <FORM LENGTH .L1> 1>>
+				.L2>
+			  '.LSAVE)>>>
+
+<ENDPACKAGE>

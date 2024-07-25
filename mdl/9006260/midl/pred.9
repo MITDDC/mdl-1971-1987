@@ -1,0 +1,138 @@
+<DEFINE COMPILE:==? (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS)
+	#DECL ((MOBJ) FORM (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (ACT-LIST) LIST (SYMBOLS) <LIST [REST SYMBOL-TABLE]>)
+	<COND (<N==? <LENGTH .MOBJ> 3>
+	       <REPORT-ERROR WRONG-NUMBER-OF-ARGS-TO-==? COMPILE:==?>)
+	      (ELSE
+	       <MCODIFY <FORM MSET .RETVAR
+			      <FORM '==?
+				    !<SEQUENTIALIZE <REST .MOBJ>
+						    <GENSYM>
+						    .REF
+						    <SET REF <GENREF>>
+						    .ACT-LIST
+						    .SYMBOLS>>>
+			.REF
+			.NXT>
+	       ;"when not being explicitly set to a variable, this should return"
+	       ;"a MUDDLE form like '<==? $5 $8> for use with successors.")>>
+
+<DEFINE COMPILE:NOT (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS)
+	#DECL ((MOBJ) FORM (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (ACT-LIST) LIST (SYMBOLS) <LIST [REST SYMBOL-TABLE]>)
+	;"I'm not sure how much optimization should be done here and how"
+	;"much should be done later."
+	<COND (<N==? <LENGTH .MOBJ> 2>
+	       <REPORT-ERROR WRONG-NUMBER-OF-ARGS-TO-NOT COMPILE:NOT>)
+	      (ELSE
+	       <MCODIFY
+		<FORM MSET
+		      .RETVAR
+		      <FORM NOT <MCODE-DISPATCH
+				 <2 .MOBJ>
+				 <GENSYM>
+				 .REF
+				 <SET REF <GENREF>>
+				 .ACT-LIST
+				 .SYMBOLS>>>
+		.REF
+		.NXT>)>>
+
+<DEFINE COMPILE:N==? (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS)
+	#DECL ((MOBJ) FORM (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (ACT-LIST) LIST (SYMBOLS) <LIST [REST SYMBOL-TABLE]>)
+	<COND (<N==? <LENGTH .MOBJ> 3>
+	       <REPORT-ERROR WRONG-NUMBER-OF-ARGS-TO-N==? COMPILE:N==?>)
+	      (ELSE
+	       <MCODIFY <FORM MSET .RETVAR
+			      <FORM 'N==?
+				    !<SEQUENTIALIZE <REST .MOBJ>
+						    <GENSYM>
+						    .REF
+						    <SET REF <GENREF>>
+						    .ACT-LIST
+						    .SYMBOLS>>>
+			.REF
+			.NXT>
+	       ;"when not being explicitly set to a variable, this should return"
+	       ;"a MUDDLE form like '<N==? $5 $8> for use with successors.")>>
+
+<DEFINE COMPILE:=? (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS)
+	#DECL ((MOBJ) FORM (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (ACT-LIST) LIST (SYMBOLS) <LIST [REST SYMBOL-TABLE]>)
+	<COND (<N==? <LENGTH .MOBJ> 3>
+	       <REPORT-ERROR WRONG-NUMBER-OF-ARGS-TO-=? COMPILE:=?>)
+	      (ELSE
+	       <MCODIFY <FORM MSET .RETVAR
+			      <FORM '=?
+				    !<SEQUENTIALIZE <REST .MOBJ>
+						    <GENSYM>
+						    .REF
+						    <SET REF <GENREF>>
+						    .ACT-LIST
+						    .SYMBOLS>>>
+			.REF
+			.NXT>
+	       ;"when not being explicitly set to a variable, this should return"
+	       ;"a MUDDLE form like '<=? $5 $8> for use with successors.")>>
+
+<DEFINE COMPILE:N=? (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS)
+	#DECL ((MOBJ) FORM (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (ACT-LIST) LIST (SYMBOLS) <LIST [REST SYMBOL-TABLE]>)
+	<COND (<N==? <LENGTH .MOBJ> 3>
+	       <REPORT-ERROR WRONG-NUMBER-OF-ARGS-TO-N=? COMPILE:N=?>)
+	      (ELSE
+	       <MCODIFY <FORM MSET .RETVAR
+			      <FORM 'N=?
+				    !<SEQUENTIALIZE <REST .MOBJ>
+						    <GENSYM>
+						    .REF
+						    <SET REF <GENREF>>
+						    .ACT-LIST
+						    .SYMBOLS>>>
+			.REF
+			.NXT>
+	       ;"when not being explicitly set to a variable, this should return"
+	       ;"a MUDDLE form like '<N=? $5 $8> for use with successors.")>>
+
+<DEFINE COMPILE:AND? (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS "AUX" EVARGS)
+	#DECL ((MOBJ) FORM (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (ACT-LIST) LIST (SYMBOLS) <LIST [REST SYMBOL-TABLE]>
+	       (EVARGS) LIST)
+	<COND (<LENGTH? .MOBJ 1>
+	       T!-)
+	      (ELSE
+	       ;"evaluate all arguments"
+	       ;"possible optimization to AND if there are not side-effects"
+	       ;"bit operations? `IF' mcodes?"
+	       <MCODIFY
+		<FORM MSET
+		      .RETVAR
+		      <FORM !<SEQUENTIALIZE <REST .MOBJ>
+					    .RETVAR
+					    .REF
+					    <SET REF <GENREF>>
+					    .ACT-LIST
+					    .SYMBOLS>>>>)>>
+
+<DEFINE COMPILE:OR? (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS "AUX" EVARGS)
+	#DECL ((MOBJ) FORM (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (ACT-LIST) LIST (SYMBOLS) <LIST [REST SYMBOL-TABLE]>
+	       (EVARGS) LIST)
+	<COND (<LENGTH? .MOBJ 1>
+	       T!-)
+	      (ELSE
+	       ;"evaluate all arguments"
+	       ;"possible optimization to OR if there are not side-effects"
+	       ;"bit operations? `IF' mcodes?"
+	       <MCODIFY
+		<FORM MSET
+		      .RETVAR
+		      <FORM !<SEQUENTIALIZE <REST .MOBJ>
+					    .RETVAR
+					    .REF
+					    <SET REF <GENREF>>
+					    .ACT-LIST
+					    .SYMBOLS>>>>)>>
+
+	       

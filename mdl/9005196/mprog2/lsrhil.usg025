@@ -1,0 +1,155 @@
+<PACKAGE "LSRHIL" ;"HI-Level interface to LSRTNS">
+
+<ENTRY FULLNAME NICKNAME MAILBOX BIRTHDAY BD? BD-MAIL>
+
+<USE "LSRTNS" "MFD" "STR" "TIMFCN">
+
+<DEFINE NAME-PARTS (LUSER "OPTIONAL" (FAST? <>)
+		  "AUX" (NM <FIELD .LUSER ,$NAME .FAST?>) CMA JR LFST LLST)
+	#DECL ((VALUE) <VECTOR STRING [REST STRING]> (LUSER) STRING (FAST?) ANY
+	       (NM CMA JR) <OR STRING FALSE> (LLST LFST) FIX)
+	<COND (<OR <NOT .NM> <EMPTY? .NM>> [.LUSER])
+	      (<SET CMA <MEMQ !\, .NM>>
+	       <SET LLST <- <LENGTH .NM> <LENGTH .CMA>>>
+	       <SET CMA <REST .CMA>>
+	       <SET LFST <LENGTH .CMA>>
+	       <COND (<SET JR <MEMQ !\, .CMA>>
+		      <SET LFST <- .LFST <LENGTH .JR>>>)
+		     (<SET JR "">)>
+	       <REPEAT ()
+		       <COND (<EMPTY? .CMA> <RETURN>)
+			     (<MEMQ <1 .CMA> " 	">
+			      <SET CMA <REST .CMA>>
+			      <SET LFST <- .LFST 1>>)
+			     (T <RETURN>)>>
+	       <VECTOR <SUBSTRUC .CMA 0 .LFST>
+		       <SUBSTRUC .NM 0 .LLST>
+		       .JR>)
+	      (T [.NM])>>
+
+<DEFINE FULLNAME (LUSER "OPTIONAL" (FAST? <>) "AUX" (N <NAME-PARTS .LUSER .FAST?>))
+	#DECL ((VALUE LUSER) STRING (FAST?) ANY)
+	<COND (<LENGTH? .N 2> <STRING !.N>)
+	      (T <STRING <1 .N> <ASCII 32> !<REST .N>>)>>
+
+<DEFINE NICKNAME (LUSER "OPTIONAL" (FAST? <>)
+		  "AUX" (NK <FIELD .LUSER ,$NICK .FAST?>))
+	#DECL ((VALUE LUSER) STRING (FAST?) ANY)
+	<COND (<AND .NK <NOT <EMPTY? .NK>>>
+	       .NK)
+	      (T
+	       <NO-INITIAL <NO-INITIAL <1 <NAME-PARTS .LUSER .FAST?>>>>)>>
+
+<DEFINE NO-INITIAL (NAME "AUX" INL LEN)
+	#DECL ((VALUE NAME) STRING (INL) <OR STRING FALSE> (LEN) FIX)
+	<COND (<AND <SET INL <MEMQ !\. .NAME>>	;"Look for initial."
+		    <NOT <LENGTH? .NAME 5>>>	;"as in Wodehouse, P. G."
+	       <SET LEN <- <LENGTH .NAME> <LENGTH .INL> 1>>
+	       <COND (<AND <G? .LEN 0>
+			   <==? <ASCII 32> <NTH .NAME .LEN>>>
+		      <STRING <SUBSTRUC .NAME 0 <- .LEN 1>>
+			      <REST .INL>>	;" X.")
+		     (<AND <NOT <LENGTH? .INL 1>>
+			   <==? <ASCII 32> <NTH .INL 2>>>
+		      <STRING <SUBSTRUC .NAME 0 .LEN>
+			      <REST .INL 2>>	;"X. ")
+		     (T
+		      <STRING <SUBSTRUC .NAME 0 .LEN>
+			      <REST .INL 1>>	;"X.")>)
+	      (<==? <ASCII 32> <2 .NAME>>
+	       <REST .NAME 2>)
+	      (<==? <ASCII 32> <NTH .NAME <- <LENGTH .NAME> 1>>>
+	       <SUBSTRUC .NAME 0 <- <LENGTH .NAME> 2>>)
+	      (T .NAME)>>
+
+<DEFINE MAILBOX (LUSER "OPTIONAL" (FAST? <>) "AUX" N)
+	#DECL ((VALUE LUSER) STRING (FAST?) ANY (N) <OR STRING FALSE>)
+	<COND (<OR <NOT <SET N <FIELD .LUSER ,$NETA .FAST?>>>
+		   <EMPTY? .N>
+		   <=? .N "DM">>
+	       .LUSER)
+	      (<MEMQ !\@ .N> .N)
+	      (T <STRING .LUSER !\@ .N>)>>
+
+<DEFINE BIRTHDAY (LUSER "OPTIONAL" (FAST? <>)
+		  "AUX" (BD <FIELD .LUSER ,$BRTH .FAST?>) M MV S X L)
+	#DECL ((VALUE) <OR FALSE LIST> (LUSER) STRING (FAST? X) ANY (L) LIST
+	       (BD S) <OR STRING FALSE> (M) FIX (MV) <OR FALSE VECTOR>)
+	<AND .BD
+	     <NOT <LENGTH? .BD 2>>
+	     <OR <AND <SET MV <MEMBER <UPPERCASE <SUBSTRUC .BD 0 3>>
+				      '["DEC" "NOV" "OCT" "SEP" "AUG" "JUL"
+					"JUN" "MAY" "APR" "MAR" "FEB" "JAN"]>>
+		      <SET M <LENGTH .MV>>
+		      <SET S <MEMQ <ASCII 32> <REST .BD 3>>>>
+		 <AND <SET S <MEMQ !\/ .BD>>
+		      <TYPE? <SET L <LPARSE
+				     <SUBSTRUC .BD 0 <- <LENGTH .BD> <LENGTH .S>>>>>
+			     LIST>		;"for stupid compiler"
+		      <TYPE? <SET X <1 .L>> FIX>
+		      <SET M .X>
+		      <SET BD <REST .S>>
+		      <OR <AND <SET S <MEMQ !\/ .BD>>
+			       <SET S <SUBSTRUC .BD 0 <- <LENGTH .BD> <LENGTH .S>>>>>
+			  <SET S .BD>>>>
+	     <TYPE? <SET L <LPARSE .S>> LIST>	;"for stupid compiler"
+	     <TYPE? <SET X <1 .L>> FIX>
+	     ((.M .X) ())>>
+
+<DEFINE BD? ("OPTIONAL" (NAMVEC <OR <GET-MFD> '[]>)
+			(DT <DTNOW>)
+				  ;"Find birthday people of given date in given vector."
+	     "AUX" (NAMLIS ()) MD)
+	#DECL ((VALUE NAMLIS) <LIST [REST STRING]> (NAMVEC) <VECTOR [REST STRING]>
+	       (DT) <LIST <LIST [REST FIX]>> (MD) <LIST [REST FIX]>)
+	<SET DT <DTNORM .DT>>
+	<SET MD <REST <1 .DT>>>
+	<LSR-INIT>
+	<MAPF <>
+	      <FUNCTION (NAME "AUX" (B <BIRTHDAY .NAME T>))
+	       <COND (<AND .B
+			   <=? .MD <1 .B>>
+			   <NOT <MEMBER .NAME .NAMLIS>>>
+		      <SET NAMLIS <CONS .NAME .NAMLIS>>)>>
+	      .NAMVEC>
+	<LSR-FLUSH>
+	.NAMLIS>
+
+<DEFINE BD-MAIL ("OPTIONAL"	    ;"COMSYS-mail MSG to birthday people of given date."
+		 (DT <DTNOW>)
+		 (MSG '["
+Happy birthday to you!
+
+Happy birthday to you!
+
+Happy birthday, dear " ",
+
+Happy birthday to you!
+"])
+		 "AUX" (DONE ()) OUTCHAN)
+	#DECL ((DT) <LIST LIST> (MSG) <VECTOR [REST STRING]>
+	       (DONE) <LIST [REST STRING]>)
+      <SET DT <DTNORM .DT>>
+      <MAPF <> <FUNCTION (DIR "AUX" C N) #DECL ((N) <OR STRING FALSE>)
+	<COND (<SET C <OPEN "PRINT" "COMSYS;M">>
+	       <SET N <MAILBOX .DIR>>
+	       <SET OUTCHAN .C>
+	       <MAPF <>
+		     ,PRINT
+		     ("TO"
+		      (.N)
+		      "FROM"
+		      <UNAME>
+		      "ACTION-TO"
+		      (.N)
+		      "TEXT"
+		      <STRING <1 .MSG>
+			      <NICKNAME .DIR>
+			      <2 .MSG>>
+		      "SCHEDULE"
+		      '("SENDING" #FALSE ()))>
+	       <CLOSE .C>
+	       <PRINT .DIR ,OUTCHAN>	;"informational Batch output")>>
+       <BD? [!<GET-MFD "AI"> !<GET-MFD "DM"> !<GET-MFD "MC"> !<GET-MFD "ML">]>>>
+
+<ENDPACKAGE>

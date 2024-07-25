@@ -1,0 +1,22 @@
+Compilation record for: PS:<COMMUD>M-FORM.MUD.19;P777752;APT
+Output file:  DSK:<COMMUD>M-FORM.NBIN.19
+File loaded.
+Precompilation loaded.
+Functions ordered.
+COMPILING BASIC-FORMAT!-M-FORM!-PACKAGE
+Peephole  0% 492/489
+Job done in:  38 / 1:56
+COMPILING DDT-FORMAT!-M-FORM!-PACKAGE
+Peephole  0% 479/479
+Job done in:  33 / 1:23
+COMPILING ONLINE-SUMMARY!-M-FORM!-PACKAGE
+Peephole  2% 134/131
+Job done in:  6 / 14
+
+
+Total time used is
+	1 min. 42 sec. CPU time,
+	1 min. 2 sec. garbage collector CPU time,
+	4 min. 52 sec. real time.
+CPU utilization is 34.931507%.
+Number of garbage collects = 20

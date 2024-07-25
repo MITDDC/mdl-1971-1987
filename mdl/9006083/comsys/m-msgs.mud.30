@@ -1,0 +1,65 @@
+<PACKAGE "M.MSGS">
+
+<ENTRY DO-MSGS MSGS-FORMAT>
+
+<USE "MADMAN" "M.DEFS" "M.READ" "M.DAC" "NSTR" "M.DATA" "ITIME" "USRUTI">
+
+<SETG MSGS-FORMAT "DSK:COMDAT;F.MSG1">
+
+\
+
+<DEFINE DO-MSGS (ADRC "AUX" (WHERE '["DSK" "AI" "ML" "MC"])
+			   (MS ,MSG-SPACE) (CURSPACE .MS) MSF DST EXP)
+	#DECL ((ADRC) STRING (WHERE) <VECTOR [REST STRING]> (MSF) STRING
+	       (CURSPACE) <SPECIAL SPACE> (MS) SPACE (EXP) <OR LIST FIX FALSE>
+	       (DST) <LIST [REST STRING]>)
+	<SET MSF <OR <DRDA "" "MSG-FILE"> <ACOPY .MS "*MSG">>>
+	<SET DST <DISTRIB>>
+	<DWT .DST .ADRC "DISTRIB">
+	<SET EXP <OR <DRDA "" "EXPIRES"> <+ <ITIME> <* 14 262144>>>>
+	<DWT .EXP .ADRC "EXPIRES">
+	<DWT <MAPF ,ALLIST
+		   <FUNCTION (MACH)
+			     #DECL ((MACH) STRING)
+			     <ALIST .MS
+				    <ASTRING .MS .MACH ":.MSGS.;" .MSF>
+				    <ASTRING .MS "PRINT">
+				    <ASTRING .MS ,MSGS-FORMAT>>>
+		   .WHERE>
+	     .ADRC
+	     "RECEIVER-FILE-OUTPUT">
+	<PRCADD .ADRC "FILE-OUTPUT"> 
+	T>
+
+<DEFINE DISTRIB ("AUX" L (MS ,MSG-SPACE) (MACHINES <DATUM "MSGS">))
+	#DECL ((L) <OR FALSE <LIST [REST STRING]>> (MS) SPACE
+	       (MACHINES) <VECTOR [REST STRING LIST]>)
+	<COND (<DRDA "" "DISTRIB">)
+	      (<SET L <DRDA "" "ACTION-TO">>
+	       <SET L
+		    <MAPF ,LIST
+			  <FUNCTION (S "AUX" V)
+			       #DECL ((S) STRING
+				      (V) <OR <VECTOR STRING LIST> FALSE>)
+			       <COND (<==? <1 .S> !\>
+				      <SET S <REST .S>>)>
+			       <SET S <UPPERCASE <EXTRACT-RCVR .S>>>
+			       <COND (<SET V <MEMBER .S .MACHINES>>
+				      <MAPRET !<2 .V>>)
+				     (<==? <1 .S> !\*> <MAPRET .S>)
+				     (ELSE <MAPRET>)>>
+			  .L>>
+	       <SET L
+		    <MAPR ,LIST
+			  <FUNCTION (L)
+			       #DECL ((L) <LIST [REST STRING]>)
+			       <COND (<MEMBER <1 .L> <REST .L>>
+				      <MAPRET>)
+				     (ELSE <MAPRET <1 .L>>)>>
+			  .L>>
+	       <COND (<NOT <EMPTY? .L>>
+		      <ACOPY .MS .L>)>)
+	      (ELSE <ACOPY .MS '("*DM")>)>>
+
+<ENDPACKAGE>
+

@@ -1,0 +1,337 @@
+Changes to MUDDLE 55 preloaded packages			taa 5/1/79
+
+New library system
+	The library system now allows the storage of useful data
+regarding a package, in addition to its entries and the file it lives
+in.  In particular, it can store manifest gvals, newtype declarations,
+macros (sometimes), and rsubr decls.  Since this is the information used
+by the compiler, one can save a great deal of space and time by using
+information from the library where possible:  only the essential things
+are loaded, while nonessentials (code vectors, data structures, atoms
+that aren't entries) don't exist.
+
+	If ,L-USE-DATFILE is true, USE of a package will load the
+package from the datfile if possible.  It is impossible if the package
+has no datfile entry, or if the package has changed since the datfile
+entry was created.  In those cases, the package itself is loaded
+instead.  If ,L-ALWAYS-DATFILE is true, an ERROR will result if the
+datfile entry is outdated; one can ERRET T to cause the real package to
+be loaded.  USE-DATFILE is just like USE, except it temporarily setgs
+L-USE-DATFILE and L-ALWAYS-DATFILE to T.  This is useful primarily for
+debugging.
+
+	The datfile contains, for each package, information for each
+interesting entry:  manifest gvals, newtype declarations, rsubr decls,
+and macros.  It also has, of course, the lists of ENTRYs and RENTRYs. 
+It does NOT contain random structures, nor does it contain functions. 
+When a package is loaded from the datfile, it is effectively
+USE-DEFERred; if you end up needing the real package, it will be loaded
+dynamically.
+
+	Some packages can not have datfile entries.  If a package
+defines macros that use data not stored in the datfile (if a macro calls
+a function, for example), the package will not get a datfile entry--most
+uses would require the whole package to be loaded anyway.  Note that the
+datfile entry is generated from the package after it has been
+loaded--things like MSETG will cause the right thing to happen.
+
+	The major visible change to LUP is that LUP-ADD-PACK now takes a
+third argument, which is optional; if it is false (default true) no
+datfile entry will be created for the package.  Since datfile entries
+are only useful in the compiler, it doesn't do much good to have them
+for packages that are only called from toplevel (FINDATOM, DEBUGR, &c.).
+
+	Careful readers will have noticed that it is possible for a
+datfile entry to become obsolete.  Since it is rather painful to have to
+remember to add a package to the library every time it's changed, the
+library garbage collector (which will be run about once a week) has been
+modified to notice when a package has been updated; it will make a new
+datfile entry for such packages when it runs.
+
+ENV package
+	The ENV package will (when various conventions are worked out)
+make it easier to load things into different environments.  It has three
+entries:
+FEATURES, given no arguments, returns the current feature list. 
+Otherwise, it adds its arguments to the feature list, or, if the first
+argument is false, removes them.  Thus:
+	<FEATURES "COMPILER">
+says that we're currently in a compiler.  (All of these routines take
+either strings or atoms; to avoid oblist problems, everything turns into
+a string internally.)
+FEATURE? returns T if any of its arguments is on the feature list.
+EVAL-WHEN is the most useful entry.  Its first argument is a feature or
+list of features; if any of the specified features is on the feature
+list, the remaining arguments are evaluated.  If the first argument is a
+list whose first element is a false, the test is inverted.  Thus:
+<EVAL-WHEN (<> COMPILER) <FLOAD "MUMBLE FROTZ">>
+will fload MUMBLE FROTZ only when it's not evaluated in a compiler.
+<EVAL-WHEN GLUE <SETG FOO 1>>
+will SETG FOO only when it's evaluated in a GLUE.
+(Because I just thought of the (<> COMPILER) feature, the version
+currently loaded in NU doesn't have this; it will soon.)
+	Note that at the moment nobody ever adds anything to the feature
+list; eventually things like the compiler and glue will set it up
+correctly.
+
+EDIT & PPRINT changed				pdl 5/1/79
+
+	There is a new command to EDIT: IG ("Insert into Group").  It
+takes any number of objects.  Those which are not atoms will be inserted
+as with I.  Those which are atoms will insert instead a form which would
+SETG, DEFINE, or SET the atom to its value (depending on what sort of
+value it has, of course).  If the object being edited is a group
+produced by GROUP-LOAD (or even <SET FOO ()>), then the group is changed
+and the newly added stuff will be included when it is next GROUP-DUMPed.
+
+	PPRINF, which is essentially unused as it currently exists, has
+been expanded slightly.  If the first argument is an atom or list of
+atoms, the value(s) will be PPRINTed to the file given as the second
+argument.  (The second argument defaults to a file with the same first
+name as the pname of the atom).
+
+	These two changes are intended to increase the simplicity of
+"programming on the fly" in your Muddle.
+
+
+MUDDLE 55 preloaded packages		11/24/78 (pdl, taa)
+
+0) Summary
+
+     Most of the preloaded packages in MUDDLE have been changed to some
+extent for this version; in some cases, they have been completely
+rewritten.
+
+     Changes include:
+
+	PMAP is no longer pre-loaded
+	SDML is no longer pre-loaded
+	CPYFIL is no longer preloaded
+
+	PAGES replaces PMAP as an interface to CORBLK
+	LIB is the new interface to a new library system
+	PCK is changed to reflect the above and has some new features
+	EDIT has some new commands and features.
+
+1) Changes to the package system.
+
+	Summary:
+
+  		New package system features:
+			Translations
+			L-SEARCH-PATH (instead of L-LIBRARIES)
+			RENTRY (put some entries in ROOT)
+
+  	Incompatibilities:
+
+		Demise of L-LIBRARIES, L-INDEX-NAME, L-ITEMS-NAME
+
+Translations
+
+     It is now possible to cause a package, when loaded, to turn into
+some other package in core.  For example, translating "GLUE" to "NGLUE"
+will cause the GLUE package to become the NGLUE package when loaded.  If
+GLUE has already been loaded, then there will be two distinct copies of
+the package around (which can prove useful if one is applying GLUE to
+itself).  One can also translate a package to FALSE, which causes it to
+appear on <1 .OBLIST>, instead of whatever package oblists might exist
+for it.  This can be useful for debugging.
+
+     Interface:
+
+	<TRANSLATE <string: package name> <string: translated name>>
+
+translates the first string to the second.
+
+	<UNTRANSLATE <string: package name>>
+
+Clears any translation of the supplied package name.  Thus
+
+	<TRANSLATE "FINDATOM" "FROBOZZ">
+
+is undone by <UNTRANSLATE "FINDATOM">.
+
+	<TRANSLATIONS>
+
+Lists all translations currently in existence.  The GVAL of
+L-TRANSLATIONS is a list containing the translations.
+
+     Note that translations apply to USE, USE-DEFER, and so on.  You may
+or may not be screwed by changing translations in the middle of a
+USE-DEFER.
+
+L-SEARCH-PATH
+
+     The old version of the package system had the list L-LIBRARIES,
+which specified the libraries to search for a package.  There was no
+user control over the directories to search.  The new package system has
+a list L-SEARCH-PATH, which specifies both libraries and directories to
+search.
+
+     A library is specified by a string, the name of the library:
+"LIBMUD;LIBMUD", for example, is the standard muddle library on ITS. The
+second file name is by default "LIB"; this may be changed by munging the
+GVAL of L-LIBRARY-NAME (previous versions had "ITEMS" and "INDEX", which
+were the GVALs of L-ITEMS-NAME and L-INDEX-NAME).
+
+     A directory is specified by a vector, in the following format: If
+empty, search the <SNAME> directory, for files whose second names are
+specified by L-SECOND-NAMES (q.v.).
+
+     If one element long, search the directory specified by the first
+element, which may be either a string or a false (false--><SNAME>).  Use
+second names specified by L-SECOND-NAMES. Otherwise, search the
+directory specified by the first element, using second names specified
+by the remaining elements of the vector.
+
+     The initial value of L-SEARCH-PATH is:
+
+	("LIBMUD" "LIBMUD;LIBMUD" [] ["MBPROG"] ["MPROG" ">"])
+
+This says:  search any libraries in my directory, then search
+"LIBMUD;LIBMUD".   Next, search my directory for a file whose first name
+is the package name, and whose second name is one of L-SECOND-NAMES.  If
+that fails, apply the same search to MBPROG.  If that fails, see if
+MPROG;<package name> > exists.
+
+     The initial value of L-SECOND-NAMES is:
+
+	["FBIN" "GBIN" "NBIN" ">"]
+
+The demise of RPACKAGEs
+
+     Although RPACKAGE still exists, its use is discouraged.  If a
+package wants to have an entry in the root, it should use RENTRY, which
+is like ENTRY except that its arguments end up in the root rather than
+in the package's external oblist.  Thus the "PP" (PPRINT) PACKAGE will
+say <RENTRY PPRINT INDENT-TO ...> for those entries which really want to
+look like SUBRs.
+
+     Until MUDDLE 54 goes away, this version of the package system will
+live in MBPROG;NPCK FBIN, while the old version will remain in
+MBPROG;PCK FBIN.
+
+2) New library system
+
+     Previous incarnations of the library were SDM data bases.
+Unfortunately, SDM does not run on 10X/TOPS-20, and has far more power
+than the library system requires.  In consequence, a new library system
+has been implemented both for ITS and for TOPS-20.  The only known
+incompatibility with the present system is that it is no longer possible
+to include the body of a package in the library itself.  This feature
+was mainly used for obscure COMSYS-related data.
+
+     Note that the SDML, PMAP, VCTMAN, and CPYFIL packages will no
+longer be preloaded, since they were used only for the library system.
+
+Updates
+
+     Updates are almost identical to the current system:  the LUP
+package does all the right things:
+
+	LUP-ACT:  activates the specified library.  If it doesn't exist,
+it will be created.
+
+	LUP-DCT:  de-activates the currently active library, if it is in
+a consistent state (if you ctrl-S out of the middle of an update, it
+won't be).
+
+	LUP-ADD-PACK:  takes a file name (the package) and an optional
+flag, which if true (default false) allows you to update the entry for a
+package already in the library.  If no library has been activated,
+LIBMUD;LIBMUD will be. LUP-ADD-DATUM:  takes a file name, a datum name,
+and an optional flag, as in LUP-ADD-PACK.
+
+	LUP-DEL:  deletes a package from the library.  The space used by
+the package's entries is added to the free chain.
+
+	LIB-GC:  takes a library name.  Garbage-collects the library in
+question, if this is required.  Garbage collection is occasionally
+useful since it causes all the elements of each hash bucket to live near
+each other in the file, thus improving performance during searches.  It
+also allocates some free storage in each page of the file.
+
+3) The PAGES package
+
+     The PAGES package (RPACKAGE, actually) is intended to replace the
+PMAP RPACKAGE in the initial MUDDLE; it exists because some packages use
+some of the functions of the PMAP package without USEing it.  There are
+three entries:
+
+	CORE-BLOCK takes a <PRIMTYPE WORD> and four FIXes.  These are
+passed unmodified to a .CALL CORBLK, in order:
+
+	Mode for the page
+	Job to modify
+	Page in job
+	Source of page
+	Page in source
+
+It returns a more-or-less meaningless FIX if the CORBLK succeeds, and a
+FALSE containing the error code returned if the CORBLK fails.
+
+	PAGE-FIND takes an optional FIX, default 1, which is the number
+of pages to get from the interpreter.  It calls PGFIND (if you don't
+know what that is, probably you don't want to read any further), and
+returns either a FALSE, if the PGFIND failed, or a FIX, the page number
+of the lowest page in the block you got.
+
+	PAGE-GIVE takes a FIX and an optional FIX, default 1.  It
+returns pages obtained via PAGE-FIND to the interpreter.  The first
+argument is the page number of a block of pages; the second is the
+number of pages in the block.  The value is a meaningless FIX.
+
+4) EDIT
+
+     There are several new commands, a new "subsystem" and some new
+magic behavior.
+
+New commands:
+
+     OT -- Open This; if positioned to the left of an "openable" object,
+in the sense of <EDIT something> or O something$, opens it.
+
+     SW -- Swap; moves the cursor and the object to its right one object
+one object to the right.  For example;
+
+<..& A B LXMT C D E &..>
+SW$
+<..& A B D LXMT C E &..>
+SW$
+<..& A B D E LXMT C &..>
+
+etc.  This has the effect of moving the object to the right of the
+cursor to the right.
+
+     QR -- Quit and Retry; now takes an optional fix argument telling
+which frame to retry.
+
+     BA -- Break After; like BK except the break occurs after the object
+the breakpoint is on has been evaluated.  The value returned (which may
+be tested by the predicate) is <LVAL VALUE>.  This sort of break prints
+as a glyph hanging on the right side of the object broken.
+
+Monitors Interface:
+
+     UM -- Use Monitors; makes monitors available (a la Cursors).
+
+     RW -- Read/Write Monitor; places a read-write monitor on the atom
+given as argument.  May be followed by a predicate and actions as for
+breakpoints.  The location where the monitor is placed is irrelevant, as
+long as it is after the atom being monitored is assigned.
+
+     RM -- Read Monitor; as above but Reading only.
+
+     WM -- Write Monitor; as above but Writing only.
+
+For more discussion of this feature, see "The MDL Programming
+Environment", which contains a more detailed description.
+
+New Cleverness:
+
+     When one opens for editing an ATOM which is an entry or internal of
+a package, EDIT attempts to splice the path for that package into the
+current OBLIST path in such a way as to reduce the number of trailers
+printed.  This is intended to make things more legible (and has the nice
+side-effect of speeding up printing; PPRINT chokes on excessive
+trailers).  This feature may be disabled by <SETG E-PKG <>>.

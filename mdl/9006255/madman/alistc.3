@@ -1,0 +1,207 @@
+<SETG LISTB-UVEC <IUVECTOR 5 #WORD 0>>
+<SETG LISTB-COUNT 0>
+<SETG LISTB-HIGHID 0>
+
+<TITLE LOCKED-PAGES>
+	<DECLARE ("VALUE" ANY FIX)>
+	<DPUSH	TP* (AB)>
+	<PUSHJ	P* ILOCK>
+	<JRST	FINIS>
+
+<INTERNAL-ENTRY ILOCK 1>
+	<SUBM	M* (P)>
+	<MOVEI	A* PGLOCKS>
+	<SETZ	B*>
+	<MOVE	D* (TP)>
+	<HRLI	D* *430100*>
+LOOP	<LDB	E* D>
+	<JUMPE	E* LOCKED>
+GOOP	<ADDI	B* P/L>
+	<IBP	D>
+	<TLNE	D* *770000*>
+	<JRST	LOOP>
+	<ADDI	A* 1>
+	<CAIGE	A* 1024>
+	<JRST	LOOP>
+	<MOVE	A* <TYPE-WORD ATOM>>
+	<MOVE	B* <MQUOTE T>>
+	<SUB	TP* [<2 (2)>]>
+	<JRST	MPOPJ>
+
+LOCKED	<PUSH	P* A>
+	<PUSH	P* B>
+	<PUSH	P* D>
+	<PUSH	P* E>
+	<PUSH	TP* <PQUOTE "
+Pages locked from ">>
+	<PUSH	TP* <MQUOTE "
+Pages locked from ">>
+	<MCALL	1 PRINC> 
+	<PUSH	TP* <TYPE-WORD FIX>>
+	<PUSH	TP* -2(P)>
+	<MCALL	1 PRIN1>
+	<PUSH	TP* <PQUOTE " to ">>
+	<PUSH	TP* <MQUOTE " to ">>
+	<MCALL	1 PRINC>
+	<PUSH	TP* <TYPE-WORD FIX>>
+	<MOVE	A* -2(P)>
+	<ADDI	A* <- ,P/L 1>>
+	<PUSH	TP* A>
+	<MCALL	1 PRIN1>
+	<POP	P* E>
+	<POP	P* D>
+	<POP	P* B>
+	<POP	P* A>
+	<JRST	GOOP>
+
+; "Given page number of MFD in core and Low Directory # for that MFD"
+
+<TITLE MFD-SCAN>
+	<DECLARE ("VALUE" ANY FIX FIX)>
+	<DPUSH	TP* (AB)>
+	<DPUSH	TP* 2(AB)>
+	<PUSHJ	P* ISCAN>
+	<JRST	FINIS>
+
+<INTERNAL-ENTRY ISCAN 2>
+	<SUBM	M* (P)>
+	<MOVE	A* (TP)>
+	<MOVE	B* -2(TP)>
+	<MOVEI	C* 1024>
+	<LSH	B* 10>
+	<PUSH	P* [0]>
+LOOP	<SKIPE	D* (B)>
+	<PUSHJ	P* FOUND>
+	<SOJE	C* DONE>
+	<ADDI	A* 1>
+	<AOJA	B* LOOP>
+DONE	<SUB	TP* [<4 (4)>]>
+	<MOVE	A* <TYPE-WORD FIX>>
+	<POP	P* B>
+	<JRST	MPOPJ>
+
+FOUND	<SUBM	M* (P)>
+	<PUSH	P* A>
+	<PUSH	P* B>
+	<PUSH	P* C>
+	<PUSH	P* D>
+	<PUSH	TP* <PQUOTE "
+ Directory ">>
+	<PUSH	TP* <MQUOTE "
+ Directory ">>
+	<MCALL	1 PRINC>
+	<PUSH	TP* <TYPE-WORD FIX>>
+	<PUSH	TP* -3(P)>
+	<MCALL	1 PRIN1>
+	<PUSH	TP* <PQUOTE " --> Page ">>
+	<PUSH	TP* <MQUOTE " --> Page ">>
+	<MCALL	1 PRINC>
+	<MOVE	A* (P)>
+	<LSH	A* -10>
+	<PUSH	TP* <TYPE-WORD FIX>>
+	<PUSH	TP* A>
+	<MCALL	1 PRIN1>
+	<POP	P* D>
+	<POP	P* C>
+	<POP	P* B>
+	<POP	P* A>
+	<AOS	-1(P)>
+	<JRST	MPOPJ>
+
+;"Given ASYLUM page number of MFD in core and Low Directory # for that MFD"
+
+<TITLE MFD-LISTB>
+	<DECLARE ("VALUE" ANY ASYLUM UVECTOR FIX FIX)>
+	<PUSH	TP* (AB)>
+	<AOBJN	AB* HERE -1>
+	<PUSHJ	P* ISCAN>
+	<JRST	FINIS>
+
+<INTERNAL-ENTRY ISCAN 2>
+	<SUBM	M* (P)>
+	<MOVE	A* (TP)>		; "Directory #"
+	<MOVE	B* -2(TP)>		; "Pointer to MFD"
+	<MOVEI	C* 1024>		; "Count"
+	<LSH	B* 10>			; "Location in core"
+LOOP	<SKIPE	D* (B)>			; "Get a directory here?"
+	<PUSHJ	P* FOUND>		; "Yes. Now hack it."
+	<SOJE	C* DONE>		; "Loop for entire MFD"
+	<ADDI	A* 1>			; "Aos directory number"
+	<AOJA	B* LOOP>		; "And MFD pointer"
+DONE	<MOVE	A* -5(TP)>
+	<MOVE	B* -4(TP)>
+	<SUB	TP* [<8 (8)>]>
+	<JRST	MPOPJ>
+
+FOUND	<SUBM	M* (P)>
+	<PUSH	P* A>			; "All of these must be saved."
+	<PUSH	P* B>
+	<PUSH	P* C>
+	<PUSH	P* D>
+	<MOVE	A* -4(TP)>		; "UVECTOR"
+	<MOVEM	D* 1(A)>		; "Save location of directory"
+	<MOVEI	B* *2000*>
+	<HRLI	B* *777776*>
+	<MOVEM	B* (A)>			; "And -1,,length"
+	<MOVE	B* [<(2) 2>]>
+	<ADDM	B* -4(TP)>		; "Rest the UVECTOR by 2"
+	<PUSH	TP* -7(TP)>		; "The ASYLUM"
+	<PUSH	TP* -7(TP)>
+	<PUSH	TP* <TYPE-WORD FIX>>	; "The directory number"
+	<LSH	D* -10>
+	<PUSH	TP* D>
+	<MCALL	2 DIRMAP>		; "Map in the directory"
+	<MOVEI	A* DIRSIZE>		; "Counter for SOSing, # of entries/directory"
+	<LSH	B* 10>			; "Get core address"
+	<ADDI	B* OBJSTART>		; "And add offset to start of dir entries"
+	<SETZ	C*>			; "The place in the directory"
+FOUND1	<SKIPE	D* 1(B)>		; "The location pointer if any"
+	 <PUSHJ	P* ADENT>		; "Add entry to moby uvector"
+	<ADDI	B* NAMBLKLEN>		; "To next entry"
+	<ADDI	C* 1>
+	<SOJN	A* FOUND1>		; "And loop"
+BIGPOP	<POP	P* D>			; "Return from these calls"
+	<POP	P* C>
+	<POP	P* B>
+	<POP	P* A>
+	<JRST	MPOPJ>
+
+ADENT	<SUBM	M* (P)>
+	<PUSH	P* A>
+	<PUSH	P* B>
+	<PUSH	P* C>
+	<PUSH	P* D>
+	<PUSH	TP* -7(TP)>		; "The ASYLUM"
+	<PUSH	TP* -7(TP)>
+	<PUSH	TP* <TYPE-WORD FIX>>	; "5 words"
+	<PUSH	TP* [5]>
+	<PUSH	TP* <TYPE-WORD FIX>>	; "The location"
+	<PUSH	TP* D>
+	<MOVE	A* <MQUOTE <RGLOC LISTB-UVEC T>>>
+	<ADD	A* GLOTOP 1>
+	<PUSH	TP* (A)>		; "The uvector"
+	<PUSH	TP* 1(A)>
+	<MCALL	4 DATREAD>		; "Read in data header"
+	<MOVE	A* -4(TP)>
+	<MOVE	C* (P)>			; "Location"
+	<MOVEM	C* 1(A)>
+	<MOVE	C* -8(P)>		; "Directory number"
+	<IMULI	C* DIRSIZE>
+	<ADD	C* -1(P)>	
+	<MOVE	D* <MQUOTE <RGLOC LISTB-HIGHID T>>>
+	<ADD	D* GLOTOP 1>
+	<MOVEM	C* 1(D)>
+	<HRLS	C>			; "File # in LH"
+	<HRR	C* 4(B)>		; "The length"
+	<MOVEM	C* (A)>
+	<MOVE	C* [<(2) 2>]>
+	<ADDM	C* -4(TP)>
+	<MOVE	D* <MQUOTE <RGLOC LISTB-COUNT T>>>
+	<ADD	D* GLOTOP 1>
+	<AOS	1(D)>
+	<JRST	BIGPOP>
+
+	<END>
+
+
+ 

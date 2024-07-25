@@ -1,0 +1,101 @@
+
+<PACKAGE "M-BUG">
+
+<ENTRY DO-BUG-EXPANSION>
+
+<USE "M-DEFS" "M-DATA" "M-READ" "M-DAC" "MADMAN" "EXPUTI" "USRUTI" "VCTSRC" "TOKENS">
+
+"Do expansion if we can.  If not, send to BUG-frob@AI."
+
+<DEFINE DO-BUG-EXPANSION (ADR
+			  "AUX" (XLIST <DATUM "BUGEXP">)
+			        (ADT <DRD .ADR "ADDRESSED-TO">)
+				(FROMHOST <DRD "" "RECEIVED-FROM-HOST">)
+				(TMP ()) TMP1 TMP2
+				(MS ,MSG-SPACE))
+	#DECL ((ADR DATUM) STRING (ADT) <OR FALSE STRING> (MS) SPACE
+	       (FROMHOST) <OR FALSE FIX> (TMP) LIST (TMP1) <OR FALSE STRING>
+	       (XLIST) VECTOR (TMP2) LIST)
+	<COND (<==? .FROMHOST ,HOSTNUMBER> <SET FROMHOST <>>)>
+	<COND (<AND .XLIST .ADT>
+	       <SET ADT <UC-STR .ADT>>
+	       <COND (<SET TMP1 <MEMBER "BUG-" .ADT>>
+		      <SET TMP1 <REST .TMP1 4>>
+		      <SET TMP <ADR-EXPAND <SET TMP2 (.TMP1)> .XLIST .FROMHOST>>)
+		     (<OR <SET TMP1 <MEMBER "(BUG" .ADT>>
+			  <SET TMP1 <MEMBER "(FEATURE" .ADT>>>
+		      <SET TMP2 <TOKENS <REST .ADT> " " ")">>
+		      <SET TMP2 <REST .TMP2>>
+		      <SET TMP <ADR-EXPAND .TMP2 .XLIST .FROMHOST>>)
+		     (ELSE <SET TMP2 (.ADT)>)>
+	       <COND (<EMPTY? .TMP>
+		      <SET TMP <ALIST .MS <ASTRING .MS "BUG-" <1 .TMP2> "@AI">>>)
+		     (ELSE <SET TMP <ACOPY .MS .TMP>>)>
+	       <OR <EMPTY? .TMP> <DWT .TMP "" "MORE-TO">>
+	       <PRCADD "" "EXPANSION">
+	       <PRCADD "" "TRANSMISSION">
+	       T)>>
+
+<DEFINE ADR-EXPAND (ALIST "OPTIONAL" (XLIST <DATUM "BUGEXP">) (LOCAL-ONLY? <>))
+	#DECL ((ALIST) LIST (XLIST) <VECTOR [REST STRING LIST]>
+	       (LOCAL-ONLY?) <OR FIX FALSE> (VALUE) <LIST [REST <OR STRING ATOM>]>)
+	<SET ALIST
+	<MAPF ,LIST
+	      <FUNCTION (A "AUX" B)
+		   #DECL ((A) STRING (B) <OR FALSE LIST> (K) <OR STRING FALSE>)
+		   <COND (<SET B <SYMLOOK <UC-STR .A> .XLIST>>
+			  <SET B <L-EXP .B .XLIST>>
+			  <COND (.LOCAL-ONLY?
+				 <SET B
+				      <MAPF ,LIST
+					    <FUNCTION (A)
+						 #DECL ((A) <OR STRING ATOM>)
+						 <COND (<TYPE? .A ATOM>
+							<MAPRET <PNAME .A>>)
+						       (<ATSIGN? .A> <MAPRET>)
+						       (ELSE <MAPRET .A>)>>
+					    .B>>)>
+			  <MAPRET !.B>)
+			 (ELSE <MAPRET>)>>
+	      .ALIST>>
+	<MAPR <>
+	      <FUNCTION (L)
+			#DECL ((L) <LIST [REST <OR ATOM STRING>]>)
+			<COND (<TYPE? <1 .L> ATOM>
+			       <PUT .L 1 <PNAME <1 .L>>>)>>
+	      .ALIST>
+	.ALIST>
+
+<DEFINE UC-STR (S)
+	#DECL ((VALUE S) STRING)
+	<MAPR <>
+	      <FUNCTION (S "AUX" (C <1 .S>)) 
+		   #DECL ((S) STRING (C) CHARACTER)
+		   <COND (<OR <G? <ASCII .C> <ASCII !\z>>
+			      <L? <ASCII .C> <ASCII !\a>>>)
+			 (ELSE <PUT .S 1 <ASCII <- <ASCII .C> 32>>>)>>
+	      .S>
+	.S>
+
+<DEFINE SYMLOOK (OBJ TABLE "OPTIONAL" (CNT 10) "AUX" TBL S) 
+	#DECL ((OBJ) STRING (TABLE) <VECTOR [REST STRING LIST]>
+	       (VALUE) <OR LIST FALSE> (CNT) FIX
+	       (TBL) <OR <VECTOR STRING LIST> FALSE>
+	       (S) <OR STRING FALSE>)
+	<COND (<SET TBL <VCTSRC .TABLE .OBJ>>
+	       <MAPF ,LIST
+		     <FUNCTION (S) 
+			  #DECL ((S) ANY)
+			  <COND (<AND <0? .CNT> <TYPE? .S ATOM STRING>>
+				 <MAPRET .S>)
+				(<AND <TYPE? .S STRING> <MEMQ !\@ .S>>
+				 <MAPRET .S>)
+				(<AND <TYPE? .S STRING>
+				      <NOT <MEMQ !\@ .S>>>
+				 <MAPRET !<SYMLOOK .S .TABLE <- .CNT 1>>>)
+				(<TYPE? .S ATOM> <MAPRET .S>)
+				(ELSE <MAPRET>)>>
+		     <2 .TBL>>)
+	      (<SET S <KEYGET .OBJ>> (.S))>>
+
+<ENDPACKAGE>

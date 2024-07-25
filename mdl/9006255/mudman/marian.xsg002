@@ -1,0 +1,175 @@
+
+PROPOSAL FOR MARIAN: A COMPUTERIZED LIBRARIAN
+
+S. W. Galley, 30 March 1976
+
+
+APOLOGIA
+
+This proposal is not a panacea that will completely automate our program
+and data library system; it is just an attempt to bring together some of
+the existing disparate pieces and make them more manageable.  In keeping
+with the spirit of "modular programming", most of this proposal deals
+with library MECHANISMS, not POLICY.
+
+STRUCTURE AND DEFINITIONS
+
+First let me describe the components of this library, drawing from the
+terminology used for garden-variety libraries.  I think it is useful to
+employ this terminology, because it is familiar and not clogged like
+computer jargon with connotations.  In fact, one could do worse than to
+model the library itself on real-world libraries.
+
+The main part of the library is the STACKS, a place where all the stuff
+is kept out of the rain.  The stacks are filled with ITEMs, which are
+what the librarian is trying to keep track of and make available to
+customers.  Items in a conventional library are books, periodicals,
+films, etc.  Items in our library are packages, datums, etc.
+
+To find what items are in the stacks, one uses the CATALOG, which is a
+collection of CARDs.  Each card describes one item in the stacks,
+telling all you wanted to know about it but were afraid to ask.  In
+particular, a card tells where the item is, where an ABSTRACT for it is,
+which VERSIONs (editions) of it exist, etc.
+
+One is led to seek out the library by encountering a REFERENCE to an
+item in it, say in a program one is writing.  (In a book, one would say
+or read "see reference 41 for details".  In a program, one says <FCN41
+args>.)  In order to tell exactly what item is referred to, one uses a
+BIBLIOGRAPHY (in the back of the book or in USE statements in the
+program).
+
+The library grows through ACQUISITION of new items, both DONATIONs and
+special ORDERs.  (In keeping with the spirit of "computer lib", I prefer
+to speak of charitable donations rather than submissions: no one should
+have to submit in any way to the whims of a mechanical beast.)
+
+Finally, the LIBRARIAN is the overseer of the library, keeping things in
+order and helping customers find things.  For our library, the librarian
+is named MARIAN (from "The Music Man" by Meredith Willson).
+
+THE STACKS
+
+MARIAN takes care of the stacks.  She doesn't let users go into the
+stacks, because they might mess things up.  She knows where every item
+is, because she keeps the catalog up-to-date and correct.  If she finds
+uncatalogued items in the stacks or unstacked cards in the catalog, she
+fires off a message to those responsible.  She moves items from place to
+place to satisfy her own sense of propriety.  She keeps all frequently-
+used items on-line, in disk files.  She puts little-used, old items out
+of the way, in places like backup tapes and the Datacomputer.  Every item
+in the stacks is identified by its name and version number.  Personal
+copies of library items can be obtained through MUDDLE functions (perhaps
+a LIB device?), or impatient types can guess the name of the file where
+the item is stored.
+
+THE CATALOG
+
+The catalog will probably be an IRS data base.  In fact it may be the
+same as the MUDIRS data base of abstracts, augmented by some new fields
+for those abstracts that specify "LIBRARY" as location.  (If this comes
+to pass, TS MUDIRS may become TS MARIAN.)  These new fields will probably
+include the following:
+
+	VERSIONS: {# type whodunit how when where reliability old-stuff}*
+		# := version number (separate number for each type)
+		type :=	U for MUDDLE source
+			A for ASSEMBLY-CODE (not ATTACH commands)
+			B for BINARY
+			N for NBIN
+			G for glued NBIN
+			F for FBIN (not FORTRAN program)
+			S for Subsystem
+			D for DATUM
+			...
+		whodunit := who donated or ordered this version
+		how := compiler, gluer, PDUMP, ...
+		when := date and time donated or order fulfilled
+		where := exactly where is the item (file, tape, DC node,...)
+		reliability := (no. of accesses - no. of complaints)???
+		old-stuff := catch-all: how to find replaced pieces of
+			this catalog card or of abstract proper that
+			applied to this version and older ones, e.g.,
+			name and time of VANISH file
+	STANDING-ORDERS: {type}* -- what new versions to order (thru
+		compiler etc.) every time the source is updated
+	FRIENDS: -- what other items will be glued, PDUMPed, etc. with
+		this one
+	HOSTS: {host-id}* -- what host(s) can use this item, if not all
+	OPERATING-SYSTEMS: {os}* -- what system(s) can ...
+	MAKER: -- How to Make a Subsystem (TS file), i.e. arguments for
+		assembling SUBSYS MAKER and how to generate the SAVE file
+
+REFERENCES
+
+A program makes reference to a library item by using the name of one of
+the item's ENTRYs.  The program's bibliography (USE statements) tell
+just which item is referenced.
+
+The normal USE (or USE-TOTAL or USE-DEFER or USE-DATUM) causes reference
+to the latest version of the item, which will be arranged to be the
+fastest to load and run.  In order to use a different version, the
+program must add -SPECIFIC to the USE (or ...).  USE-SPECIFIC takes
+pairs of arguments, namely item names and version specifiers.  A version
+specifier can be any of:
+	FIX > 0		  version number
+	FIX < 0		  that many versions before the latest
+	FIX = 0		  the latest version (default)
+	<LIST LIST LIST>  a date/time whose latest version is to be used
+
+I realize that this mechanism glosses over a controversy: what exactly
+is meant by a reference within a library item?  One school of thought
+dictates that it always mean the same that it did when the item was
+acquired, thus "freezing" a chain or tree of references forever.  Another
+school of thought dictates that L-LIBRARIES should be searched to find
+the meaning of a reference, thus avoiding the use of different versions
+of the same item in one computation.  The -SPECIFIC mechanism leaves the
+choice up to the item itself.  It may become necessary, to avoid throwing
+programs into confusion, to employ a different Oblist for non-current
+versions of an item, say named by both item name and version number.
+
+This mechanism also makes it difficult for a subsystem user (not a
+programmer) to fall back on an earlier incarnation of the subsystem
+if a bug crops up.  However, the subsystem maintainer (a programmer)
+can be -SPECIFIC about which versions of library items to use and/or
+can use the TS O..... convention to minimize headaches.
+
+Someone who wants to relive The Way We Were or to avoid "new-fangled"
+software can redefine USE to be USE-SPECIFIC of three versions ago or
+of a certain date.  (Or, as JCM suggested, specify a future date and
+we can all take a vacation till then.)
+
+There will also be a new kind of bibliography entry: INCLUDE or
+INCLUDE-SPECIFIC instead of USE.  It is designed to handle those cases
+where part of a PACKAGE is written in Muddle ('type' U) and part in
+assembly-code ('type' A).  It is similar to .INSRT in MIDAS, that is,
+the named item is logically inserted in place of the INCLUDE statement.
+It is different in that MARIAN (and compiler, abstracter, etc.?) will
+find the version of the proper 'type' for the current context: binary for
+compiling, source for abstracting, assembly-code for assembling, etc.  No
+PACKAGE overhead is incurred.
+
+ACQUISITIONS
+
+A new item will be donated to the library by putting its file in the
+DONATE disk directory.  A Batch task will do all the heavy work during
+the night.  This task will look at the first character of the file's
+second name to ascertain the item's 'type', at the author of the file
+for 'whodunit', and the creation date of the file for 'when'.
+
+If the donor wants the item to be in the library immediately, the item
+should be LUP-ADDed to DONATE;NEWLIB and then that library should be
+consed into L-LIBRARIES.  The Batch task will move it to the main
+library later on.
+
+FBINs are not donated; instead a user asks MARIAN to order them made.
+In fact MARIAN will make a new one when the source file is thereafter
+updated, so the user needs to ask only once.  Similarly, source files may
+be donated and ordered to be compiled, glued, etc.
+
+Abstracts are donated to the catalog in the same way, with second file
+name ABSTR.  Perhaps sugared versions of donation will be offered by TS
+ABSTR (renamed to TS DONATE?).  In this way a source file could be
+loaded, abstracted, and donated -- keeping the catalog synchronized with
+the stacks.
+

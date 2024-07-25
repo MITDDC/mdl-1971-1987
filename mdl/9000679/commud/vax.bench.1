@@ -1,0 +1,174 @@
+11-May-81 16:28:40-EDT,6656;000000000001
+Date: 11 May 1981 1628-EDT
+From: AV
+Subject: [KAHN at USC-ISI: vax bvenchmarks]
+To: PDL, CLR
+
+	I would like to talk abot this to see
+if we are making a mistake getting a 750.
+			Al
+                ---------------
+Mail-from: USC-ISI rcvd at 9-May-81 1317-EDT
+Date: 9 May 1981 1012-PDT
+Sender: KAHN at USC-ISI
+Subject: vax bvenchmarks
+Subject: [LYNCH at USC-ISIB: VAX 750/780 benchmarks from Kashtan]
+From: KAHN at USC-ISI
+To: av at MIT-XX
+Message-ID: <[USC-ISI] 9-May-81 10:12:28.KAHN>
+
+al,
+
+dan lynch from isi sent these. i thought you'ld like
+to see them too. If you have questions, better
+send th;em to dan, if you know him and tell him that
+i shared the data with you.
+
+ill let him know too.
+
+bob
+	
+Begin forwarded message
+Mail-From: ARPANET host USC-ISIB rcvd at 7-May-81 1900-PDT
+Date:  7 May 1981 1859-PDT
+From: LYNCH at USC-ISIB
+To:   KAHN at USC-ISI
+Subject: VAX 750/780 benchmarks from Kashtan
+
+Mail-from: ARPANET host SRI-AI rcvd at 7-May-81 0201-PDT
+Date:  6 May 1981 2331-PDT
+From: KASHTAN
+Subject: VAX-11/750 <--> VAX-11/780 benchmarks
+To: quam, witkin, hanson, jirak, wilcox, meyers, larson, kennard, sad,
+    heathman at SRI-AI, ryland at SRI-AI, burback at SRI-AI, mcghie,
+    sword
+Remailed-date:  7 May 1981 0139-PDT
+Remailed-from: SAD at SRI-AI (Stephen Dougherty)
+Remailed-to: Lynch at SRI-AI, Mcgreal at SRI-AI
+
+Here are the complete results of the 11/750 - 11/780 benchmarks.  Looks
+like the 11/750 gets to memory faster (and is optimized w.r.t. getting
+to memory faster) than the 11/780.  It loses VERY badly when it comes to
+actually executing instructions, as the execution unit is very much slower
+in the 750 than the 780.  This is particulary born out by the execution
+benchmarks for the convolution program in various languages.  The languages
+vary from BLISS (which keeps the whole world in registers) to LISP (which
+keeps the whole world in memory).  Even though the 750 gets to memory faster,
+it doesn't do you much good when it takes so long to process what you got
+from memory (even a simple move).
+The 750 does a good job of operand processing (especially given its relative
+CPU speed) but this doesn't seem to help too much in actual program execution,
+as on the 750 the execution time seems to be dominated by the instruction
+execution time rather than the on the operand fetch time (as is the case on
+the 780).
+A note on the Richard Fateman's 750 benchmarks.  Seems that all they did was
+run a Liszt (Franz Lisp compiler) compile on one of Bell Labs UNIX systems.
+A compiled Franz Lisp program (as Liszt is) tends to be very heavy on CALLS
+and on moving things around in memory (i.e. to and from the stack).  No
+intermediate results are kept in registers at all.  What this does is skew
+the results somewhat towards a faster looking 750 (since the 750 will benefit
+from any benchmarks that are heavily involved in memory referencing).  What
+he reported was that the 750 was indeed about 60% of the 780 in this case.
+PLEASE NOTE that large IU and VLSI programs, while we might consider them
+memory intensive, are really virtual memory intensive (i.e. have very large
+working sets).  This is not the same as the above benchmark.  Most IU and
+VLSI programs when compiled with good compilers will tend to do a small amount
+of computation (even just an add or multiply) with each datum fetched from
+memory.  You can expect the performance of the 750 relative to the 780 to
+drop quite a bit from the above mentioned 60%.  It should become very much
+like the following convolution benchmarks (a very good example of a virtual
+memory intensive program that does a small amount of computation with each
+datum fetched).  An interesting side note:  CARs and CDRs in compiled lisp
+tend to come out as   "movl  x(r),dst"  (which executes at about 60% of 780
+speed).
+My feeling from playing with the two systems is that the 750 is best used
+as an entry level system for those sites which need to acquire the smallest
+possible VAX configuration (i.e. the lowest possible price).  An entry level
+750 goes for about $90K while an entry level 780 system with approximately
+the same configuration would go for about $140K.  Clearly there is a big
+difference here (almost all of it in the price of the CPU).  As the systems
+get larger the price advantage goes away (as the price will note be dominated
+by the CPU price, which is the case in the smaller systems, but by memory /
+peripheral prices).  Here you will save about $50K on a $250K system and get
+less than 1/2 the machine.
+I am somewhat confused by the divide instruction timings.  There are a couple
+of possibilities here - 1) a stupidity in the 780 was fixed in the 750
+			2) I muffed the 780 test (don't thing so, as I
+					triple checked it)
+			3) I muffed the 750 test.
+I find it incredible that MULL is 4x as fast on the 780 while DIVL is a bit
+slower on the 780.  I did not do any floating point tests, as there is no
+floating point accelerator on the 750.
+David
+
+-------------------------------------------------------------------------------
+
+VAX-11/750 vs VAX-11/780
+------------------------
+
+Simple 2D convolution program:
+
+		11/750		11/750 (% of 11/780)		11/780
+		------		--------------------		------
+
+BLISS-32	5.45 sec		45%			2.5 sec
+
+VMS PASCAL	12.9 sec		38%			4.9 sec
+
+UNIX C		11.3 sec		44%			5.0 sec
+
+UNIX F77	39.9 sec		29%			11.4 sec
+
+Compiled
+Franz Lisp	76.5 sec		53%			41.0 sec
+
+
+Instruction timings:
+
+movl r,r	1000nSec		40%			400nSec
+movl x(PC),r	1760nSec		45%			800nSec
+movl r,x(PC)	2300nSec		52%		       1300nSec
+movl (r),r	1330nSec		60%		        800nSec
+
+Addressing modes:
+
+r		0nSec			--			0nSec
+# (short)	0nSec			--			0nSec
+# (long)	700nSec			57%			400nSec
+(r)		330nSec		       120%			400nSec
+(r)+		330nSec		       120%			400nSec
+-(r)		330nSec		       120%			400nSec
+@(r)+		900nSec		       111%		       1000nSec
+x(r)		500nSec			80%			400nSec
+@x(r)		1150nSec		86%		       1000nSec
+[r]		1000nSec		60%			600nSec
+
+Instructions:
+
+MOVL		1000nSec		40%			400nSec
+ADDL
+SUBL
+etc
+
+MULL		8000nSec		25%			2000nSec
+DIVL		8000nSec	       112%			9000nSec
+CALLx/RET	20000nSec+1800nSec/register			15000nSec+
+				       100%			2000nSec/Reg
+JSB/RSB		6000nSec		50%			3000nSec
+SOBGxx		2000nSec		50%			1000nSec
+ACBL		5600nSec		71%			4000nSec
+MOVC3		350nSec/byte	       107%			375nSec/byte
+
+3 operand	+500nSec		40%			+200nSec
+instructions
+-------
+...
+Bob,  Thought you would like to see this data.
+Dan
+-------
+
+          --------------------
+End forwarded message
+		
+                ---------------
+-------

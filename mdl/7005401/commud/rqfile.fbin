@@ -1,0 +1,63 @@
+'<PCODE "RQFILE">
+
+<PACKAGE "RQFILE"> 
+
+<ENTRY RQNEXT RQTEMP RQLOSE RQEXIST? RQDELE RQRCVR> 
+
+<USE "CHAN" "M-DEFS" "M-DATA" "ACHOMP"> 
+
+"RQNEXT -- given string, naming request file, returns an open
+  ACHANNEL to next file to be hacked.  used to actually process
+  requests.  the string should be the same as the one used by
+  RQOPEN to create the request files." 
+
+<SETG RQBUF <FREEZE <ISTRING 500>>> 
+
+<SETG RQNEXT  %<RSUBR!- '[ %<PCODE!- "RQFILE" 0> RQNEXT #DECL ("VALUE" <OR 
+ACHANNEL FALSE>) FILCHN ACOPEN DATUM SNM "COMSYS-MESSAGE-DIR" (STRING) 
+"COMSYS-MOBY-FILE" %<RGLOC RQBUF T> "COMSYS-INPUT-FILE" TO "COMSYS-INPUT-TEMP" 
+"COMSYS-LOSER-FILE" RENAME-FAILED RQLOSE "COMSAT-INPUT-FILE" "COMSYS-NEW-FILE" 
+" <"]>> 
+<AND <ASSIGNED? GLUE> .GLUE <PUT ,RQNEXT PGLUE ![721420287 -4294967296!]>> 
+
+
+"RQTEMP -- used by a process which has finished processing a request
+  file obtained from RQNEXT.  this function renames the file to indicate
+  that it has been processed.  the procedure using these functions should
+  call RQDELE on the 'renamed' requests to get rid of them when their
+  effects have been permanently recorded.  the function RQRCVR is used
+  when starting to retrieve any 'done' requests which were not deleted,
+  presumably because of a crash, etc.
+  the supplied string should be used to specify the first name to be used
+  to save the processed file." 
+
+<SETG RQTEMP %<RSUBR-ENTRY '[RQNEXT RQTEMP #DECL ("VALUE" <OR ATOM CHANNEL FALSE
+> ACHANNEL)] 41>> 
+
+<SETG RQLOSE %<RSUBR-ENTRY '[RQNEXT RQLOSE #DECL ("VALUE" ANY ACHANNEL)] 70>> 
+
+"RQEXIST? -- given file name, returns T if there are requests" 
+
+<SETG RQEXIST? %<RSUBR-ENTRY '[RQNEXT RQEXIST? #DECL ("VALUE" <OR ATOM FALSE>)] 
+107>> 
+
+"RQDELE -- given name of request file (usually 'old' name file)
+  deletes all such files.  used generally to delete processed files, when
+  certain that their effects have been permanently recorded.
+ -- returns # of files deleted" 
+
+<SETG RQDELE %<RSUBR-ENTRY '[RQNEXT RQDELE #DECL ("VALUE" FIX)] 147>> 
+
+"RQRCVR -- given name of request file and 'old' request files, renames
+  any existing old files to be requests again.  used for crash recovery.
+  returns the number of files recovered.
+	the optional name2 argument is used to specify whether the files
+  should be renamed to be '>', or to retain the same second name.  the
+  latter is the default.
+ 	if files retain the same name 2 -- the optional arg upd, (default false)
+  controls what happens if the file with that name exists already -- if
+   upd is false, the 'old' file will simply be deleted, else error." 
+
+<SETG RQRCVR %<RSUBR-ENTRY '[RQNEXT RQRCVR #DECL ("VALUE" FIX)] 189>> 
+
+<ENDPACKAGE> 

@@ -1,0 +1,78 @@
+<PACKAGE "M-TEMP">
+
+<ENTRY TEMPOPEN
+       TEMPAPPEND
+       TEMPCLOSE
+       TEMPDELETE
+       TEMPFAILURE?>
+
+<USE "CHAN" "OPEN-APPEND">
+
+"
+TEMPOPEN	-- open a new file for writing
+TEMPAPPEND	-- append a file to a temporary open on a channel
+TEMPCLOSE	-- close and rename a temporary file
+TEMPDELETE	-- close and delete a temporary file
+"
+
+<MANIFEST RNAME1 RNAME2 RDIRECTORY RDEVICE>
+
+"TEMPOPEN -- open a temporary file for writing"
+
+<DEFINE TEMPOPEN (SP "AUX" CH) 
+	#DECL ((SP) STRING (CH) CHANNEL (VALUE) <OR FALSE CHANNEL>)
+	<SET CH <CHANNEL "PRINT" .SP>>
+	<PUT .CH ,RNAME1 "_TEMP_">
+	<PUT .CH ,RNAME2 ">">
+	<RESET .CH>>
+
+\
+
+"TEMPAPPEND -- given channel, copies any existing file of same
+  real name to end of channel, deletes old file, and renames temp
+  to be new version.  error if rename lost, or if channel not obtained
+  originally from tempfile call"
+
+<DEFINE TEMPAPPEND (CH "AUX" CH2)
+	#DECL ((CH) CHANNEL (CH2) <OR CHANNEL FALSE>)
+	<COND (<SET CH2
+		    <OPEN "READ"
+			  <NAME1 .CH> <NAME2 .CH>
+			  <RDEVICE .CH> <RDIRECTORY .CH>>>
+	       <FILECOPY .CH2 .CH>
+	       <CLOSE .CH2>
+	       <RENAME <NAME1 .CH> <NAME2 .CH>
+		       <RDEVICE .CH> <RDIRECTORY .CH>>)>
+	<TEMPCLOSE .CH>>
+
+"TEMPCLOSE -- given channel, renames file, outputs buffers"
+
+<DEFINE TEMPCLOSE (CH)
+	#DECL ((CH) CHANNEL (VALUE) <OR ATOM FALSE>)
+	<COND (<AND <=? <RNAME1 .CH> "_TEMP_">
+		    <N=? <RNAME1 .CH> <NAME1 .CH>>>
+	       <COND (<RENAME .CH <NAME1 .CH> <NAME2 .CH>>)
+		     (ELSE <ERROR CANNOT-RENAME-TEMP-FILE .CH TEMPRENAME>)>)>
+	<CLOSE .CH>
+	T>
+
+"TEMPDELETE -- given channel open to temp file, closes and deletes it"
+
+<DEFINE TEMPDELETE (CH) 
+	#DECL ((CH) CHANNEL (VALUE) <OR FALSE ATOM>)
+	<CLOSE .CH>
+	<RENAME <RNAME1 .CH> <RNAME2 .CH> <RDEVICE .CH> <RDIRECTORY .CH>>>
+
+"TEMPFAILURE? -- returns T if open failure is a temporary one"
+
+<DEFINE TEMPFAILURE? (CH)
+	#DECL ((CH) FALSE)
+	<COND (<AND <NOT <EMPTY? .CH>>
+		    <OR <=? <1 .CH> "FILE LOCKED">
+			<=? <1 .CH> "DEVICE FULL">
+			<=? <1 .CH> "DIRECTORY FULL">
+			<=? <1 .CH> "DEVICE NOT AVAILABLE">
+			<=? <1 .CH> "DEVICE NOT READY">>>)
+	      (ELSE .CH)>>
+
+<ENDPACKAGE>

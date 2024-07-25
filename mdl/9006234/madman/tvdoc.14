@@ -1,0 +1,403 @@
+TRIVIA.1   Documentation    (MARC&TAA 9/20/76)
+
+I.  Getting TRIVIA.
+
+	TRIVIA is loaded by typing either TRIVIA or :TRIVIA to DDT.
+TRIVIA will check for the availability of the game (see below) and then
+load the actual TRIVIA program.  
+	The availability of TRIVIA for non-directory owners is as
+follows:	
+	Mon-Fri : 10pm - 9am
+	Sat-Sun : All day
+	Holidays: All day
+
+II. TRIVIA passwords
+	
+	Each TRIVIA player is required to have a password which will
+be checked upon each entrance into the game.  The first time a player
+uses TRIVIA, he will be asked to supply his password.  He will also
+be allowed to check this password.  If the check fails (i.e. he has
+forgotten it in the last 5 seconds or has thought of a better one),
+he will be asked for his password again.
+
+III. Prompting and user responses
+
+	TRIVIA uses a number of different types of methods for eliciting
+information from the user.  In each of these methods there is a prompt
+indicating the type of information being elicited and a SYNTACTIC prompt
+indicating the method by which the information must be entered.
+This second prompt is not standardly available but can be made so by
+typing the VERBOSE command to the TRIVIA command reader (see below).
+The meanings of the verbose commands follows:
+
+   a. BUFFER:  Text terminated by an altmode (but see 'Safety' command).
+	The following special characters are recognized inside BUFFERs
+	    i.    Control-D -- display BUFFER
+	    ii.   Control-E -- edit BUFFER (IMEDIT/TECO)
+	    iii.  Control-L -- clear screen and display BUFFER
+	    iv.   Control-Q -- quote the next character
+	    v.    Control-T -- toggle 'Tell answer' mode
+	    vi.	  Control-V -- toggle Verbose 'More questions' mode
+	    vii.  Control-W -- delete the last word
+	    viii. Control-X -- delete the last line
+	    ix.   Control-Y -- insert a file
+	    x.    Control-@ -- delete the entire buffer
+
+   b. FIX:     Integer terminated by altmode or <cr>
+
+   c. FLOAT:   Floating point decimal number terminated by altmode or <cr>
+
+   d. SYM:     Symbolic input.
+	The following special characters are recognized by SYM
+	    i.     <altmode> will complete a symbol if possible (printing ? if not)
+		   and terminate the response.  
+	    ii.    <space> will cause completion to take place, but not terminate.
+	    iii.   <cr> will cause termination without completion.
+	    iv.   Control-F -- print all possible symbols at this point
+
+   e. MULT:    Multiple items allowed, with SYM.
+	The following special characters are recognized by MULT (in addition
+	to those for SYM)
+	    i.    <comma> is used to separate items
+	    ii.   Control-A -- use all possibilities at this point
+
+   Types b-e also take the special characters and handle them in
+the same way that BUFFERs do with the exception of Control-E.
+
+   A vertical bar between any of these prompts indicates an 'or' of the
+specified prompts.
+
+   Typing Control-S at any point will flush whatever is currently
+happening and return to TRIVIA's command level (see below).
+
+   f. Y/N:     Yes/No switch.  The first character typed is eaten
+	and compared to Y or N.  If Y, the answer will be yes.
+	If N, the answer will be no.  Otherwise, it will ask again
+	until a Y or N is typed.  The only exceptions to this are
+	that Control-T may be used for 'Want the answer' and Control-V
+	may be used for 'More'.
+
+
+IV. TRIVIA data base
+
+	The TRIVIA data base is housed in one moby file.  This file
+is not in human readable format (indeed it is in MUDDLE readable format).
+All questions, mail, answers, scores are located within.
+For each user, the following data is kept:
+    a. Last entry into TRIVIA
+    b. Last time grading was done
+    c. Pointer to peronal mail
+    d. Pointer to last announcement read
+    e. Pointer to next question to answer
+    f. List of authored questions
+    g. Tailor information
+    h. Score information
+
+V. TRIVIA start up program
+
+	When TRIVIA comes up, a normal sequence of operations described
+below is performed. 
+This is:	Read announcements
+		Read personal mail
+		Answer new questions
+		Make new questions
+	This sequence is tailorable using the commands SEQUENCE and
+SAVE.TAILOR (described below).
+
+VI. TRIVIA command level
+
+	TRIVIA has a command level from which all of the available
+operations of TRIVIA may be called.
+	TRIVIA command level prompts with an '@' and has an implicit
+SYNTACTIC prompt of SYM.
+	The following commands exist in TRIVIA.14
+
+    a. Announce 
+	Make an announcement to all trivia players.  This command is
+	NOT intended to be used randomly and should ONLY be used if
+	there is an urgent need to tell everyone something.  Its main
+	use is in announcing changes to TRIVIA.  Announcements now
+	vanish after roughly two weeks.
+
+    b. Answer
+	Answer new questions.
+
+    c. Babble
+	Print comparative scores of the TRIVIA players.  The scores
+	may be sorted on any of the Categories, Name, and Total.
+	Within this designation, the scores are sorted either on
+	total points, maximum possible points, percentage
+	(batting average), or questions (number of questions submitted).
+	The first call to BABBLE is rather slow but future calls
+	are very rapid.  The first is slow because it loads scores
+	for all of the players.  Thus, future BABBLEs are fast at
+	the expense of being non-current (see LOAD.SCORES command).
+	The TINY.BABBLE command (q.v.) performs a similar function.
+
+    d. End.teleconference
+	End teleconference mode (see Teleconference).
+
+    e. Grade
+	Grade incoming mail and read responses to Answered questions
+
+    f. Load.players
+	Recreate TRIVIA's internal list of players.  This is useful iff
+	you want to send TRIVIA mail to a player who has entered the
+	game for the first time since your current session started.  (In
+	short, almost never.)
+
+    g. Load.scores
+	Load the current score tables into TRIVIA.  This must be done
+	if it is necessary to insure that BABBLE (other than the initial
+	one) has the most up-to-date score information.
+
+    h. Make
+	Make new questions.
+ 
+    i. New.match
+	Use the alternative answer interface for matching questions.
+	The principal feature is that it is possible to change the
+	answer to the various sections easily.  See the 'question'
+	section for full details.  As of TRIVIA.15, this switch will go
+	away, since the 'alternative' is now installed.
+
+    j. No.simple
+	Toggle a tailorable switch which determines whether simple
+	questions will be seen.  Normally they will be.
+
+    k. Peek
+	Print some information about people presently playing TRIVIA.
+
+    l. Print.score
+	Print the scores (by category) of various players.  This will
+	also print the players' progress, and the number of questions
+	submitted in each category.
+
+    m. Question.print
+	Print various of the questions submitted by the current user,
+	with their answers and scores, and a total score for all
+	questions printed.  This is intimately related to
+	Status.of.question and Summary.status.of.question.
+
+    n. Quit
+	Leave TRIVIA
+
+    o. Read.mail
+	Read the personal mail file.  There is no way to save mail
+	once it has been read.
+
+    p. Safety
+	Toggle safe BUFFERs mode.  In 'safe' mode, a BUFFER will
+  	type [Confirm] after an altmode.  To terminate (i.e. Confirm),
+	type another altmode.
+
+    q. Save.tailor
+	Save the current state of switches and sequence as the
+	state in which future uses of TRIVIA will come up (see section IX).
+
+    r. Send.mail
+	Send personal mail to another TRIVIA user.
+
+    s. Sequence
+	Set the start up sequence for TRIVIA (see section IX).
+
+    t. Shout
+	For normal users, this command is a no-op.  It allows the
+	maintainers to send a message to all TRIVIAs simultaneously, to
+	be printed when it is convenient for the receiving TRIVIAs (NOT
+	for the receiving player, necessarily.)  Should you receive such
+	an unsolicited message, please pay attention to it.  There is
+	also a facility which allows the maintainers to cause all
+	TRIVIAs to go away if that should ever prove necessary; it is
+	used very rarely, for obvious reasons.
+
+    u. Simple.load
+	Create a new symbol table of the current player's simple
+	questions, for use by the Simple.print and Simple.update (q.v.)
+	commands.  This is performed automatically the first time either
+	of the aforementioned two commands is invoked, and is quite
+	slow.  This command is only necessary when simple questions have
+	been created since the last invocation of Simple.print or
+	Simple.update.
+
+    v. Simple.print
+	Prints various of the current player's simple questions.  The
+	first invocation may be quite slow, since a simple.load is
+	performed.
+
+    w. Simple.update
+	Update a specified simple question.  See Update.question.  There
+	are separate commands because simple questions are stored
+	differently in the data base.
+	
+    x. Status.of.question
+	Print the questions listed and give their status (how many
+	people have answered it and how they did)
+	This only works if you are the author of the question.
+
+    y. Summary.status.of.question
+	Prints the cumulative score for the specified questions.  This
+	is a nonverbose form of Status.of.question.
+
+    z. Teleconference
+	Listen for new personal mail arriving every n seconds and
+	tell when one has arrived.  Teleconferencing is not available
+	in version 14; it should eventually reappear, probably in a
+	different form.  As of version 15, teleconferencing exists
+	again; the immediate.read feature has been flushed.  Peek
+	indicates when a player is in this mode by printing a "T" next
+	to his name.
+
+   aa. Tiny.babble
+	This is like Babble, except that it asks how many players it
+	should babble on, and only prints out the scores for the top n
+	players by whatever criteria you have selected.
+
+   aa. Update.question
+	Update a question you have authored.  The category and the
+	value may not be altered.
+ 
+   bb. Verbosity
+	Toggle verbose prompt mode
+
+    [Erret, Evaluate, Play, Recurse are not for users. Beware!]
+
+VII. About TRIVIA questions
+
+	The following types of TRIVIA questions are implemented:
+
+    a. Long answer
+	The user is asked to respond by typing in a response.
+	The author must grade these questions before scoring is done.
+	
+    b. Multiple Choice
+	The user is asked to select the correct choice among those printed. 
+	This type of question is scored instantly.
+
+    c. True/False
+	See Multiple Choice
+
+    d. Matching
+	The user is asked to select something from Column A, and is then
+	asked for a match.  The default (obtained by typing altmode) for
+	the choice from column A is the lowest-numbered item in that
+	column which as yet has no answer.  When all have been answered,
+	the default action is to end the question.  In this method,
+	therefore, it is possible to change the answer given for one of
+	the items in Column A, or even to give up on one of the choices.
+	When you are through, type <cr> or <altmode> to the request for
+	something from Column A.  This type of question in scored
+	instantly with 1/N credit for each correct match (for N items in
+	'Column A')
+
+    e. Joint
+	Joint questions have more than one author associated with them;
+	none of the authors is asked the question.  Grading mail goes to
+	the person in whose TRIVIA the question was made, but all authors
+	are indicated when the question is printed.  Joint questions also
+	have one of the four types above:  if "Joint" is given as the
+	type of a question being made, TRIVIA will then ask for the type
+	of question again.
+
+	TRIVIA questions are also broken into categories for purposes
+of scoring.  Users may not opt to answer questions that fall into only
+one category or other.
+
+	TRIVIA questions have values attached to them by their authors.
+Legal values are greater than 0.0 and less than 2.0.  In grading these
+questions, only scores less than or equal to the given value will be
+allowed.
+
+	SIMPLE questions have no value in the score.  At present,
+a simple question is printed, immediately followed by its answer; you
+will then be asked for "Nonsense".  If nothing is given, no response
+will be sent to the author; otherwise the nonsense will appear in the
+author's grading mail.  Reading of simple questions may be prevented
+or reinstated by using the No.simple command.  The following commands
+are also useful:  Simple.load, Simple.print, and Simple.update.
+
+VII. Making TRIVIA questions
+
+	TRIVIA requests all of the information required for making up
+any sort of TRIVIA question.  The following are interesting tidbits 
+about quirks, etc. in making questions:
+
+    a. To indicate that the last choice for a multiple choice, true/false,
+or matching question has come, type an altmode.
+
+    b. After supplying the information for 'Column A' and 'Column B' for
+matching questions, TRIVIA will simlulate asking you the question.
+The responses you give will be taken to be correct.
+
+    c. To flush a question, 
+	i.   In multiple choice, true/false - type Control-R to the
+	     request for correct answer
+	ii.  In matching, type Control-R to any request for correct match.
+	iii. In long answer, type altmode to an empty BUFFER.
+       In any case, a NULL question (i.e. empty BUFFER) is a loser.
+       Also, Control-S takes you back to command level from anywhere.
+
+VIII. Grading TRIVIA questions
+
+	One other feature of the new TRIVIA is postponing grading of
+any number of questions.  This may be done by typing altmode to the
+prompt 'Score (out of xx.xxx)'.
+
+	Another feature in grading is automagic scoring of long answer
+questions when the answerer 'gives up'.  The question maker is still asked
+to provide a comment for the poor loser, but this is not required.
+
+IX. Tailoring TRIVIA
+
+	The status of the various toggle switches (6 currently) and
+the sequence of actions TRIVIA takes upon starting up may be tailored
+to meet the needs (whims) of TRIVIA users.
+	The command SEQUENCE is used to set up the sequence of actions
+TRIVIA is to take when starting.  The possible actions are reading mail,
+grading, answering, making, and checking the status of questions, doing
+a babble, and printing scores.  Up to 9 items may be selected for the
+sequence.  When the sequence is exhausted, TRIVIA enters command level.
+The SEQUENCE command does not become effective until a SAVE.TAILOR command
+is given.
+	The command SAVE.TAILOR is used to actually update the tailor
+information in the user's personal area in the TRIVIA data base.  It reads
+the values of the toggle switches and the results of any SEQUENCE commands
+given and saves this information.  When TRIVIA starts up, the switches
+are put in the correct state and the sequence is performed.
+	
+X.  Associated Programs
+
+	There are, at the moment, three programs other than TRIVIA
+itself which may be found useful.
+TS BABBLE
+	Performs much the same function as a Babble on Total, but is
+much faster.  However, it is not guaranteed to be current if the system
+is flaky.  The following JCL is appropriate:
+  V  (used in combination with any of the below) means print information
+	on all players; BABBLE normally gives only those who have
+	answered a reasonable proportion of the questions.
+  P  Sort on progress
+  S  Sort on total score
+  M  Sort on maximum possible score
+  A  Sort alphabetically
+When given no JCL, BABBLE sorts on the percentage.
+TS TVPEEK
+	Looks like Peek in TRIVIA.  :PEEK R causes it to go into a loop,
+redisplaying every n seconds.  "n" may be set by typing numbers between
+1 and 9 at a running TVPEEK.
+TS CHECK
+	Determines whether TRIVIA is available.  Most useful in
+.ddt. (init) files, where it can be invoked with :GUEST;CHECK.
+
+Appendix I.  Categories
+
+	The following categories exist in TRIVIA.1:
+	Athletics
+	Cinema
+	Events
+	General
+	History
+	Literature
+	Music
+	Science Fiction
+	TV/Radio

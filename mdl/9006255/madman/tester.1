@@ -1,0 +1,21 @@
+<SET SIZE 1>
+<SET A <AFIND .SIZE>>
+<SET B <AFIND .SIZE>>
+<DEFINE FOO (X)
+	<PRINC .N>
+	<COND (<AND <SET Y <ACOPY <ARESET .B> .X>>
+		    <SET Z <ACOPY <ARESET .A> .Y>>>
+	       <PRINC !\,>)>>
+
+<DEFINE DO ("OPTIONAL" (ATM AIVECTOR) N "AUX" (OP ,.ATM))
+	<COND (<NOT <ASSIGNED? N>>
+	<SET N <COND (<==? .OP ,AIVECTOR> 511)
+		     (<==? .OP ,AIUVECTOR> 1022)
+		     (<==? .OP ,AILIST> 512)
+		     (<==? .OP ,AISTRING> 5106)
+		     (ELSE 1)>>)>
+	<PRINT .ATM>
+	<CRLF>
+	<REPEAT ()
+		<FOO <SET X <APPLY .OP <ARESET .A> .N>>>
+		<SET N <+ .N 1>>>>

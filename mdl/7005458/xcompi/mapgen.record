@@ -1,0 +1,621 @@
+Compilation record for: DSK:XCOMPI;MAPGEN UCR069
+Output file:  DSK:XCOMPI;MAPGEN NBIN
+
+It is now Wednesday, 21 Jan 1981 11:17 EST
+
+File loaded.
+Functions ordered.
+COMPILING PUSH-STRUCS!-IMAPGEN!-MAPGEN!-PACKAGE
+===== Computed decl of variable:  NL!-IMAPGEN!-MAPGEN!-PACKAGE is:  <OR ATOM 
+FALSE>
+===== Not open compiled because of defer.
+ **** <PUT .TEM!-IMAPGEN!-MAPGEN!-PACKAGE %<OFFSET 1 DATUM!-COMPDEC!-PACKAGE> 
+ ...
+===== External variable being referenced:  BSTB!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .BSTB!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  AC-HACK!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .AC-HACK!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  FCN!-COMPDEC!-PACKAGE
+<%<OFFSET 29 NODE!-COMPDEC!-PACKAGE>  **** .FCN!-COMPDEC!-PACKAGE **** >
+===== External variable being referenced:  TMPS!-COMPDEC!-PACKAGE
+ **** .TMPS!-COMPDEC!-PACKAGE **** 
+Peephole  1% 251/248
+Job done in:  1:55 / 3:26
+ COMPILING KEEP-IN-ACS!-IMAPGEN!-MAPGEN!-PACKAGE
+*** WARNING	VARIABLE NEVER USED: D 
+*** WARNING	VARIABLE NEVER USED: S 
+*** WARNING	VARIABLE NEVER USED: PTYP 
+Peephole  0% 166/166
+Job done in:  1:42 / 5:08
+   COMPILING REST-STRUCS!-IMAPGEN!-MAPGEN!-PACKAGE
+===== Computed decl of variable:  TEM!-IMAPGEN!-MAPGEN!-PACKAGE is:  <OR FALSE 
+LIST>
+===== Computed decl of variable:  ACFLG!-IMAPGEN!-MAPGEN!-PACKAGE is:  <OR ATOM 
+FALSE>
+===== Arithmetic can't open compile because:  <1?  **** .NR!-IMAPGEN!-MAPGEN!-PA
+CKAGE **** >
+ is of type:  <OR FIX FLOAT>
+ **** <1? .NR!-IMAPGEN!-MAPGEN!-PACKAGE> **** 
+===== Arithmetic can't open compile because:  <1?  **** .NR!-IMAPGEN!-MAPGEN!-PA
+CKAGE **** >
+ is of type:  <OR FIX FLOAT>
+ **** <1? .NR!-IMAPGEN!-MAPGEN!-PACKAGE> **** 
+===== Arithmetic can't open compile because:  <1?  **** .NR!-IMAPGEN!-MAPGEN!-PA
+CKAGE **** >
+ is of type:  <OR FIX FLOAT>
+ **** <1? .NR!-IMAPGEN!-MAPGEN!-PACKAGE> **** 
+===== Arithmetic can't open compile because:  <1?  **** .NR!-IMAPGEN!-MAPGEN!-PA
+CKAGE **** >
+ is of type:  <OR FIX FLOAT>
+ **** <1? .NR!-IMAPGEN!-MAPGEN!-PACKAGE> **** 
+===== Arithmetic can't open compile because:  <1?  **** .NR!-IMAPGEN!-MAPGEN!-PA
+CKAGE **** >
+ is of type:  <OR FIX FLOAT>
+ **** <1? .NR!-IMAPGEN!-MAPGEN!-PACKAGE> **** 
+===== Arithmetic can't open compile because:  <1?  **** .NR!-IMAPGEN!-MAPGEN!-PA
+CKAGE **** >
+ is of type:  <OR FIX FLOAT>
+ **** <1? .NR!-IMAPGEN!-MAPGEN!-PACKAGE> **** 
+===== Arithmetic can't open compile because:  <1?  **** .NR!-IMAPGEN!-MAPGEN!-PA
+CKAGE **** >
+ is of type:  <OR FIX FLOAT>
+ **** <1? .NR!-IMAPGEN!-MAPGEN!-PACKAGE> **** 
+Peephole  2% 502/488
+Job done in:  2:33 / 6:19
+ COMPILING FIND-FIRST-STRUC!-IMAPGEN!-MAPGEN!-PACKAGE
+===== External variable being referenced:  FRMS!-IMAPGEN!-MAPGEN!-PACKAGE
+<NTH  **** .FRMS!-IMAPGEN!-MAPGEN!-PACKAGE ****  2>
+===== Not open compiled because type is:  ANY
+ **** <NTH .FRMS!-IMAPGEN!-MAPGEN!-PACKAGE 2> **** 
+Peephole  0% 84/84
+Job done in:  20 / 35
+COMPILING DO-FINAL-SETUP!-IMAPGEN!-MAPGEN!-PACKAGE
+===== External variable being referenced:  REASONABLE!-COMPDEC!-PACKAGE
+<NOT  **** .REASONABLE!-COMPDEC!-PACKAGE **** >
+Peephole  0% 88/88
+Job done in:  30 / 53
+   COMPILING DO-STACK-ARGS!-IMAPGEN!-MAPGEN!-PACKAGE
+Peephole  1% 95/94
+Job done in:  7 / 11
+  COMPILING DO-FUNNY-LAST!-IMAPGEN!-MAPGEN!-PACKAGE
+Peephole  0% 62/62
+Job done in:  17 / 34
+ COMPILING DO-FUNNY-HACK!-IMAPGEN!-MAPGEN!-PACKAGE
+===== Not open compiled because type is:  STRUCTURED
+ **** <NTH ,MINS!-IMAPGEN!-MAPGEN!-PACKAGE .MOD> **** 
+===== Not open compiled because type is:  STRUCTURED
+ **** <NTH <NTH ,MINS!-IMAPGEN!-MAPGEN!-PACKAGE .MOD> .
+COD!-IMAPGEN!-MAPGEN!-P ...
+Peephole  0% 269/267
+Job done in:  51 / 1:49
+  COMPILING GOOD-CALL!-IMAPGEN!-MAPGEN!-PACKAGE
+Peephole  2% 76/74
+Job done in:  17 / 27
+COMPILING DO-LAST!-IMAPGEN!-MAPGEN!-PACKAGE
+Peephole  9% 111/101
+Job done in:  18 / 34
+COMPILING DO-FIRST-SETUP!-IMAPGEN!-MAPGEN!-PACKAGE
+*** WARNING	VARIABLE NEVER USED: W 
+*** WARNING	VARIABLE NEVER USED: CHF 
+*** WARNING	VARIABLE NEVER USED: ONES 
+*** WARNING	VARIABLE NEVER USED: FLS 
+*** WARNING	VARIABLE NEVER USED: DAT 
+*** WARNING	VARIABLE NEVER USED: TEM 
+*** WARNING	VARIABLE NEVER USED: TT 
+*** WARNING	VARIABLE NEVER USED: T1 
+===== Can't open compile CHTYPE.
+ **** <CHTYPE '() .TYP!-IMAPGEN!-MAPGEN!-PACKAGE> **** 
+===== Not open compiled because type is:  STRUCTURED
+ **** <NTH ,FSLOT-FIRST!-IMAPGEN!-MAPGEN!-PACKAGE .
+COD!-IMAPGEN!-MAPGEN!-PACKA ...
+===== Not open compiled because type is:  STRUCTURED
+ **** <NTH ,SLOT-FIRST!-IMAPGEN!-MAPGEN!-PACKAGE .
+COD!-IMAPGEN!-MAPGEN!-PACKAG ...
+Peephole  6% 137/128
+Job done in:  37 / 1:08
+ COMPILING DO-FIRST-SETUP-2!-IMAPGEN!-MAPGEN!-PACKAGE
+===== Computed decl of variable:  TEM!-IMAPGEN!-MAPGEN!-PACKAGE is:  <OR ATOM <
+PRIMTYPE LIST> <PRIMTYPE VECTOR>>
+===== Not open compiled because type is:  STRUCTURED
+ **** <NTH ,FSLOT-FIRST!-IMAPGEN!-MAPGEN!-PACKAGE .
+COD!-IMAPGEN!-MAPGEN!-PACKA ...
+===== Not open compiled because type is:  STRUCTURED
+ **** <NTH ,SLOT-FIRST!-IMAPGEN!-MAPGEN!-PACKAGE .
+COD!-IMAPGEN!-MAPGEN!-PACKAG ...
+===== Not open compiled because of defer.
+ **** <PUT .DAT!-IMAPGEN!-MAPGEN!-PACKAGE %<OFFSET 1 DATUM!-COMPDEC!-PACKAGE> 
+ ...
+===== Not open compiled because of defer.
+ **** <PUT .DAT!-IMAPGEN!-MAPGEN!-PACKAGE %<OFFSET 2 DATUM!-COMPDEC!-PACKAGE> 
+ ...
+===== External variable being referenced:  BSTB!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .BSTB!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  AC-HACK!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .AC-HACK!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  FCN!-COMPDEC!-PACKAGE
+<%<OFFSET 29 NODE!-COMPDEC!-PACKAGE>  **** .FCN!-COMPDEC!-PACKAGE **** >
+===== External variable being referenced:  TMPS!-COMPDEC!-PACKAGE
+ **** .TMPS!-COMPDEC!-PACKAGE **** 
+Peephole  7% 344/318
+Job done in:  2:41 / 4:34
+   COMPILING STACKM!-IMAPGEN!-MAPGEN!-PACKAGE
+Peephole  4% 686/655
+Job done in:  2:24 / 4:15
+  COMPILING MPARGS-GEN!-MAPGEN!-PACKAGE
+*** WARNING	VARIABLE NEVER USED: N 
+===== Computed decl of variable:  OFFS!-IMAPGEN!-MAPGEN!-PACKAGE is:  FORM
+===== External variable being referenced:  MPINFO!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .MPINFO!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  STK!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .STK!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  STK!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .STK!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  AC-HACK!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .AC-HACK!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  AC-HACK!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .AC-HACK!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  FCN!-COMPDEC!-PACKAGE
+<%<OFFSET 29 NODE!-COMPDEC!-PACKAGE>  **** .FCN!-COMPDEC!-PACKAGE **** >
+Peephole  4% 265/252
+Job done in:  1:42 / 4:31
+  COMPILING ISET!-IMAPGEN!-MAPGEN!-PACKAGE
+===== Computed decl of variable:  A2!-IMAPGEN!-MAPGEN!-PACKAGE is:  <OR ATOM <
+PRIMTYPE LIST> <PRIMTYPE VECTOR>>
+===== Computed decl of variable:  BIND is:  <OR ATOM FALSE>
+===== Arithmetic can't open compile because:  <NOT <1?  **** .NRG!-IMAPGEN!-MAPG
+EN!-PACKAGE **** >>
+ is of type:  <OR FIX FLOAT>
+<NOT  **** <1? .NRG!-IMAPGEN!-MAPGEN!-PACKAGE> **** >
+===== External variable being referenced:  INRAP!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .INRAP!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  STK!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .STK!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== Arithmetic can't open compile because:  <1?  **** .NRG!-IMAPGEN!-MAPGEN!-P
+ACKAGE **** >
+ is of type:  <OR FIX FLOAT>
+ **** <1? .NRG!-IMAPGEN!-MAPGEN!-PACKAGE> **** 
+===== External variable being referenced:  PRE!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .PRE!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  INRAP!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .INRAP!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  INRAP!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .INRAP!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  INRAP!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .INRAP!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  NTSLOTS!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .NTSLOTS!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being SET: NTSLOTS!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** <SET NTSLOTS!-IMAPGEN!-MAPGEN!-PACKAGE (<FORM GVAL <%<OFFSET 17 
+NODE!-CO ...
+===== External variable being referenced:  STK!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .STK!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being SET: GSTK!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** <SET GSTK!-IMAPGEN!-MAPGEN!-PACKAGE .STK!-IMAPGEN!-MAPGEN!-PACKAGE>
+ **** ...
+===== External variable being referenced:  STK!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .STK!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being SET: STK!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** <SET STK!-IMAPGEN!-MAPGEN!-PACKAGE (0 )> **** 
+===== External variable being referenced:  PRE!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .PRE!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  STK!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .STK!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being SET: GSTK!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** <SET GSTK!-IMAPGEN!-MAPGEN!-PACKAGE .STK!-IMAPGEN!-MAPGEN!-PACKAGE>
+ **** ...
+===== External variable being referenced:  STK!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .STK!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being SET: STK!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** <SET STK!-IMAPGEN!-MAPGEN!-PACKAGE (0 )> **** 
+===== External variable being referenced:  BSTB!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .BSTB!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  AC-HACK!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .AC-HACK!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  FCN!-COMPDEC!-PACKAGE
+<%<OFFSET 29 NODE!-COMPDEC!-PACKAGE>  **** .FCN!-COMPDEC!-PACKAGE **** >
+===== External variable being referenced:  TMPS!-COMPDEC!-PACKAGE
+ **** .TMPS!-COMPDEC!-PACKAGE **** 
+===== Not open compiled because of defer.
+ **** <PUT <SET D2!-IMAPGEN!-MAPGEN!-PACKAGE <DATUM .
+ET!-IMAPGEN!-MAPGEN!-PACK ...
+===== Not open compiled because of defer.
+ **** <PUT <SET D2!-IMAPGEN!-MAPGEN!-PACKAGE <DATUM ANY-AC!-COMPDEC!-PACKAGE 
+A ...
+===== Not open compiled because of defer.
+ **** <PUT .D2!-IMAPGEN!-MAPGEN!-PACKAGE %<OFFSET 2 DATUM!-COMPDEC!-PACKAGE> <
+ ...
+Peephole  3% 1202/1164
+Job done in:  10:48 / 25:38
+ COMPILING IISET!-IMAPGEN!-MAPGEN!-PACKAGE
+===== Computed decl of variable:  AC!-COMPDEC!-PACKAGE is:  <OR ATOM <PRIMTYPE 
+LIST> <PRIMTYPE VECTOR>>
+===== External variable being referenced:  BSTB!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .BSTB!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  AC-HACK!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .AC-HACK!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  FCN!-COMPDEC!-PACKAGE
+<%<OFFSET 29 NODE!-COMPDEC!-PACKAGE>  **** .FCN!-COMPDEC!-PACKAGE **** >
+===== External variable being referenced:  TMPS!-COMPDEC!-PACKAGE
+ **** .TMPS!-COMPDEC!-PACKAGE **** 
+Peephole  0% 157/157
+Job done in:  57 / 1:49
+   COMPILING DO-EVEN-FUNNIER-HACK!-IMAPGEN!-MAPGEN!-PACKAGE
+*** WARNING	VARIABLE NEVER USED: LV 
+===== Not open compiled because type is:  STRUCTURED
+ **** <NTH ,MINS!-IMAPGEN!-MAPGEN!-PACKAGE .MOD> **** 
+===== Not open compiled because type is:  STRUCTURED
+ **** <NTH <NTH ,MINS!-IMAPGEN!-MAPGEN!-PACKAGE .MOD> .
+COD!-IMAPGEN!-MAPGEN!-P ...
+Peephole  1% 147/145
+Job done in:  35 / 1:00
+  COMPILING NO-INTERFERE!-IMAPGEN!-MAPGEN!-PACKAGE
+===== Not open compiled because type is:  STRUCTURED
+ **** <MEMQ <%<OFFSET 1 NODE!-COMPDEC!-PACKAGE> .N!-IMAPGEN!-MAPGEN!-PACKAGE> 
+ ...
+Peephole  7% 92/85
+Job done in:  34 / 1:14
+COMPILING BLT-HACK!-IMAPGEN!-MAPGEN!-PACKAGE
+===== Computed decl of variable:  N1!-IMAPGEN!-MAPGEN!-PACKAGE is:  
+NODE!-COMPDEC!-PACKAGE
+===== Computed decl of variable:  AC!-COMPDEC!-PACKAGE is:  <OR ATOM <PRIMTYPE 
+LIST> <PRIMTYPE VECTOR>>
+===== Not open compiled because type is:  STRUCTURED
+<==? 1  **** <LENGTH .K!-IMAPGEN!-MAPGEN!-PACKAGE> **** >
+===== Not open compiled because type is:  <STRUCTURED ANY>
+ **** <NTH .K!-IMAPGEN!-MAPGEN!-PACKAGE 1> **** 
+===== Not open compiled because type is:  STRUCTURED
+ **** <MEMQ <%<OFFSET 4 NODE!-COMPDEC!-PACKAGE> .N1!-IMAPGEN!-MAPGEN!-PACKAGE>
+ ...
+===== Not open compiled because type is:  <STRUCTURED <FIX (-34359738367 1 67 
+34359738367)>>
+ **** <LENGTH <3 .K!-IMAPGEN!-MAPGEN!-PACKAGE>> **** 
+===== Arithmetic can't open compile because:   **** <INDEX %<OFFSET 9 NODE!-COMP
+DEC!-PACKAGE>> **** 
+ is of type:  <OR FIX FLOAT>
+ **** <G=? <LENGTH <3 .K!-IMAPGEN!-MAPGEN!-PACKAGE>> <INDEX %<OFFSET 9 
+NODE!-C ...
+===== Arithmetic can't open compile because:  <G?  **** .LN!-IMAPGEN!-MAPGEN!-PA
+CKAGE ****  1>
+ is of type:  <OR FIX FLOAT>
+ **** <G? .LN!-IMAPGEN!-MAPGEN!-PACKAGE 1> **** 
+Peephole  4% 519/495
+Job done in:  2:44 / 6:28
+  COMPILING GEN-TAGS!-IMAPGEN!-MAPGEN!-PACKAGE
+===== External variable being referenced:  PRE!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .PRE!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  MNOD!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .MNOD!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  NTSLOTS!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .NTSLOTS!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+Peephole  0% 96/96
+Job done in:  20 / 34
+  COMPILING MOPTG!-MAPGEN!-PACKAGE
+Peephole  0% 18/18
+Job done in:  3 / 5
+COMPILING MOPTG2!-MAPGEN!-PACKAGE
+Peephole  0% 18/18
+Job done in:  2 / 3
+    COMPILING NOTIMP!-MAPGEN!-PACKAGE
+*** WARNING	VARIABLE NEVER USED: ARG 
+Peephole  0% 18/18
+Job done in:  3 / 5
+COMPILING MAP:UNBIND!-IMAPGEN!-MAPGEN!-PACKAGE
+*** WARNING	VARIABLE NEVER USED: STOP 
+===== External variable being referenced:  PRE!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .PRE!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  STK!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .STK!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  MNOD!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .MNOD!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  NTSLOTS!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .NTSLOTS!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  STK!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .STK!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+Peephole  0% 53/53
+Job done in:  8 / 12
+COMPILING MAPLEAVE-GEN!-MAPGEN!-PACKAGE
+*** WARNING	VARIABLE NEVER USED: W 
+===== External variable being referenced:  MNOD!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .MNOD!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  DEST!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .DEST!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  DEST!-IMAPGEN!-MAPGEN!-PACKAGE
+<==?  **** .DEST!-IMAPGEN!-MAPGEN!-PACKAGE ****  FLUSHED!-COMPDEC!-PACKAGE>
+===== External variable being referenced:  STOP!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .STOP!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  STOP!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .STOP!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  INRAP!-IMAPGEN!-MAPGEN!-PACKAGE
+<RETURN-UP  **** .INRAP!-IMAPGEN!-MAPGEN!-PACKAGE **** >
+===== External variable being referenced:  DEST!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .DEST!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being SET:  CD!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** <SET CD!-IMAPGEN!-MAPGEN!-PACKAGE <GEN <1 <%<OFFSET 5 
+NODE!-COMPDEC!-PAC ...
+===== External variable being referenced:  STOP!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .STOP!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  STOP!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .STOP!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  INRAP!-IMAPGEN!-MAPGEN!-PACKAGE
+<RETURN-UP  **** .INRAP!-IMAPGEN!-MAPGEN!-PACKAGE **** >
+===== External variable being referenced:  CD!-IMAPGEN!-MAPGEN!-PACKAGE
+<RET-TMP-AC  **** .CD!-IMAPGEN!-MAPGEN!-PACKAGE **** >
+===== External variable being referenced:  DEST!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .DEST!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  CD!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .CD!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  EXIT!-IMAPGEN!-MAPGEN!-PACKAGE
+<BRANCH:TAG  **** .EXIT!-IMAPGEN!-MAPGEN!-PACKAGE **** >
+Peephole  0% 129/129
+Job done in:  37 / 1:02
+COMPILING DO-FUNNY-MAPRET!-IMAPGEN!-MAPGEN!-PACKAGE
+===== Computed decl of variable:  ANY?!-IMAPGEN!-MAPGEN!-PACKAGE is:  <OR ATOM 
+FALSE>
+===== External variable being referenced:  STK!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .STK!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  STB!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .STB!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  MNOD!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .MNOD!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  MNOD!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .MNOD!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  STB!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .STB!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  STRV!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .STRV!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+Peephole  0% 210/210
+Job done in:  42 / 1:43
+  COMPILING MAPRET-STOP-GEN!-MAPGEN!-PACKAGE
+*** WARNING	VARIABLE NEVER USED: W 
+===== Computed decl of variable:  SG!-IMAPGEN!-MAPGEN!-PACKAGE is:  <OR ATOM 
+FALSE>
+===== Computed decl of variable:  LN!-IMAPGEN!-MAPGEN!-PACKAGE is:  <FIX (0 
+34359738367)>
+===== Computed decl of variable:  UNK!-IMAPGEN!-MAPGEN!-PACKAGE is:  <OR ATOM 
+FALSE>
+===== Computed decl of variable:  FAP!-IMAPGEN!-MAPGEN!-PACKAGE is:  
+NODE!-COMPDEC!-PACKAGE
+===== Computed decl of variable:  FF?!-IMAPGEN!-MAPGEN!-PACKAGE is:  <OR ATOM 
+FALSE>
+===== Computed decl of variable:  LEAVE!-IMAPGEN!-MAPGEN!-PACKAGE is:  <OR ATOM 
+FALSE>
+===== Computed decl of variable:  OOS!-IMAPGEN!-MAPGEN!-PACKAGE is:  LIST
+===== External variable being referenced:  MNOD!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .MNOD!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  STK!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .STK!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  NARG!-IMAPGEN!-MAPGEN!-PACKAGE
+<* -2  **** .NARG!-IMAPGEN!-MAPGEN!-PACKAGE **** >
+===== Arithmetic can't open compile because:  <* -2  **** .NARG!-IMAPGEN!-MAPGEN
+!-PACKAGE **** >
+ is of type:  ANY
+ **** <* -2 .NARG!-IMAPGEN!-MAPGEN!-PACKAGE> **** 
+===== External variable being referenced:  STK!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .STK!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  NTSLOTS!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .NTSLOTS!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  STB!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .STB!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  STRV!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .STRV!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  GMF!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .GMF!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  NTSLOTS!-IMAPGEN!-MAPGEN!-PACKAGE
+<REST  **** .NTSLOTS!-IMAPGEN!-MAPGEN!-PACKAGE ****  1>
+===== Not open compiled because type is:  ANY
+ **** <REST .NTSLOTS!-IMAPGEN!-MAPGEN!-PACKAGE 1> **** 
+===== External variable being SET: NTSLOTS!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** <SET NTSLOTS!-IMAPGEN!-MAPGEN!-PACKAGE <REST .
+NTSLOTS!-IMAPGEN!-MAPGEN!- ...
+===== External variable being referenced:  STB!-IMAPGEN!-MAPGEN!-PACKAGE
+<SET STK!-IMAPGEN!-MAPGEN!-PACKAGE  **** .STB!-IMAPGEN!-MAPGEN!-PACKAGE **** >
+===== External variable being referenced:  INRAP!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .INRAP!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  MNOD!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .MNOD!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  INRAP!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .INRAP!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  INRAP!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .INRAP!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  MNOD!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .MNOD!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  MAYBE-FALSE!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .MAYBE-FALSE!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  MAYBE-FALSE!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .MAYBE-FALSE!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  MAYBE-FALSE!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .MAYBE-FALSE!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  MAYBE-FALSE!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .MAYBE-FALSE!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  MAYBE-FALSE!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .MAYBE-FALSE!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  MNOD!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .MNOD!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  STRV!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .STRV!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  SPECD!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .SPECD!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  MNOD!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .MNOD!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  MAYBE-FALSE!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .MAYBE-FALSE!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  MAYBE-FALSE!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .MAYBE-FALSE!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  PRE!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .PRE!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  GMF!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .GMF!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  NTSLOTS!-IMAPGEN!-MAPGEN!-PACKAGE
+<REST  **** .NTSLOTS!-IMAPGEN!-MAPGEN!-PACKAGE ****  1>
+===== Not open compiled because type is:  ANY
+ **** <REST .NTSLOTS!-IMAPGEN!-MAPGEN!-PACKAGE 1> **** 
+===== External variable being SET: NTSLOTS!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** <SET NTSLOTS!-IMAPGEN!-MAPGEN!-PACKAGE <REST .
+NTSLOTS!-IMAPGEN!-MAPGEN!- ...
+===== External variable being referenced:  STB!-IMAPGEN!-MAPGEN!-PACKAGE
+<SET STK!-IMAPGEN!-MAPGEN!-PACKAGE  **** .STB!-IMAPGEN!-MAPGEN!-PACKAGE **** >
+===== External variable being referenced:  ANY?!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .ANY?!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  POFF!-IMAPGEN!-MAPGEN!-PACKAGE
+<EMIT <FORM `SETZM   **** .POFF!-IMAPGEN!-MAPGEN!-PACKAGE ****  `(P) >>
+===== External variable being referenced:  INRAP!-IMAPGEN!-MAPGEN!-PACKAGE
+<RETURN-UP  **** .INRAP!-IMAPGEN!-MAPGEN!-PACKAGE **** >
+===== External variable being referenced:  INRAP!-IMAPGEN!-MAPGEN!-PACKAGE
+<AGAIN-UP  **** .INRAP!-IMAPGEN!-MAPGEN!-PACKAGE **** >
+===== External variable being SET: NTSLOTS!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** <SET NTSLOTS!-IMAPGEN!-MAPGEN!-PACKAGE .NS!-IMAPGEN!-MAPGEN!-PACKAGE>
+ ** ...
+===== External variable being referenced:  APPLTAG!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .APPLTAG!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  GMF!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .GMF!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  RTAG!-COMPDEC!-PACKAGE
+(.GMF!-IMAPGEN!-MAPGEN!-PACKAGE  **** .RTAG!-COMPDEC!-PACKAGE **** )
+===== External variable being referenced:  MAPLP!-IMAPGEN!-MAPGEN!-PACKAGE
+(ELSE  **** .MAPLP!-IMAPGEN!-MAPGEN!-PACKAGE **** )
+Peephole  0% 685/679
+Job done in:  4:08 / 8:16
+  COMPILING AP?!-IMAPGEN!-MAPGEN!-PACKAGE
+===== External variable being referenced:  REASONABLE!-COMPDEC!-PACKAGE
+ **** .REASONABLE!-COMPDEC!-PACKAGE **** 
+===== External variable being referenced:  FCNS!-COMPDEC!-PACKAGE
+<==? .AT  **** .FCNS!-COMPDEC!-PACKAGE **** >
+===== External variable being referenced:  FCNS!-COMPDEC!-PACKAGE
+<TYPE?  **** .FCNS!-COMPDEC!-PACKAGE ****  LIST>
+===== External variable being referenced:  FCNS!-COMPDEC!-PACKAGE
+<MEMQ .AT  **** .FCNS!-COMPDEC!-PACKAGE **** >
+===== Not open compiled because type is:  ANY
+ **** <MEMQ .AT .FCNS!-COMPDEC!-PACKAGE> **** 
+Peephole  9% 98/89
+Job done in:  35 / 57
+    COMPILING HMAPFR!-IMAPGEN!-MAPGEN!-PACKAGE
+===== Computed decl of variable:  F?!-IMAPGEN!-MAPGEN!-PACKAGE is:  <OR ATOM 
+FALSE>
+
+***********************************************************
+*        ERROR ERROR ERROR ERROR ERROR ERROR ERROR        *
+***********************************************************
+
+to wit,
+NOTE 
+"Special variable never used: " 
+
+Compilation totally aborted.
+Status at death was:
+
+
+Running: 28 finished, working on HMAPFR!-IMAPGEN!-MAPGEN!-PACKAGE, and 1 to go.
+
+
+Total time used is
+	2 hours 26 min. 4 sec. CPU time,
+	35 min. 15 sec. garbage collector CPU time,
+	5 hours 29 min. 17 sec. real time.
+CPU utilization is 44.358961%.
+Number of garbage collects = 177
+
+*** NOTE	Special variable never used: START:TAG 
+===== Computed decl of variable:  R?!-IMAPGEN!-MAPGEN!-PACKAGE is:  <OR ATOM 
+FALSE>
+===== Computed decl of variable:  FF?!-IMAPGEN!-MAPGEN!-PACKAGE is:  <OR ATOM 
+FALSE>
+===== Computed decl of variable:  OTAG!-IMAPGEN!-MAPGEN!-PACKAGE is:  LIST
+*** WARNING	VARIABLE NEVER USED: OUTSAV 
+===== Computed decl of variable:  CHF!-IMAPGEN!-MAPGEN!-PACKAGE is:  <OR ATOM 
+FALSE>
+===== Computed decl of variable:  FLS!-IMAPGEN!-MAPGEN!-PACKAGE is:  <OR ATOM 
+FALSE>
+===== Computed decl of variable:  NEED-INT!-IMAPGEN!-MAPGEN!-PACKAGE is:  <OR 
+ATOM FALSE>
+===== Computed decl of variable:  OS!-IMAPGEN!-MAPGEN!-PACKAGE is:  LIST
+===== Computed decl of variable:  NS!-IMAPGEN!-MAPGEN!-PACKAGE is:  LIST
+===== Computed decl of variable:  DOIT!-IMAPGEN!-MAPGEN!-PACKAGE is:  <OR ATOM 
+FALSE>
+===== Computed decl of variable:  RV!-IMAPGEN!-MAPGEN!-PACKAGE is:  <OR ATOM 
+FALSE>
+===== Computed decl of variable:  BS!-IMAPGEN!-MAPGEN!-PACKAGE is:  LIST
+===== Computed decl of variable:  S!-IMAPGEN!-MAPGEN!-PACKAGE is:  
+SYMTAB!-COMPDEC!-PACKAGE
+===== External variable being referenced:  NTSLOTS!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .NTSLOTS!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  PRE!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .PRE!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  TMPS!-COMPDEC!-PACKAGE
+(.PRE!-IMAPGEN!-MAPGEN!-PACKAGE  **** .TMPS!-COMPDEC!-PACKAGE **** )
+===== External variable being referenced:  STK!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .STK!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  BSTB!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .BSTB!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  STK!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .STK!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  STK!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .STK!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  TMPS!-COMPDEC!-PACKAGE
+ **** .TMPS!-COMPDEC!-PACKAGE **** 
+===== External variable being referenced:  BASEF!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .BASEF!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  FRMS!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .FRMS!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  PRE!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .PRE!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  AC-HACK!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .AC-HACK!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  TOT-SPEC!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .TOT-SPEC!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== Arithmetic can't open compile because:   **** .TOT-SPEC!-IMAPGEN!-MAPGEN!-
+PACKAGE **** 
+ is of type:  ANY
+ **** <- <%<OFFSET 12 NODE!-COMPDEC!-PACKAGE> .INRAP!-IMAPGEN!-MAPGEN!-PACKAGE
+ ...
+===== External variable being referenced:  PRE!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .PRE!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== Arithmetic can't open compile because:   **** <MAPF ,MIN <FUNCTION ("AUX" 
+DUMMY-MAPF DUMMY-MAPF 
+N!-IMAPGEN!-MAPGEN!-PA ...
+ is of type:  <OR FIX FLOAT>
+ **** <L=? <MAPF ,MIN <FUNCTION ("AUX" DUMMY-MAPF DUMMY-MAPF 
+N!-IMAPGEN!-MAPGE ...
+===== Not open compiled because type is:  STRUCTURED
+ **** <NTH ,MBINDERS!-MAPGEN!-PACKAGE <%<OFFSET 4 SYMTAB!-COMPDEC!-PACKAGE> .
+S ...
+===== Arithmetic can't open compile because:  <+  **** .STKOFFS!-IMAPGEN!-MAPGEN
+!-PACKAGE ****  2>
+ is of type:  <OR FIX FLOAT>
+ **** <+ .STKOFFS!-IMAPGEN!-MAPGEN!-PACKAGE 2> **** 
+*** WARNING	 TAG SEEN IN PROG/REPEAT 
+ **** T **** 
+
+ 
+*** WARNING	TYPE? ALWAYS TRUE 
+ **** <TYPE? .R!-IMAPGEN!-MAPGEN!-PACKAGE AC!-COMPDEC!-PACKAGE> **** 
+
+ 
+Peephole  1% 2524/2479
+Job done in:  2:19:58 / 5:04:33
+COMPILING MAPFR-GEN!-MAPGEN!-PACKAGE
+===== Computed decl of variable:  F?!-IMAPGEN!-MAPGEN!-PACKAGE is:  <OR ATOM 
+FALSE>
+===== Computed decl of variable:  FF?!-IMAPGEN!-MAPGEN!-PACKAGE is:  <OR ATOM 
+FALSE>
+===== Computed decl of variable:  ANY?!-IMAPGEN!-MAPGEN!-PACKAGE is:  <OR ATOM 
+FALSE>
+===== Computed decl of variable:  NARG!-IMAPGEN!-MAPGEN!-PACKAGE is:  <FIX (0 
+34359738367)>
+===== Computed decl of variable:  R?!-IMAPGEN!-MAPGEN!-PACKAGE is:  <OR ATOM 
+FALSE>
+===== External variable being referenced:  STK!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .STK!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  STK!-IMAPGEN!-MAPGEN!-PACKAGE
+ **** .STK!-IMAPGEN!-MAPGEN!-PACKAGE **** 
+===== External variable being referenced:  PRE!-IMAPGEN!-MAPGEN!-PACKAGE
+<NOT  **** .PRE!-IMAPGEN!-MAPGEN!-PACKAGE **** >
+Peephole  4% 667/640
+Job done in:  3:25 / 10:28
+ 
+
+Total time used is
+	3 hours 4 min. 16 sec. CPU time,
+	42 min. 39 sec. garbage collector CPU time,
+	6 hours 43 min. 53 sec. real time.
+CPU utilization is 45.623735%.
+Number of garbage collects = 212

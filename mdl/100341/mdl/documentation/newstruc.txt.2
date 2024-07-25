@@ -1,0 +1,65 @@
+NEWSTRUC RPACKAGE		-taa 3/3/81
+
+The NEWSTRUC package provides two entries:  MSETG and NEWSTRUC.
+
+MSETG takes a tuple of pairs; the first element of each pair is an atom,
+and the second is its value.  It performs a SETG and a MANIFEST.  If the
+atom is already GASSIGNED to something other than its new value, and
+REDEFINE is not ASSIGNED to non-false, then ERROR is called.  If the user
+ERRETs T, the SETG will be performed; otherwise, it will be skipped.
+
+NEWSTRUC is used to define new data types.  In the simple case, that of
+a fixed-length structure, it takes the new type name, the primtype (both
+of these arguments are atoms), and a bunch of pairs describing the
+slots of the structure:  the slot name, and its DECL.  These arguments
+are not evaluated, so things like <OR ATOM FALSE> need not be quoted.
+Thus:
+<NEWSTRUC FROB VECTOR
+	  FROB-NUM FIX
+	  FROB-TYPE <OR ATOM STRING>
+	  VALID-FROB? <OR ATOM FALSE>>
+This effectively performs the following actions:
+<NEWTYPE FROB VECTOR '<<PRIMTYPE VECTOR> FIX <OR ATOM STRING>
+					     <OR ATOM FALSE>>>
+<MSETG FROB-NUM <OFFSET 1 FROB>>
+<MSETG FROB-TYPE <OFFSET 2 FROB>>
+<MSETG VALID-FROB? <OFFSET 3 FROB>>
+
+There are, of course, more complicated ways to use this package.  Let us
+hypothesize a structure that is of some arbitrary length, for example, a
+<VECTOR STRING [REST FIX]>.  The call to NEWSTRUC in this case would be
+<NEWSTRUC FROTZ VECTOR
+	  FROTZ-NAME STRING
+	  "REST"
+	  FROTZES FIX>
+This will do:
+<NEWTYPE FROTZ VECTOR '<<PRIMTYPE VECTOR> STRING [REST FIX]>>
+<MSETG FROTZ-NAME <OFFSET 1 FROTZ>>
+<MSETG FROTZES <OFFSET 2 FROTZ>>
+Thus, the offset associated with the "REST" points to the first possible
+such element.  One can also do
+<NEWSTRUC FROTZ VECTOR
+	  FROTZ-NAME STRING
+	  "REST"
+	  FROTZ1 FIX
+	  FROTZ2 FLOAT>
+which will give a decl of <<PRIMTYPE VECTOR> STRING [REST FIX FLOAT]>.
+
+
+Using NEWSTRUC with the compiler.
+
+It is possible, though not necessary, to put a <USE "NEWSTRUC"> in any
+package where NEWSTRUC is called.  Since NEWSTRUC is an RPACKAGE, its
+entries go in the ROOT oblist, and are available to packages that don't
+USE it, if it is loaded.  I normally load NEWSTRUC as a thing to do
+before compilation, or as a separate package.  This has the advantage
+that when calls to NEWSTRUC are eliminated (coming right up), the
+package needn't be around.
+
+If the LVAL of EXPSPLICE is set to T, GROUP-LOAD will take any objects of type
+SPLICE it encounters during loading and expand them into the group. 
+When this is true, NEWSTRUC and MSETG return SPLICEs containing
+appropriate forms:  <MSETG FOO 1> will return
+#SPLICE (<SETG FOO 1> <MANIFEST FOO>)
+Thus if EXPSPLICE is set to T during compilation, calls to NEWSTRUC in
+the source will be changed to suitable NEWTYPEs in the NBIN.

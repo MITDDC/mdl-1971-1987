@@ -1,0 +1,129 @@
+'<PCODE "M-ACK">
+
+<PACKAGE "M-ACK"> 
+
+<ENTRY ACKNOWLEDGMENT SET-CONDITIONS COND-SIGNAL ACK-ERR> 
+
+<USE "M-DEFS" "M-READ" "M-DAC" "M-PRCD" "M-MSG" "ITIME" "FIELDS" "PRTUTI" 
+"PRTSTR" "M-ERR" "USRUTI" "MADMAN"> 
+
+"ACKNOWLEDGMENT PROCESS" 
+
+<DEMON-PROCESS "ACKNOWLEDGMENT" ACKNOWLEDGMENT ACK-ERR [,FATAL ,FATAL ,FATAL]> 
+
+"SUBTITLE Offsets in CONDITIONS Elements" 
+
+<PUT CSPEC DECL '<LIST [REST STRING <OR FIX FALSE>]>> 
+
+<MSETG CCND 1> 
+
+<MSETG CTIM 2> 
+
+"SUBTITLE Offsets in ACKNOWLEDGE elements" 
+
+<PUT ASPEC DECL '<LIST STRING <OR FIX FALSE> ANY>> 
+
+<MSETG ACND 1> 
+
+<MSETG ATIM 2> 
+
+<MSETG AFNC 3> 
+
+"SUBTITLE Offsets in PENDING-CONDITIONS elements" 
+
+<PUT PSPEC DECL '<LIST STRING STRING <OR FALSE FIX> [REST FIX]>> 
+
+<MSETG PCND 1> 
+
+<MSETG PADR 2> 
+
+<MSETG PVAL 3> 
+
+"SUBTITLE Offsets in ACKNOWLEDGED-CONDITIONS elements" 
+
+<MSETG PACK 4> 
+
+\ 
+
+"SUBTITLE Acknowledgement Process" 
+
+<SETG ACKNOWLEDGMENT  %<RSUBR!- '[ %<PCODE!- "M-ACK" 0> ACKNOWLEDGMENT #DECL (
+"VALUE" <OR ATOM FALSE> STRING) ADDBACK S-TIME SENDMSG ERR-HEADER BEDRIDDEN? 
+EXTRACT-HOST S-ADDR DAPPMSG DUSERS MEMF AFALSE PRCADD DWT ITIME DRDMSG DRD %<
+RGLOC MSG-SPACE T> %<TYPE-W SPACE VECTOR> "" "ACKNOWLEDGE" %<INTERNAL-RSUBR 
+ALIST 262143> %<INTERNAL-RSUBR ACONS 3> T "ACKNOWLEDGMENT" OUTCHAN " Fail=" 
+" Win=" "COPY-TO-ADDRESSEE-AREA" %<INTERNAL-RSUBR ASTRING 262143> 
+%<INTERNAL-RSUBR ACOPY 2> %<RGLOC SCRATCH-SPACE T> "Message to " 
+" has not yet been delivered." 
+"     The message described below has not been successfully delivered
+to " 
+".
+     This is because the host has been down for an extended period.
+The message will be delivered when the host comes up again.
+
+" ".
+
+" "COMMUNICATION-DEMON" " has been delivered." 
+"     The message described below was successfully delivered to
+" " on " "     The ACKNOWLEDGMENT process failed because:
+
+" 
+"A predefined condition was specified which does not correspond to any
+existing predefined condition:  " 
+"A condition was signalled and a corresponding specification of
+action to take could not be found.  Generally, this indicates an
+internal demon bug, or a clobbered data base.  The condition was
+" "The handler associated with the condition " " is not an
+applicable type."]>> 
+<AND <ASSIGNED? GLUE> .GLUE <PUT ,ACKNOWLEDGMENT PGLUE ![715827882 -17179869185 
+-4096 0!]>> 
+
+
+"COND-APPLY -- apply the handler for a particular condition" 
+
+\ 
+
+"utilities for condition handling" 
+
+"COND-HAP -- checks to see if a particular condition has happened
+by searching a CONDITIONS field" 
+
+"PRUNE-COND -- takes WATCH-CONDITIONS list and CONDITIONS list
+  returns pruned WATCH-CONDITIONS list.  In other words, flushes conditions
+  which have occurred already." 
+
+\ 
+
+"SUBTITLE Initialize Acknowledgement Goodies" 
+
+"SET-CONDITIONS -- sets up fields for acknowledgement process" 
+
+<SETG SET-CONDITIONS %<RSUBR-ENTRY '[ACKNOWLEDGMENT SET-CONDITIONS #DECL (
+"VALUE" <OR ATOM FALSE>)] 617>> 
+
+\ 
+
+"ACK-SCAN -- create WACK part of WATCH-CONDITIONS list.  Returns a sorted
+(by time) list of conditions and the times they run." 
+
+\ 
+
+"COND-SIGNAL -- signal that a condition has occurred" 
+
+<SETG COND-SIGNAL %<RSUBR-ENTRY '[ACKNOWLEDGMENT COND-SIGNAL #DECL ("VALUE" ATOM
+STRING STRING)] 974>> 
+
+\ 
+
+"DLV-TIMEOUT -- delivery timeout :  send message admitting failure" 
+
+"DLV-HAP -- delivery successful" 
+
+\ 
+
+"SUBTITLE Acknowledgement Errors" 
+
+<SETG ACK-ERR %<RSUBR-ENTRY '[ACKNOWLEDGMENT ACK-ERR #DECL ("VALUE" <OR LIST 
+FALSE> STRING <FALSE FIX> STRING)] 1311>> 
+
+<ENDPACKAGE> 

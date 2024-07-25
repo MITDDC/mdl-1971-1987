@@ -1,0 +1,34 @@
+<AND <=? <UNAME> "COMSYS"> <FILE-EXISTS? "COMDAT;STAY DOWN"> <LOGOUT>>
+		;"don't run if file exists: means database unhappy, etc."
+
+<USE "M.DEFS" "M.DIR" "M.DMN" "M.DB" "NETFTP" "PRTUTI" "HOSTS">
+
+<SETG HOSTNUMBER <HOST "MIT-DMS">>
+		;"comsys running on MIT-DMS"
+
+<SETG DB-DANGER-POINT 10000>
+		;"archive asylums when 95% full"
+
+<PRINTTYPE
+  FALSE
+  <FUNCTION (F)
+	    <COND (<EMPTY? .F> <PRINC "%<>">)
+		  (<PRINC "#FALSE "> <PRIN1 <CHTYPE .F LIST>>)>>>
+<PRINTTYPE RSUBR <FUNCTION (R) <PRINC "#RSUBR "> <PRIN1 <2 .R>>>>
+<PRINTTYPE RSUBR-ENTRY <FUNCTION (R) <PRINC "#RSUBR-ENTRY "> <PRIN1 <2 .R>>>>
+		;"useful printtypes, cut down on junk when error"
+
+<UNSOAK>	;"put ftp transactions into script"
+
+<REPEAT ()
+ <COND (<OR <RENAME "COMDAT;_TEMP_ <"> <RENAME "COMDAT;NETMSG <">>)
+       (ELSE <RETURN>)>>
+		;"flush junk files"
+
+<SETG ZAP T>	;"enable clock"
+
+<SETG DEBUG-RUNNING-DEMON? <>>
+		;"says stop dead on any error if T"
+<SETG MDEBUG? <>> ;"zero spaces, check them, etc. etc. etc."
+<MDBG <>>	;"debugging comsys if T"
+

@@ -1,0 +1,211 @@
+<PACKAGE "R-UTIL">
+
+<ENTRY ITERATE MATCH ELEMATCH NOTHING>
+
+<ENTRY BEFORE AFTER BETWEEN>
+
+<ENTRY CPRINC NMSGS PNUM PMID CANONIZE DECANONIZE CLEAR-BITS>
+
+<USE "R-DEFS" "R-SEARCH" "R-IO">
+
+<USE "MACROS">
+
+"ITERATE -- macro to produce a repeat through each match of an inversion"
+
+<DEFMAC ITERATE ('I "ARGS" BODY "AUX" (EXPLAIN? T))
+	<COND (<AND <NOT <EMPTY? .BODY>>
+		    <OR <TYPE? <1 .BODY> FALSE>
+			<AND <TYPE? <1 .BODY> FORM>
+			     <EMPTY? <1 .BODY>>>>>
+	       <SET EXPLAIN? <>>
+	       <SET BODY <REST .BODY>>)>
+	<FORM PROG ((I <2 .I>) '(N 0) '(MT ,MESSAGE-TABLE) '(L <R-TUPLE .MT>))
+	      #DECL ((I) INVERSION (L N) FIX (MT) MTABLE)
+	      '<COND (<I-KEY .I>
+		      <PUT .I
+			   ,I-TUPLE
+			   <REST .MT <R-HEADER .MT>>>)>
+	      <FORM REPEAT (<1 .I>)
+		    <CHTYPE ((<1 .I>) '<OR UVECTOR FALSE>) DECL>
+		    <COND (.EXPLAIN?
+			   <FORM COND
+				 (<FORM SET <1 .I> '<MATCH .I>>
+				  '<SET N <+ .N 1>>
+				  !.BODY)
+				 '(<0? .N> <NOTHING .I> <RETURN 0>)
+				 '(ELSE
+				   <RETURN .N>)>)
+			  (ELSE
+			   <FORM COND
+				 (<FORM SET <1 .I> '<MATCH .I>>
+				  '<SET N <+ .N 1>>
+				  !.BODY)
+				 '(ELSE
+				   <RETURN .N>)>)>
+		    <FORM PUT '.I ,I-TUPLE
+			  <FORM SET <1 .I>
+				<FORM REST <FORM LVAL <1 .I>> '.L>>>>>>
+
+"MATCH -- takes an inversion and the length of message tuples."
+
+<DEFINE MATCH (I
+	       "AUX"
+	       (MT ,MESSAGE-TABLE) (L <R-TUPLE .MT>) (K <I-KEY .I>)
+	       (U <OR <I-TUPLE .I> <REST .MT <R-HEADER .MT>>>))
+	#DECL ((I) INVERSION (L) FIX (K) ANY (MT U) <UVECTOR [REST FIX]>)
+	<COND (<NOT .K> <SET K <1 .K>>)>
+	<REPEAT ()
+		<COND (<OR <EMPTY? .U> <0? <1 .U>>>
+		       <RETURN <>>)>
+		<COND (<ELEMATCH .U .K>
+		       <PUT .I ,I-TUPLE .U>
+		       <RETURN .U>)>
+		<SET U <REST .U .L>>>>
+
+<DEFINE ELEMATCH (U K "AUX" M X (R <>))
+	#DECL ((U) <UVECTOR [REST FIX]> (K X) ANY (M) FIX (R) <OR ATOM FALSE>)
+	<SET M <1 .U>>
+	<CASE ,TYPE? .K
+	      (ATOM T)
+	      (WORD <NOT <0? <CHTYPE <ANDB .M .K> FIX>>>)
+	      (FIX <==? <CHTYPE <GETBITS .M <BITS 18>> FIX> .K>)
+	      (VECTOR <ELEMATCH <REST .U <1 .K>> <2 .K>>)
+	      (FORM
+	       <SET X <1 .K>>
+	       <SET R
+	       <CASE ,==? .X
+		     (AND
+		      <MAPF <>
+			    <FUNCTION (K)
+				 #DECL ((K) ANY)
+				 <COND (<ELEMATCH .U .K> T)
+				       (ELSE <MAPLEAVE <>>)>>
+			    <REST .K>>)
+		     (OR
+		      <MAPF <>
+			    <FUNCTION (K)
+				 #DECL ((K) ANY)
+				 <COND (<ELEMATCH .U .K> <MAPLEAVE T>)>>
+			    <REST .K>>)
+		     (NOT <NOT <ELEMATCH .U <2 .K>>>)
+		     (MEMBER
+		      <FIELD-MEMBER <MSG .U> <2 .K> <3 .K>>)
+		     (BEFORE
+		      <PROG ((D <2 .K>))
+			    #DECL ((D) FIX)
+			    <L? <GET-DATE .U> .D>>)
+		     (AFTER
+		      <PROG ((D <2 .K>))
+			    #DECL ((D) FIX)
+			    <G? <GET-DATE .U> <+ .D 262144>>>)
+		     (ON
+		      <PROG ((D <2 .K>))
+			    #DECL ((D) FIX)
+			    <==? <GETBITS <GET-DATE .U> <BITS 18 18>>
+				 <GETBITS .D <BITS 18 18>>>>)
+		     (BETWEEN
+		      <PROG ((D <2 .K>) (E <3 .K>))
+			    #DECL ((D E) FIX)
+			    <AND <G? <GET-DATE .U> .D>
+				 <L? <GET-DATE .U> <+ .E 262144>>>>)
+		     DEFAULT
+		     (<ERROR BAD-OP .X .K>)>>
+	       <COND (.R <ONBITS .U ,R-SEARCH>)
+		     (ELSE <OFFBITS .U ,R-SEARCH>)>
+	       .R)
+	      DEFAULT
+	      (<ERROR BAD-KEY .K>)>>
+
+<DEFINE NOTHING (I "AUX" (K <I-KEY .I>) (OUTCHAN .OUTCHAN))
+	#DECL ((K) ANY (I) INVERSION (OUTCHAN) CHANNEL)
+	<CASE ,TYPE? .K
+	      (ATOM <PRINC "No messages?">)
+	      (WORD
+	       <PRINC <COND (<NOT <0? <CHTYPE <ANDB .K
+					    <ORB ,R-IN-BOX
+						 ,R-OUT-BOX
+						 ,R-PENDING
+						 ,R-DISCARDED>> FIX>>>
+			     "Empty bin?")
+			    (<NOT <0? <CHTYPE <ANDB .K ,R-USER> FIX>>>
+			     "No such message(s)?")
+			    (<NOT <0? <CHTYPE <ANDB .K ,R-SEARCH> FIX>>>
+			     "Nothing matched?")
+			    (ELSE
+			     "No messages with that tag?")>>)
+	      (FIX <PRINC "No such message?">)
+	      (VECTOR <PRINC "Empty folder?">)
+	      (FORM <PRINC "Nothing matches?">)
+	      (FALSE <PRINC "No more messages?">)
+	      DEFAULT
+	      (<PRINC "Bad search key?">)>>
+
+"CLEAR-BITS -- empty a bin"
+
+<DEFINE CLEAR-BITS (B "AUX" (UV ,MESSAGE-TABLE) (L <R-TUPLE .UV>))
+	#DECL ((B) <PRIMTYPE WORD> (L) FIX (UV) MTABLE)
+	<SET UV <REST .UV <R-HEADER .UV>>>
+	<REPEAT ()
+		<COND (<OR <EMPTY? .UV> <0? <1 .UV>>> <RETURN>)
+		      (ELSE
+		       <OFFBITS .UV .B>
+		       <SET UV <REST .UV .L>>)>>>
+
+<DEFINE CPRINC (N "AUX" (OUTCHAN .OUTCHAN))
+	#DECL ((N) FIX (OUTCHAN) CHANNEL)
+	<COND (<G=? .N 100>)
+	      (<G=? .N 10> <PRINC !\ >)
+	      (ELSE <PRINC "  ">)>
+	<PRINC .N>>
+
+<DEFINE NMSGS (NL "TUPLE" STR "AUX" (OUTCHAN .OUTCHAN))
+	#DECL ((NL) FIX (STR) TUPLE (OUTCHAN) CHANNEL)
+	<PRINC "A">
+	<PRINC <COND (<0? .NL> "No") (ELSE .NL)>>
+	<MAPF <>
+	      <FUNCTION (S)
+		   #DECL ((S) <OR FIX STRING>)
+		   <COND (<TYPE? .S STRING> <PRINC .S>)
+			 (ELSE <PRINC " message"> <OR <1? .NL> <PRINC !\s>>)>>
+	      .STR>
+	<PRINC !\.>
+	<CRLF>
+	.NL>
+
+"PNUM -- print message number in format for user"
+
+<DEFINE PNUM (N "AUX" (SID <DECANONIZE .N>) (OUTCHAN .OUTCHAN))
+	#DECL ((N SID) FIX (OUTCHAN) CHANNEL)
+	<COND (<==? .N .SID> <PRINC .N> <PRINC !\ >)
+	      (ELSE
+	       <COND (<L? .SID 10> <PRINC "  ">)
+		     (<L? .SID 100> <PRINC !\ >)>
+	       <PRINC !\[>
+	       <PRINC .SID>
+	       <PRINC !\]>)>>
+
+<DEFINE PMID (N "OPTIONAL" (OUTCHAN .OUTCHAN) (CID? <>) SID)
+	#DECL ((N SID) FIX (OUTCHAN) CHANNEL (CID?) <OR ATOM FALSE>)
+	<PRINC "[Message #">
+	<PRINC <SET SID <DECANONIZE .N>>>
+	<COND (<AND .CID? <N==? .N .SID>>
+	       <PRINC " ("> <PRINC .N> <PRINC !\)>)>
+	<PRINC "]">>
+
+<DEFINE CANONIZE (N "AUX" (NT ,FIX-TABLE))
+	#DECL ((N) FIX (NT) <OR FALSE <VECTOR [REST <OR FIX FALSE>]>>)
+	<COND (<AND .NT
+		    <G? .N 0>
+		    <L=? .N <LENGTH .NT>>
+		    <NTH .NT .N>>)
+	      (ELSE .N)>>
+
+<DEFINE DECANONIZE (N "AUX" (NT ,FIX-TABLE) TT)
+	#DECL ((N) FIX (NT TT) <OR FALSE <VECTOR [REST <OR FIX FALSE>]>>)
+	<COND (<AND .NT
+		    <G? .N <LENGTH .NT>>
+		    <SET TT <MEMQ .N .NT>>>
+	       <+ 1 <- <LENGTH .NT> <LENGTH .TT>>>)
+	      (ELSE .N)>>
+
+<ENDPACKAGE>

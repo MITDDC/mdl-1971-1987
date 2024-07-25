@@ -1,0 +1,32 @@
+
+
+   The MEDIT package implements an interface between MDL and EMACS.  It
+allows the user invoke an EMACS inferior to his MDL and to only
+re-load the functions that have been edited, rather than the whole
+file.  Needless to say, this capability is really nice to have when
+the load average is high.
+
+  To get into EMACS from MDL, do <MEDIT>$.  MEDIT will clear the
+screen, type "MEDIT==>" and go into EMACS.  The EMACS invoked will be
+in MEDIT mode (note the name in the lower left hand corner!).  The
+only difference between MEDIT-Emacs and regular EMACS is that there
+are two additional functions defined.  They are as follows:
+
+               M-z,M-Z: marks the current DEFINE, or the immediately 
+                        following DEFINE.
+
+               ^X Z:    exit from MEDIT.  Saves the marked functions
+                        and offers to save all changed buffers.  If
+                        EMACS is exited with ^X ^Z like normal, it
+                        will NOT save anything, and you will have
+                        gained nothing.
+
+As soon as ^X Z is finished, MEDIT returns to MDL and loads in the
+edited functions, if there are any.  It will type a message to this
+effect.
+
+Remember that since the EMACS is inferior to the MDL, it is not the
+same as any EMACS that may have been invoked from EXEC.  It will be
+empty when it is created.  However, successive invocations of MEDIT
+will always get the same EMACS; i.e, it will be just as it was left,
+with all buffers intact.

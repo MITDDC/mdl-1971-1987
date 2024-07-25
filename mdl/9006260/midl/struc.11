@@ -1,0 +1,214 @@
+;"STRUCTURES-- THE HELL WITH BYTES!"
+
+<DEFINE COMPILE:IVECTOR (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS)
+	#DECL ((MOBJ) FORM (RETVAR) VARIABLE (REF NXT) FORWRD (ACT-LIST) LIST
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]>)
+	<COND (<NOT <OR <==? <LENGTH .MOBJ> 2><==? <LENGTH .MOBJ> 3>>>
+	       <REPORT-ERROR WRONG-NUMBER-OF-ARGS-TO-IVECTOR COMPILE:IVECTOR>)
+	      (ELSE
+	       <COMPILE-I-THING VECTOR .MOBJ .RETVAR .REF .NXT .ACT-LIST .SYMBOLS>)>>
+
+<DEFINE COMPILE:IUVECTOR (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS)
+	#DECL ((MOBJ) FORM (RETVAR) VARIABLE (REF NXT) FORWRD (ACT-LIST) LIST
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]>)
+	;"MAYBE SHOULD BE DONE SPECIALLY TO FLUSH TYPE WORDS."
+	<COND (<NOT <OR <==? <LENGTH .MOBJ> 2><==? <LENGTH .MOBJ> 3>>>
+	       <REPORT-ERROR WRONG-NUMBER-OF-ARGS-TO-IUVECTOR COMPILE:IUVECTOR>)
+	      (ELSE
+	       <COMPILE-I-THING UVECTOR .MOBJ .RETVAR .REF .NXT .ACT-LIST .SYMBOLS>)>>
+
+<DEFINE COMPILE:ISTRING (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS)
+	#DECL ((MOBJ) FORM (RETVAR) VARIABLE (REF NXT) FORWRD (ACT-LIST) LIST
+	       (SYMBOLS) <LIST [REST SYMBOL-TABLE]>)
+	<COND (<NOT <OR <==? <LENGTH .MOBJ> 2><==? <LENGTH .MOBJ> 3>>>
+	       <REPORT-ERROR WRONG-NUMBER-OF-ARGS-TO-ISTRING COMPILE:ISTRING>)
+	      (ELSE
+	       <COMPILE-I-THING STRING .MOBJ .RETVAR .REF .NXT .ACT-LIST .SYMBOLS>)>>
+
+<DEFINE COMPILE-I-THING (ITYPE MOBJ RETVAR REF NXT ACT-LIST SYMBOLS
+			 "AUX" ARGS ICOUNT IEND IBUILD)
+	#DECL ((ITYPE) ATOM (MOBJ) FORM (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (ACT-LIST) LIST (SYMBOLS) <LIST [REST SYMBOL-TABLE]> (ARGS) LIST
+	       (ICOUNT IEND IBUILD) <OR VARIABLE FIX>)
+	;"This is inefficient. Should probably cons up a VECTOR of the requisite"
+	;"size and then PUT into it."
+	<SET ARGS <SEQUENTIALIZE <REST .MOBJ>
+				 .RETVAR
+				 .REF
+				 .NXT
+				 .ACT-LIST
+				 .SYMBOLS>>
+	<SET ICOUNT <1 .ARGS>>
+	;"if it's a FIX, put it in a variable so we can decrement it."
+	<COND (<TYPE? .ICOUNT FIX>
+	       <SET ICOUNT
+		    <MCODIFY <FORM MSET
+				   <GENSYM>
+				   .ICOUNT>
+			     .REF
+			     <SET REF .IBUILD>>>)>
+	;"if length is zero, quit."
+	<MCODIFY <FORM IF <FORM 0? .ICOUNT>
+		       <SET IEND <GENREF>>
+		       <SET IBUILD <GENREF>>>
+		 .REF
+		 <SET REF .IBUILD>>
+	<COND (<NOT <TYPE? <2 .ARGS> VARIABLE>>
+	       ;"it's some kind of constant, probably a FORM or FIX"
+	       <MCODE-PUSH <MCODE-DISPATCH <2 .ARGS>
+					   <GENSYM>
+					   .REF
+					   <SET REF <GENREF>>
+					   .ACT-LIST
+					   .SYMBOLS>
+			   .REF
+			   <SET REF <GENREF>>>)
+	      (ELSE
+	       ;"assume 2nd arg is a variable."
+	       ;"generate code for EVALing it."
+	       ;"IBUILD references next MCODE."
+	       <MCODE-PUSH <2 .ARGS>
+			   .REF
+			   <SET REF <GENREF>>>
+	       ;"push result of EVAL"
+	       <MCODE-PUSH <MCODIFY <FORM MSET
+					  <GENSYM>
+					  <FORM CALL EVAL 1>>
+				    .REF
+				    <SET REF <GENREF>>>
+			   .REF
+			   <SET REF <GENREF>>>)>
+	;"decrement count of things pushed."
+	<MCODIFY <FORM MSET
+		       .ICOUNT
+		       <FORM - .ICOUNT 1>>
+		 .REF
+		 <SET REF <GENREF>>>
+	;"repeat"
+	<MCODIFY <FORM GO .IBUILD>
+		 .REF
+		 <SET REF .IEND>>
+	;"build the structure"
+	<MCODIFY <FORM MSET
+		       .RETVAR
+		       <FORM CALL .ITYPE .ICOUNT>>
+		 .REF
+		 .NXT>>
+
+<DEFINE COMPILE:ILIST (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS)
+	#DECL ((MOBJ) FORM (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (ACT-LIST) LIST (SYMBOLS) <LIST [REST SYMBOL-TABLE]>)
+	<COND (<NOT <OR <==? <LENGTH .MOBJ> 2><==? <LENGTH .MOBJ> 3>>>
+	       <REPORT-ERROR WRONG-NUMBER-OF-ARGS-TO-ILIST COMPILE:ILIST>)
+	      (ELSE
+	       <ILIST-COMPILE ILIST .RETVAR .REF .NXT .ACT-LIST .SYMBOLS>)>>
+
+<DEFINE COMPILE:IFORM (MOBJ RETVAR REF NXT ACT-LIST SYMBOLS)
+	#DECL ((MOBJ) FORM (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (ACT-LIST) LIST (SYMBOLS) <LIST [REST SYMBOL-TABLE]>)
+	<COND (<NOT <OR <==? <LENGTH .MOBJ> 2><==? <LENGTH .MOBJ> 3>>>
+	       <REPORT-ERROR WRONG-NUMBER-OF-ARGS-TO-IFORM COMPILE:IFORM>)
+	      (ELSE
+	       <ILIST-COMPILE IFORM .RETVAR .REF .NXT .ACT-LIST .SYMBOLS>)>>
+
+<DEFINE ILIST-COMPILE (ITYPE MOBJ RETVAR REF NXT ACT-LIST SYMBOLS
+		       "AUX" ICOUNT ILOOP STD-IT FIRST-IT FIRST LOOPEND)
+	#DECL ((ITYPE) ATOM (RETVAR) VARIABLE (REF NXT) FORWRD
+	       (ACT-LIST) LIST (SYMBOLS) <LIST [REST SYMBOL-TABLE]>
+	       (ICOUNT) ANY (FIRST) VARIABLE (ILLOP STD-IT FIRST-IT LOOPEND) FORWRD)
+	;"EVAL ARGUMENTS"
+	<SET ARGS <SEQUENTIALIZE <REST .MOBJ>
+				 <GENSYM>
+				 .REF
+				 <SET REF <GENREF>>
+				 .ACT-LIST
+				 .SYMBOLS>>
+	<SET ICOUNT <1 .ARGS>>
+	<COND (<NOT <TYPE? .ICOUNT VARIABLE>>
+	       ;"check for errors (ATOM?) later."
+	       <MCODIFY <FORM MSET
+			      <GENSYM>
+			      .ICOUNT>
+			.REF
+			<SET REF <GENREF>>>)>
+	;"flag for first iteration."
+	<MCODIFY <FORM MSET
+		       <SET FIRST <GENSYM>>
+		       T>
+		 .REF
+		 <SET REF <GENREF>>>
+	;"next is loop"
+	<SET ILOOP .REF>
+	;"test for zero"
+	<MCODIFY <FORM IF
+		       <FORM 0? .ICOUNT>
+		       <SET .LOOPEND <GENREF>>
+		       <SET 2NDARG <GENREF>>>
+		 .ILOOP
+		 <SET REF .2NDARG>>
+	;"eval the second arg"
+	<COND (<NOT <TYPE? <2 .ARGS> VARIABLE>>
+	       <SET NXTVAL <MCODE-DISPATCH <2 .ARGS>
+					   <GENSYM>
+					   .REF
+					    <SET REF <GENREF>>
+					    .ACT-LIST
+					    .SYMBOLS>>)
+	      (ELSE
+	       <MCODE-PUSH <2 .ARGS>
+			   .REF
+			   <SET REF <GENREF>>>
+	       <MCODIFY <FORM CALL EVAL 1>
+			.REF
+			<SET REF <GENREF>>>)>
+	;"cons onto end of list"
+	<MCODIFY <FORM IF .FIRST
+		       <SET FIRST-IT <GENREF>>
+		       <SET STD-IT <GENREF>>>
+		 .REF
+		 <SET REF .STD-IT>>
+	;"if its the first time..."
+	<SET LOOPEND <GENREF>>
+	<MCODIFY <FORM MSET
+		       .RETVAR
+		       <MCODIFY <FORM MSET
+				      <GENSYM>
+				      <FORM LIST .NXTVAL>>
+				.REF
+				<SET REF <GENREF>>>>
+		 .FIRST-IT
+		 <SET REF <GENREF>>>
+	<MCODIFY <FORM MSET
+		       .LAST
+		       .RETVAR>>
+	<MCODIFY <FORM MSET
+		       .FIRST
+		       <>>
+		 .REF
+		 .LOOPEND>
+	;"otherwise, cons onto the end."
+	<MCODIFY <FORM PUTREST
+		       .LAST
+		       <MCODIFY <FORM MSET
+				      <GENSYM>
+				      <FORM LIST .NXTVAL>>
+				.REF
+				<SET REF <GENREF>>>>
+		       .STD-IT
+		       <SET REF <GENREF>>>
+	<MCODIFY <FORM REST
+		       .LAST>
+		 .REF
+		 .LOOPEND>
+	;"loop"
+	<MCODIFY <FORM GO .ILOOP>
+		 .LOOPEND
+		 <SET REF <GENREF>>>
+	;"final fixup"
+	<COND (<==? .ITYPE FORM>
+	       <MCODIFY <FORM MSET
+			      .RETVAR
+			      <CHTYPE .RETVAR FORM>>
+			.REF
+			.NXT>)>>
+

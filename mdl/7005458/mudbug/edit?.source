@@ -1,0 +1,57 @@
+
+?	this summary
+??	long summary
+O	Open object
+Q	Quit
+V	toggle Verbosity
+
+Movement commands
+L	Left
+R	Right
+U	Up
+D	Down
+B	Back
+F	Front
+UR	Up Right
+DL	Down Left
+UT	Up Top
+
+Editing commands
+I	Insert
+I:	change TYPEs
+I*	Imbed
+X	save object
+G	insert EVALed
+C	Change
+C:	Change TYPE
+K	Kill objects
+K:	Kill brackets
+
+Search Commands
+S (SR)	Search (Right)
+SL	Search Left
+
+Macro Commands
+M	execute string
+IT (DO)	ITerate string
+
+Printing commands
+P	PPRINT next object
+PU	PPRINT Upper level
+PT	PPRINT whole object
+
+Cursor commands
+CU	save cursor position
+GO	GOto cursor position
+PC	Print object's Cursors
+PA	Print All cursors
+KC	Kill atom's Cursor
+
+Debugging commands
+BK	set BreaKpoint here
+KB	Kill all Breakpoints
+KT	Kill This breakpoint
+
+^F returns you to EDIT
+* is largest legal FIX arg
+

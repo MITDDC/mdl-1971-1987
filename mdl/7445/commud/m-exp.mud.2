@@ -1,0 +1,189 @@
+
+<PACKAGE "M-EXP">
+
+<ENTRY EXPANSION EXP-ERR>
+
+<USE "M-READ" "M-DAC" "M-PRCD" "M-ERR" "M-DEFS"
+     "MADMAN" "EXPUTI" "USRUTI" "FIELDS">
+
+<DEMON-PROCESS
+ "EXPANSION"
+ EXPANSION
+ EXP-ERR
+ [,FATAL	;1
+  ,FATAL	;2
+  ,FATAL	;3
+  ,FATAL	;4
+  ,FATAL	;5
+  <>		;6
+  <>		;7
+  ,FATAL	;8
+  ,FATAL	;9
+  ,FATAL	;10]>
+
+\
+
+;"EXPANSION"
+
+<DEFINE EXPANSION (ADR
+		   "AUX" L DATA CTAA EXPUS EXPDB LEX PAIR (LOSERS ()) (WINNERS ())
+		         LT TO? FLG NL (MS ,MSG-SPACE))
+   #DECL ((ADR) ADDRESS (TO?) <OR FIX FALSE> (FLG) <OR ATOM FALSE> (MS) SPACE
+	  (DATA) ANY (NL LOSERS WINNERS EXPDB L) LIST
+	  (PAIR) <OR FALSE <LIST LIST LIST>>
+	  (LT LEX EXPUS CTAA) <OR FALSE LIST>)
+   <PROG ()
+     <COND (<NOT <SET LT <GET-ALIST .ADR>>> <RETURN .LT>)>
+     <SET L <1 .LT>>					   ;"LIST OF ADDRESSEES"
+     <SET TO? <2 .LT>>			  ;"WHERE IT CAME FROM -- TO OR MORE-TO"
+     <SET DATA <DRD () <GETFIX "COPY-TO-ADDRESSEE-AREA">>>
+							 ;"LIST OF SPLIT FIELDS"
+     <COND (<NOT .DATA> <SET CTAA <>>)
+	   (<NOT <OK? <GETFIX "COPY-TO-ADDRESSEE-AREA"> .DATA>>
+	    <RETURN <AFALSE 5>>)
+	   (ELSE <SET CTAA .DATA>)>	  ;"EXPUS -- DATA BASE SPECS TO BE USED"
+     <SET DATA <DRD () <GETFIX "EXPAND-USING">>>   ;"GET DATA BASE SPECS TO USE"
+     <COND (<OR <NOT .DATA> <NOT <OK? <GETFIX "EXPAND-USING"> .DATA>>>
+	    <RETURN <AFALSE 2>>)
+	   (ELSE <SET EXPUS .DATA>)>
+     <COND (<NOT <SET DATA <GETDB .EXPUS>>>
+	    <COND (<AND <NOT <EMPTY? .DATA>>
+			<=? <1 .DATA> "Data-Base-Not-Found?">>
+		   <RETURN <AFALSE 1 <ACOPY .MS .DATA>>>)
+		  (ELSE <RETURN <AFALSE 4 <ACOPY .MS .DATA>>>)>)>
+     <SET EXPDB .DATA>						  ;"EXPAND LIST"
+     <COND (<NOT <SET LEX <ACOPY .MS <LA-EXP .L .EXPDB>>>> <RETURN <AFALSE 8>>)>
+     <COND (<SET PAIR <GOOD-BAD .LEX>>
+	    <SET LOSERS <2 .PAIR>>
+	    <SET WINNERS <1 .PAIR>>)>
+     <COND
+      (.CTAA
+       <SET FLG
+	<REPEAT ()
+		<COND (<EMPTY? .CTAA> <RETURN T>)>
+		<SET DATA <DRD .ADR <1 .CTAA>>>		   ;"GET FIELD CONTENTS"
+		<COND (<NOT .DATA>				      ;"NO DATA"
+		       <SET CTAA <REST .CTAA>> <AGAIN>)>
+		<COND (<NOT <DECL? .DATA
+				   '<LIST [REST
+					   <LIST <LIST [REST ADDRESS]> ANY>]>>>
+		       <RETURN <CHTYPE <ALIST .MS 9 <ASTRING .MS <1 .CTAA>>> FALSE>>)>
+		<SET L .DATA>					   ;"INPUT LIST"
+		<SET NL ()> ;"WILL BECOME OUTPUT LIST, WITH ADDRESSEES EXPANDED"
+		<SET FLG
+		     <REPEAT (LL)
+			     #DECL ((LL) <LIST LIST ANY>)
+			     <COND (<EMPTY? .L> <RETURN T>)>
+			     <SET LL <1 .L>>
+			     <SET DATA <LA-EXP <1 .LL> .EXPDB>>
+			     <COND (<NOT .DATA> <RETURN .DATA>)>
+			     <SET PAIR <GOOD-BAD .DATA>>
+			     <COND (<AND .PAIR <NOT <EMPTY? <2 .PAIR>>>>
+				    <RETURN <CHTYPE <ALIST .MS
+							   10
+							   <ACOPY .MS
+								  <1 .CTAA>>
+							   <2 .PAIR>>
+						    FALSE>>)>
+			     <SET NL
+				  <ACONS .MS
+					 <ALIST .MS
+						<1 .PAIR>
+						<2 .LL>>
+					 .NL>>
+			     <SET L <REST .L>>>>
+		<COND (<NOT .FLG> <RETURN .FLG>)>
+		<DWT .NL .ADR <1 .CTAA>>		  ;"WRITE OUT NEW VALUE"
+		<SET CTAA <REST .CTAA>>>>
+       <COND (<NOT .FLG> <RETURN .FLG>)>)>		    ;"WRITE OUT RESULTS"
+     <COND (.TO? <DWT .WINNERS () <GETFIX "EXPANDED-ADDRESSEE-LIST">>)
+	   (ELSE
+	    <DWT .WINNERS () <GETFIX "MORE-EXPANDED-ADDRESSEE-LIST">>
+	    <DAPP .L () <GETFIX "TO">>
+	    <DWT <> () <GETFIX "MORE-TO">>)>
+     <COND (<NOT <EMPTY? .LOSERS>>
+	    <DAPP .LOSERS () <GETFIX "UNPROCESSABLE-ADDRESSEES">>)>
+     T>>
+
+\ 
+
+"GET-ALIST -- finds addressee list to be expanded
+ -- returns list of 2 elements, addressee list, and flag
+     where t means it used 'to', and false 'more-to'"
+
+<DEFINE GET-ALIST (ADR "AUX" RES (MS ,MSG-SPACE)) 
+	#DECL ((VALUE) <OR FALSE LIST> (ADR) ADDRESS (RES) ANY (MS) SPACE)
+	<PROG ()
+	      <COND (<TYPE? <SET RES <DRD .ADR <GETFIX "MORE-TO">>> LIST>
+		     <COND (<NOT <OK? <GETFIX "MORE-TO"> .RES>>
+			    <RETURN <AFALSE 3>>)
+			   (<NOT <EMPTY? <CHECK-ALIST .RES>>>
+			    <RETURN <ALIST .MS .RES <>>>)>)>
+	      <COND (<TYPE? <SET RES <DRD () <GETFIX "TO">>> LIST>
+		     <COND (<NOT <OK? <GETFIX "TO"> .RES>>
+			    <RETURN <AFALSE 3>>)
+			   (<NOT <EMPTY? <CHECK-ALIST .RES>>>
+			    <RETURN <ALIST .MS .RES 0>>)>)>
+	      <RETURN <AFALSE 3>>>>
+
+<DEFINE CHECK-ALIST (L "AUX" (CH? <>))
+	#DECL ((L VALUE) <LIST [REST ADDRESS]> (CH?) <OR ATOM FALSE>)
+	.L>
+
+\ 
+
+;"ERROR ANALYZER
+"
+
+<DEFINE EXP-ERR (PRC ERR ADR "AUX" (ECOD <1 .ERR>) L (SS ,SCRATCH-SPACE)) 
+   #DECL ((PRC) STRING (ADR) ADDRESS (ERR) <FALSE FIX> (ECOD) FIX
+	  (L VALUE) <OR LIST FALSE> (SS) SPACE)
+   <SET L <ALIST .SS <ASTRING .SS
+"     The EXPANSION process failed because:
+
+">>>
+   <COND (<==? .ECOD 1>
+	  <ADDBACK .L
+		   <ALIST .SS <ASTRING .SS
+"One of the data base(s) specified could not be read:
+
+" <ASTRING .SS <UNPARSE <2 .ERR>>>>>>)
+	 (<==? .ECOD 2>
+	  <ADDBACK .L
+		   <ALIST .SS <ASTRING .SS
+"The specification of the data base(s) to use (in the EXPAND-USING
+field) was unusable.  Either the specification of data bases could not
+be found, or it was not in proper form.">>>)
+	 (<==? .ECOD 3>
+	  <ADDBACK .L <ALIST .SS <ASTRING .SS
+"No list of addressees was available as input to the procedure.  A
+message must have either a 'TO' or 'MORE-TO' field, containing a list
+of addressees to be expanded.">>>)
+	 (<==? .ECOD 4>
+	  <ADDBACK .L
+		   <ALIST .SS <ASTRING .SS
+"One of the data base(s) specified was not in the proper format:
+
+" <ASTRING .SS <UNPARSE <2 .ERR>>>>>>)
+	 (<==? .ECOD 5>
+	  <ADDBACK .L <ALIST .SS <ASTRING .SS
+"The specification of the identity of all fields to be 'split' is not
+in the correct format.">>>)
+	 (<==? .ECOD 8>
+	  <ADDBACK .L <ALIST .SS <ASTRING .SS
+"Either the recursion depth limit was exceeded in attempting the
+expansion, or another error occurred.  This generally indicates that
+the data base used for the expansion is ill-formed.">>>)
+	 (<==? .ECOD 9>
+	  <ADDBACK .L <ALIST .SS <ASTRING .SS
+"The data in a field specified as a 'split' field is not in the proper
+format.  The field which is bad is the " <GETSTRING <2 .ERR>> " field.">>>)
+	 (<==? .ECOD 10>
+	  <ADDBACK .L <ALIST .SS <ASTRING .SS
+"Addressee(s) specified in a 'split' field were not legal addressee(s):
+" <UNPARSE <3 .ERR>> ".  The field which contained the bad addressee is the
+" <GETSTRING <2 .ERR>> " field.">>>)
+	 (ELSE <SET L <>>)>
+   .L>
+
+<ENDPACKAGE>

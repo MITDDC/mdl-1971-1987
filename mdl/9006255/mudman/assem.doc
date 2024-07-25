@@ -1,0 +1,529 @@
+
+
+
+
+
+
+
+
+           I_d_e_n_t_i_f_i_c_a_t_i_o_n_:  
+
+           The MUDDLE Assembler 
+
+           M_o_t_i_v_a_t_i_o_n_:  
+
+                   The MUDDLE assembler provides the MUDDLE user with a
+
+           means of writing RSUBRs directly in machine language.  The
+
+           assembler is also used as the object language of the
+
+           compiler.  This document is a brief description of the
+
+           assembler, its use and some of the pseudo-ops.  
+
+           G_e_n_e_r_a_l_ O_r_g_a_n_i_z_a_t_i_o_n_:  
+
+                   The MUDDLE assembler is written in MUDDLE to produce
+
+           code that runs in the MUDDLE environment.  The assembler
+
+           consists of a PACKAGE of MUDDLE functions contained in the
+
+           file "CODING >" in the MUDDLE directory.  In order to load
+
+           the assembler, MUDDLE;PACKAG > must be loaded first.  The
+
+           main entry to the assembler is ASSEMBLE!-CODING.  It takes
+
+           arguments in the following form:  
+
+                   <ASSEMBLE!-CODING <-body>- -<-locals>-- -<-messages>-- -<-
+
+           list>-- > 
+
+           All the arguments are optional with the exception of <-body>-.
+
+           <-body>- may be a channel in which case all instructions in
+
+           the file associated with the channel are assembled or it may
+
+           be a structured object in which case all instructions in the
+
+           object are assembled.  <-locals-> specifies the oblist to use
+
+           for local symbol lookup when the <-body>- is a channel.  The
+
+           default is <1 .OBLIST> when the assembler is called.
+
+
+
+
+
+
+
+
+
+
+
+                                                                 PAGE 2
+
+
+
+
+
+           <=messages>- is a channel to receive error messages etc.  It
+
+           is defaulted to .OUTCHAN.  <-list-> is a channel to receive an
+
+           assembly listing.  If <-list-> is not supplied, no listing is
+
+           generated.  The default is no listing. There is another
+
+           entry to the assembler called ASSEMBLE1!-CODING.  It is used
+
+           by the compiler and suppresses all messages except for
+
+           errors.  
+
+           F_o_r_m_a_t_ o_f_ A_s_s_e_m_b_l_e_r_'_s_ S_o_u_r_c_e_:  
+
+                   The MUDDLE assembler's equivalent of a line of code
+
+           is a form.  It assembles forms into instructions in much the
+
+           same way that a typical assembler treats lines of code.
+
+           Atoms at the top level (i.e.  not in forms) are treated as
+
+           labels.  The forms are assembled based on the type of the
+
+           GVAL of the first atom in the form.  The GVALs of atoms
+
+           whose pnames are the PDP-10 instructions are of type OPCODE
+
+           and value the 36 bit value of the instruction.  For example:
+
+                   <MOVE A* 1 (B)> 
+
+           The value of MOVE (in the OP OBLIST) is OPCODE
+
+           *200000000000*.  This form is assembled directly into an
+
+           instruction.  If the GVAL of the first atom in a form is
+
+           something applicable (SUBR, FUNCTION, RSUBR etc.) the form
+
+           is EVALd and the returned vector of forms is assembled.
+
+           This is how macros and pseudo-ops are implemented.  Notice
+
+           that a pseudo-op or macro may produce no code by returning
+
+           an empty vector.  
+
+
+
+
+
+
+
+
+
+
+
+                                                                 PAGE 3
+
+
+
+
+
+           I_n_s_t_r_u_c_t_i_o_n_ A_s_s_e_m_b_l_y_:  
+
+                   Having determined that a form is going to assemble
+
+           into an instruction, the assembler basically adds up the
+
+           values of all the items in the form.  In the case of items
+
+           of type OPCODE, a full 36 bit add is performed.  Items of
+
+           type ADDRESS refer to labels in the program.  Since the code
+
+           is all location insensitive and will move around, references
+
+           to labels must be indexed by ac M, the base register.
+
+           Therefore, label symbols include an M in the left half and
+
+           must also be added in with a full word add.  Items of
+
+           PRIMTYPE WORD other than OPCODEs and ADDRESSs are anded with
+
+           *777777* before being added and the carry from right half to
+
+           left half is suppressed. When atoms are found in forms that
+
+           are being assembled into instructions, special lookup rules
+
+           are in effect.  If the atom has a global value, that value
+
+           is used.  If the atom does not have a global value but has a
+
+           local value, it is used.  If the atom has neither a local or
+
+           global value, it is assumed to be a local symbol for this
+
+           assembly.  In this case the symbol value is used if it has
+
+           already been defined, otherwise it is added to a list of as
+
+           yet undefined symbols.  
+
+                   Objects other than atoms or primtype word cause the
+
+           assembler to take special action.  Lists are used to
+
+           indicate swapping left and right halves.  For example: 
+
+                   <MOVE (1)> 
+
+
+
+
+
+
+
+
+
+
+
+                                                                 PAGE 4
+
+
+
+
+
+           would put the 1 in the index field of the MOVE instruction
+
+           (similar to MIDAS).  A vector indicates a constant.  The
+
+           vector may contain any number of forms to be assembled at
+
+           the end of the program.  For example:  
+
+                   <PUSH TP* [<1 (1)>]> 
+
+           pushes a constant containing 1 in the right and left halves.
+
+           A form is simply EVALd and the value returned is used.  
+
+           I_n_i_t_i_a_l_ S_y_m_b_o_l_s_:  
+
+                   The oblist structure in effect during assembly is:  
+
+                   (<-op>- <-muddle>- DEFAULT <-local>- <-root>-) 
+
+           The oblist <-op-> is named OP and contains the PDP-10 opcodes,
+
+           the MUDDLE accumulator definitions (in ac and address
+
+           fields), and the pseudo-ops.  The oblist <-muddle>- is named
+
+           MUDDLE and contains values of many labels in the
+
+           interpreter.  This enables programs to do things like JRST
+
+           FINIS.  When an instruction is assembled using a symbol from
+
+           the MUDDLE oblist, a fixup is also generated so that if the
+
+           symbol gets a different value in a new MUDDLE the code can
+
+           be fixed up when it is loaded.  <-local>- is the user's local
+
+           symbol oblist and <-root>- is the ROOT oblist.  
+
+                   As stated earlier, every ac has two symbols
+
+           associated with it, one for the address field and one for
+
+           the ac field.  This is because there is no syntax to specify
+
+           which field is intended.  The address symbol is simply the
+
+           ac's name and the ac symbol is the name with an asterisk (*)
+
+
+
+
+
+
+
+
+
+
+
+                                                                 PAGE 5
+
+
+
+
+
+           appended to it. 
+
+           P_s_e_u_d_o_ O_p_s_:  
+
+                   The next part of this document will describe pseudo-
+
+           ops available in the MUDDLE assembler.  There is no
+
+           difference between a pseudo-op and macro in the assembler
+
+           except that the pseud-ops are supplied by the system.  
+
+           T_I_T_L_E_:  
+
+                   This is about the only required pseudo-op.  It must
+
+           be the first instruction to be assembled.  It takes one
+
+           argument, the name of the RSUBR being assembled.  If
+
+           additional TITLEs are found in a file being assembled, they
+
+           are assumed to both end the previous RSUBR and begin the
+
+           next.  The assembler prints each TITLE on the message
+
+           channel as it is encountered.  
+
+           S_U_B_-_E_N_T_R_Y_:  
+
+                   This pseudo-op is used to define additional RSUBR-
+
+           ENTRYs for the RSUBR being assembled.  It takes 1 required
+
+           argument and 1 optional.  The required argument is the name
+
+           of the RSUBR-ENTRY and the optional argument is a decl for
+
+           the entry.  
+
+           D_E_C_L_A_R_E_:  
+
+                   DECLARE is used to supply declarations to the top
+
+           level RSUBR.  It must occur before any code-generating
+
+           instructions. DECLARE takes a LIST as its one argument.  The
+
+           format of the LIST is:  
+
+
+
+
+
+
+
+
+
+
+
+                                                                 PAGE 6
+
+
+
+
+
+                   ("VALUE" <-decl-> <-decl-> <-decl-> ....) 
+
+           The string "VALUE" is optional; if supplied it causes the
+
+           first <-decl-> to declare the type of the value of the RSUBR.
+
+           Each additional <-decl>- is associated with one argument.
+
+           Special strings may also appear in the list with the
+
+           following meanings:  
+
+                   "QUOTE" 	The next arg is quoted (not EVALd).  
+
+                   "OPTIONAL" The rest of the args are optional 
+
+                                   (the RSUBR must supply defaults).  
+
+                   "CALL" 	If this appears, it must be directly after 
+
+                                   the "VALUE" decl.  It says there is
+
+           one arg 
+
+                                   and it is the form generating the
+
+           call 
+
+                                   (see "CALL" for functions in the
+
+           Primer).  
+
+                   "ARGS" 	This must be the last string.  It says 
+
+                                   treat the rest of the args in the
+
+           form as a list 
+
+                                   and pass it as the argument (see
+
+           "ARGS" for 
+
+                                   functions in the Primer).  
+
+                   "TUPLE" 	EVAL the rest of the arguments and pass
+
+           them.  
+
+           M_Q_U_O_T_E_:  
+
+
+
+
+
+
+
+
+
+
+
+                                                                 PAGE 7
+
+
+
+
+
+                   MQUOTE allows the RSUBR to reference garbage
+
+           collected space.  It adds its argument to the RSUBR vector
+
+           (if it isn't already there) and assembles an address of the
+
+           form <-offset>-(R).  
+
+           T_Y_P_E_-_C_O_D_E_:  
+
+                   TYPE-CODE allows references to the internal type
+
+           codes for both system and user defined types.  It takes one
+
+           argument, the MUDDLE type name. For example:  
+
+                   <MOVSI A* <TYPE-CODE FIX>> 
+
+           puts the type code for FIX into the left half of ac A. 
+
+           T_Y_P_E_-_W_O_R_D_:  
+
+                   TYPE-WORD generates a reference to a word containing
+
+           a type code in the left half and possibly other junk in the
+
+           right half.  The first argument is the type name and the
+
+           rest of the args are optional but if supplied are added into
+
+           the right half.  If the type is an initial type and no right
+
+           half is generated, a reference to the "$T<-type>-" location in
+
+           the interpreter is generated.  
+
+           P_S_E_U_D_O_:  
+
+                   PSEUDO simply evaluates its argument and assembles
+
+           no code.  
+
+           G_E_T_Y_P_:  
+
+                   GETYP has the same form as a PDP-10 instruction.  It
+
+           gets the type code into the right half of its ac from its
+
+           address.  This is done by generating an appropriate LDB
+
+
+
+
+
+
+
+
+
+
+
+                                                                 PAGE 8
+
+
+
+
+
+           instruction.  
+
+           R_S_U_B_R_s_ a_n_d_ R_S_U_B_R_-_E_N_T_R_Y_s_:  
+
+                   An RSUBR is a MUDDLE object of PRIMTYPE VECTOR.  The
+
+           first element of an RSUBR is always of type CODE.  CODE is
+
+           of PRIMTYPE UVECTOR, consisting of words or instructions.
+
+           The second element of an RSUBR is an atom which is the
+
+           RSUBR's name.  If the RSUBR has declarations they are the
+
+           third element.  The rest of the RSUBR contains MUDDLE
+
+           objects which must be referenced by the code.  
+
+                   An RSUBR-ENTRY is a vector of two or three items.
+
+           The first item is either an RSUBR or an atom whose GVAL is
+
+           an RSUBR, the second is an atom which is the entry's name
+
+           and the third is a DECL for the entry.  The difference
+
+           between an RSUBR and an RSUBR-ENTRY is that an RSUBR always
+
+           starts running at the beginning of the code when it is
+
+           called while an RSUBR-ENTRY usually starts running somewhere
+
+           in the middle of the code.  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+whi

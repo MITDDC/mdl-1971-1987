@@ -1,0 +1,129 @@
+Format of Comsys Request Files				pdl 7/13/79
+
+     Mail programs are expected to write Comsys request files to
+"COMSYS;M >".  The files are expected to contain pairs of Muddle
+objects.  The first element of a pair is a STRING token and the second
+an object which is the value of the token.  A fairly basic request file
+would look like:
+
+	"TO" ("MOE" "LARRY" "CURLY")
+	"FROM" "PDL"
+	"SUBJECT" "Foo?"
+	"TEXT" "Is it \"foobar\" or \"fubar\"?"
+	"WHEN-ORIGINATED" ((79 7 12) (10 40 13) "EDT")
+	"SCHEDULE" ("SENDING")
+
+Note the Muddle quoting convention in the TEXT string:  to include a "
+or a \ in a STRING it must be quoted with \.
+
+The SCHEDULE token is required because it is possible to write into the
+Comsys data base using these request files, and Comsys has to know that
+what you want to do is SENDING rather than (for example) CORRECTION.
+
+Fields:
+
+     What follows are some of the fields it is useful to give Comsys,
+and their formats:
+
+Addressees:
+
+	"user" or "user@host" or "[filename]"
+
+Addressee fields:
+
+	"TO" ("adr1" "adr2" "adr3" "adr4" "adr5")
+	"ACTION-TO" ("adr1" "adr2")
+	"CARBON-COPY-TO" ("adr3")
+	"BLIND" ((("adr4") ("adr4"))
+	         (("adr5") ("adr5")))
+	"NOTES" ((("adr4") ("What gives?" "Who's on first?")))
+
+    The BLIND(-carbon-copy) and NOTES fields are examples of "split
+fields", that is fields whose values are seen only by some addressees. 
+The general format is a list, each of whose elements is a list of two
+elements.  The first of these is a list of the addressees to whom the
+second element is visible.  If, for example, "adr4" reads the BLIND
+field, he will see ("adr4"), "adr5" will see "adr5", and none of the
+other addressees will see anything.  If "adr4" reads the NOTES field, he
+will see the list of two strings, and no other addressee will see
+anything. 
+
+    These fields are all potentially intertwined.  TO is the compilation
+of all the addressees appearing in any of the above fields.  ACTION-TO
+is a list of all the "envelope" addressees (what was given to To: in the
+composer.  If all the addressees are normal "envelope" addressees, then
+all you need is the TO field.  If you have CARBON-COPY-TO or
+BLIND(-carbon-copy-to) or NOTES, then the addressees listed in them must
+also be in the TO field.  This is reflected in the example above.
+
+Sender fields:
+
+	"FROM" "adr"
+	"SENDER" "adr1"
+	"REPLY-TO" ("adr2")
+
+     SENDER is the XUNAME of the person doing the mailing, and need only
+be output if it is different from FROM.  REPLY-TO is the mailbox(es) to
+return the answer to (RFC733 style).
+
+Message Fields:
+
+	"SUBJECT" "fweep"
+	"TEXT" "blahblahblah"
+	"IN-REPLY-TO" "mumblemumblemumble"
+	"ENCLOSURES" ("fnm" "fnm" "fnm" ... )
+
+     IN-REPLY-TO is set up by "Answer" in Reader, and Enclosures are
+files to include in the message when it is sent.  TEXT and SUBJECT are
+pretty obvious.
+
+Dates:
+
+	"WHEN-ORIGINATED" ((yy mm dd) (hh mm ss) "zone")
+
+is the time the message was sent.  This may also be input in ITIME
+format, for those sending messages from Muddles.
+
+Forwarding:
+
+	"MSG-NO" 69105
+	"MORE-TO" ("adr" "adr1" ... )
+	("FORWARDING" "APPEND")
+            ((("from" "adr" "adr1")
+	      (("from"
+		("adr" "adr1")
+		((yy mm dd) (hh mm ss) "zone")))))
+
+     As you might have guessed already, forwarding is moderately
+complex, because Comsys maintains sharing of forwarded messages instead
+of producing a new one.  Using the split-field concept, this is fairly
+easy, but the structures are pretty hairy looking.  The only new concept
+here is that instead of writing into the FORWARDING field, you are
+appending to it (preserving the existing data).  That's what the list of
+FORWARDING and APPEND means.  The MSG-NO field specifies what message
+you are forwarding.  MORE-TO is the list of new addressees.  The actual
+contents of the FORWARDING field describe who forwarded, to whom, and
+when.  It is possible to get more than one value for a given person if
+he has the same message forwarded to him more than once. 
+
+:MSG Fields:
+
+	"MSG-FILE" "filename"
+	"DISTRIB" ("*DM" "*AI" .... )
+	"EXPIRES" ((79 8 12) (6 0 0) "EDT")
+	"TO" ("MSGSRV")
+
+     These should be pretty self-explanatory.  They are the additional
+information required for making .MSGS. files.  MSGSRV is the special
+addressee for handling MSGs.
+
+:QSEND Field:
+
+	"QSEND" n
+
+     Sets up QSENDing instead of Mail delivery.  N is the same as for
+Comsat, and specifies whether the message should be mailed if it can't
+be CLI'd.  Permissible values are 1, 0, and -1 (I don't know how they
+map into functions offhand).
+
+

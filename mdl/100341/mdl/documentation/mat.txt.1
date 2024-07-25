@@ -1,0 +1,82 @@
+         MAT: A Cross Referencing Program for MDL
+                                    12/81 - shane
+
+MAT (Muddle ATsign) is a program for generating a cross-reference listing
+and symbol table(s) for one or more files of MDL code. Each atom used
+as a global symbol in tthe input file(s) (GVAL, FUNCTION, NEWTYPE, or
+MACRO) will appear in the cross-reference listing and symbol-table.
+
+To use MAT, get a MDL and type <USE "MAT">. The sole entry to the
+package is named, strangely enough, MAT. Some improvement in runtime
+may be gained by also typing <GC 0 <> 50> or some such, before calling
+MAT: this directs the interpreter to use the marksweep garbage collecter
+rather than the more exhaustive (and slower) copying garbage collector.
+
+The general form of a call to MAT is:
+
+        <MAT specstring:string  "OPT" symtablesize:fix>
+
+symtablesize is an optional fix controlling the initial size of
+the symbol table used by MAT. MAT can grow the symbol table, if
+necessary, but growing involves copying and, possibly, a garbage 
+collection. The size is 1000 by default. For large runs, you might
+consider giving MAT a second argument.
+
+
+specstring is a string of the form: "Fn1,Fn2,.../switches".
+Any number of filenames, separated by commas, may precede the first switch
+(if any). In fact, it is not necessary to explicitly list each file in the
+call to MAT (see /I switch below). Regardless of how they are entered, all
+files will be cross-referenced as a group.
+
+
+SWITCHES:
+ 
+/C      Generate a cross-reference. The default is no cross reference.
+
+
+/U      Print a separate symbol table for each type of object in each
+        file (ie, one table for GVALs, one for TYPEs, etc.).
+
+
+/P[width length]    Set page width and length. The defaults are 90
+                    and 60 respectively.
+
+
+/I[title1 title2]   Sets Fn1 and Fn2 of the output file; defaults are
+                    the input file's first name (title1) and MAT (title2).
+
+
+/N       Print the symbol table only (and cross-reference listing
+         if requested). MAT defaultly prints a record file containing
+         a title page, index, and numbered pages and lines for each file.
+
+
+/S       If given a group of files and this switch is selected, a
+         record file will be printed for each input file. If /S is not 
+         selected, only one record file (containing the text of each input
+         file) will be written out.
+
+
+/I[Filename]       MAT will look up input filenames from a file, if this switch
+                   is selected. The input filenames must be separated by
+                   commas or carriage returns.
+
+
+/Q[message]        MAT will print a message at the bottom of each page.
+        
+
+SUBTITLES:
+
+You may include subtitles in your file. Subtitles are strings of the form:
+
+                      "Subtitle subtitle_text"
+
+A subtitle begins with the word subtitle (or Subtitle or SUBTITLE) followed
+by the text of the subtitle (the number of characters should not exceed
+page width). Subtitles will be printed at the top of each page. If a record
+file is printed, it will contain an index of subtitles and page numbers.
+Page delimiters are ^L's which you include in your file.
+
+
+Bugs to SHANE at XX.

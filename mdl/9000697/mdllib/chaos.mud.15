@@ -1,0 +1,249 @@
+<PACKAGE "CHAOS">
+
+<ENTRY CHAOS-OPEN CHAOS-OUT CHAOS-RESP CHAOS-OPER CHAOS-CLOSE>
+
+<TITLE CHAOS-OPEN>
+
+%%<SETG GETER #OPCODE *104000000012*>
+	<DECLARE ("VALUE" <OR FIX FALSE> STRING "OPTIONAL" FIX)>
+	<PUSH TP* (AB)>
+	<PUSH TP* 1(AB)>
+	<CAML AB* [<(-3) -1>]>
+	 <JRST DO2>
+	<PUSH TP* 2(AB)>	;"WAIT TIME"
+	<PUSH TP* 3(AB)>
+	<PUSHJ P* ICHOPEN1>
+	<JRST FINIS>
+
+DO2	<PUSHJ P* ICHOPEN1>
+	<JRST FINIS>
+
+<INTERNAL-ENTRY ICHOPEN1 1>
+	<PUSH TP* <TYPE-WORD FIX>>
+	<PUSH TP* [7000]>
+<INTERNAL-ENTRY ICHOPEN2 2>
+	<SUBM M* (P)>
+;"HACK STUPID ASCIZ STRINGS"
+	<MOVEI B* 1(P)>
+	<MOVE A* [*416210135000*]> ;"CHA:"
+	<MOVEM A* 1(P)>
+	<HRLI B* *440700*>
+	<MOVE A* B>
+	<HRLI A* *100700*>
+	<MOVE C* -2(TP)>
+	<HRRZ D* -3(TP)>
+	<JUMPE D* ICHJFN>
+ICHLUP	<ILDB O* C>
+	<IDPB O* A>
+	<SOJG D* ICHLUP>
+	<IDPB D* A>		;"make it asciz"
+;"FINALLY, DO GTJFN"
+ICHJFN	<MOVSI A* 1>		;"short form"
+	<GTJFN>
+	 <JRST CHOERR>		;"Failed completely"
+	<MOVE E* (TP)>		;"wait time"
+	<SETZ F*>		;"count"
+	<MOVE B* [*103000300000*]> ;"8bit, 6-of%mod, of%rd, of%wt"
+	<PUSH P* A>
+	<OPENF>
+	 <JRST [<EXCH A* (P)>	;"flush jfn"
+		<RLJFN>
+		 <JFCL>
+		<POP P* A>
+		<JRST CHOERR>]>
+CHAWAT	<MOVE A* (P)>
+	<GDSTS>
+	 <JFCL>			;<ERJMP CHALUZ>
+	<ANDI B* *17*>		;"Check state"
+	<CAIN B* *4*>		; "OPN ?"
+	 <JRST CHOWIN>		;"WON"
+	<CAIN B* *3*>		; "RFS ?"
+	 <SKIPE F>
+	  <JRST CHALUZ>
+	<MOVEI A* 100>
+	<MOVNI B* (A)>
+	<ADDB B* E>
+	<JUMPLE B* CHALUZ>
+	<DISMS>
+	<JRST CHAWAT>
+
+CHALUZ	<POP P* A>
+	<CLOSF>
+	 <JFCL>
+CHOFLS	<MOVSI A* <TYPE-CODE FALSE>>
+	<SETZ B*>
+	<JRST CHOEXI>
+
+CHOERR	<PUSHJ P* ERRSTR>
+CHOEXI	<SUB TP* [<4(4)>]>
+	<JRST MPOPJ>
+
+CHOWIN	<POP P* B>
+	<MOVSI A* <TYPE-CODE FIX>>
+	<JRST CHOEXI>
+
+<SUB-ENTRY CHAOS-OUT
+	   ("VALUE" <OR FIX FALSE>
+		  <OR <PRIMTYPE WORD> STRING>
+		  FIX
+		  "OPTIONAL" FIX)>
+	<PUSH TP* (AB)>
+	<PUSH TP* 1(AB)>
+	<PUSH TP* 2(AB)>
+	<PUSH TP* 3(AB)>
+	<CAML AB* [<(-5) -1>]>
+	 <JRST CO2>
+	<PUSH TP* 4(AB)>	;"character count"
+	<PUSH TP* 5(AB)>
+	<PUSHJ P* ICHOUT3>
+	<JRST FINIS>
+
+CO2	<PUSHJ P* ICHOUT2>
+	<JRST FINIS>
+
+<INTERNAL-ENTRY ICHOUT2 2>
+	<PUSH TP* <TYPE-WORD FIX>>
+	<PUSH TP* [-1]>		;"character count"
+<INTERNAL-ENTRY ICHOUT3 3>
+	<SUBM M* (P)>
+	<MOVE A* -2(TP)>	;"JFN"
+	<GETYP C* -5(TP)>
+	<CAIE C* <TYPE-CODE STRING>>
+	  <JRST CHFIX>
+	<MOVE C* -4(TP)>	;"bptr to string"
+	<SKIPG D* (TP)>		;"count given by luser"
+	 <HRRZ D* -5(TP)>	;"count of chars in string"
+CHOSTR	<SOJL D* CPOP1J>
+	<ILDB B* C>		;"Get next char"
+	<CAIN B* *12*>		;"Lfs don't go"
+	 <JRST CHOSTR>
+	<CAIL B* *10*>
+	 <CAILE B* *15*>
+	  <SKIPA>
+	   <TRO B* *200*>
+	<BOUT>
+	 <ERJMP COUERR>		;"Failed: give error return"
+	<JRST CHOSTR>
+
+CHFIX	<MOVE B* -4(TP)>
+	<BOUT>
+	 <ERJMP CPOPJ>
+
+CPOP1J	<MOVE A* -3(TP)>
+	<MOVE B* -2(TP)>
+	<JRST CHEX>
+
+COUERR	<PUSHJ P* ERRSTR>
+	<JRST CHEX>
+
+CPOPJ	<MOVSI A* <TYPE-CODE FALSE>>
+	<SETZ B*>
+CHEX	<SUB TP* [<6(6)>]>
+	<JRST MPOPJ>
+
+; "Get a response; treat net errors like temporary (%) failures"
+
+<SUB-ENTRY CHAOS-RESP ("VALUE" <OR FIX FALSE> STRING FIX)>
+	<PUSH TP* (AB)>
+	<PUSH TP* 1(AB)>
+	<PUSH TP* 2(AB)>
+	<PUSH TP* 3(AB)>
+	<PUSHJ P* ICHARSP>
+	<JRST FINIS>
+
+<INTERNAL-ENTRY ICHARSP 2>
+	<SUBM M* (P)>
+	<MOVE A* (TP)>
+	<MOVE B* -2(TP)>
+	<HRRZ C* -3(TP)>
+	<MOVEI D* *215*>
+	<SIN-JSYS>			;Read response line
+	 <ERJMP CHOERR>
+	<SETZ D* >
+	<DPB D* B>			;Replace newline with null
+	<MOVSI A* <TYPE-CODE FIX>>
+	<HRRZ B* -3(TP)>
+	<SUB B* C>
+	<JRST CHOEXI>
+
+<SUB-ENTRY CHAOS-OPER ("VALUE" <OR FALSE FIX> FIX FIX)>
+	<PUSH TP* (AB)>
+	<PUSH TP* 1(AB)>
+	<PUSH TP* 2(AB)>
+	<PUSH TP* 3(AB)>
+	<PUSHJ P* ICHOPR>
+	<JRST FINIS>
+
+<INTERNAL-ENTRY ICHOPR 2>
+	<SUBM M* (P)>
+	<MOVE A* (TP)>
+	<MOVE B* -2(TP)>
+	<MTOPR>
+	 <ERJMP CHOERR>
+	<MOVSI A* <TYPE-CODE FIX>>
+	<MOVE B* -2(TP)>
+	<JRST CHOEXI> 
+
+<SUB-ENTRY CHAOS-CLOSE ("VALUE" <OR FALSE FIX> FIX)>
+	<PUSH TP* (AB)>
+	<PUSH TP* 1(AB)>
+	<PUSHJ P* ICHCLS>
+	<JRST FINIS>
+
+<INTERNAL-ENTRY ICHCLS 1>
+	<SUBM M* (P)>
+	<MOVE A* (TP)>
+	<CLOSF>
+	 <JFCL>
+	<MOVSI A* <TYPE-CODE FIX>>
+	<MOVE B* (TP)>
+	<SUB TP* [<2 (2)>]>
+	<JRST MPOPJ> 
+
+ERRSTR	<SUBM	M* (P)>
+	<MOVEI	D* 1(P)>
+	<ADD	P* [<10(10)>]>
+	<MOVEI	A* *400000*>
+	<GETER>
+	<HRRZ	A* B>
+	<PUSH	TP* <TYPE-WORD FIX>>
+	<PUSH	TP* A>
+	<MOVE	B* A>		; "ERROR"
+	<HRLI	B* *400000*>	; "SELF"
+	<HRROI	A* (D)>
+	<SETZ	C*>
+	<ERSTR>
+	 <JRST DUMERR>
+	 <JRST DUMERR>
+	<SKIPN	(A)>
+	 <SUBI	A* 1>
+	<HRRZS	A>
+	<SUB	A* D>
+	<MOVEI	O* IBLOCK>
+	<PUSHJ	P* RCALL>
+	<MOVSI	A* <TYPE-CODE STRING>>
+	<HRLI	B* 4544>
+	<SUBI	B* 1>
+	<MOVE	C* B>
+	<HRLI	D* *440700*>
+	<ILDB	O* D>
+	<JUMPE	O* HERE 4>
+	<IDPB	O* C>
+	<ADDI	A* 1>
+	<JRST	HERE -4>
+	<EXCH	A* -1(TP)>
+	<EXCH	B* (TP)>
+	<PUSH	TP* A>
+	<PUSH	TP* B>
+	<MCALL	2 LIST>
+	<MOVSI	A* <TYPE-CODE FALSE>>
+	<JRST	ERREXI>
+
+DUMERR	<MCALL	1 LIST>			; "HERE FOR J RANDOM ERROR"
+	<MOVSI	A* <TYPE-CODE FALSE>>
+ERREXI	<SUB	P* [<10(10)>]>
+	<JRST	MPOPJ>
+
+<END>
+
+<ENDPACKAGE>

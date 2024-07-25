@@ -1,0 +1,148 @@
+"USERS-INIT"
+
+<DEFINE USERS-INIT ("OPTIONAL" (RDS? <>) "AUX" ST N C)
+	#DECL ((ST N) <OR FALSE FIX> (C) CHARACTER (RDS?) <OR ATOM FALSE>)
+	<COND (<SET ST <T-STARTUP <GET-READER-TAILOR>>>
+	       <COND (<NOT <0? <CHTYPE <ANDB .ST ,T-SUMMARIZE> FIX>>>
+		      <SET N
+			   <READER-SUMMARIZE <COND (.RDS? ,I-NEW)
+						   (ELSE ,I-RECENT)>
+					     .ST>>
+		      <COND (<AND .N
+				  <G? .N 0>
+				  <NOT <0? <CHTYPE <ANDB .ST ,T-SCAN> FIX>>>>
+			     <COND (<NOT ,SCANNING?>
+				    <SET C <MORE-MSG "A--Show?--">>
+				    <COND (<N==? .C <ASCII 32>>
+					   <SET ST 0>)>)>)>)>
+	       <COND (<AND <NOT ,SCANNING?>
+			   <NOT <0? <CHTYPE <ANDB .ST ,T-SCAN> FIX>>>>
+		      <OPEN-BIN <COND (.RDS? ,I-NEW)
+				      (ELSE ,I-RECENT)>
+				1>)>)>>
+
+"SET-READER-TAILOR -- setup tailor info"
+
+<DEFINE SET-READER-TAILOR ("AUX" (NEW-VALUE T) (OLD-VALUE T))
+	#DECL ((NEW-VALUE OLD-VALUE) <OR ATOM FALSE>)
+	<REPEAT ()
+		<CTABLE <COND (<NOT .NEW-VALUE> "")
+			      (ELSE "what ")>
+			""
+
+"Tailoring commands:
+
+	'show'		shows current state of tailoring
+
+Tailorable things:
+
+	'formats'	set up output formats for 'show' command
+	'editor'	set up default editor (e.g., RMODE, EMACS)
+
+Toggles: (turn them off by saying 'no' or 'don't' first)
+
+	'renumber-after-expunge'
+	'clear-screen-between-messages'
+	'update-after-each-command'
+
+Things to do on startup: (turn off with 'no' or 'don't')
+
+	'scan-recently-received'
+	'summarize-recently-received'"
+
+	"show" <SHOW-TAILOR>
+	"no" <SET NEW-VALUE <>>
+	"don't" <SET NEW-VALUE <>>
+	"formats" <SET-FORMATS>
+	"editor" <SET-EDITOR>
+	"renumber-after-expunge" <BIT-TAILOR ,T-TAILOR ,T-RENUMBER .NEW-VALUE>
+	"clear-screen-between-messages" <BIT-TAILOR ,T-TAILOR ,T-CLEAR .NEW-VALUE>
+	"update-after-each-command" <BIT-TAILOR ,T-TAILOR ,T-UPDATE .NEW-VALUE>
+	"scan-recently-received" <BIT-TAILOR ,T-STARTUP ,T-SCAN .NEW-VALUE>
+	"summarize-recently-received" <BIT-TAILOR ,T-STARTUP ,T-SUMMARIZE .NEW-VALUE>>
+	<COND (<==? .NEW-VALUE .OLD-VALUE> <RETURN>)
+	      (ELSE <SET OLD-VALUE .NEW-VALUE>)>>>
+
+<DEFINE SHOW-TAILOR ("AUX" (TAIL <GET-READER-TAILOR>) (OUTCHAN .OUTCHAN))
+	#DECL ((TAILOR) ANY (OUTCHAN) CHANNEL)
+	<COND (<OR <NOT .TAIL> <NOT <TYPE? .TAIL VECTOR>>>
+	       <SET TAIL <VECTOR <> <> <> 0 0 <> <> <> <> <>>>)
+	      (ELSE
+	       <COND (<NOT <0? <14 .OUTCHAN>>> <CRLF>)>
+	       <PRINC "Formats ">
+	       <COND (<NOT <1 .TAIL>> <PRINC "Default">)
+		     (ELSE <PRINC <1 .TAIL>>)>
+	       <PRINC " (for Local messages), ">
+	       <COND (<NOT <2 .TAIL>> <PRINC "Default">)
+		     (ELSE <PRINC <2 .TAIL>>)>
+	       <PRINC " (for Foreign messages).
+Editor ">
+	       <COND (<NOT <3 .TAIL>> <PRINC "Default">)
+		     (ELSE <PRINC <3 .TAIL>>)>
+	       <PRINC ".
+">
+	       <COND (<0? <CHTYPE <ANDB <T-TAILOR .TAIL> ,T-RENUMBER> FIX>>
+		      <PRINC "Don't ">)>
+	       <PRINC "Renumber-after-Expunge.
+">
+	       <COND (<0? <CHTYPE <ANDB <T-TAILOR .TAIL> ,T-CLEAR> FIX>>
+		      <PRINC "Don't ">)>
+	       <PRINC "Clear-screen-between-messages.
+">
+	       <COND (<0? <CHTYPE <ANDB <T-TAILOR .TAIL> ,T-UPDATE> FIX>>
+		      <PRINC "Don't ">)>
+	       <PRINC "Update-after-each-command.
+">
+	       <COND (<0? <CHTYPE <ANDB <T-STARTUP .TAIL> ,T-SCAN> FIX>>
+		      <PRINC "Don't ">)>
+	       <PRINC "Scan-Recently-Received.
+">
+	       <COND (<0? <CHTYPE <ANDB <T-STARTUP .TAIL> ,T-SUMMARIZE> FIX>>
+		      <PRINC "Don't ">)>
+	       <PRINC "Summarize-Recently-Received.
+">)>>
+
+<DEFINE SET-FORMATS ("AUX" (TAIL <GET-READER-TAILOR <>>) (SS ,SCRATCH-SPACE)
+		     L (S <>) (N <>))
+	#DECL ((TAIL) <VECTOR [2 ANY] [REST ANY]> (L) LIST
+	       (S N) <OR FALSE STRING> (SS) SPACE)
+	<SET L <GET-TEMP "Formats for output">>
+	<COND (<NOT <EMPTY? .L>>
+	       <SET S <1 .L>>
+	       <COND (<SUBSNC .S "DEFAULT"> <SET S <>>)
+		     (ELSE <SET S <ASTRING .SS .S>>)>)>
+	<COND (<NOT <EMPTY? <SET L <REST .L>>>>
+	       <SET N <1 .L>>
+	       <COND (<SUBSNC .S "DEFAULT"> <SET N <>>)
+		     (ELSE <SET N <ASTRING .SS .N>>)>)>
+	<ARELEASE .SS <T-LOCAL-FORMAT .TAIL>>
+	<ARELEASE .SS <T-NET-FORMAT .TAIL>>
+	<PUT .TAIL ,T-LOCAL-FORMAT .S>
+	<PUT .TAIL ,T-NET-FORMAT .N>
+	<RWRITE ,M-TAILOR .SS .TAIL>
+	<SETG READER-TAILOR <>>>
+
+<DEFINE SET-EDITOR ("AUX" (TAIL <GET-READER-TAILOR <>>) (SS ,SCRATCH-SPACE)
+		    (PRGM <FLIP-EDITOR>))
+	#DECL ((TAIL) <VECTOR [2 ANY] [REST ANY]> (SS) SPACE
+	       (PRGM) <OR STRING FALSE>)
+	<COND (.PRGM
+	       <ARELEASE .SS <T-EDITOR .TAIL>>
+	       <PUT .TAIL ,T-EDITOR <ASTRING .SS .PRGM>>
+	       <RWRITE ,M-TAILOR .SS .TAIL>
+	       <SETG READER-TAILOR <>>)>>
+
+<DEFINE BIT-TAILOR (WHICH BIT VAL "AUX" (TAIL <GET-READER-TAILOR <>>) TMP)
+	#DECL ((TAIL) <VECTOR [3 <OR STRING FALSE>] [REST <OR FIX FALSE>]>
+	       (VAL) <OR ATOM FALSE> (TMP) <PRIMTYPE WORD> (WHICH) FIX)
+	<SET TMP <ANDB <NTH .TAIL .WHICH> <XORB -1 .BIT>>>
+	<COND (.VAL <SET TMP <ORB .TMP .BIT>>)>
+	<SET-TAILOR .WHICH <CHTYPE .TMP FIX>>>
+
+<DEFINE SET-TAILOR (WHICH VAL "AUX" (TAIL <GET-READER-TAILOR <>>))
+	#DECL ((TAIL) <VECTOR [3 STRING] [REST <OR FIX FALSE>]>
+	       (VAL) <OR FIX FALSE> (WHICH) FIX)
+	<PUT .TAIL .WHICH .VAL>
+	<RWRITE ,M-TAILOR ,SCRATCH-SPACE .TAIL>
+	<SETG READER-TAILOR <>>>
+

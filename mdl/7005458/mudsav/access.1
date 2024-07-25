@@ -1,0 +1,460 @@
+< PACKAGE "ACCESS-PLANNER" >
+
+< ENTRY
+	ACCESS-PLAN	;"takes a global graph query and turns it into an execution plan"
+ >
+
+<USE	"CONTEXT-ANALYZER">
+<USE	"GDM-PARSER">
+<USE	"PARSE-DEFINITIONS">
+<USE	"GRAPH-DEFS">
+<USE	"GRAPH-BUILDER">
+<USE	"GDM-UTIL">
+<USE	"EM-INTERFACE">
+<USE	"GDM-DIR">
+<USE	"MACROS">
+
+
+<MSETG AP-GLOBAL-R-INDEX 2>	;"index into the vector [local-bool , global-bool]"
+<MSETG AP-LOCAL-R-INDEX 1>
+""
+;"check to see if this operand is an access path via this operator"
+
+<DEFINE IS-AN-ACCESS-PATH (NODE OPER "AUX" ACCESS-INFO )
+	#DECL ((NODE) <OR FIX STRING FCN> (OPER) ATOM)
+
+<COND (<TYPE? .NODE FCN>	;"can only have access path via a fcn"
+	<SET ACCESS-INFO <F-MAP-INFO  <GET-FCN-ENTRY <FCN-NAME .NODE>>>>
+	<CASE ==? .OPER
+	    (= <F-AP-EQ .ACCESS-INFO>)	;"true if this function has access path via EQ"
+	    (/= <F-AP-NQ .ACCESS-INFO>)
+	    (!'( \> \< \>= \<=) <F-AP-RANGE .ACCESS-INFO>)>)
+	(ELSE <>)>	;"no access path via constatns"
+>
+""
+;"Checks a boolean to see if any part of it is via an
+access path, if so returns the simple expression, if not returns F"
+
+<DEFINE ACCESS-PATH-FOUND (NODE "AUX" (LOP <OP-OP1 .NODE>) (ROP <OP-OP2 .NODE>)
+				(OPER <OP-NAME .NODE>))
+	#DECL ((NODE) OPERATOR (LOP ROP) <OR OPERATOR FIX STRING FCN FALSE> (OPER) ATOM)
+
+<CASE ==? .OPER 
+    (AND
+	<OR <ACCESS-PATH-FOUND .LOP> <ACCESS-PATH-FOUND .ROP>>)
+
+    (!'(= /= \> \< \>= \<=)
+	<COND (<OR <IS-AN-ACCESS-PATH .LOP .OPER> <IS-AN-ACCESS-PATH .ROP .OPER>>
+		.NODE)>)	;"return the whole exp"
+>>
+""
+;"looks for the first simple expression in a boolean and returns it"
+
+<DEFINE FIND-SIMPLE-EXP (NODE) #DECL ((NODE) OPERATOR)
+
+<CASE ==? <OP-NAME .NODE>
+    (AND
+	<FIND-SIMPLE-EXP <OP-OP1 .NODE>>)
+    (!'(= /= \< \> \>= \<=)
+	.NODE)
+>
+>
+""
+;"Takes a simple expression and a boolean which contains that
+simple expression.  Returns the boolean minus the simple expression"
+
+<DEFINE REMOVE-REL-EXP (NODE BOOL "AUX" NEW-OP) 
+	#DECL ((NODE BOOL) OPERATOR (NEW-OP) <OR FALSE OPERATOR>)
+
+<CASE ==? <OP-NAME .BOOL>
+    (!'(= /= \> \< \>= \<=)
+	<COND (<==? .NODE .BOOL> <>)	;"only thing in bool is node, return nothing"
+		(ELSE .BOOL)>)		;"not it"
+    (AND
+	<SET NEW-OP <REMOVE-REL-EXP  .NODE <OP-OP1 .BOOL>>>
+	<COND (<NOT .NEW-OP>	;"found it if false returned"
+		<OP-OP2 .BOOL>)	;"return right operand"
+	    (<N==? .NEW-OP <OP-OP1 .BOOL>>
+		<PUT .BOOL ,OP-OP1 .NEW-OP>	;"found and removed it at a lower level"
+		.BOOL)	;"return the changed bool"
+	    (ELSE	;"didn't find it on left , try on right"
+		<SET NEW-OP <REMOVE-REL-EXP  .NODE <OP-OP2 .BOOL>>>
+		<COND (<NOT .NEW-OP>	;"found it if false returned"
+			<OP-OP1 .BOOL>)	;"return left operand"
+		    (<N==? .NEW-OP <OP-OP2 .BOOL>>
+			<PUT .BOOL ,OP-OP2 .NEW-OP>	;"found and removed it at a lower level"
+			.BOOL)	;"return the changed bool"
+		    (ELSE .BOOL)>	;"didn't find it at all, return whole thing"
+	)>)>>
+""
+;"Takes a vector =[bool1, bool2] and a AP-required boolean.
+Reduces bool1 to a sinple relational expression, the remaining part of 
+bool1 is anded onto bool2.  If AP-required is true, then the simple relational
+expression is required to be an access path, else an access path is used
+if one is available"
+
+<DEFINE STRIP-LOCAL-BOOL (NEW-RESTRICTION AP-REQ "AUX" AP-NODE (GLOBAL-RESTRICT
+		<NTH .NEW-RESTRICTION ,AP-GLOBAL-R-INDEX>)
+		(LOCAL-RESTRICT <NTH .NEW-RESTRICTION ,AP-LOCAL-R-INDEX>))
+	#DECL ( (NEW-RESTRICTION) <VECTOR <OR FALSE OPERATOR> <OR FALSE OPERATOR>>
+		(AP-NODE GLOBAL-RESTRICT LOCAL-RESTRICT) <OR FALSE OPERATOR>)
+
+
+<SET AP-NODE <ACCESS-PATH-FOUND .LOCAL-RESTRICT>>
+<COND (<AND
+	<NOT .AP-NODE>	;"if an access path found, use it"
+	.AP-REQ>	;"no access path found, is one required"
+	<SET GLOBAL-RESTRICT <GLUE-BOOLS .LOCAL-RESTRICT .GLOBAL-RESTRICT>>
+	<SET LOCAL-RESTRICT <>>)
+    (<AND <NOT .AP-NODE> <NOT .AP-REQ>> ;"no access path found, andoe required , just use 1st simple exp"
+	<SET AP-NODE <FIND-SIMPLE-EXP .LOCAL-RESTRICT>>)>
+<COND (.AP-NODE	;"fix things up if not already done"
+	<SET GLOBAL-RESTRICT <GLUE-BOOLS <REMOVE-REL-EXP .AP-NODE .LOCAL-RESTRICT> .GLOBAL-RESTRICT>>
+	<SET LOCAL-RESTRICT .AP-NODE>)>
+<PUT .NEW-RESTRICTION ,AP-LOCAL-R-INDEX .LOCAL-RESTRICT>
+<PUT .NEW-RESTRICTION ,AP-GLOBAL-R-INDEX .GLOBAL-RESTRICT>
+>
+""
+;"Checks the local host fror resrictions wrt access path entry points and 
+supported logical operators, if necessary pulls off pieces from local resrict
+and ANDs them onto global restrict"
+
+
+<DEFINE CHECK-HOST-RESTRICTIONS (ID NEW-RESTRICTION "AUX" (GLOBAL-RESTRICT
+		<NTH .NEW-RESTRICTION ,AP-GLOBAL-R-INDEX>)
+		(LOCAL-RESTRICT <NTH .NEW-RESTRICTION ,AP-LOCAL-R-INDEX>)
+		DEFAULT-AP-REQ DEFAULT-AND-SUP DBOPTS DBLOPTS)
+	#DECL ((ID) IDENTIFIER (NEW-RESTRICTION) <VECTOR <OR FALSE OPERATOR> <OR FALSE OPERATOR>>
+		(GLOBAL-RESTRICT LOCAL-RESTRICT) <OR FALSE OPERATOR>)
+
+<COND (.LOCAL-RESTRICT	;"no point in checking things if no resriction"
+    <SET DEFAULT-AP-REQ <>>
+    <SET DEFAULT-AND-SUP <>>
+    <SET DBOPTS <DB-OPTIONS <<ID-DBMS-ID .ID> ,DBMS-TAB>>>
+    <COND (.DBOPTS	;"if options exist, verify our assumptions"
+	<COND (<DB-AP-REQUIRED .DBOPTS>
+		<SET DEFAULT-AP-REQ T>)>
+	<SET DBLOPTS <DB-LOG-OPS .DBOPTS>>
+	<COND (<AND .DBLOPTS <LOP-AND .DBLOPTS>>
+		<SET DEFAULT-AND-SUP T>)>
+	)>
+    <COND (<OR	;"if there are not options then AND local resrict into global resrict and st local resrict to <>"
+		<NOT .DBOPTS>
+			;"or if we require an access path and 
+				(a) logical AND is supported or local resriction is not an AND
+			and     (b) an access path is not found, perform the same operations"
+		<AND .DEFAULT-AP-REQ
+		    <OR .DEFAULT-AND-SUP	;"eith we support AND or there is no and"
+			<N==? AND <OP-NAME .LOCAL-RESTRICT>>>
+		    <NOT <ACCESS-PATH-FOUND .LOCAL-RESTRICT>>>>
+	<PUT .NEW-RESTRICTION ,AP-GLOBAL-R-INDEX 
+		<GLUE-BOOLS  .LOCAL-RESTRICT .GLOBAL-RESTRICT>>
+	<PUT .NEW-RESTRICTION ,AP-LOCAL-R-INDEX <>>)
+
+	(<AND	;"if if none of the above is true, and AND is not supported
+			and AND is used in the local restriction, then pick
+			off a single term (an access path if possible),
+			if there is not access path clause and one is required ,
+			the entire local bool goes away, the remaining boolean is
+			ANDed into the global restirct"
+	<NOT .DEFAULT-AND-SUP>
+	<==? AND <OP-NAME .LOCAL-RESTRICT>>>
+		<STRIP-LOCAL-BOOL .NEW-RESTRICTION .DEFAULT-AP-REQ>)>
+)>>
+""
+;"INSURES THAT THE EXP  is supported by the local host system (according to
+the restrictions in the dbms table) then return T else F"
+
+<DEFINE CHECK-LOCAL-RESTRICTS (NODE SITE   "AUX" (LOP <OP-OP1 .NODE>)
+				(ROP <OP-OP2 .NODE>) (OPER <OP-NAME .NODE>)
+				DB-ENTRY DB-OPTS DB-RELS COPS)
+	#DECL ((NODE) OPERATOR (SITE ) FIX (LOP ROP) <OR FIX STRING FCN> (OPER) ATOM)
+
+<PROG ()
+
+<SET DB-ENTRY <.SITE ,DBMS-TAB>>
+<SET DB-OPTS <DB-OPTIONS .DB-ENTRY>>
+<COND (<NOT .DB-OPTS>	;" not options then can't posibly support the relational expression"
+	<RETURN <>>)>
+
+<SET DB-RELS <DB-REL-OPS .DB-OPTS>>
+;"check if the operator is supported at this site"
+<COND (<NOT .DB-RELS>
+	<RETURN <>>)>	;"no relational operator options, doesn't support any?"
+
+<COND (<NOT <ROP-ALL .DB-RELS>>	; "if all ops supported then no need to check them"
+	<CASE ==? .OPER
+		(= <COND (<NOT <ROP-EQ .DB-RELS>> <RETURN <>>)>)
+		(/= <COND (<NOT <ROP-NE .DB-RELS>> <RETURN <>>)>)
+		(\< <COND (<NOT <ROP-LT .DB-RELS>> <RETURN <>>)>)
+		(\> <COND (<NOT <ROP-GT .DB-RELS>> <RETURN <>>)>)
+		(\<= <COND (<NOT <ROP-LE .DB-RELS>> <RETURN <>>)>)
+		(\>= <COND (<NOT <ROP-GE .DB-RELS>> <RETURN <>>)>)
+		    >; " end of case"
+	<COND (<AND	;"now, if the operator is a range compare, and the operands
+			are strings, make sure alphabetic collating is supported"
+		<OR <==? .OPER \>>
+		    <==? .OPER \>=>
+		    <==? .OPER \<>
+		    <==? .OPER \<=>>
+		<==? <TYPE-OF .LOP> STRING>
+		<NOT <ROP-AC .DB-RELS>>>
+		<RETURN <>>)>	;"guess its not"
+	)>
+
+;"operator is supported at the dbms"
+
+;"now make sure the dbms can handle the operands together, ie
+one may only support field relop constant...."
+
+<SET COPS <DB-COMPARE-OPS .DB-OPTS>>
+<COND (<NOT .COPS> <RETURN <>>)>	;"strange, none here"
+
+<COND (<NOT <COP-ALL .COPS>>	;"no point in checking if all supported"
+	<COND (<TYPE? .LOP FCN>
+		<CASE TYPE? .ROP	;"left op is a function, see if type of rop supported"
+		    (!'(FIX STRING)
+			<COND (<NOT <COP-CONSTANT .COPS>> <RETURN <>>)>)
+		    (FCN
+			<COND (<NOT <COP-FIELD .COPS>> <RETURN <>>)>)
+		>)
+	    (<TYPE? .ROP FCN>
+		<CASE TYPE? .LOP	;"right op is a function, see if type of lop supported"
+		    (!'(FIX STRING)
+			<COND (<NOT <COP-CONSTANT .COPS>> <RETURN <>>)>)
+		    (FCN
+			<COND (<NOT <COP-FIELD .COPS>> <RETURN <>>)>)
+		>)
+	>)>
+
+;"guess the operator and the operands are ok"
+
+;"now check any access poath restrictions"
+
+<COND (<DB-AP-ONLY .DB-OPTS>	;"if we can only access via access paths"
+	<COND (<OR 
+		<IS-AN-ACCESS-PATH .LOP .OPER>
+		<IS-AN-ACCESS-PATH .ROP .OPER>>)
+	    (ELSE <RETURN <>>)>
+	)>
+
+T	;"finally all is ok"
+>
+>
+""
+;"Given an identifier for an entity type and a vector=[local restriction,global restriction]
+check the local resriction for legality wrt operands and relational
+operators.  if a non-legal term is found, pull it off and AND into global restriction.
+return the vector=
+[remaining-local-restriction, expanded-global-resriction]
+"
+
+<DEFINE CHECK-LOCAL-COMPARES (ID  NEW-RESTRICTION   "AUX" (GLOBAL-RESTRICT
+		<NTH .NEW-RESTRICTION ,AP-GLOBAL-R-INDEX>)
+		(LOCAL-RESTRICT <NTH .NEW-RESTRICTION ,AP-LOCAL-R-INDEX>)
+		(OLD-LOP <>) (OLD-ROP <>) (NEW-LOP <>) (NEW-ROP <>))
+	#DECL ((ID) IDENTIFIER (NEW-RESTRICTION) <VECTOR <OR FALSE OPERATOR> <OR FALSE OPERATOR>>
+		(LOCAL-RESTRICT GLOBAL-RESTRICT OLD-LOP OLD-ROP NEW-LOP NEW-ROP)
+		 <OR FALSE OPERATOR> )
+
+<COND (<TYPE? .LOCAL-RESTRICT OPERATOR>	;"if no restriction, nothing to do"
+    <CASE ==? <OP-NAME  .LOCAL-RESTRICT>
+	(!'(= /= \> \< \>= \<=)
+	;"if the type of comparison is supported and the relational operator is
+	supported and either this is an access path , or we ar not required to access
+	only via an access path, then all stays the same; else AND this
+	term into the global restriction and return false for the local restriction"
+	<COND (<NOT <CHECK-LOCAL-RESTRICTS .LOCAL-RESTRICT <ID-DBMS-ID .ID>>>
+		<PUT .NEW-RESTRICTION ,AP-LOCAL-R-INDEX <>>
+		<PUT .NEW-RESTRICTION ,AP-GLOBAL-R-INDEX 
+			<GLUE-BOOLS .LOCAL-RESTRICT .GLOBAL-RESTRICT>>)>
+	)
+
+
+	(AND
+		<SET OLD-LOP <OP-OP1 .LOCAL-RESTRICT>>
+		<SET OLD-ROP <OP-OP2 .LOCAL-RESTRICT>>
+		<PUT .NEW-RESTRICTION ,AP-LOCAL-R-INDEX .OLD-LOP>
+		<CHECK-LOCAL-COMPARES .ID  .NEW-RESTRICTION >
+		<SET NEW-LOP <NTH .NEW-RESTRICTION ,AP-LOCAL-R-INDEX>>
+		<PUT .NEW-RESTRICTION ,AP-LOCAL-R-INDEX .OLD-ROP>
+		<CHECK-LOCAL-COMPARES .ID  .NEW-RESTRICTION >
+		<SET NEW-ROP <NTH .NEW-RESTRICTION ,AP-LOCAL-R-INDEX>>
+		;"noew determine what our new local restriction should be"
+		<COND (<AND	;"if neither operand has changed, neither has the local resrict"
+			    <==? .OLD-LOP .NEW-LOP>
+			    <==? .OLD-ROP .NEW-ROP>>
+			<PUT .NEW-RESTRICTION ,AP-LOCAL-R-INDEX .LOCAL-RESTRICT>)
+		    (ELSE
+			<PUT .NEW-RESTRICTION ,AP-LOCAL-R-INDEX
+				 <GLUE-BOOLS .NEW-LOP .NEW-ROP>>)>
+	)
+
+	> ;"end of case"
+	)>
+>""
+;"Takes a list and splices out an element, returns the new list"
+
+<DEFINE SPLICE-OUT (A-LIST WHICH-ELE) #DECL ((A-LIST) <PRIMTYPE LIST> (WHICH-ELE) FIX)
+<CHTYPE ;"retype the result"
+	<COND (<1? .WHICH-ELE> <REST .A-LIST>)	;"if first ele is to go, then return rest of list"
+		(ELSE <PUTREST <REST .A-LIST <- .WHICH-ELE 2>>
+				<REST .A-LIST .WHICH-ELE>> .A-LIST)>
+	<TYPE .A-LIST>>>
+""
+;"Takes a graph node and checks its local restrictions,
+for each JOIN arc, checks its join boolean and recurses with the node
+at the other end (if not done), if an entire join boolean gets pulled off,
+splits the graph (disconnects the arc), then recurses for any nodes at the
+other end of LINK arcs, when all done, the NEW-RESTRICTION vector has any
+boolean terms pulled off in its global slot"
+
+<DEFINE HANDLE-ALL-RESTRICTIONS (A-NODE NEW-RESTRICTION
+	"AUX" ANOTHER-LEN ARC-LIST LIST-LEN CUR-ELE AN-ARC ANOTHER-NODE ANOTHER-ARC-LIST)
+	#DECL ((A-NODE ANOTHER-NODE) GRAPH-NODE (NEW-RESTRICTION) <VECTOR <OR FALSE OPERATOR>
+				<OR FALSE OPERATOR>>
+		(ARC-LIST ANOTHER-ARC-LIST) <LIST [REST GRAPH-ARC]> 
+		(ANOTHER-LEN LIST-LEN CUR-ELE) FIX (AN-ARC) GRAPH-ARC)
+
+<PUT <GNODE-GDM-WS .A-NODE> ,GDM-WS-DONE T>	;"st this node as done so we don't recurse forever"
+<PUT .NEW-RESTRICTION ,AP-LOCAL-R-INDEX 
+	<GNODE-RESTRICTION .A-NODE>>
+;"now check the local resriction for compare type and relational operator validity"
+<CHECK-LOCAL-COMPARES <GNODE-ENTITY .A-NODE> .NEW-RESTRICTION>
+;"now check access path restrictions and support for logical operators"
+<CHECK-HOST-RESTRICTIONS <GNODE-ENTITY .A-NODE> .NEW-RESTRICTION>
+<PUT .A-NODE ,GNODE-RESTRICTION <NTH .NEW-RESTRICTION ,AP-LOCAL-R-INDEX>>
+	;"reset local resriction incase it changed"
+<COND (<GNODE-ARC-LIST .A-NODE>	;"if the arc list is empty we are done"
+    <SET ARC-LIST <GNODE-ARC-LIST .A-NODE>>	;"first go thru arcs and handle any join booleans"
+    <SET LIST-LEN <LENGTH .ARC-LIST>>	;"due to local restrictions, the boolean may be modified oR"
+    <SET CUR-ELE 0>	;"might go away compeletely, in this case the arc-list is modified"
+    <REPEAT ()
+	<COND (<==? .LIST-LEN .CUR-ELE>
+		<RETURN>)>	;"looked at them all, break out ot the repeat"
+	<SET CUR-ELE <+ .CUR-ELE 1>>
+	<SET AN-ARC <NTH .ARC-LIST .CUR-ELE>>
+	<COND (<==? <GARC-TYPE .AN-ARC> ARC-LINK>
+		<AGAIN>)>	;"ignore links for the time being"
+	;"we have a join boolen, make sure it can be handled"
+	<SET ANOTHER-NODE <GARC-NEXT-NODE .AN-ARC>>	;"guess the other end of the arc is in next node"
+	<COND (<==? .ANOTHER-NODE .A-NODE>
+		<SET ANOTHER-NODE <GARC-PREV-NODE .AN-ARC>>)>
+	<COND (<NTH <GNODE-GDM-WS .ANOTHER-NODE> ,GDM-WS-DONE> <AGAIN>)>	;"been here before"
+	<COND (<N==? <ID-DBMS-ID <GNODE-ENTITY .A-NODE>> <ID-DBMS-ID <GNODE-ENTITY .ANOTHER-NODE>>>
+		;"join is over fdifferent databases, put join term in global bool"
+		<PUT .NEW-RESTRICTION ,AP-LOCAL-R-INDEX <>>
+		<PUT .NEW-RESTRICTION ,AP-GLOBAL-R-INDEX 
+			<GLUE-BOOLS <NTH .NEW-RESTRICTION ,AP-GLOBAL-R-INDEX>
+				<GARC-JOIN-TERM .AN-ARC>>>)
+	    (ELSE
+		<PUT .NEW-RESTRICTION ,AP-LOCAL-R-INDEX <GARC-JOIN-TERM .AN-ARC>>
+		;"make sure the join term can be handled"
+		<CHECK-LOCAL-COMPARES <GNODE-ENTITY .A-NODE> .NEW-RESTRICTION>
+		<CHECK-HOST-RESTRICTIONS <GNODE-ENTITY .A-NODE> .NEW-RESTRICTION>
+	    )>
+	<PUT .AN-ARC ,GARC-JOIN-TERM <NTH .NEW-RESTRICTION ,AP-LOCAL-R-INDEX>>
+		;"it might have changed or even gone away"
+	<COND (<NOT <GARC-JOIN-TERM .AN-ARC>>
+		;"oops it disappeared, disconnect this arc"
+		<SET ARC-LIST <SPLICE-OUT .ARC-LIST .CUR-ELE>>
+		<SET LIST-LEN <- .LIST-LEN 1>>	;"adjust list length and current element"
+		<SET CUR-ELE <- .CUR-ELE 1>>
+			;"splice join out of this arc-list"
+		;"now do the same for the node at the other end"
+		<SET ANOTHER-ARC-LIST <GNODE-ARC-LIST .ANOTHER-NODE>>
+		<SET ANOTHER-LEN <+ <- <LENGTH .ANOTHER-ARC-LIST>
+			<LENGTH <MEMQ .AN-ARC .ANOTHER-ARC-LIST>>>1>>
+		<SET ANOTHER-ARC-LIST <SPLICE-OUT .ANOTHER-ARC-LIST .ANOTHER-LEN>>
+		<COND (<==? <LENGTH .ANOTHER-ARC-LIST> 0>	;"if the list of arcs compeletely went way"
+			<PUT .ANOTHER-NODE ,GNODE-ARC-LIST <>>)>
+		<AGAIN>	;"continue"
+		)>
+	<HANDLE-ALL-RESTRICTIONS .ANOTHER-NODE .NEW-RESTRICTION>
+		;"recurse with the node at the other end of the arc"
+    > ;"end of repeat, we have handled all joins, 3 possibilities - the arc-list might have
+	disappeared, might have shrunk or stayed the same"
+    <COND (<==? .LIST-LEN 0>
+		<PUT .A-NODE ,GNODE-ARC-LIST <>>)	;"it went away, we're done"
+	(ELSE <PUT .A-NODE ,GNODE-ARC-LIST .ARC-LIST>	;"reset list in case it changed"
+		<MAPF <>	;"and go handle all links"
+		    <FUNCTION (ONE-ARC)
+			<COND (<==? <GARC-TYPE .ONE-ARC> ARC-LINK>
+				<SET ANOTHER-NODE <GARC-PREV-NODE .ONE-ARC>>
+				<COND (<NOT <NTH <GNODE-GDM-WS .ANOTHER-NODE> ,GDM-WS-DONE>>
+					;"prev node not yet handled "
+					<HANDLE-ALL-RESTRICTIONS .ANOTHER-NODE .NEW-RESTRICTION>)>
+				<SET ANOTHER-NODE <GARC-NEXT-NODE .ONE-ARC>>
+				<COND (<NOT <NTH <GNODE-GDM-WS .ANOTHER-NODE> ,GDM-WS-DONE>>
+					;"next node not yet handled "
+					<HANDLE-ALL-RESTRICTIONS .ANOTHER-NODE .NEW-RESTRICTION>)>
+				)>>
+		    .ARC-LIST>
+)>)>
+>
+""
+;" Handle one query including legality check, and building an entry
+in the PLAN"
+
+<DEFINE HANDLE-ONE-QUERY (A-GRAPH-QUERY "AUX" (NEW-RESTRICTION [<> <>]))
+	#DECL((A-GRAPH-QUERY) GRAPH-NODE (NEW-RESTRICTION) <VECTOR <OR OPERATOR FALSE> <OR OPERATOR FALSE>>)
+
+;"returns <> if not able to build a plan, else not <>"
+<HANDLE-ALL-RESTRICTIONS .A-GRAPH-QUERY .NEW-RESTRICTION>
+	;"will perform all the appropriate local resrictions/tests
+	and pull off any local restrictions/join terms which cannot
+	be handled.  The pulled-ff pieces are returnd in the global boolean part
+	of NEW-RESTRICTION"
+
+<COND (<NTH .NEW-RESTRICTION ,AP-GLOBAL-R-INDEX>
+	;"here is wher we will increment the target lists and build local
+	GDM queries, for now we cannot handle local queries and return false"
+	<ERR "HANDLE-ONE-QUERY: Temporary restriction, no local work space">
+	<>)
+
+	(ELSE <BUILD-AN-ACTION .A-GRAPH-QUERY <ID-DBMS-ID <GNODE-ENTITY .A-GRAPH-QUERY>>>)>
+>
+""
+;"Turn a global qraph query into an exection plan"
+;"currently makes no use of a local work space, returns the plan or false"
+
+<DEFINE ACCESS-PLAN (GLOBAL-GRAPH-QUERY "AUX" (THE-PLAN ())  AN-EVENT)
+	#DECL ((GLOBAL-GRAPH-QUERY) <LIST [REST GRAPH-NODE]>
+		(THE-PLAN) <LIST [REST ACTION]> (AN-EVENT) <OR FALSE ACTION>)
+
+
+<PROG ("ACT" AP-ACT)
+;"now go thru the global graph query list looking for system entry points which
+have not been handled"
+<MAPF <>
+    <FUNCTION (GNODE)
+	<COND (<AND
+		<ID-SYS-EP <GNODE-ENTITY .GNODE>>
+		<NOT <NTH <GNODE-GDM-WS .GNODE> ,GDM-WS-DONE>>>
+		;"check the local restriction to make sure that the local system
+		can handle it and that any requirements are being followed,
+		increment the target list if necessary and add new queries
+		for the local work space"
+
+		;"check to see if the join clauses are supported by the local
+		system, increment the target list and add new queries as necessary"
+
+		;"now for each node at the other end of a link or join term,
+		perform the same processing"
+
+		;"finally , build an event for this query"
+		<SET AN-EVENT <HANDLE-ONE-QUERY .GNODE>>
+		<COND (<NOT .AN-EVENT>
+			<RETURN <> .AP-ACT>)>
+		<SET THE-PLAN (.AN-EVENT  !.THE-PLAN)>
+		)>
+	>
+	.GLOBAL-GRAPH-QUERY
+	>
+;"perform any finishing legality checks, and format the users output"
+<CHTYPE .THE-PLAN PLAN>	;"return the plan we built"
+>
+>
+""
+<ENDPACKAGE>
+  

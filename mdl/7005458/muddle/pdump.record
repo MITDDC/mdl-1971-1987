@@ -1,0 +1,25 @@
+Compilation record for: DSK:MUDDLE;PDUMP 22
+Output file:  DSK:MUDDLE;PDUMP NBIN
+
+It is now Wednesday, 13 May 1981 12:51 EDT
+
+File loaded.
+Precompilation loaded.
+Functions ordered.
+COMPILING UNIQUE-FILE!-IPDUMP!-PDUMP!-PACKAGE
+*** NOTE	Special variable never used: MODE 
+===== Computed decl of variable:  TNUM!-IPDUMP!-PDUMP!-PACKAGE is:  FIX
+===== Not open compiled because type is:  STRUCTURED
+ **** <REST ,DIRBUF!-IPDUMP!-PDUMP!-PACKAGE 1> **** 
+===== Not open compiled because type is:  STRUCTURED
+<CHTYPE  **** <NTH ,DIRBUF!-IPDUMP!-PDUMP!-PACKAGE 1> ****  FIX>
+Peephole  0% 184/184
+Job done in:  30 / 51
+    
+
+Total time used is
+	51 sec. CPU time,
+	19 sec. garbage collector CPU time,
+	1 min. 23 sec. real time.
+CPU utilization is 61.445783%.
+Number of garbage collects = 3

@@ -1,0 +1,48 @@
+<PACKAGE "M.GC">
+
+<ENTRY COMPACT-SYSTEM-ASYLUM>
+
+<USE "MADMAN" "ASYLUM" "M.DAC" "M.DEFS" "M.DB">
+
+<DEFINE COMPACT-SYSTEM-ASYLUM ()
+	<COND (<AND <SOPEN>
+		    <SET R <MAKE-DATA-BASE "COMDAT;SYSTEM NEW" 20>>
+		    <SETG NEW <OPEN-DATA-FILE .R>>>
+	       <COND (<SET D
+			   <DATA-AREAD ,SYSTEM-ASYLUM
+				       ,COMSYS-PENDING-QUEUE
+				       <ARESET ,QUEUE-SPACE>>>
+		      <COND (<SET R
+				  <DATA-APRINT ,NEW
+					       ,COMSYS-PENDING-QUEUE
+					       ,QUEUE-SPACE
+					       .D>>
+			     <PRINT PENDING-QUEUE>
+			     <PRIN1 <LENGTH .D>>)
+			    (<ERROR CANT-WRITE-PENDING-QUEUE .R>)>)
+		     (<ERROR CANT-READ-PENDING-QUEUE .D>)>
+	       <COND (<SET D
+			   <DATA-AREAD ,SYSTEM-ASYLUM
+				       ,COMSYS-MSG-MAP
+				       <ARESET ,SCRATCH-SPACE>>>
+		      <COND (<SET R
+				  <DATA-APRINT ,NEW
+					       ,COMSYS-MSG-MAP
+					       ,SCRATCH-SPACE
+					       .D>>
+			     <PRINT MSG-MAP>
+			     <PRIN1 <LENGTH .D>>)
+			    (<ERROR CANT-WRITE-MSG-MAP .R>)>)
+		     (<ERROR CANT-READ-MSG-MAP .D>)>
+	       <COND (<SET D <DATA-READW ,SYSTEM-ASYLUM ,COMSYS-MSG-MAP>>
+		      <COND (<SET R <DATA-PRINTW ,NEW ,COMSYS-MSG-MAP .D>>
+			     <PRINT HIGH-ID>
+			     <PRIN1 <CHTYPE .D FIX>>)
+			    (<ERROR CANT-WRITE-HIGH-ID>)>)
+		     (<ERROR CANT-READ-HIGH-ID>)>
+	       <CLOSE-DATA-FILE ,NEW>
+	       <CRLF>
+	       "DONE")>>
+
+<ENDPACKAGE>
+

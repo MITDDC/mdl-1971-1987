@@ -1,0 +1,250 @@
+
+<PACKAGE "M.DATA">
+
+"functions to handle usage of library data items"
+
+<ENTRY GET-DATUM-ERRORS?
+       PURIFIED?
+       DDATUMS
+       LOADED-STUFF
+       DATUM
+       FDATUM
+       QDATUM
+       GET-DATUM
+       MAKE-DATUM
+       DATED-DATUM
+       CHECK-DATUM
+       LOADIT
+       REMEMBERIT
+       FORGETIT
+       LIST-ITEMS
+       PURIFY-ITEMS>
+
+<USE "M.DEFS" "M.DIR" "M.MSG" "M.TIME" "SORTX">
+
+<SETG GET-DATUM-ERRORS? <>>
+
+<GDECL (PURIFIED? GET-DATUM-ERRORS?) <OR FALSE ATOM>
+       (GETDERR) HANDLER
+       (LOADED-STUFF) LIST
+       (DATA) OBLIST>
+
+\
+
+<SETG DATA <MOBLIST DATUM>>
+
+"GET-ATOMD -- macro to return form to get atom of pname of
+  supplied string, on oblist datum."
+
+<DEFINE GET-ATOMD (AA) 
+	#DECL ((AA) STRING (VALUE) ATOM)
+	<OR <LOOKUP .AA ,DATA>
+	    <INSERT .AA ,DATA>>>
+
+"MAKE-DATUM -- set up a datum in core (for preloaded constant data)"
+
+<DEFINE MAKE-DATUM (NAME VAL)
+	#DECL ((NAME) STRING (VAL) ANY)
+	<SETG <GET-ATOMD .NAME> .VAL>
+	<REMEMBERIT .NAME .VAL>
+	.NAME>
+
+"DATED-DATUM -- get new copy only if file has changed"
+
+<DEFINE DATED-DATUM (NAME FILE "AUX" D NEW)
+	#DECL ((NAME FILE) STRING (D) <OR FALSE FIX> (NEW) ANY)
+	<COND (<SET D <CHANGED-FILE? .FILE <GET <GET-ATOMD .NAME> DATE>>>
+	       <SET NEW <GET-DATUM .FILE>>
+	       <COND (<OR <NOT <MEMBER .NAME <DATUM "COMSYS-SORTED-DATA">>>
+			  <CHECK-DATUM .NAME .FILE .NEW>>
+		      <MAKE-DATUM .NAME .NEW>
+		      <PUT <GET-ATOMD .NAME> DATE .D>)>)>>
+
+"CHANGED-FILE? -- looks for a file with a different cdate than is recorded"
+
+<DEFINE CHANGED-FILE? (NM1 DATE "AUX" N)
+	#DECL ((NM1) STRING (DATE N) <OR FIX FALSE>)
+	<SET N <CREATED? .NM1 ">" "DSK" <DATUM "COMSYS-DATA-DIR">>>
+	<COND (.DATE <AND <N==? .N .DATE> .N>)
+	      (ELSE .N)>>
+
+<DEFINE DDATUMS (X)
+	#DECL ((X) <VECTOR [REST STRING]>)
+	<REPEAT ()
+		<COND (<LENGTH? .X 1> <RETURN>)>
+		<DATED-DATUM <1 .X> <2 .X>>
+		<SET X <REST .X 2>>>>
+
+<DEFINE CHECK-DATUM (NAME FILE NEW
+		     "AUX" (GOOD? <>) (OLD "") (SORT? <>) (MSG <>))
+	#DECL ((NAME FILE OLD) STRING (NEW) ANY (GOOD?) <OR ATOM FALSE>
+	       (SORT? MSG) <OR FALSE STRING>)
+	<COND (<TYPE? .NEW VECTOR>
+	       <REPEAT ((N .NEW))
+		       #DECL ((N) VECTOR)
+		       <COND (<EMPTY? .N> <RETURN <SET GOOD? T>>)
+			     (<LENGTH? .N 1> <RETURN>)
+			     (<TYPE? <1 .N> STRING>
+			      <COND (<G=? <STRCOMP .OLD <SET OLD <1 .N>>> 0>
+				     <SET SORT? .OLD>)>)
+			     (ELSE <RETURN>)>
+		       <SET N <REST .N 2>>>)>
+	<COND (.GOOD?
+	       <COND (.SORT?
+		      <SORT <> .NEW 2>
+		      <SCROUT <SET MSG <STRING "??? Unsorted: "
+			      .NAME " from " .FILE " at " .SORT?>>>)>)
+	      (ELSE
+	       <RENAME .FILE ">" "DSK" <DATUM "COMSYS-DATA-DIR">
+		       TO
+		       <STRING "?" .FILE>>
+	       <SCROUT <SET MSG <STRING "??? Loaded datum chomps: "
+		       .NAME " from " .FILE>>>)>
+	<COND (<AND .MSG <NOT ,GET-DATUM-ERRORS?>>
+	       <SENDMSG '("COMSYS") .FILE .MSG "COMSYS-Daemon">)>
+	.GOOD?>
+
+
+"DATUM -- takes string, name of library data
+ item, and returns it.  items may be obtained from the gval of the
+ associated atom, or, as a last resort, by calling USE-DATUM."
+
+<DEFINE DATUM (DN "AUX" ATM A)
+	#DECL ((DN) STRING (ATM) ATOM (A) ANY)
+	<COND (<GASSIGNED? <SET ATM <GET-ATOMD .DN>>> ,.ATM)
+	      (<SET A <LOADIT .DN T>>)
+	      (<ERROR CANT-LOAD-DATUM .DN .A>)>>
+
+<DEFINE QDATUM (DN "AUX" ATM)
+	#DECL ((DN) STRING (ATM) ATOM)
+	<FDATUM .DN <>>>
+
+<DEFINE FDATUM (DN "OPTIONAL" (REM? T) "AUX" ATM)
+	#DECL ((DN) STRING (ATM) ATOM (REM?) <OR ATOM FALSE>)
+	<COND (<GASSIGNED? <SET ATM <GET-ATOMD .DN>>> ,.ATM)
+	      (<LOADIT .DN .REM?>)>>
+
+\
+
+"LOADIT -- function to load a datum, saving its value as gval
+  of an atom.  if no <PURIFY-ITEMS> has been done yet, also adds
+  it to front of LOADED-STUFF list.  note that
+  this list may be used to purify a bunch of preloaded data items
+  it is also possible to reload a data item by calling LOADIT directly.
+  it is normally not called when the data item is found as the related
+  atom's gval.
+
+-- if optional arg SV? false, will not save as a gval"
+
+<SETG LOADED-STUFF (T)>
+
+<DEFINE LOADIT (SS "OPTIONAL" (SV? T) "AUX" ANS) 
+	#DECL ((SS) STRING (VALUE ANS) ANY (SV?) <OR 'T FALSE>)
+	<SET ANS <GET-DATUM .SS>>
+	<COND (<AND .SV? .ANS>
+	       <SETG <GET-ATOMD .SS> .ANS>
+	       <REMEMBERIT .SS .ANS>)>
+	.ANS>
+
+<DEFINE REMEMBERIT (NAME VAL "AUX" (L ,LOADED-STUFF))
+	#DECL ((NAME) STRING (VAL) ANY (L) LIST)
+	<OR ,PURIFIED?
+	    <REPEAT ((LL <REST .L>))
+		    #DECL ((LL) LIST)
+		    <COND (<LENGTH? .LL 1> <RETURN <>>)
+			  (<=? <1 .LL> .NAME> <PUT .LL 2 .VAL> <RETURN T>)
+			  (ELSE <SET LL <REST .LL 2>>)>>
+	    <PUTREST .L (.NAME .VAL !<REST .L>)>>>
+
+"FORGETIT -- used to remove all traces of a specified datum from core"
+
+<DEFINE FORGETIT (SS) 
+	#DECL ((SS) STRING)
+	<GUNASSIGN <GET-ATOMD .SS>>
+	<OR ,PURIFIED?
+	    <REPEAT ((L ,LOADED-STUFF))
+		    #DECL ((L) LIST)
+		    <COND (<LENGTH? .L 1> <RETURN>)
+			  (<=? .SS <2 .L>> <PUTREST .L <REST .L 3>>)
+			  (ELSE <SET L <REST .L 2>>)>>>>
+
+
+"PURIFY-ITEMS -- causes current list to become pure (done just before SAVE'ing)"
+
+<SETG PURIFIED? <>>
+
+<DEFINE PURIFY-ITEMS ("AUX" (OUTCHAN .OUTCHAN)) 
+	#DECL ((OUTCHAN) CHANNEL)
+	<COND (,PURIFIED? <PRINC "ALREADY PURIFIED, SORRY."> <TERPRI>)
+	      (ELSE <SETG PURIFIED? T> <PURIFY ,LOADED-STUFF>)>>
+
+\
+
+"GET-DATUM -- takes data name, loads datum from library, evaling forms
+  encountered until it gets last item -- permits including <USE...>
+  forms in data item file.
+
+if given an optional arg to be used with decl?, reads items until
+something matching the specified pattern is found, which it returns.
+otherwise, evals each object seen, and returns result of last eval when
+eof encountered
+
+will try to read from library first, then see if data name is file name."
+
+<DEFINE GET-DATUM (DNAME "OPTIONAL" (DTYPE <>) "EXTRA" A R (LAST <>)) 
+	#DECL ((DNAME) STRING (A) <OR CHANNEL FALSE> (R LAST DTYPE) ANY)
+	<COND (<OR <AND <MEMBER !\; .DNAME>
+			<SET A <OPEN "READB" .DNAME>>>
+		   <SET A <OPEN "READB" .DNAME ">" "DSK" <DATUM "COMSYS-DATA-DIR">>>>
+	       <OR ,GET-DATUM-ERRORS?
+		   <WATCH GETDERR "ERROR" ,READ-ERROR 4>>
+	       <SET LAST
+		    <REPEAT GETDACT ()
+		       #DECL ((GETDACT) <SPECIAL ACTIVATION>)
+		       <SET R <READ .A '<>>>
+		       <COND (<NOT .R> <RETURN .LAST>)
+			     (<AND .DTYPE <DECL? .R .DTYPE>>
+			      <RETURN <SET LAST .R>>)
+			     (ELSE <SET LAST <EVAL .R>>)>>>
+	       <OR ,GET-DATUM-ERRORS? <OFF ,GETDERR>>
+	       <AND <NOT <0? <1 .A>>> <CLOSE .A>>
+	       .LAST)>>
+
+"READ-ERROR -- readin time error handler"
+
+<DEFINE READ-ERROR ("TUPLE" STUFF) 
+	#DECL ((STUFF) TUPLE (GETDACT) ACTIVATION)
+	<COND (<AND <ASSIGNED? GETDACT> <LEGAL? .GETDACT>>
+	       <REPEAT ((IC IN-COLLECTION!-IPKG!-PKG!-PACKAGE!- ))
+		       <COND (<GETPROP .OBLIST .IC>
+			      <PUTPROP .OBLIST .IC>
+			      <ENDBLOCK>)
+			     (ELSE <RETURN>)>>
+	       <SCROUT ">>> Error while reading datum: " .STUFF>
+	       <DISMISS <CHTYPE (<UNPARSE .STUFF>) FALSE>
+			.GETDACT>)>>
+
+\
+
+"LIST-ITEMS -- lists names of currently loaded data items"
+
+<DEFINE LIST-ITEMS ("AUX" (L <REST ,LOADED-STUFF>) (OUTCHAN .OUTCHAN)) 
+	#DECL ((L) LIST (VALUE) ATOM (OUTCHAN) CHANNEL)
+	<TERPRI>
+	<COND (,PURIFIED? <PRINC "PURIFIED ALREADY:"> <TERPRI>)
+	      (ELSE <PRINC "NOT YET PURIFIED:"> <TERPRI>)>
+	<TERPRI>
+	<REPEAT ()
+		<COND (<EMPTY? .L> <TERPRI> <TERPRI> <RETURN T>)>
+		<PRINC <1 .L>>
+		<PRINC ": ">
+		<PRINC <TYPE <2 .L>>>
+		<COND (<STRUCTURED? <2 .L>>
+		       <PRINC " (">
+		       <PRINC <LENGTH <2 .L>>>
+		       <PRINC ")">)>
+		<TERPRI>
+		<SET L <REST .L 2>>>>
+
+<ENDPACKAGE>
+

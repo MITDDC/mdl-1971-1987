@@ -1,0 +1,505 @@
+
+<PACKAGE "PRTUTI">
+
+;"PRINTING UTILITY FUNCTIONS"
+
+<ENTRY LINE-LNTH
+       MONTHS
+       P-ADDRL
+       P-ADDR
+       P-SPLIT
+       P-SLIST
+       P-TIME
+       P-NOTES
+       P-TEXT-SPLIT
+       P-ENCLOSURES
+       P-FORWARD
+       P-AUTHOR-FORWARD
+       P-FULNAM
+       P-REPLIED-TO
+       FROM-ITS?
+       ITS-SITES
+       NET-P-DATE
+       NET-P-LINE
+       NET-FROM
+       DDT-ADRL
+       DDT-ADR
+       DDT-SPLIT
+       MSG-FROM
+       DDT-LIST
+       DDT-FORWARD
+       DDT-AUTHOR-FORWARD
+       DDT-REPLIED-TO
+       DDT-TEXT-LIST
+       DDT-TEXT-SPLIT
+       QUICK-DATE
+       TOPS-20-DATE-TIME>
+
+<USE "M-DEFS" "ITIME" "CHAN" "USRUTI" "HOSTS" "LSRTNS">
+
+<SETG MONTHS
+      '["Jan" "Feb" "Mar" "Apr" "May" "Jun"
+	"Jul" "Aug" "Sep" "Oct" "Nov" "Dec"]>
+
+<SETG LINE-LNTH 65		 ;"DEFAULT LINE LENGTH FOR PRINTING FUNCTIONS">
+
+<GDECL (LINE-LNTH)
+       FIX
+       (MONTHS)
+       <VECTOR [REST STRING]>>
+
+\
+
+"P-ADDRL -- print addressee list or single addressee"
+
+<DEFINE P-ADDRL (UUL OUTCHAN "OPTIONAL" (IND <14 .OUTCHAN>))
+	#DECL ((UUL) <OR STRING LIST> (OUTCHAN) CHANNEL (IND) FIX)
+	<COND (<TYPE? .UUL STRING> <P-ADDR .UUL .OUTCHAN>)
+	      (ELSE
+	       <REPEAT ()
+		       <COND (<EMPTY? .UUL> <RETURN>)>
+		       <P-ADDR <1 .UUL> .OUTCHAN .IND>
+		       <COND (<NOT <LENGTH? .UUL 1>> <PRINC ", ">)>
+		       <SET UUL <REST .UUL>>>)>>
+
+<DEFINE P-SPLIT (SF OUTCHAN "AUX" SE)
+	#DECL ((SF) <LIST [REST LIST]> (OUTCHAN) CHANNEL (SE) <LIST LIST LIST>)
+	<REPEAT ()
+		<COND (<EMPTY? .SF> <RETURN>)>
+		<PRINC "[For ">
+		<P-ADDRL <1 <SET SE <1 .SF>>> .OUTCHAN>
+		<PRINC "] ">
+		<P-ADDRL <2 .SE> .OUTCHAN>
+		<COND (<NOT <EMPTY? <SET SF <REST .SF>>>>
+		       <PRINC "; ">)>>>
+
+"P-ADDR -- print single addressee"
+
+<DEFINE P-ADDR (UU OUTCHAN "OPTIONAL" (IND <14 .OUTCHAN>)
+		"AUX" U F H STL (LL ,LINE-LNTH))
+	#DECL ((UU H U) STRING (OUTCHAN) CHANNEL (LL STL IND F) FIX)
+	<SET U <EXTRACT-RCVR .UU>>
+	<SET F <EXTRACT-HOST .UU>>
+	<SET H <HOST .F>>
+	<SET STL <+ 4 <LENGTH .U> <LENGTH .H>>>
+	<COND (<G? <+ <14 .OUTCHAN> .STL> .LL> <CRLF> <INDENT-TO .IND .OUTCHAN>)>
+	<PRINC .U>
+	<PRINC " at ">
+	<PRINC .H>>
+
+"P-SLIST -- net header list of strings"
+
+<DEFINE P-SLIST (LL OUTCHAN "AUX" ST (IND <14 .OUTCHAN>))
+	#DECL ((LL) <LIST [REST STRING]> (OUTCHAN) CHANNEL (ST) STRING (IND) FIX)
+	<REPEAT ()
+		<COND (<EMPTY? .LL> <RETURN>)>
+		<SET ST <1 .LL>>
+		<COND (<G? <+ <LINPOS .OUTCHAN> <LENGTH .ST>> ,LINE-LNTH>
+		       <CRLF>
+		       <INDENT-TO .IND>)>
+		<PRINC .ST>
+		<COND (<NOT <LENGTH? .LL 1>> <PRINC ", ">)>
+		<SET LL <REST .LL>>>>
+
+"P-TIME -- net header time fields"
+
+<DEFINE P-TIME (DTIM OUTCHAN "AUX" DTIME DT TM) 
+	#DECL ((DTIM) <OR FIX LIST UVECTOR>
+	       (DTIME) <LIST [2 <LIST [3 FIX]>] STRING> (OUTCHAN) CHANNEL
+	       (DT TM) <LIST FIX FIX FIX>)
+	<COND (<TYPE? .DTIM FIX UVECTOR> <SET DTIME <LTIME .DTIM>>)
+	      (ELSE <SET DTIME .DTIM>)>
+	<SET DT <1 .DTIME>>
+	<PRINC <3 .DT>>
+	<PRINC " ">
+	<PRINC <COND (<0? <2 .DT>> "??")(<NTH ,MONTHS <2 .DT>>)>>
+	<PRINC " ">
+	<PRINC <1 .DT>>
+	<PRINC " at ">
+	<SET TM <2 .DTIME>>
+	<PN <1 .TM> .OUTCHAN>
+	<PN <2 .TM> .OUTCHAN>
+	<PRINC !\ >
+	<PRINC <3 .DTIME>>>
+
+"NET-FROM -- net header FROM field"
+
+<DEFINE NET-FROM (LL CC "AUX" NN (FF <>))
+	#DECL ((LL) <OR STRING <LIST STRING <OR STRING FALSE>>> (NN) STRING
+	       (FF) <OR STRING FALSE> (CC) CHANNEL)
+	<COND (<TYPE? .LL LIST> <SET NN <1 .LL>> <SET FF <2 .LL>>)
+	      (ELSE <SET NN .LL>)>
+	<P-ADDR .NN .CC>
+	<COND (.FF
+	       <PRINC " (" .CC>
+	       <PRINC .FF .CC>
+	       <PRINC !\) .CC>)
+	      (ELSE
+	       <P-FULNAM .NN .CC " ">)>>
+
+"P-FULNAM -- print sender name in parens"
+
+<DEFINE P-FULNAM (FROM CC
+		  "OPTIONAL" (PRE <>)
+		  "AUX" NM CMA JR LFST LLST)
+	#DECL ((FROM) STRING (CC) CHANNEL (NM CMA PRE JR) <OR STRING FALSE>
+	       (LLST LFST) FIX)
+	<COND (<NOT <FROM-ITS? .FROM>>)
+	      (<SET NM <FIELD <RCUSR .FROM> ,$HNAME>>
+	       <COND (<SET CMA <MEMQ !\, .NM>>
+		      <SET LLST <- <LENGTH .NM> <LENGTH .CMA>>>
+		      <SET CMA <REST .CMA>>
+		      <SET LFST <LENGTH .CMA>>
+		      <COND (<SET JR <MEMQ !\, .CMA>>
+			     <SET LFST <- .LFST <LENGTH .JR>>>)>
+		      <REPEAT ()
+			      <COND (<EMPTY? .CMA> <RETURN>)
+				    (<MEMQ <1 .CMA> " 	">
+				     <SET CMA <REST .CMA>>
+				     <SET LFST <- .LFST 1>>)
+				    (ELSE <RETURN>)>>
+		      <AND .PRE <PRINC .PRE .CC>>
+		      <PRINC !\( .CC>
+		      <PRINTSTRING .CMA .CC .LFST>
+		      <PRINC !\  .CC>
+		      <PRINTSTRING .NM .CC .LLST>
+		      <AND .JR <PRINC .JR .CC>>
+		      <PRINC !\) .CC>)
+		     (ELSE <PRINC !\( .CC> <PRINC .NM .CC> <PRINC !\) .CC>)>)>>
+
+"FROM-ITS? -- return site if its an ITS"
+
+<SETG ITS-SITES
+      <UVECTOR <HOST "MIT-DMS">
+	       <HOST "MIT-ML">
+	       <HOST "MIT-MC">
+	       <HOST "MIT-AI">>>
+
+<GDECL (ITS-SITES) <UVECTOR [REST FIX]>>
+
+<DEFINE FROM-ITS? (FROM "AUX" I)
+	#DECL ((FROM) STRING (I) <OR FALSE <UVECTOR [REST FIX]>>)
+	<AND <SET I <MEMQ <EXTRACT-HOST .FROM> ,ITS-SITES>>
+	     <1 .I>>>
+
+"P-NOTES -- print notes"
+
+<DEFINE P-NOTES (NN CC)
+	#DECL ((NN) LIST (CC) CHANNEL)
+	<TERPRI .CC>
+	<MAPF <> <FUNCTION (S) #DECL ((S) STRING) <PRINC .S .CC> <TERPRI .CC>> .NN>
+	<TERPRI .CC>>
+
+<DEFINE P-TEXT-SPLIT (SF OUTCHAN "AUX" SE)
+	#DECL ((SF) <LIST [REST LIST]> (OUTCHAN) CHANNEL (SE) <LIST LIST LIST>)
+	<REPEAT ()
+		<COND (<EMPTY? .SF> <RETURN>)>
+		<PRINC "[For ">
+		<P-ADDRL <1 <SET SE <1 .SF>>> .OUTCHAN>
+		<PRINC "]">
+		<CRLF>
+		<P-NOTES <2 .SE> .OUTCHAN>
+		<OR <EMPTY? <SET SF <REST .SF>>> <CRLF>>>>
+
+"P-FORWARD -- print a forwarding spec of (from (to) date)"
+
+<DEFINE P-FORWARD (FS OUTCHAN "AUX" (ST <14 .OUTCHAN>))
+	#DECL ((FS) LIST (OUTCHAN) CHANNEL (ST) FIX)
+	<MAPR <>
+	      <FUNCTION (FF "AUX" (FS <1 .FF>))
+		   #DECL ((FF) LIST (FS) <LIST STRING <LIST [REST STRING]> FIX>)
+		   <P-ADDRL <2 .FS> .OUTCHAN .ST>
+		   <COND (<LENGTH? <2 .FS> 1> <PRINC " by ">)
+			 (<CRLF> <PRINC "Forwarded-by:"> <INDENT-TO .ST>)>
+		   <P-ADDR <1 .FS> .OUTCHAN>
+		   <COND (<G=? <+ <14 .OUTCHAN> 24> <13 .OUTCHAN>>
+			  <CRLF .OUTCHAN>
+			  <INDENT-TO .ST .OUTCHAN>)
+			 (ELSE <PRINC !\  .OUTCHAN>)>
+		   <PRINC "on ">
+		   <P-TIME <3 .FS> .OUTCHAN>
+		   <COND (<NOT <LENGTH? .FF 1>>
+			  <CRLF .OUTCHAN>
+			  <INDENT-TO .ST .OUTCHAN>)>>
+	      .FS>>
+
+<DEFINE P-REPLIED-TO (RP CC)
+	#DECL ((RP) <LIST FIX FIX> (CC) CHANNEL)
+	<NET-P-DATE <2 .RP> .CC>
+	<PRINC " <[MIT-DMS]." .CC>
+	<PRINC <1 .RP> .CC>
+	<PRINC ">" .CC>>
+
+<DEFINE P-AUTHOR-FORWARD (SF OUTCHAN "AUX" SE)
+	#DECL ((SF) <LIST [REST LIST]> (OUTCHAN) CHANNEL (SE) <LIST LIST LIST>)
+	<REPEAT ()
+		<COND (<EMPTY? .SF> <RETURN>)>
+		<PRINC "[For ">
+		<P-ADDRL <1 <SET SE <1 .SF>>> .OUTCHAN>
+		<PRINC "] ">
+		<P-FORWARD <2 .SE> .OUTCHAN>
+		<COND (<NOT <EMPTY? <SET SF <REST .SF>>>>
+		       <PRINC "; ">)>>>
+
+"P-ENCLOSURES -- print enclosures"
+
+<DEFINE P-ENCLOSURES (NN CC "AUX" (CT 1) (OUTCHAN .CC)) 
+	#DECL ((NN) LIST (OUTCHAN) <SPECIAL CHANNEL> (CC) CHANNEL (CT) FIX)
+	<MAPF <>
+	      <FUNCTION (XX "AUX" C) 
+		   #DECL ((XX) <OR STRING <VECTOR STRING STRING>>
+			  (C) <OR CHANNEL <FALSE STRING>>)
+		   <TERPRI>
+		   <PRINC "----- Enclosure #">
+		   <PRINC .CT>
+		   <SET CT <+ .CT 1>>
+		   <PRINC ":  ">
+		   <COND (<TYPE? .XX STRING>
+			  <PRINC .XX>
+			  <PRINC " -----">
+			  <TERPRI>
+			  <SET C <OPEN "READ" .XX>>)
+			 (ELSE
+			  <COND (<NOT <LENGTH? .XX 2>>
+				 <PRINC <3 .XX>>
+				 <PRINC ":">)>
+			  <COND (<NOT <LENGTH? .XX 3>>
+				 <PRINC <4 .XX>>
+				 <PRINC ";">)>
+			  <PRINC <1 .XX>>
+			  <PRINC " ">
+			  <PRINC <2 .XX>>
+			  <PRINC " -----">
+			  <TERPRI>
+			  <SET C <OPEN "READ" !.XX>>)>
+		   <COND (.C
+			  <FILECOPY .C .OUTCHAN>
+			  <CLOSE .C>
+			  <TERPRI>)
+			 (ELSE
+			  <PRINC "Cannot read file: ">
+			  <PRINC <CHTYPE .C LIST>>
+			  <TERPRI>)>>
+	      .NN>>
+
+"NET-P-DATE -- net header date"
+
+<DEFINE NET-P-DATE (DTIM OUTCHAN "AUX" DTIME DT TM) 
+	#DECL ((DT TM) <LIST FIX FIX FIX>
+	       (DTIME) <LIST [2 <LIST [3 FIX]>] STRING>
+	       (DTIM) <OR FIX LIST UVECTOR> (OUTCHAN) CHANNEL)
+	<COND (<TYPE? .DTIM FIX UVECTOR> <SET DTIME <LTIME .DTIM>>)
+	      (ELSE <SET DTIME .DTIM>)>
+	<SET DT <1 .DTIME>>
+	<PRINC <3 .DT>>
+	<PRINC !\ >
+	<PRINC <NTH ,MONTHS <2 .DT>>>
+	<PRINC !\ >
+	<COND (<L? <1 .DT> 100>
+	       <PRINC "19">)>
+	<PRINC <1 .DT>>
+	<PRINC !\ >
+	<SET TM <2 .DTIME>>
+	<PN <1 .TM> .OUTCHAN>
+	<PN <2 .TM> .OUTCHAN>
+	<PRINC !\->
+	<PRINC <3 .DTIME>>>
+
+<DEFINE TOPS-20-DATE-TIME (DTIM OUTCHAN "AUX" DTIME DT TM) 
+	#DECL ((DT TM) <LIST FIX FIX FIX>
+	       (DTIME) <LIST [2 <LIST [3 FIX]>] STRING>
+	       (DTIM) <OR FIX LIST UVECTOR> (OUTCHAN) CHANNEL)
+	<COND (<TYPE? .DTIM FIX UVECTOR> <SET DTIME <LTIME .DTIM>>)
+	      (ELSE <SET DTIME .DTIM>)>
+	<SET DT <1 .DTIME>>
+	<COND (<L? <3 .DT> 10> <PRINC !\ >)>
+	<PRINC <3 .DT>>
+	<PRINC !\->
+	<PRINC <NTH ,MONTHS <2 .DT>>>
+	<PRINC !\->
+	<PRINC <1 .DT>>
+	<PRINC !\ >
+	<SET TM <2 .DTIME>>
+	<PN <1 .TM> .OUTCHAN>
+	<PRINC !\:>
+	<PN <2 .TM> .OUTCHAN>
+	<PRINC !\:>
+	<PN <3 .TM> .OUTCHAN>
+	<PRINC !\->
+	<PRINC <3 .DTIME>>>
+
+"NET-P-LINE -- print random text on a line"
+
+<DEFINE NET-P-LINE (LIN OUTCHAN "AUX" (LNTH ,LINE-LNTH) BLNTH CR?)
+	#DECL ((LIN) STRING (OUTCHAN) CHANNEL (LNTH BLNTH) FIX
+	       (CR?) <OR FALSE STRING>)
+	<REPEAT ()
+		<COND (<EMPTY? .LIN> <RETURN T>)>
+		<SET BLNTH <LENGTH .LIN>>		    ;"TOTAL AMOUNT LEFT"
+		<SET CR?
+		     <OR <MEMBER <ASCII 13> .LIN> <MEMBER <ASCII 10> .LIN>>>
+		<COND (.CR?			  ;"STRING HAS A CR OR LF IN IT"
+		       <SET BLNTH <- .BLNTH <LENGTH .CR?>>>
+						  ;"UPDATE LENGTH TO CONSIDER")>
+		<SET BLNTH <MIN .LNTH .BLNTH>>	        ;"FORMS LENGTH TO PRINT"
+		<COND (<0? .BLNTH>		      ;"NEXT CHAR IS A CR OR LF"
+		       <SET LIN <REST .LIN>>)
+		      (ELSE
+		       <PRINTSTRING .LIN .OUTCHAN .BLNTH>
+		       <SET LIN <REST .LIN .BLNTH>>
+		       <REPEAT ()
+			       <COND (<EMPTY? .LIN> <RETURN>)
+				     (<OR <=? <1 .LIN> <ASCII 13>>
+					  <=? <1 .LIN> <ASCII 10>>>
+				      <SET LIN <REST .LIN>>)
+				     (ELSE <RETURN>)>>
+		       <COND (<NOT <EMPTY? .LIN>>
+			      <CRLF>)>)>>>
+
+\
+
+"***** routines for simulating DDT/COMSAT style headers *****"
+
+"DDT-ADR -- single addressee, DDT-style"
+
+<DEFINE DDT-ADR (UU OUTCHAN "OPTIONAL" (IGNORE-LCL? <>) "AUX" (DM ""))
+	#DECL ((UU DM) STRING (OUTCHAN) CHANNEL (IGNORE-LCL?) <OR ATOM FALSE>)
+	<COND (<==? ,HOSTNUMBER <EXTRACT-HOST .UU>>
+	       <OR .IGNORE-LCL? <SET DM <HOST ,HOSTNUMBER>>>
+	       <SET UU <EXTRACT-RCVR .UU>>)>
+	<COND (<G? <+ <14 .OUTCHAN>
+		      <LENGTH .UU>
+		      <COND (<EMPTY? .DM> 0)
+			    (ELSE <+ 1 <LENGTH .DM>>)>>
+		   70>
+	       <CRLF>)>
+	<PRINC .UU>
+	<COND (<NOT <EMPTY? .DM>> <PRINC !\@> <PRINC .DM>)>>
+
+"DDT-ADRL -- list of addressees, DDT-style"
+
+<DEFINE DDT-ADRL (UUL OUTCHAN "OPTIONAL" (IL? <>))
+	#DECL ((UUL) <OR STRING <LIST [REST STRING]>> (OUTCHAN) CHANNEL
+	       (IL?) <OR ATOM FALSE>)
+	<COND (<TYPE? .UUL STRING>
+	       <DDT-ADR .UUL .OUTCHAN .IL?>)
+	      (ELSE
+	       <REPEAT ()
+		<COND (<EMPTY? .UUL> <RETURN>)>
+		<DDT-ADR <1 .UUL> .OUTCHAN .IL?>
+		<COND (<NOT <LENGTH? .UUL 1>> <PRINC ", ">)>
+		<SET UUL <REST .UUL>>>)>>
+
+<DEFINE DDT-SPLIT (SF OUTCHAN "OPTIONAL" (IL? <>) "AUX" SE)
+	#DECL ((SF) <LIST [REST LIST]> (OUTCHAN) CHANNEL (SE) <LIST LIST LIST>)
+	<REPEAT ()
+		<COND (<EMPTY? .SF> <RETURN>)>
+		<PRINC "[For ">
+		<DDT-ADRL <1 <SET SE <1 .SF>>> .OUTCHAN .IL?>
+		<PRINC "] ">
+		<DDT-ADRL <2 .SE> .OUTCHAN .IL?>
+		<COND (<NOT <EMPTY? <SET SF <REST .SF>>>>
+		       <PRINC "; ">)>>>
+
+
+<DEFINE DDT-FORWARD (FS OUTCHAN)
+	#DECL ((FS) LIST (OUTCHAN) CHANNEL)
+	<MAPR <>
+	      <FUNCTION (FF "AUX" (FS <1 .FF>))
+		   #DECL ((FF) LIST (FS) <LIST STRING <LIST [REST STRING]> FIX>)
+		   <PRINC "Forwarded to: ">
+		   <DDT-ADRL <2 .FS> .OUTCHAN>
+		   <COND (<LENGTH? <2 .FS> 1> <PRINC " by ">)
+			 (ELSE <CRLF> <PRINC "Forwarded by: ">)>
+		   <DDT-ADR <1 .FS> .OUTCHAN>
+		   <PRINC " ">
+		   <QUICK-DATE <3 .FS> .OUTCHAN>
+		   <OR <LENGTH? .FF 1> <CRLF .OUTCHAN>>>
+	      .FS>>
+
+<DEFINE DDT-AUTHOR-FORWARD (SF OUTCHAN "AUX" SE)
+	#DECL ((SF) <LIST [REST LIST]> (OUTCHAN) CHANNEL (SE) <LIST LIST LIST>)
+	<REPEAT ()
+		<COND (<EMPTY? .SF> <RETURN>)>
+		<PRINC "[For ">
+		<DDT-ADRL <1 <SET SE <1 .SF>>> .OUTCHAN>
+		<PRINC "] ">
+		<DDT-FORWARD <2 .SE> .OUTCHAN>
+		<COND (<NOT <EMPTY? <SET SF <REST .SF>>>>
+		       <PRINC "; ">)>>>
+
+<DEFINE DDT-REPLIED-TO (RP CC)
+	#DECL ((RP) <LIST FIX FIX> (CC) CHANNEL)
+	<PRINC "Replied-to: " .CC>
+	<QUICK-DATE <2 .RP> .CC>
+	<PRINC " <[MIT-DMS]." .CC>
+	<PRINC <1 .RP> .CC>
+	<PRINC ">" .CC>>
+
+"DDT-LIST -- like DDT-ADRL, but no hosts or locals"
+
+<DEFINE DDT-LIST (LL CC)
+	#DECL ((LL) <OR STRING LIST> (CC) CHANNEL)
+	<DDT-ADRL .LL .CC T>>
+
+"MSG-FROM -- like DDT-ADRL, but include all host names"
+
+<DEFINE MSG-FROM (FF CC)
+	#DECL ((FF) STRING (CC) CHANNEL)
+	<DDT-ADR .FF .CC <>>>
+
+"DDT-TEXT-LIST -- print list of strings, guarantee on separate lines"
+
+<DEFINE DDT-TEXT-LIST (TL OUTCHAN)
+	#DECL ((TL) LIST (OUTCHAN) CHANNEL)
+	<MAPF <>
+	      <FUNCTION (TT)
+		#DECL ((TT) STRING)
+		<COND (<NOT <0? <14 .OUTCHAN>>> <CRLF>)>
+		<PRINC .TT>
+		<COND (<NOT <0? <14 .OUTCHAN>>> <CRLF>)>
+		<PRINC "-----">>
+	      .TL>>
+
+<DEFINE DDT-TEXT-SPLIT (SF OUTCHAN "OPTIONAL" (IL? T) "AUX" SE)
+	#DECL ((SF) <LIST [REST LIST]> (OUTCHAN) CHANNEL (SE) <LIST LIST LIST>
+	       (IL?) <OR ATOM FALSE>)
+	<REPEAT ()
+		<COND (<EMPTY? .SF> <RETURN>)>
+		<PRINC "[For ">
+		<DDT-ADRL <1 <SET SE <1 .SF>>> .OUTCHAN .IL?>
+		<PRINC "]">
+		<CRLF>
+		<DDT-TEXT-LIST <2 .SE> .OUTCHAN>
+		<CRLF>
+		<SET SF <REST .SF>>>>
+
+"QUICK-DATE -- print slashy dates"
+
+<DEFINE QUICK-DATE (DTIM OUTCHAN "AUX" DT DAT)
+	#DECL ((DT) <LIST [2 <LIST [3 FIX]>]> (OUTCHAN) CHANNEL
+	       (DTIM) <OR FIX LIST UVECTOR> (DAT) <LIST [3 FIX]>)
+	<COND (<TYPE? .DTIM FIX UVECTOR> <SET DT <LTIME .DTIM>>)
+	      (ELSE <SET DT .DTIM>)>
+	<SET DAT <1 .DT>>
+	<PN <2 .DAT> .OUTCHAN>
+	<PRINC !\/>
+	<PN <3 .DAT> .OUTCHAN>
+	<PRINC !\/>
+	<PN <1 .DAT> .OUTCHAN>
+	<PRINC !\ >
+	<SET DAT <2 .DT>>
+	<PN <1 .DAT> .OUTCHAN>
+	<PRINC !\:>
+	<PN <2 .DAT> .OUTCHAN>
+	<PRINC !\:>
+	<PN <3 .DAT> .OUTCHAN>>
+
+"PN -- two-digit number printer, useful for slashy dates"
+
+<DEFINE PN (N OUTCHAN)
+	#DECL ((N) FIX (OUTCHAN) CHANNEL)
+	<AND <L? .N 10> <PRINC !\0>>
+	<PRINC .N>>
+
+<ENDPACKAGE>

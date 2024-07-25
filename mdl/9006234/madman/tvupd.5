@@ -1,0 +1,37 @@
+NEW INTERFACE FOR MATCHING QUESTIONS
+	A new interface for answering matching questions has been
+installed.
+	The new scheme first prints the question, then prompts with
+"Match "; at this point, the user should type in one of the choices from
+column a (1. Mumble foo, for example); ctrl-F will, as usual, list all of
+the available choices.  If the user types <esc>, the lowest-numbered
+choice which has not yet been answered will be selected.  When all
+choices have been answered, the default is to finish with the question;
+therefore, by always answering <esc> to this, you will proceed through
+column A in order.  When the choice has been completed, TRIVIA will
+prompt with "with ", whereupon the user should, as in the old scheme,
+enter something from column b.  It is possible to provide an answer for
+one of the choices from column a several times, thus making it quite
+convenient to change answers; it is also possible to not provide answers
+for items from column a.  To assist the user in determining which items
+he has provided answers for, ctrl-F for column a will mark those which
+have been answered with a "+".  When all has been answered satisfactorily,
+answer <cr> to the match prompt.
+
+HINTS
+	On long answer questions, the author will be asked for a "hint"
+immediately after giving the question.  If one is given, he will then
+be asked what fraction of the total question value the question will be
+worth if it is answered after seeing the hint.  He is then asked for
+another hint, and so on.  When answering such questions, TRIVIA
+indicates if there is a hint remaining, and how much the question will
+be worth if answered after the hint is seen.  When you give up on a
+question which has hints, TRIVIA will display the hint and ask again,
+until there are no more hints.
+
+Other changes
+	Teleconferencing has been reinstated.  However, immediate
+reading (formerly a switch) is not available.  It may be at some time in
+the future, but will never be as immediate as it formerly was.  Also,
+the new.match switch has been flushed, since the new match interface has
+been installed as the only match interface.

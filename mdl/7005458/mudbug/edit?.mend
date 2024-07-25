@@ -1,0 +1,21 @@
+
+?	this summary		MEND interrupts
+??	complete summary	^E	End automatic mode
+O	Open object		^B	Begin automatic mode
+V	toggle Verbosity	^N	Next step
+				^O	skip Over
+MEND commands			^L	cLear screen
+N	Next step(s)		^Q	Quit MEND
+OV	skip OVer		^U	Unprint stack
+Q	Quit EDIT		^P	Print stack
+QM	Quit MEND		
+SN	Set Number of lines	Debugging commands
+SV	Set lowest 1STEP leVel	BK	set BreaKpoint here
+SD	Set Delay		KB	Kill all Breakpoints
+PD	Pprint Displayed obj	KT	Kill This breakpoint
+PO	Pprint Original obj
+
+^F returns you to EDIT
+* is largest legal FIX arg
+
+

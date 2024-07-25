@@ -1,0 +1,133 @@
+
+<FLOAD "ITSEX NBIN">
+
+<SETG SYMHD ![-262067 0!]>
+
+<SETG PGBND 4294967295>
+
+<SETG ONEBUF ![0!]>
+
+<SETG BUFLN 100>
+
+<SETG OBUF <IUVECTOR ,BUFLN 0>>
+
+<SETG BUF <IUVECTOR ,BUFLN 0>>
+
+<SETG MAGIC 23085449217>
+
+<MANIFEST PGBND MAGIC BUFLN>
+
+<GDECL (ONEBUF) <UVECTOR FIX> (BUF OBUF) <UVECTOR [100 FIX]>>
+
+<DEFINE ITSEX (IN
+	       "OPTIONAL" OUT SYMS
+	       "AUX" SYC IC OC BASE LNT ACC ACC1 (TOTSYM 0) SBASE)
+	#DECL ((IN OUT SYMS) STRING (IC OC) <OR FALSE CHANNEL>
+	       (SYC) <SPECIAL <OR FALSE CHANNEL>>
+	       (LNT TOTSYM) FIX)
+	<PROG ()
+	      <OR <SET IC <OPEN "READB" .IN>> <RETURN .IC>>
+	      <COND (<ASSIGNED? OUT> <SET OC <OPEN "PRINTB" .OUT>>)
+		    (ELSE
+		     <SET OC <OPEN "PRINTB" <7 .IC> "SAV" <9 .IC> <10 .IC>>>)>
+	      <COND (<NOT .OC> <CLOSE .IC> <RETURN .OC>)>
+	      <COND (<ASSIGNED? SYMS> <SET SYC <OPEN "PRINTB" .SYMS>>)
+		    (ELSE
+		     <SET SYC
+			  <OPEN "PRINTB" <7 .OC> "SYMBOL" <9 .OC> <10 .OC>>>)>
+	      <COND (<NOT .SYC> <CLOSE .IC> <CLOSE .OC> <RETURN .SYC>)>
+	      <REPEAT ()
+		      <READB ,ONEBUF .IC>
+		      <AND <==? <1 ,ONEBUF> ,MAGIC> <RETURN>>>
+	      <REPEAT (CNT BP PNT SKIP (FLG <>))
+		      #DECL ((CNT SKIP BASE) FIX)
+ 		      <SET SKIP 0>
+		      <AND <0? <READB ,ONEBUF .IC>> <RETURN>>
+		      <AND <G=? <SET CNT <1 ,ONEBUF>> 0> <RETURN>>
+		      <SET LNT <- <HLRE .CNT>>>
+		      <COND (<AND <G=? <SET BASE
+					    <CHTYPE <GETBITS .CNT <BITS 18>>
+						    FIX>>
+				       64>
+				  <L=? .BASE 96>>
+			     <READB <REST ,BUF
+					  <- ,BUFLN <MIN .LNT <- 96 .BASE>>>>
+				    .IC>
+			     <AND <L? <SET LNT <- .LNT <- 96 .BASE>>> 0>
+				  <READB ,ONEBUF .IC>
+				  <AGAIN>>
+			     <SET BASE 96>)>
+		      <COND (<AND <G=? <+ .BASE .LNT> 64>
+				  <L=? <+ .BASE .LNT> 96>>
+			     <SET SKIP <- <+ .BASE .LNT> 64>>
+			     <AND <L? <SET LNT <- .LNT .SKIP>> 0>
+				  <READB <REST ,BUF <- ,BUFLN .LNT 1>> .IC>
+				  <AGAIN>>)>
+		      <PUT ,ONEBUF
+			   1
+			   <PUTBITS <- .BASE 1> <BITS 18 18> <- .LNT>>>
+		      <PRINTB ,ONEBUF .OC>
+		      <REPEAT (BP) #DECL ((BP) <UVECTOR [REST FIX]>)
+			      <COND (<G? .LNT ,BUFLN>
+				     <READB ,BUF .IC>
+				     <PRINTB ,BUF .OC>
+				     <SET LNT <- .LNT ,BUFLN>>)
+				    (ELSE
+				     <READB <SET BP <REST ,BUF <- ,BUFLN .LNT>>>
+					    .IC>
+				     <PRINTB .BP .OC>
+				     <RETURN>)>>
+		      <COND (<NOT <0? .SKIP>>
+			     <READB <REST ,BUF <- ,BUFLN .SKIP>> .IC>)>
+		      <READB ,ONEBUF .IC>>
+	      ;"turn JUMPA into entry vector format 1,,address"
+	      <PUT ,ONEBUF 1 <PUTBITS <1 ,ONEBUF> <BITS 18 18> 1>>
+
+	      <PRINTB ,ONEBUF .OC>
+	      <CLOSE .OC>
+	      <PUT ,ONEBUF 1 0>
+	      <PRINTB ,ONEBUF .SYC>
+	      <REPEAT (CNT (OBP ,OBUF))
+		      #DECL ((CNT) FIX (OBP) <SPECIAL <UVECTOR [REST FIX]>>)
+		      <AND <0? <READB ,ONEBUF .IC '<RETURN>>> <RETURN>>
+		      <AND <G=? <SET CNT <1 ,ONEBUF>> 0> <RETURN>>
+		      <SET LNT <- <HLRE .CNT>>>
+		      <SET TOTSYM <+ .TOTSYM .LNT>>
+		      <REPEAT (BP) #DECL ((BP) <UVECTOR [REST FIX]>)
+			      <SET BP
+				   <COND (<G? .LNT ,BUFLN> ,BUF)
+					 (ELSE <REST ,BUF <- ,BUFLN .LNT>>)>>
+			      <SET LNT <- .LNT ,BUFLN>>
+			      <READB .BP .IC>
+			      <REPEAT (WD) #DECL ((WD) FIX)
+				      <AND <EMPTY? .BP> <RETURN>>
+				      <AND <NOT <0? <SET WD <1 .BP>>>>
+					   <SET WD <SQHACK .WD>>>
+				      <COND (<AND <G? .WD 0> <L=? .WD ,PGBND>>
+					     <OUTWD .WD>
+					     <OUTWD 0>
+					     <OUTWD 0>
+					     <OUTWD 0>
+					     <SET TOTSYM <+ .TOTSYM 2>>)
+					    (ELSE <OUTWD .WD> <OUTWD <2 .BP>>)>
+				      <SET BP <REST .BP 2>>>
+			      <AND <L=? .LNT 0>
+				   I
+				   <MAPR <> <FUNCTION (X) #DECL ((X) <UVECTOR FIX>)
+						<PUT .X 1 0>> .OBP>
+				   <PRINTB ,OBUF .SYC>
+				   <RETURN>>>
+		      <READB ,ONEBUF .IC>>
+	      <ACCESS .SYC 0>
+	      <PUT ,ONEBUF 1 <PUTBITS 0 <BITS 18 18> <- .TOTSYM>>>
+	      <PRINTB ,ONEBUF .SYC>
+	      <CLOSE .SYC>
+	      <CLOSE .IC>
+	      <CLOSE .OC>>>
+
+<DEFINE OUTWD (W) #DECL ((W) FIX (OBP) <UVECTOR [REST FIX]>)
+	<PUT .OBP 1 .W>
+	<COND (<EMPTY? <SET OBP <REST .OBP>>>
+	       <PRINTB ,OBUF .SYC>
+	       <SET OBP ,OBUF>)>>
+

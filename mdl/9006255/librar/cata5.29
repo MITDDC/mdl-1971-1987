@@ -1,0 +1,1488 @@
+
+
+
+P6.20
+.C6
+1982
+
+Computer architecture. Proceedings of the
+9th annual symposium. Held in Austin TX,
+April 26-29, 1982.
+
+SIGARCH Newsletter, vol. 10, n. 3
+IEEE		335 p.
+-----
+  architecture
+
+P3.72
+.D3
+1978
+
+Data base design techniques I: requirements
+and logical structures. Proceedings of a
+symposium held at New York University, May
+1978.
+
+Yao, S.B., ed., et al.
+Lecture Notes in Computer Science, 132
+-----
+  systems evaluation
+  file maintenance
+  data base design
+
+P3.72
+.D3
+1979
+
+Data base design techniques II: physical
+structures and applications. Proceedings of 
+a symposium held in Tokyo, November 1979.
+
+Yao, S.B., ed.
+Kunii, T.L., ed.	399 p.
+Lecture Notes in Computer Science, 133
+-----
+  systems evaluation
+  file maintenance
+  data base design
+
+P5.21
+.L65
+1981
+
+Logics of programs. Proceedings of a work-
+shop held in Yorktown Heights, NY, May 4-6,
+1981.
+
+Kozen, Dexter, ed.	429 p.
+Lecture Notes in Computer Science, 131
+-----
+  logic, programming
+  program verification
+  model theory
+
+P4.20
+.I5
+1982
+
+Programming. Proceedings of an International
+Symposium held in Turin, Italy, April 6-8,
+1982.
+
+Dezani-Ciancaglini, M., ed.
+Montanari, Ugo, ed.
+-----
+  programming languages
+
+P8.1
+.S5
+1982
+
+Simulation. Proceedings of the 15th annual
+symposium held at Tampa, FL, March 17-19,
+1982.
+
+ACM
+IEEE
+Society for Computer Simulation
+			359 p.
+-----
+  simulation
+ 
+P6.31
+.A3
+1982
+
+VLSI. Proceedings of a conference on 
+advanced research in VLSI. Held at MIT,
+January 25-27, 1982.
+
+Penfield, Paul, Jr., ed.
+			209 p.
+-----
+  VLSI 
+
+			MIT/LCS/TM-217
+
+_MIT Laboratory for Computer Science
+
+A file transfer program for a personal
+computer. (S.B. thesis)
+
+MIT Dept. of E.E. and C.S.
+Wright, Karl D.	April 1982   42 p.
+-----
+  file transfer
+  computers, personal
+  concurrency
+
+		 	ALBERTA U TR 80-1
+
+_Alberta Univ. Canada
+
+On determining tree-query membership of a
+distributed query.
+
+Yu, C.T.
+Ozsoyoglu, M.		(n.d.)   57 p.
+-----
+  distributed database system
+  query processing
+
+			BELL TR 8
+
+_Bell Laboratories
+
+The programming language B.
+
+Johnson, S.C.
+Kernigham, B.W.		Jan. 1973   33 p.
+-----
+  B programming
+  language processing
+
+			BELL TR 32
+
+_Bell Laboratories
+
+YACC- yet another compiler-complier.
+
+Johnson, Stephen C.	July 1975   30 p.
+-----
+  YACC
+  input design
+
+			TR CCA 79-27
+
+Computer Corporation of America.
+
+The theory of semi-joins.
+
+Berstein, Philip A.
+Goodman, Nathan		Nov. 1979
+-----
+  distributed database system
+  query processing
+
+			DDC/TR-78/3
+
+_Defense Documentation Center
+
+DDC Catalog Guidelines.
+
+Gladde, Barbara P.	Aug. 1978   84 p.
+-----
+  information processing
+  descriptive cataloging
+  subject indexing
+
+			EDINBURGH DAI 137
+
+_Edinburgh Univ., Dept. of A.I.
+
+Extending mecho to solve statics problems.
+
+Byrd, Lawrence
+Borning, Alan		1980   9 p.
+-----
+  statics
+  problem solving
+  inference
+
+			EDINBURGH DAI 140
+
+_Edinburgh Univ. Dept. of A.I.
+
+Understanding English descriptions of 
+programs.
+
+Ramsay, Allan		1980   5 p.
+-----
+  automatic program verification
+  symbolic interpretation
+  natural language programming
+
+			EDINBURGH DAI 142
+
+_Edinburgh Univ. Dept. of A.I.
+
+Using determinism to predict garden paths.
+
+Milne, Rob		1980   6 p.
+-----
+  garden path prediction
+  semantic information processing
+
+			EDINBURGH DAI 144
+
+_Edinburgh Univ. Dept. of A.I.
+
+Parsing against lexical ambiguity.
+
+Milne, Rob		1980
+-----
+  ambiguity
+  syntax directed translations
+
+			EDINBURGH DAI 146
+
+_Edinburgh Univ. Dept. of A.I.
+
+Extraposition grammars.
+
+Pereira, Fernando	1980   13 p.
+-----
+  natural language text
+  grammars
+
+			ED 146 919
+
+_ERIC Reports. Washington, D.C.
+
+Information science or informatics? 
+A critical survey of recent literature.
+
+Cook, Gordon		1976   31 p.
+-----
+  ERIC (Educational Recources Info. Ctr.)
+  library applications
+
+			ED 148 338
+
+_ERIC Reports. Washington, D.C.
+
+Rules for input to the library catalog on
+microfiche (A guide to librarians at the 
+Eastman Kodak Co.).
+
+Freund, Clare E.	Oct. 1977   24 p.
+-----
+  ERIC (Educational Resources Info. Ctr.)
+  library applications
+
+			GIT-ICS-79/03
+
+Georgia Institute of Technology
+
+On describing the behavior and implementa-
+tion of distributed systems.
+
+Lynch, Nancy A.
+Fischer, Michael J.	March 1980   45 p.
+-----
+  distributed systems
+
+			UILU-ENG 80 1706
+
+_Illinois Univ. at Urbana-Champaign
+
+Path PASCAL user manual.
+
+Kolstad, Robert B.
+Campbell, Roy H.	Feb. 1980
+-----
+  path PASCAL
+  user manual
+
+			IBM RC 5606
+
+_IBM Research Center. Yorktown Heights
+
+MAPLE: a high level language for research
+in mechanical assembly.
+
+Darringer, John A.
+Blasgen, Michael W.	Sept. 1975   28 p.
+-----
+  MAPLE (Manipulator Programming Language)
+  programming language
+
+			IBM RC 6288
+
+_IBM Research Center. Yorktown Heights
+
+A practical deadlock avoidance algorithm 
+for data base systems.
+
+Lomet, David B.		Nov. 1976   15 p.
+-----
+  deadlock prevention
+
+			IBM RC 6327
+
+_IBM Research Center. Yorktown Heights
+
+An implementation of a protected, fast 
+access execution and data domain for the 
+VM/370 virtual machine.
+
+Attanasio, C.R.		Dec. 1976   11 p.
+-----
+  VCS (Virtual Control Store)
+
+			IBM RC 6372
+
+_IBM Research Center. Yorktown Heights
+
+Path calculus in program verification.
+
+Brand, Daniel		Jan. 1977   39 p.
+-----
+  program verification
+  induction
+  symbolic manipulation
+
+			IBM RC 6375
+
+_IBM Research Center. Yorktown Heights
+
+Analysis of a Feistel-like cipher weakened
+by having no rotating key.
+
+Grossman, Edna K.
+Tuckerman, Bryant	Jan. 1977   33 p.
+-----
+  Feistel-like system
+  autoclaved system
+
+			IBM RC 6441
+
+_IBM Research Center. Yorktown Heights
+
+A low-bit-rate speech coding system using
+a low cost stack architecture microprocessor.
+
+Das, S.K.
+Tappert, C.C.		Jan. 1977   10 p.
+-----
+  coding theory
+
+			IBM RC 6452
+
+_IBM Research Center. Yorktown Heights
+
+A program behavior model for paging systems.
+
+Chow, We-Min
+Chiv, Willy W.		March 1977   22 p.
+-----
+  paging systems
+
+			IBM RC 6479
+
+_IBM Research Center. Yorktown Heights
+
+Dynamic allocation for clearing a congested
+multi-destination transportation network.
+
+Sarachik, P.E.		April 1977   24 p.
+-----
+  routing
+  traffic control
+
+			IBM RC 6481
+
+_IBM Research Center. Yorktown Heights
+
+Register assignment algorithms for optimi-
+zing compilers.
+
+Tan, C.J.		April 1977   31 p.
+-----
+  optimizing compiler
+  packing problem
+
+			IBM RC 6487
+
+_IBM Research Center. Yorktown Heights
+
+An initial algebra approach to the specifi-
+cation correctness, and implementation of
+abstract data types.
+
+Goguen, J.A.
+Thatcher, J.W.
+Wagner, E.G.		Oct. 1976   109 p.
+-----
+  abstract data types
+  algebraic computations
+
+			IBM RC 6488
+
+_IBM Research Center. Yorktown Heights
+
+Global scheduling approach to conflict-free
+mulitaccess: part I - bus architecture and
+channel utilization.
+
+Mark, Jon W.		April 1977   22 p.
+-----
+  global scheduling 
+  multi-access computing
+
+			IBM RC 6495
+
+_IBM Research Center. Yorktown Heights
+
+Universal classes of Hash functions.
+
+Carter, J. Lawrence
+Wegman, Mark N.		March 1977   9 p.
+-----
+  access control
+
+			IBM RC 6505
+
+_IBM Research Center. Yorktown Heights
+
+Optimal 2,3-trees.
+
+Miller, Raymond E.
+Pippenger, Nicholas
+Rosenberg, Arnold L.
+Snyder, Lawrence	April 1977   31 p.
+-----
+  access control
+
+			IBM RC 6516
+
+_IBM Research Center. Yorktown Heights
+
+Comprehensive laboratory automation 
+facilities.
+
+Guido, A.A.		May 1977   7 p.
+-----
+  laboratory automation software
+
+			IBM RC 6523
+
+_IBM Research Center. Yorktown Heights
+
+ATS-Advanced Terminal Subsystem.
+
+Loughlin, Martin P.
+Rosenthal, Stephen E.
+Stein, Arthur J.	March 1977   8 p.
+-----
+  ATS (Advanced Terminal Subsystem)
+  communication processor
+
+			IBM RC 6551
+
+_IBM Research Center. Yorktown Heights
+
+Minimal-comparison 2,3-trees.
+
+Rosenberg, Arnold L.
+Snyder, Lawrence	May 1977   28 p.
+-----
+  tree constructing algorithms
+
+			IBM RC 6587
+
+_IBM Research Center. Yorktown Heights
+
+An automated proof of microprogram
+correctness.
+
+Leeman, George B. Jr.
+Joyner, William H. Jr.
+Carter, William C.	June 1977   28 p.
+-----
+  correctness
+  microprogramming
+
+			IBM RC 6649
+
+_IBM Research Center. Yorktown Heights
+
+Steepest edge simplex algorithms for network
+flow problems.
+
+Goldfarb, D.		July 1977   17 p.
+-----
+  flow problems
+
+			IBM RC 6658
+
+_IBM Research Center. Yorktown Heights
+
+Covering, packing and knapsack problems.
+
+Padberg, Manfred W.	July 1977   40 p.
+-----
+  integer programming
+  linear inequalities
+
+			IBM RC 6793
+
+_IBM Research Center. Yorktown Heights
+
+Encoding data structures in trees.
+
+Rosenberg, Arnold L.	Oct. 1977   45 p.
+-----
+  data structures
+  storage schemes
+
+			IBM RC 6812
+
+_IBM Research Center. Yorktown Heights
+
+Search Games with mobile and immobile hider.
+
+Gal, Shmuel		Oct. 1977   38 p.
+-----
+  search strategies
+
+			IBM RC 7287
+
+_IBM Research Center. Yorktown Heights
+
+An introduction to VECTRAN and its use in
+scientific applications programming.
+
+Paul, George
+Wilson, M. Wayne	Sept. 1978   28 p.
+-----
+  VECTRAN
+  FORTRAN
+  programming language
+
+			IBM RC 7694
+
+_IBM Research Center. Yorktown Heights
+
+Upper bounds on limit cycles for a general
+second-order digital filter structure.
+
+Abu-El-Haija, Ahmad I.	June 1979   12 p.
+-----
+  error analysis
+
+			IBM RC  7712
+
+_IBM Research Center. Yorktown Heights
+
+Modulus division on a two's complement
+machine.
+
+Warren, Jr.,Henry S.
+Fox, A. Shawham
+Markstein, Peter W.	June 1979   2 p.
+-----
+  modular programming
+
+			IBM RC 8040
+
+_IBM Research Center. Yorktown Heights
+
+On some continuous properties of language.
+
+Bever, T.G.
+Carroll, J. M.		Dec. 1979   10 p.
+-----
+  linguistic expression
+
+			IBM RC 8051
+
+_IBM Research Center. Yorktown Heights
+
+A macro for document preparation using the
+Yorktown formatting language.
+
+Gruhn, Ann M.		Jan. 1980   20 p.
+-----
+  macro control language
+  EZYFL
+  formatting
+
+			IBM RC 8055
+
+_IBM Research Center. Yorktown Heights
+
+Error correction scheme for telephone line
+transmission of RELP vocoder.
+
+Wadia, Aspi B.		Jan. 1980   8 p.
+-----
+  linear prediction
+
+			IBM RC 8058
+
+_IBM Research Center. Yorktown Heights
+
+Reducing models of covariance to weighted
+sums of squares: a procedure for the fast
+determinations of efficient portfolios.
+
+Markowitz, Harry M.
+Perold, Andre, F.	Jan. 1980   20 p.
+-----
+  matrix computations
+
+			IBM RC 8060
+
+_IBM Research Center. Yorktown Heights
+
+Interprocedural data flow analysis in the
+presence of pointers, procedure variables,
+and label variables.
+
+Weihl, William E.	Jan. 1980   36 p.
+-----
+  data flow analysis
+
+			IBM RC 8061
+
+_IBM Research Center. Yorktown Heights
+
+State constrained dynamic programming (SCDP)
+for discrete utterance recognition.
+
+Silverman, Harvey F.
+Dixon, N. Rex		Jan. 1980   9 p.
+-----
+  dynamic programming (DP)
+
+			IBM RC 8072
+
+_IBM Research Center. Yorktown Heights
+
+An optimal control approach to dynamic 
+routing in data communication networks, 
+Part I: principles.
+
+Moss, F.H.
+Segall, A.		Jan. 1980   43 p.
+-----
+  optimal control theory
+
+			IBM RC 8075
+
+_IBM Research Center. Yorktown Heights
+
+Computer simulator for acoustic phased 
+arrays.
+
+Duerinckx, Andre J.	Jan. 1980   39 p.
+-----
+  phased array
+  pulsed operation
+  array near field
+
+			IBM RC 8077
+
+_IBM Research Center. Yorktown Heights
+
+A partition theorem for the infinite 
+subtrees of a tree.
+
+Milliken, Keith R.	Jan. 1980   24 p.
+-----
+  tree constructing algorithms
+  Silver's partition theorem
+
+			IBM RC 8105
+
+_IBM Research Center. Yorktown Heights
+
+On partitioning matrices.
+
+Markowsky, G.		Feb. 1980 1 p.
+-----
+  matrix computations
+
+			IBM RC 8111
+
+_IBM Research Center. Yorktown Heights
+
+Measurement of program improvement 
+algorithms.
+
+Cocke, John
+Markstein, Peter	Feb. 1980   14 p.
+-----
+  code optimization
+
+			IBM RC 8116
+
+_IBM Research Center. Yorktown Heights
+
+A tree storage scheme for magnetic bubble
+memories.
+
+Chung, K.M.
+Luccio, F.
+Wong, C.K.		Dec. 1979   28 p.
+-----
+  memory hierarchy
+
+			IBM RC 8161
+
+_IBM Research Center. Yorktown Heights
+
+A perspective on the use of control variables
+to increase the efficiency of Monte Carlo
+simulations.
+
+Lavenberg, S.S.
+Welch, P.D.		March 1980   23 p.
+-----
+  Monte Carlo methods
+  control structures
+
+			IBM RC 8184
+
+_IBM Research Center. Yorktown Heights
+
+On relative diagonals.
+
+Kozen, Dexter
+Machtey, Michael	April 1980   11 p.
+-----
+  oracle machine computation
+
+			IBM RC 8205
+
+_IBM Research Center. Yorktown Heights
+
+Algorithms for finding paths with multiple
+constraints.
+
+Jaffe, Jeffrey M.	April 1980   36 p.
+-----
+  length and weight constraints
+
+			IBM RC 8219
+
+_IBM Research Center. Yorktown Heights
+
+An experimental software system for large
+scale 0-1 problems with efficient data
+structures and accesss to MPSX/370.
+
+Spielberg, Kurt
+Suhl, Uwe		April 1980   40 p.
+-----
+  enumeration problem
+  integer programming
+  data structures
+
+			KYOTO A-15
+
+_Kyoto Univ. Japan
+
+On the facilities of TROLL by comparing with
+INGRE's guels.
+
+Watanabe, Toyohide
+Wasserman, Anthony I.	March 1981   25 p.
+-----
+  TROLL
+  PLAIN
+  database management system
+
+			KYOTO RIMS-322
+
+_Kyoto Univ. Japan
+
+The iota programming system - a support sys-
+tem for hierarchical and modular programming.
+
+Nakajima, Reiji
+Yuasa, Taiichi		Jan. 1980   22 p.
+-----
+  iota programming system
+  interactive computing
+
+			McGILL R79-14R
+
+_McGill Univ. Computer Vision and Graphics 
+Laboratory. Montreal
+
+Progress report, June 1978-May 1979.
+
+			July 1979   21 p.
+-----
+  image processing, biomedical
+  computer graphics
+
+			McGILL R81-13
+
+_McGill Univ. Computer Vision and Graphics
+Laboratory. Montreal
+
+Progress report, June 1980-Sept. 1981.
+
+				38 p.
+-----
+  computer vision
+  image processing, biomedical
+  computer graphics
+
+			MICHIGAN TR 79-01
+
+_Michigan State University
+
+Cluster validity profiles.
+
+Baily, Thomas A.
+Dubes, Richard C.	(n.d.)   72 p.
+-----
+  clustering
+  classification
+
+			MICHIGAN TR 80-01
+
+_Michigan State University
+
+Augmented relaxation labeling and dynamic
+relaxation labeling for computer vision.
+(Ph.D. thesis)
+
+Kuschel, Stephen A.	1979   165 p.
+-----
+  parallel processing
+  graphic controller
+
+			DNACS Report 2/78
+
+_National Physical Lab. Teddington, Scotland
+
+Analysis of pilot's voice records for auto-
+mated speech recognition.
+
+Pay, B.E.		Aug. 1978   57 p.
+-----
+  DVI (Direct Voice Input)
+  speech recognition
+
+			NPL Report CSU 7/80
+
+_National Physical Lab. Teddington, Scotland
+
+A PASCAL processor validation suite.
+
+Wichmann, B		March 1980   26 p.
+-----
+  PASCAL
+  validation
+
+			NPL Report NAC 80
+
+_National Physical Lab. Teddington, Scotland
+
+The incorporation of boundary conditions in
+spline approximation problems.
+
+Cox, M.G.		June 1977   19 p.
+-----
+  spline functions
+
+			DOE/ER/O3077-167
+
+_New York University
+
+A random choice finite-difference scheme
+for hyperbolic conservation laws.
+
+Harten, A.
+Lax, P.D.		May 1980   57 p.
+-----
+  finite functions
+
+			NSO-16
+
+_New York Univ. Courant Inst. of Mathematical
+Sciences
+
+On the complexity of the satisfiability
+problem.
+
+Goldberg, Allen T.	Oct. 1979   85 p.
+-----
+  Davis-Putnam procedure
+  resolution principle
+
+			NSO-19
+
+_New York Univ. Courant Inst. of Mathematical
+Sciences
+
+Computing chromatic polynomials for special
+families of graphs.
+
+Loerinc, Beatrice M.	Feb. 1980   111 p.
+-----
+  chromatic polynomials
+  graph coloring
+
+			NSO-21
+
+_New York Univ. Courant Inst. of Mathematical
+Sciences
+
+Circle graphs.
+
+Buckingham, Mark A.	Oct. 1980   142 p.
+-----
+  circle graph sequences
+
+			OSU-CISRC-TR-79-6
+
+_Ohio State University
+
+The post processing functions of a database
+computer.
+
+Hsiao, David K.
+Menon, Jaishankar	July 1979   32 p.
+-----
+  database computers
+  post functions
+  set functions
+
+			OSU-CISRC-TR-80-3
+
+_Ohio State University
+
+Design and analysis of update mechanisms of
+a database computer (DBC).
+
+Hsiao, David K.
+Menon, M. Jaishankar	June 1980   132 p.
+-----
+  database computers
+  update methods
+  queueing methods
+
+			OSU-CISRC-TR-80-7
+
+_Ohio State University
+
+Parallel record-sorting methods for hardware
+realization.
+
+Hsiao, David K.
+Menon, M.		July 1980   42 p.
+-----
+  database computers
+  parallel and sequential methods
+  post functions
+
+			OSU-CISRC-TR-80-8
+
+_Ohio State University
+
+Design and analysis of relational join 
+operations of a database computer (DBC).
+
+Hsiao, David K.
+Menon, M. Jaishankar	Sept. 1980  89 p.
+-----
+  database computers
+  post functions
+  queueing analysis
+
+			PARIS RR 77
+
+_Paris University
+
+Interconnexion de reseaux locaux: modelisa-
+tion et problemes d'optimisation.
+
+Bernard, G.		June 1980   7 p.
+-----
+  topological network
+
+			PARIS RR 78
+
+_Paris University
+
+Machine representation of knowledge for 
+computer-assisted instruction.
+
+Kayser, D.		June 1980
+-----
+  knowledge representation
+  ICAI systems
+
+			PARIS RR 80
+
+_Paris University
+
+Parallel computation of partial differential
+equations: a modeling approach.
+
+Gelenbe, E.		Sept. 1980   6 p.
+-----
+  multiprocessors
+  parallel computation
+
+			PARIS RR 81
+
+_Paris University
+
+Experience with the parallel solution of
+partial differential equation on a distrib-
+uted computer system.
+
+Gelenbe, E.
+Lichnewsky, A.
+Staphylopatis, A.	Sept. 1980   28 p.
+-----
+  mulitiprocessors
+  numerical theory
+
+			PARIS RR 84
+
+_Paris University
+
+On d-graceful graphs.
+
+Maheo, M.
+Thuillier, H.		Jan. 1981   13 p.
+-----
+  graph theory
+  d-graceful graphs
+
+			PURDUE FY 80-81
+
+_Purdue Univ. School of E.E. 
+
+Annual research summary, July 1, 1980-
+June 30, 1981.
+
+			(n.d.)   171 p.
+-----
+  automatic controls
+  bioengineering
+  communications
+
+			RUTGERS CBM-TM-83
+
+_Rutgers University. NJ
+
+A planning system for plan recognition in a
+common sense domain.
+
+Venkataraman, K.N.	Sept. 1979   41 p.
+-----
+  planning system
+  representation theory
+
+			RUTGERS CBM-TM-85
+
+_Rutgers University. NJ
+
+Some considerations on extracting defini-
+tional information about relations.
+
+Nagel, D.		June 1980   23 p.
+-----
+  information retrieval
+
+			RUTGERS CBM-TM-86
+
+_Rutgers University. NJ
+
+Representational facilities of AIMDS: 
+a sampling.
+
+Sridharan, N.S.		May 1980   9 p.
+-----
+  AIMDS
+  search strategies
+
+			RUTGERS CBM-TM-88
+
+_Rutgers University. NJ
+
+Initial thoughts on characterization of
+expert systems.
+
+Amarel, Saul		Sept. 1980   
+-----
+  artificial intelligence
+
+			RUTGERS CBM-TM-89
+
+_Rutgers University. NJ
+
+Review of characteristics of current expert
+systems.
+
+Amarel, Saul		 (n.d.)	  9 p.
+-----
+  expert systems
+
+			RUTGERS CBM-TM-90
+
+_Rutgers University. NJ
+
+Precedence scheme for selection and explana-
+tion of therapies.
+  
+Kastner, John K.
+Weiss, Sholom M.	March 1981   5 p.
+-----
+  planning, therapies
+
+			RUTGERS CBM-TM-91
+
+_Rutgers University. NJ
+
+System for empirical experimentation with
+expert knowledge.
+
+Politakis, Peter
+Weiss, Sholom M.	March 1981   6 p.
+-----
+  information retrieval
+
+			RUTGERS CBM-TR-98
+
+_Rutgers University. NJ
+
+Medical modeling and decision-making systems.
+
+Kulikowski, C.A.	Jan. 1979   38 p.
+-----
+  knowledge representation
+  causal-associational network (CASNET)
+  medical applications
+
+			RUTGERS CBM-TR-100
+
+_Rutgers University. NJ
+
+Designing consistent knowledge bases for
+expert consultation systems.
+
+Politakis, Peter
+Weiss, Sholom
+Kulikowski, Casimir	Sept. 1979   38 p.
+-----
+  knowledge acquisition
+
+			RUTGERS CBM-TR-107
+
+_Rutgers University. NJ
+
+Description languages and learning algor-
+ithms: a paradigm for comparison.
+
+Banerji, Ranan B.
+Mitchell, Tom M.	Jan. 1980   29 p.
+-----
+  inductive inference
+  learning
+
+			RUTGERS CBM-TR-109
+
+_Rutgers University. NJ
+
+The role of world knowledge in planning.
+
+Sridharan, N.S.
+Schmidt, C.F.
+Goodson, J.L.		May 1980   6 p.
+-----
+  knowledge representation
+
+			RUTGERS CBM-TR-110
+
+_Rutgers University. NJ
+
+An experimental transformation of a large
+expert knowledge-base.
+
+Goldberg, Robert N.
+Weiss, Sholol, M.	May 1980   25 p.
+-----
+  INTERNIST
+  medical diagnosis
+
+			RUTGERS CBM-TR-111
+
+_Rutgers University. NJ
+
+A process for evaluating tree-consistency.
+
+Goodson, John L.	Sept. 1980   8 p.
+-----
+  inference and deduction
+
+			RUTGERS CBM-TR-112
+
+_Rutgers University. NJ
+
+A methodology for the construction of natu-
+ral language front ends for medical consulta-
+tion systems. (Ph.D. thesis)
+
+Ciesielski, V.		Sept. 1980   220 p.
+-----
+  medical applications
+  associative memory
+
+			RUTGERS CBM-TR-114
+
+_Rutgers University. NJ
+
+Learning problem-solving heuristics by 
+experimentation.
+
+Mitchell, Tom M.
+Utgoff, Paul E.
+Banerji, Ranan B.	Sept. 1980   31p.
+-----
+  heuristics
+
+			RUTGERS CBM-TR-115
+
+_Rutgers University. NJ
+
+Plan recognition and revision: understanding
+the observed actions of another actor.
+
+Schmidt, Charles F.	Sept. 1980   9 p.
+-----
+  commonsense reasoning
+  linguistic decoding
+
+			RUTGERS CBM-TR-116
+
+_Rutgers University. NJ
+
+FOCUSER a strategic interaction paradigm
+for language acquisition.
+
+Smith, Donald E.	Oct 1980   9 p.
+-----
+  FOCUSER
+  teaching/learning strategies
+
+			RUTGERS CBM-TR-117
+
+_Rutgers University. NJ
+
+The need for biases in learning generali-
+zations.
+
+Mitchell, Tom M.	May 1980   6 p.
+-----
+  biased memory management
+
+			RUTGERS CBM-TR-118
+
+_Rutgers University. NJ
+
+Problems of representation in heurisitic
+problem solving: related issues in the
+development of expert systems.
+
+Amarel, Saul		Feb. 1981   113 p.
+-----
+  artificial intelligence
+  heuristics
+
+			RUTGERS CBM-TR-119
+
+_Rutgers University. NJ
+
+Reasoning by default.
+
+Sridharan, N.S.
+Schmidt, C,F,
+Goodson, J.L.		April 1981   17 p.
+-----
+  plausable reasoning
+
+			RUTGERS CBM-TR-120
+
+_Rutgers University. NJ
+
+Bibliography on machine learning.
+
+Nudel, B.
+Utgoff, P.E.			36 p.
+-----
+  machine learning--bibliography
+
+			RUTGERS CBM-TR-124
+
+_Rutgers University. NJ
+
+Common virtual arrays in PDP-11 Fortran: an
+exercise in software engineering.
+
+Schwanke, Bob		Nov. 1981   21 p.
+-----
+  DEC
+  arrays
+  language development
+
+			RUTGERS CTA-TR-1
+
+-Rutgers University. NJ
+
+Computability on term algebras part II-
+multisuccessor: the representability of
+computability on strings.
+
+Yasuhara, Ann		Aug. 1980   28 p.
+-----
+  string processing
+
+			RUTGERS CTA-TR-2
+
+_Rutgers University. NJ
+
+Computability on binary trees-an extended
+abstract.
+
+Yasuhara, A.
+Hawrusik, F.
+Venkataraman, K.N.	Aug. 1980   11 p.
+-----
+  abstract algebra
+
+			RUTGERS LCSR-TM-1
+
+_Rutgers University. NJ
+
+Using BRIGHT for maintaining class rosters
+and grades.
+
+Goldberg, Robert N.	July 1980   21 p.
+-----
+  BRIGHT
+  data management system
+
+			RUTGERS LCSR-TR-6
+
+_Rutgers University. NJ
+
+ASQ: Automatic Synthesis of Questions. 
+(Ph.D. thesis)
+
+Welsch, Lawrence A.	May 1979   185 p.
+-----
+  problem solving
+  ASQ(Automatic Synthesis of Questions)
+
+			RUTGERS LCSR-TR-7
+
+_Rutgers University. NJ
+
+How to control grants.
+
+Lockman, A.
+Minsky, N.		July 1979   24 p.
+-----
+  protection
+  access control
+
+			RUTGERS LCSR-TR-8
+
+_Rutgers University. N.J.
+
+Finite differencing of computable
+expressions.
+
+Paige, Robert
+Koenig, Shaye		Aug. 1980   94 p.
+-----
+  program optimization
+  verification
+  transformations
+
+			RUTGERS LCSR-TR-11
+
+_Rutgers University. NJ
+
+Representations for reasoning about digital
+circuits.
+
+Mitchell, Tom M.
+Steinberg, Lou
+Smith, Reid G.
+Schooley, Pat
+Kelly, Van		March 1981   6 p.
+-----
+  circuit theory
+
+			RUTGERS LRP-TR-4
+
+_Rutgers University. NJ
+
+The representation of conceptual structures.
+
+McCarty, L.T.
+Sridharan, N.S.		May 1980   45 p.
+-----
+  TAXMAN
+  legal reasoning
+
+			RUTGERS LRP-TR-5
+
+_Rutgers University. NJ
+
+The post-Macomber cases in a TAXMAN II
+framework: a preliminary analysis.
+
+Brody, David A.		March 1980   56 p.
+-----
+  legal reasoning
+  TAXMAN II
+
+			RUTGERS LRP-TR-6
+
+_Rutgers University. NJ
+
+Some notes on the MAP formalism of TAXMAN II,
+with applications to Eisner v. Macomber.
+
+McCarty, L. Thorne	May 1980   21 p.
+-----
+  legal reasoning
+  MAP
+
+			RUTGERS LRP-TR-7
+
+_Rutgers University. NJ
+
+The representation of an evolving system
+of legal concepts: I. logical templates.
+
+McCarty, L.T.		April 1980   
+-----
+  legal reasoning
+
+			RUTGERS LRP-TR-8
+
+_Rutgers University. NJ
+
+Some requirements for a computer-based 
+legal consultant.
+
+McCarty, L. Thorne	July 1980   8 p.
+-----
+  legal information processing
+
+			RUTGERS LRP-TR-9
+
+_Rutgers University. NJ
+
+A computational theory of Eisner v. Macomber.
+
+McCarty, L. Thorne	Oct 1980   43 p.
+-----
+  TAXMAN
+  Eisner v. Macomber
+  computational theory
+
+			

@@ -1,0 +1,50 @@
+<PACKAGE "SPACE">
+
+<ENTRY IN-SPACE SPACE MAKE-SPACE RESET-SPACE ZPRINT>
+
+<FLOAD "<TAA.IO>FS-DEFS.MUD">
+
+<DEFINE SPACE ("OPTIONAL" Z)
+	<COND (<NOT <ASSIGNED? Z>> ,CURRENT-ZONE)
+	      (.Z <SET-ZONE .Z>)
+	      (ELSE <RESTORE-ZONE>)>>
+
+<DEFINE MAKE-SPACE ("OPTIONAL" (N 10000))
+	<CREATE-NEW-SPACE .N>>
+
+<DEFINE RESET-SPACE (Z "AUX" LA GCP A)
+	<SET LA <ALL-SPACES .Z>>
+	<PUT <SET GCP <GC-PARAMS .Z>>
+	     ,GCSMIN
+	     <AMIN <SET A <1 .LA>>>>
+	<PUT .GCP ,GCSBOT <ABOT .A>>
+	<PUT .GCP ,GCSMAX <AMAX .A>>
+	<PUT .ZN ,GC-PARAMS .GCP>
+	<PUT .ZN ,ALL-SPACES .LA>
+	.Z>
+
+<DEFINE ZPRINT (Z "AUX" (LA <ALL-SPACES .Z>) (GCP <GC-PARAMS .Z>) (C 0))
+	<PRINC "   MIN     BOT     MAX"><CRLF>
+	<PRINC "GC ">
+	<PRINC <GCSMIN .GCP>><PRINC " ">
+	<PRINC <GCSBOT .GCP>><PRINC " ">
+	<PRINC <GCSMAX .GCP>><CRLF>
+	<MAPF <>
+	      <FUNCTION (A)
+		   <PRINC <SET C <+ .C 1>>>
+		   <PRINC ". ">
+		   <PRINC <AMIN .A>><PRINC " ">
+		   <PRINC <ABOT .A>><PRINC " ">
+		   <PRINC <AMAX .A>><CRLF>>
+	      .LA>
+	T>
+
+<DEFINE IN-SPACE (Z "ARGS" L)
+	<UNWIND <PROG ()
+		      <SPACE .Z>
+		      <SET R <MAPF <> ,EVAL .L>>
+		      <SPACE <>>
+		      .R>
+		<SPACE <>>>>
+
+<ENDPACKAGE>

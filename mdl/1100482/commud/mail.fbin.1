@@ -1,0 +1,743 @@
+'<PCODE "MAIL">
+
+<PACKAGE "MAIL"> 
+
+<ENTRY SAVE-MAIL> 
+
+"For Reader" 
+
+<ENTRY FIELD-TABLE COMPOSING? IN-READER? MAIL-CHRTABLE MUDDLE-ESCAPE MAILER 
+MAILER-INIT OPEN-FAILED FLIP-EDITOR SKIP-MSG-NO> 
+
+<ENTRY MSG-NO IN-REPLY-TO ID-IRT SUBJECT CARBON-COPY-TO TEXT> 
+
+<SURVIVOR EDIT-COMMAND SEND-TABLE RELATION-TABLE MEDIUM-TABLE> 
+
+"Use the universe..." 
+
+<USE "FORMS" "BUF" "BUFTECO" "SCR" "NSTR" "ITIME" "JCL" "HOSTS" "LSRTNS" 
+"CHKADR" "DID" "NEWSTRUC"> 
+
+<USE "COMMAND" "INPUT" "SPEC" "SYMPARSE" "FILE-PARSE" "R-PARSE" "R-WINDOW" 
+"WINDOW"> 
+
+\ 
+
+"Constant (more or less) GVALS" 
+
+<SETG COMPOSING? <>> 
+
+<SETG IN-READER? <>> 
+
+<SETG MORE-MSGS <>> 
+
+<SETG REQUEST-FILE "<COMSYS>M.DSP"> 
+
+<SETG DUMP-FILE "DRAFT.MAIL"> 
+
+<GDECL (CONSOLE-START) FIX (CPU-START) FLOAT> 
+
+<GDECL (NOTES-LIST) LIST> 
+
+<SETG SAVE-WHERE "<COMMUD>"> 
+
+<SETG DIVERT-HAND <HANDLER <SETG DIVERT-INT <EVENT "DIVERT-AGC" 1000>> <FUNCTION
+(AMT REASON) <BLOAT <+ .AMT 4000>>>>> 
+
+<OFF ,DIVERT-HAND> 
+
+<SETG INITED <>> 
+
+\ 
+
+<SETG SAVE-MAIL  %<RSUBR!- '[ %<PCODE!- "MAIL" 0> SAVE-MAIL #DECL ("VALUE" ANY <
+OR FIX FALSE> "OPTIONAL" STRING) SYMBOL BUFTOS HOST BUFPRINT CHECK-ADDRESSEES 
+INIT-BUF SPLICE-FIELD BUFGROW INPUT ADDPROMPT PADDSTRING ADDCRLF ADDCHR 
+GET-WINDOW BUFSPRINT PUNIQUE DISPATCH-ID UPPERCASE TERM CONTROL 
+REENTER-COMMAND-LOOP PREVIOUS-FIELD NEXT-FIELD FILL-FIELD FIRST-FIELD WINOP 
+SELECT ITIME BUFLENGTH MESSAGE-LOOP ADDSTRING BUFCLEAR READJCL INIT INIT-FIELDS 
+SCR-INIT %<RGLOC SAVE-WHERE T> %<RGLOC BUF-CTL-G? T> "" %<RGLOC DIVERT-INT T> %<
+RGLOC DIVERT-HAND T> INCHAN "MAIL" "SAVED" T "CHAR" %<RGLOC INITED T> %<RGLOC 
+EDIT-SCREEN T> %<RGLOC FIELD-TABLE T> %<TYPE-W FIELD VECTOR> %<TYPE-W BUFFER 
+VECTOR> %<RGLOC NOTES-LIST T> %<RGLOC MAIL-CHRS T> %<RGLOC INPUT-CHRS T> %<RGLOC
+MAIL-CHRTABLE T> %<RGLOC FORMS-CHRTABLE T> %<RGLOC EDIT-CHRS T> %<RGLOC 
+EDIT-CHRTABLE T> %<RGLOC COMPOSING? T> "FEA" %<RGLOC FEATURE T> "BUG" %<RGLOC 
+BUG T> "REM" %<RGLOC REMIND T> "MSG" %<RGLOC MSG T> "FOR" %<RGLOC FORWARD T> 
+"ANS" %<RGLOC ANSWER T> "COR" %<RGLOC CORRECT T> %<RGLOC IN-READER? T> %<RGLOC 
+FROM T> %<RGLOC JCL-CTRL-C T> CLEVEL (FIX) ANOTHER-MSG (ACTIVATION) %<RGLOC 
+MAIL-ASK-ME T> %<RGLOC ASK-ME T> %<RGLOC MSG-ASK-ME T> %<RGLOC MSGALWAYS T> %<
+RGLOC ALWAYSFIELDS T> %<RGLOC SKIP-SUBJECT T> %<RGLOC BUGALWAYS T> %<RGLOC 
+BUG-ASK-ME T> %<RGLOC FORWARD-ASK-ME T> %<RGLOC FWDALWAYS T> %<RGLOC IN-REPLY-TO
+T> IN-REPLY-TO %<RGLOC CARBON-COPY-TO T> CARBON-COPY-TO %<RGLOC CPU-START T> %<
+RGLOC CONSOLE-START T> CLOOP LERR\ !-INTERRUPTS %<RGLOC MORE-MSGS T> %<RGLOC 
+READER-SCREEN T> %<RGLOC ON-SCREEN T> %<TYPE-W SCREEN VECTOR> 
+COMMAND-LOOP-ACTIVATION OUTCHAN %<RGLOC ACK-CONDS T> %<RGLOC TOALWAYS T> %<RGLOC
+EXPIRES T> %<RGLOC SKIP-TO T> %<RGLOC SKIP-MSG-FILE T> %<RGLOC SKIP-MSG-NO T> %<
+RGLOC JCL-TEXT T> %<RGLOC STIME T> "DONE" %<TYPE-C FIELD VECTOR> %<RGLOC LINE T>
+ %<RGLOC EOL T> "(Done)" %<RGLOC TECO-PROGRAM T> "Using TECO (as 'TS " "')" (
+CHANNEL) ("MAILER") ")" "REMIND" "FORWARD" "CORRECT" "ROUTINE" "WHEN-ORIGINATED"
+ "SENDER" "EXPIRES" "ACKNOWLEDGE" "FAILED" "DELIVERY" %<RGLOC FAILED T> 
+"CONSOLE-MINUTES" "CPU-SECONDS" "
+)]
+" %<RGLOC TO T> %<RGLOC PROGRAM T> "BUG-" "FEATURE-" %<RGLOC BLIND T> %<RGLOC 
+NOTES T> "ACTION-TO" "CARBON-COPY-TO" "BLIND" "EMERGENCY" ("CORRECTION") 
+"\"SCHEDULE\" (\"SENDING\"" "You must give your name instead of" "Real name" 
+"MORE-TO" "(\"FORWARDING\" \"APPEND\")" "(((" ") ((" "))))" "MSG-FILE" 
+"Message id is not a number" "Message id" "FEATURE" " => " "REMINDER" " for " (
+"EXPAND-USING" "ADD") %<RGLOC ANNOTATION T> " \"APPEND\")" "\"[From " "]\" " 
+"))" "READ" "SCHEDULE" ("FILE-OUTPUT" #FALSE ()) ("AUTHOR-FILE-OUTPUT" "APPEND")
+ "APPEND" %<RGLOC FILEBRKS T> "File name incomprehensible?" "File" %<RGLOC 
+TOBRKS T> %<RGLOC JCLBRKS T> " 	" "@%" "([{" %<RGLOC KEYBREAKS T> "    " %<RGLOC
+KEYWORDS T> %<RGLOC REQUEST-FILE T> "'" "' empty? Specify it before sending." 
+"PRINT" "SENT" "Open of " " failed" ": " "." "File-name: " TEXT SEQUENTIAL %<
+RGLOC INPBUF T> %<RGLOC IFILE T> %<TYPE-W CIRCLE VECTOR> "[DONE]" %<RGLOC 
+CONSTANT T> "
+" " FILE" %<RGLOC SPACE T> 
+"Multi-media files may only be inserted into text fields." " " " 	" %<RGLOC TEMPORARY T> %<RGLOC TEXT T> %<RGLOC MSG-FILE T> %<RGLOC SUBJECT T> %<
+RGLOC END-OF-LINE T> "/ ," "Uninterpreted switch ignored:  " %<RGLOC NOTE-TEXT T
+> %<RGLOC INTERESTING-GVALS T> SETG NOTES-LIST " (" ")]" 
+"[Illegal object of type " " in MAIL dump file]" %<RGLOC MSG-NO T> "Disabled." 
+"Default failure acknowledgment (two days)." %<RGLOC EXPUSING T> "COMEXP" %<
+TYPE-C BUFFER VECTOR> "Unknown host given in addressee" "Host" "' field: " ": '"
+ "'." %<RGLOC DBRKS T> "More messages to come" "No more messages" %<RGLOC 
+EDITCMDS T> %<RGLOC MAIL-SCREEN T> %<RGLOC EDITBUF T> ["acknowledge-delivery" 
+"acknowledge-failure" "annotation" "bcc" "blind-carbon-copy-to" "c" 
+"carbon-copy-to" "cc" "edit-flush" "enclosures" "expansion-data-bases" 
+"file-output-to" "forward-message" "from" "full-name-of-sender" "in-reply-to" 
+"insert" "keywords" "load-mail" "message" "msg-expiration" "msg-file" "muddle" 
+"note" "program" "quit" "reader" "reply-to" "save-mail" "select-editor" "send" 
+"set-switches" "subject" "to"] #CIRCLE [#FALSE () <ACK-DELIVERY> #FALSE () 0] #
+CIRCLE [#SYNTAX [TIME-OUT] <FAIL-HACK <ARG 1>> #FALSE () 0] #CIRCLE [#FALSE () <
+EDIT-FIELD ,ANNOTATION> #FALSE () 0] #CIRCLE [#FALSE () <EDIT-FIELD ,BLIND> #
+FALSE () 0] #CIRCLE [#FALSE () <EDIT-FIELD ,CARBON-COPY-TO> #FALSE () 0] #CIRCLE
+[#FALSE () <EDIT-FLUSH> #FALSE () 0] #CIRCLE [#FALSE () <EDIT-FIELD ,ENCLOSURES>
+#FALSE () 0] #CIRCLE [#FALSE () <EDIT-FIELD ,EXPUSING> #FALSE () 0] #CIRCLE [#
+FALSE () <EDIT-FIELD ,FILES> #FALSE () 0] #CIRCLE [#FALSE () <FORWARD-HACK> #
+FALSE () 0] #CIRCLE [#FALSE () <EDIT-FIELD ,FROM> #FALSE () 0] #CIRCLE [#FALSE (
+) <EDIT-FIELD ,FULL-NAME> #FALSE () 0] #CIRCLE [#FALSE () <EDIT-FIELD ,
+IN-REPLY-TO> #FALSE () 0] #CIRCLE [#SYNTAX [MEDIUM RELATION IFILE] <INSERT-FILE 
+<ARG 1> <ARG 2> <ARG 3>> #FALSE () 0] #CIRCLE [#FALSE () <EDIT-FIELD ,KEYWORDS> 
+#FALSE () 0] #CIRCLE [#SYNTAX [IFILE] <LOAD-FROM-FILE <ARG 1>> #FALSE () 0] #
+CIRCLE [#FALSE () <EDIT-FIELD ,TEXT> #FALSE () 0] #CIRCLE [#SYNTAX [TIME-OUT] <
+EXPIRES-HACK <ARG 1>> #FALSE () 0] #CIRCLE [#FALSE () <EDIT-FIELD ,MSG-FILE> #
+FALSE () 0] #CIRCLE [#FALSE () <MUDDLE-ESCAPE> #FALSE () 0] #CIRCLE [#FALSE () <
+HACK-NOTES> #FALSE () 0] #CIRCLE [#FALSE () <EDIT-FIELD ,PROGRAM> #FALSE () 0] #
+CIRCLE [#FALSE () <QUITIT> #FALSE () 0] #CIRCLE [#FALSE () <NEXT-LEVEL> #FALSE (
+) 0] #CIRCLE [#FALSE () <EDIT-FIELD ,REPLY-TO> #FALSE () 0] #CIRCLE [#SYNTAX [
+OFILE] <FILE-CURRENT-STATE <ARG 1>> #FALSE () 0] #CIRCLE [#SYNTAX [LINE] <
+FLIP-EDITOR <ARG 1>> #FALSE () 0] #CIRCLE [#SYNTAX [SENDERS] <SEND-MESSAGE <ARG 
+1>> #FALSE () 0] #CIRCLE [#SYNTAX [LINE] <SWITCH-HACK <ARG 1>> #FALSE () 0] #
+CIRCLE [#FALSE () <EDIT-FIELD ,SUBJECT> #FALSE () 0] #CIRCLE [#FALSE () <
+EDIT-FIELD ,TO> #FALSE () 0] ["file" "normally" "tty"] #CIRCLE [#SYNTAX [OFILE] 
+<ARG 1> #FALSE () 0] #CIRCLE [#FALSE () <> #FALSE () 0] #CIRCLE [#FALSE () T #
+FALSE () 0] ["bitmap" "fax" "text-file" "voice"] #CIRCLE [#FALSE () 'BITMAP #
+FALSE () 0] #CIRCLE [#FALSE () 'FAX #FALSE () 0] #CIRCLE [#FALSE () 'TEXT #FALSE
+() 0] #CIRCLE [#FALSE () 'VOICE #FALSE () 0] ["independent" "sequential" 
+"simultaneous"] #CIRCLE [#FALSE () 'INDEPENDENT #FALSE () 0] #CIRCLE [#FALSE () 
+'SEQUENTIAL #FALSE () 0] #CIRCLE [#FALSE () 'SIMULTANEOUS #FALSE () 0]]>> 
+<AND <ASSIGNED? GLUE> .GLUE <PUT ,SAVE-MAIL PGLUE ![715827882 -22906492246 
+-23622320128 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0!]>> 
+
+
+<SETG MUDDLE-ESCAPE %<RSUBR-ENTRY '[SAVE-MAIL MUDDLE-ESCAPE #DECL ("VALUE" <OR 
+ATOM FALSE>)] 80>> 
+
+<SETG MAILER-INIT %<RSUBR-ENTRY '[SAVE-MAIL MAILER-INIT #DECL ("VALUE" <OR ATOM 
+STRING> "OPTIONAL" <OR ATOM FALSE>)] 114>> 
+
+<SETG MAILER %<RSUBR-ENTRY '[SAVE-MAIL MAILER #DECL ("VALUE" ANY "OPTIONAL" <OR 
+FALSE STRING>)] 265>> 
+
+\ 
+
+"Main message composing and sending loop:
+       -1 -- reentering from reader
+	0 -- Composing/Editing Level
+	1 -- Sending level
+	2 -- Editing level (after aborted Send)
+" 
+
+<SETG MESSAGE-LOOP %<RSUBR-ENTRY '[SAVE-MAIL MESSAGE-LOOP #DECL ("VALUE" ANY FIX
+)] 425>> 
+
+<SETG KLUDGE-IT %<RSUBR-ENTRY '[SAVE-MAIL KLUDGE-IT #DECL ("VALUE" ANY)] 620>> 
+
+\ 
+
+"Here to initiate another message:
+	If MORE-MSGS is T, clears out volatile buffers, sets level to 0 again.
+	If MORE-MSGS is <>, QUITs.
+" 
+
+<SETG NEXT-MSG %<RSUBR-ENTRY '[SAVE-MAIL NEXT-MSG #DECL ("VALUE" ANY)] 702>> 
+
+<SETG QUITIT %<RSUBR-ENTRY '[SAVE-MAIL QUITIT #DECL ("VALUE" ANY)] 748>> 
+
+"Redo the Message loop at a given level" 
+
+<SETG GO-TO-LEVEL %<RSUBR-ENTRY '[SAVE-MAIL GO-TO-LEVEL #DECL ("VALUE" ANY FIX)]
+775>> 
+
+<SETG NEXT-LEVEL %<RSUBR-ENTRY '[SAVE-MAIL NEXT-LEVEL #DECL ("VALUE" ANY 
+"OPTIONAL" ANY ANY)] 804>> 
+
+<SETG EDIT-LEVEL %<RSUBR-ENTRY '[SAVE-MAIL EDIT-LEVEL #DECL ("VALUE" ANY 
+"OPTIONAL" ANY ANY)] 854>> 
+
+<SETG EDIT-LOOP %<RSUBR-ENTRY '[SAVE-MAIL EDIT-LOOP #DECL ("VALUE" ANY)] 884>> 
+
+<SETG EDIT-ONCE %<RSUBR-ENTRY '[SAVE-MAIL EDIT-ONCE #DECL ("VALUE" CHANNEL 
+BUFFER CHARACTER)] 931>> 
+
+<SETG EDIT-SEND %<RSUBR-ENTRY '[SAVE-MAIL EDIT-SEND #DECL ("VALUE" ANY BUFFER 
+CHARACTER)] 954>> 
+
+\ 
+
+"Initialize buffers and top-level variables" 
+
+<SETG INIT-MESSAGE %<RSUBR-ENTRY '[SAVE-MAIL INIT-MESSAGE #DECL ("VALUE" STRING 
+"OPTIONAL" <OR ATOM FALSE>)] 972>> 
+
+\ 
+
+"**************** AUTOMATIC MESSAGE COMPOSER ************************" 
+
+"Simple message sender" 
+
+<SETG LAZY-MSG %<RSUBR-ENTRY '[SAVE-MAIL LAZY-MSG #DECL ("VALUE" ATOM LIST ANY)]
+1100>> 
+
+"Back up one in Lazy-MSG" 
+
+<SETG LAZY-PREVIOUS %<RSUBR-ENTRY '[SAVE-MAIL LAZY-PREVIOUS #DECL ("VALUE" ANY 
+ANY ANY)] 1236>> 
+
+<SETG LAZY-NEXT %<RSUBR-ENTRY '[SAVE-MAIL LAZY-NEXT #DECL ("VALUE" ANY ANY ANY)]
+1249>> 
+
+\ 
+
+"*********************** 'EDIT' MODE COMMANDS ********************" 
+
+"Edit-level commands dispatch to here --
+	 Each of these functions is a command handler" 
+
+"Exit command mode" 
+
+<SETG EDIT-FLUSH %<RSUBR-ENTRY '[SAVE-MAIL EDIT-FLUSH #DECL ("VALUE" ANY)] 1269>
+> 
+
+"Here to set ^E function -- either Teco or Imedit" 
+
+<SETG FLIP-EDITOR %<RSUBR-ENTRY '[SAVE-MAIL FLIP-EDITOR #DECL ("VALUE" ANY 
+STRING)] 1282>> 
+
+\ 
+
+"Print out a mail file onto a channel" 
+
+<SETG ACK-CONDS (<> <>)> 
+
+<GDECL (ACK-CONDS) <LIST [REST <OR FALSE STRING>]>> 
+
+<SETG HERE "MIT-XX"> 
+
+<GDECL (HERE) STRING> 
+
+<SETG PRMAIL %<RSUBR-ENTRY '[SAVE-MAIL PRMAIL #DECL ("VALUE" STRING "OPTIONAL" 
+CHANNEL)] 1320>> 
+
+\ 
+
+"PTO -- print to-lists; deals with all to-style lists" 
+
+<SETG PTO %<RSUBR-ENTRY '[SAVE-MAIL PTO #DECL ("VALUE" <OR CHARACTER FALSE !<
+LIST STRING!>> FIELD)] 1674>> 
+
+\ 
+
+<SETG PFROM %<RSUBR-ENTRY '[SAVE-MAIL PFROM #DECL ("VALUE" ATOM FIELD)] 2041>> 
+
+\ 
+
+"PFORWARD -- print special to-list for forwarding message" 
+
+<SETG PFORWARD %<RSUBR-ENTRY '[SAVE-MAIL PFORWARD #DECL ("VALUE" <OR FALSE 
+STRING> LIST LIST)] 2160>> 
+
+<SETG PMSG-FILE %<RSUBR-ENTRY '[SAVE-MAIL PMSG-FILE #DECL ("VALUE" <OR BUFFER 
+FALSE> FIELD)] 2290>> 
+
+\ 
+
+"Printers for fields which are message ids" 
+
+<SETG PIDS %<RSUBR-ENTRY '[SAVE-MAIL PIDS #DECL ("VALUE" <OR FALSE <LIST [REST 
+STRING]>> FIELD)] 2320>> 
+
+<SETG PID %<RSUBR-ENTRY '[SAVE-MAIL PID #DECL ("VALUE" <OR FALSE STRING> FIELD)]
+2359>> 
+
+<SETG FINDIDS %<RSUBR-ENTRY '[SAVE-MAIL FINDIDS #DECL ("VALUE" <OR FALSE <LIST [
+REST STRING]>> FIELD "OPTIONAL" <OR ATOM FALSE>)] 2421>> 
+
+<SETG CHECK-FIX %<RSUBR-ENTRY '[SAVE-MAIL CHECK-FIX #DECL ("VALUE" <OR ATOM 
+FALSE> STRING)] 2523>> 
+
+\ 
+
+"General message field printers for various sorts of fields" 
+
+<SETG PUNIQUE %<RSUBR-ENTRY '[SAVE-MAIL PUNIQUE #DECL ("VALUE" <OR CHARACTER 
+FALSE> "TUPLE" <TUPLE [REST STRING]>)] 2553>> 
+
+<SETG PTEXT %<RSUBR-ENTRY '[SAVE-MAIL PTEXT #DECL ("VALUE" ATOM <OR FALSE FIELD>
+)] 2617>> 
+
+<SETG PSTR %<RSUBR-ENTRY '[SAVE-MAIL PSTR #DECL ("VALUE" <OR ATOM BUFFER> FIELD)
+] 2769>> 
+
+<SETG PLST %<RSUBR-ENTRY '[SAVE-MAIL PLST #DECL ("VALUE" <OR ATOM FALSE <LIST [
+REST STRING]>> FIELD)] 2807>> 
+
+<SETG PONE %<RSUBR-ENTRY '[SAVE-MAIL PONE #DECL ("VALUE" <OR ATOM STRING> FIELD)
+] 2849>> 
+
+\ 
+
+"Printers for specific sorts of fields" 
+
+<SETG PSUBJ %<RSUBR-ENTRY '[SAVE-MAIL PSUBJ #DECL ("VALUE" <OR BUFFER FALSE> 
+FIELD)] 2900>> 
+
+<SETG PEXPUSING %<RSUBR-ENTRY '[SAVE-MAIL PEXPUSING #DECL ("VALUE" ATOM FIELD)] 
+3052>> 
+
+<SETG PEXPAND %<RSUBR-ENTRY '[SAVE-MAIL PEXPAND #DECL ("VALUE" ATOM <LIST [REST 
+STRING]>)] 3069>> 
+
+"The notes list consists of a list of two element lists.  Each of
+the two elements is a buffer.  The first is the addressee buffer,
+the second the text buffer.  NOTE!!!!! The list is circular, with
+the current last buffer edited being the pointer into it.  BE
+CAREFUL GROVELLING OVER THIS CROCK!!!!!!! " 
+
+<SETG PNOTES %<RSUBR-ENTRY '[SAVE-MAIL PNOTES #DECL ("VALUE" ATOM FIELD)] 3107>> 
+
+"Pseudo-MEMBER for notes list.  Check for a message entry that
+is like the one we have.  Like means same length and notes
+buffers in it.  Message entries are even numbered elements of
+the structure and consist of lists of buffers." 
+
+<SETG NEMBER %<RSUBR-ENTRY '[SAVE-MAIL NEMBER #DECL ("VALUE" <OR FALSE <LIST ANY
+<LIST [REST BUFFER]> [REST ANY <LIST [REST BUFFER]>]>> <LIST [REST BUFFER]> <
+LIST [REST ANY <LIST [REST BUFFER]>]>)] 3602>> 
+
+\ 
+
+<SETG FNAME %<RSUBR-ENTRY '[SAVE-MAIL FNAME #DECL ("VALUE" STRING STRING)] 3672>
+> 
+
+<SETG PENCLOSURES %<RSUBR-ENTRY '[SAVE-MAIL PENCLOSURES #DECL ("VALUE" <OR ATOM 
+CHARACTER> FIELD)] 3711>> 
+
+<SETG PFILE-OUTPUT %<RSUBR-ENTRY '[SAVE-MAIL PFILE-OUTPUT #DECL ("VALUE" <OR 
+ATOM FALSE> FIELD)] 3833>> 
+
+<SETG PFILES %<RSUBR-ENTRY '[SAVE-MAIL PFILES #DECL ("VALUE" <OR ATOM FALSE> <
+LIST [REST STRING]>)] 3852>> 
+
+"Returns a LIST of File names for FILE-OUTPUT" 
+
+<SETG GET-FILES %<RSUBR-ENTRY '[SAVE-MAIL GET-FILES #DECL ("VALUE" <LIST [REST 
+STRING]> FIELD "OPTIONAL" <OR ATOM FALSE>)] 3946>> 
+
+<SETG FILEBRKS ",
+"> 
+
+<GDECL (FILEBRKS) STRING> 
+
+<SETG GOOD-FILE-NAME? %<RSUBR-ENTRY '[SAVE-MAIL GOOD-FILE-NAME? #DECL ("VALUE" <
+OR ATOM FALSE> <OR FALSE STRING>)] 4067>> 
+
+\ 
+
+"Buffer parser" 
+
+<SETG BUFLEX %<RSUBR-ENTRY '[SAVE-MAIL BUFLEX #DECL ("VALUE" <OR FALSE <LIST [
+REST STRING]>> BUFFER "OPTIONAL" STRING STRING)] 4159>> 
+
+<SETG CONSTRUC %<RSUBR-ENTRY '[SAVE-MAIL CONSTRUC #DECL ("VALUE" STRING STRING 
+STRING <OR ATOM FALSE>)] 4504>> 
+
+<SETG BALANCED? %<RSUBR-ENTRY '[SAVE-MAIL BALANCED? #DECL ("VALUE" <OR FALSE 
+STRING> STRING "OPTIONAL" STRING)] 4612>> 
+
+<SETG ADDBREAK %<RSUBR-ENTRY '[SAVE-MAIL ADDBREAK #DECL ("VALUE" BUFFER BUFFER 
+CHARACTER)] 4785>> 
+
+<SETG MAILCRLF %<RSUBR-ENTRY '[SAVE-MAIL MAILCRLF #DECL ("VALUE" ANY BUFFER 
+CHARACTER)] 4827>> 
+
+"Keyword extractors" 
+
+<SETG KEYWEX %<RSUBR-ENTRY '[SAVE-MAIL KEYWEX #DECL ("VALUE" BUFFER BUFFER 
+CHARACTER)] 4889>> 
+
+\ 
+
+"Sending methods" 
+
+<SETG SEND-MESSAGE %<RSUBR-ENTRY '[SAVE-MAIL SEND-MESSAGE #DECL ("VALUE" ANY ANY
+)] 4986>> 
+
+<SETG SENDER %<RSUBR-ENTRY '[SAVE-MAIL SENDER #DECL ("VALUE" STRING "OPTIONAL" <
+OR FALSE <VECTOR [REST STRING]> STRING> <OR FALSE ATOM>)] 5015>> 
+
+"Beautiful error messages" 
+
+<SETG OPEN-FAILED %<RSUBR-ENTRY '[SAVE-MAIL OPEN-FAILED #DECL ("VALUE" FIX FALSE
+ANY)] 5185>> 
+
+\ 
+
+"READ-FILE" 
+
+<SETG TEXT-FILE %<RSUBR-ENTRY '[SAVE-MAIL TEXT-FILE #DECL ("VALUE" BUFFER BUFFER
+"OPTIONAL" CHARACTER)] 5250>> 
+
+<SETG READ-FILE %<RSUBR-ENTRY '[SAVE-MAIL READ-FILE #DECL ("VALUE" <OR FALSE 
+STRING> STRING)] 5333>> 
+
+<SETG INSERT-FILE %<RSUBR-ENTRY '[SAVE-MAIL INSERT-FILE #DECL ("VALUE" ANY ATOM 
+ANY STRING)] 5369>> 
+
+\ 
+
+"***********************JCL LINE INTERPRETATION***********************" 
+
+<SETG ANYTHING %<RSUBR-ENTRY '[SAVE-MAIL ANYTHING #DECL ("VALUE" <OR FALSE 
+STRING> STRING "OPTIONAL" <OR STRING FALSE>)] 5726>> 
+
+<SETG JCLBRKS ","> 
+
+<GDECL (JCLBRKS) STRING> 
+
+<SETG HACK-JCL %<RSUBR-ENTRY '[SAVE-MAIL HACK-JCL #DECL ("VALUE" <OR ATOM BUFFER
+FALSE STRING FIX FIX> STRING "OPTIONAL" STRING)] 5789>> 
+
+"Search a string for a 'winner' or a 'loser'.  If a loser is
+found return #FALSE(loser)." 
+
+<SETG STRSRC %<RSUBR-ENTRY '[SAVE-MAIL STRSRC #DECL ("VALUE" <OR FALSE STRING> 
+STRING STRING "OPTIONAL" <OR ATOM FALSE>)] 6099>> 
+
+\ 
+
+"******SWITCH HACKERY*******" 
+
+<SETG SWITCH-HACK %<RSUBR-ENTRY '[SAVE-MAIL SWITCH-HACK #DECL ("VALUE" <OR ATOM 
+STRING> STRING)] 6148>> 
+
+<SETG FLAG-HACK %<RSUBR-ENTRY '[SAVE-MAIL FLAG-HACK #DECL ("VALUE" STRING STRING
+)] 6171>> 
+
+\ 
+
+"***************************APPEND TO NOTES****************************" 
+
+"Special routine to hack notes fields" 
+
+<SETG HACK-NOTES %<RSUBR-ENTRY '[SAVE-MAIL HACK-NOTES #DECL ("VALUE" ANY)] 6275>
+> 
+
+\ 
+
+"Buffer clearing functions" 
+
+<SETG ALLCLEAR %<RSUBR-ENTRY '[SAVE-MAIL ALLCLEAR #DECL ("VALUE" LIST "OPTIONAL"
+<OR ATOM FALSE> <UVECTOR [REST FIELD]>)] 6356>> 
+
+\ 
+
+<SETG FILE-CURRENT-STATE %<RSUBR-ENTRY '[SAVE-MAIL FILE-CURRENT-STATE #DECL (
+"VALUE" <OR CHANNEL FIX> STRING)] 6430>> 
+
+<SETG LOAD-FROM-FILE %<RSUBR-ENTRY '[SAVE-MAIL LOAD-FROM-FILE #DECL ("VALUE" ANY
+STRING)] 6608>> 
+
+<SETG MAIL-BUF %<RSUBR-ENTRY '[SAVE-MAIL MAIL-BUF #DECL ("VALUE" BUFFER FIELD)] 
+6862>> 
+
+<SETG INTERESTING-GVALS '![BUG FEATURE REMIND MSG FORWARD CORRECT ACK-CONDS 
+ASK-ME ALWAYSFIELDS EXPIRES STIME TECO-PROGRAM!]> 
+
+<GDECL (INTERESTING-GVALS) <UVECTOR [REST ATOM]>> 
+
+\ 
+
+"Set up Forwarding, and edit Msg-no field" 
+
+<SETG FORWARD-HACK %<RSUBR-ENTRY '[SAVE-MAIL FORWARD-HACK #DECL ("VALUE" ATOM)] 
+6922>> 
+
+"If :REMIND, then ask for a delivery date" 
+
+<SETG REMIND-HACK %<RSUBR-ENTRY '[SAVE-MAIL REMIND-HACK #DECL ("VALUE" ATOM FIX)
+] 6970>> 
+
+<SETG ACK-DELIVERY %<RSUBR-ENTRY '[SAVE-MAIL ACK-DELIVERY #DECL ("VALUE" ANY)] 
+7031>> 
+
+"If ACK on failure, ask for how long to wait" 
+
+<SETG FAIL-HACK %<RSUBR-ENTRY '[SAVE-MAIL FAIL-HACK #DECL ("VALUE" ANY <OR FALSE
+FIX>)] 7074>> 
+
+"Expiration date for :MSG" 
+
+<SETG EXPIRES-HACK %<RSUBR-ENTRY '[SAVE-MAIL EXPIRES-HACK #DECL ("VALUE" <OR 
+FALSE FIX> <OR FALSE FIX>)] 7134>> 
+
+\ 
+
+<SETG CHECKER %<RSUBR-ENTRY '[SAVE-MAIL CHECKER #DECL ("VALUE" <OR FALSE FIX> 
+BUFFER CHARACTER)] 7150>> 
+
+<SETG FIND-BUF %<RSUBR-ENTRY '[SAVE-MAIL FIND-BUF #DECL ("VALUE" <OR FALSE FIELD
+> BUFFER)] 7209>> 
+
+\ 
+
+"************************ HOST NAME HACKING *************************" 
+
+"Check any hosts specified, ask for corrections if some are losers" 
+
+<SETG FINDHOSTS %<RSUBR-ENTRY '[SAVE-MAIL FINDHOSTS #DECL ("VALUE" <LIST [REST 
+STRING]> FIELD "OPTIONAL" <OR STRING FALSE>)] 7244>> 
+
+<SETG ATSIGN? %<RSUBR-ENTRY '[SAVE-MAIL ATSIGN? #DECL ("VALUE" <OR FALSE STRING>
+STRING)] 7427>> 
+
+<SETG CORRECT-ADDRESS %<RSUBR-ENTRY '[SAVE-MAIL CORRECT-ADDRESS #DECL ("VALUE" 
+STRING <OR STRING FALSE> STRING STRING STRING "OPTIONAL" <OR FALSE FIX> STRING)]
+7488>> 
+
+<SETG GET-ADDR %<RSUBR-ENTRY '[SAVE-MAIL GET-ADDR #DECL ("VALUE" <OR STRING <
+LIST [REST STRING]>> STRING "OPTIONAL" <OR FALSE STRING> STRING FIX)] 7596>> 
+
+<SETG REMAKE %<RSUBR-ENTRY '[SAVE-MAIL REMAKE #DECL ("VALUE" <OR BUFFER FALSE> 
+BUFFER <LIST [REST STRING]>)] 7694>> 
+
+<SETG ADDADDR %<RSUBR-ENTRY '[SAVE-MAIL ADDADDR #DECL ("VALUE" BUFFER BUFFER 
+STRING "OPTIONAL" FIX)] 7738>> 
+
+<SETG MORE-MESSAGES %<RSUBR-ENTRY '[SAVE-MAIL MORE-MESSAGES #DECL ("VALUE" ANY)]
+7810>> 
+
+\ 
+
+"Various breaks and things" 
+
+<SETG TOBRKS " ,
+"> 
+
+<SETG KEYBREAKS <MAPF ,STRING ,ASCII (13 9 10 32 <ASCII !\,> <ASCII !\.>)>> 
+
+<SETG END-OF-LINE "
+"> 
+
+<SETG SP <ISTRING 15 '<ASCII 32>>> 
+
+<SETG DBRKS ".,/ 	
+"> 
+
+<GDECL (DBRKS SP TOBRKS KEYBREAKS END-OF-LINE) STRING> 
+
+\ 
+
+"**************************FIELD INFORMATION*************************" 
+
+<SETG ASK-ME <SETG MAIL-ASK-ME '(TO SUBJECT TEXT)>> 
+
+<SETG MSG-ASK-ME '(MSG-FILE SUBJECT TO TEXT)> 
+
+<SETG FORWARD-ASK-ME '(MSG-NO TO ANNOTATION)> 
+
+<SETG BUG-ASK-ME '(PROGRAM SUBJECT TEXT)> 
+
+<GDECL (ASK-ME TO-ASK-ME MSG-ASK-ME FORWARD-ASK-ME BUG-ASK-ME) <LIST [REST ATOM]
+>> 
+
+"Fields that are always printed, whether empty or not" 
+
+<SETG ALWAYSFIELDS <SETG TOALWAYS '(TO FROM TEXT)>> 
+
+<SETG MSGALWAYS (MSG-FILE SUBJECT !,ALWAYSFIELDS)> 
+
+<SETG FWDALWAYS '(MSG-NO TO)> 
+
+<SETG BUGALWAYS '(PROGRAM FROM TEXT)> 
+
+<GDECL (ALWAYSFIELDS TOALWAYS MSGALWAYS FWDALWAYS BUGALWAYS) <LIST [REST ATOM]>> 
+
+\ 
+
+"BFLAGS bits" 
+
+<MSETG BSAVE 1> 
+
+<MSETG BFORWARD 2> 
+
+<MSETG BLFP 4> 
+
+<MSETG BCRLF 8> 
+
+<MSETG BADDR 16> 
+
+<MSETG BTEXT 32> 
+
+\ 
+
+"Field information uvector" 
+
+<SETG FIELD-TABLE <UVECTOR <FIELD FROM <> <+ ,BSAVE ,BCRLF ,BADDR> ,PFROM "From"
+,SPACE "Type the name of the principal author." 1 <> <>> <FIELD FULL-NAME <> ,
+BCRLF ,PSTR "Full name" ,SPACE 
+"Type the full name of the author; it will
+be printed in addition to the mailbox name
+in the 'From' field.  (This is not necessary
+if you are known to INQUIR.)" 1 <> <>> <FIELD REPLY-TO <> <+ ,BLFP ,BADDR> ,PLST
+"Reply-to" ,SPACE 
+"The return address, if it is different from the From
+or Sender fields.  Separated by space, 'CR'
+or comma." 1 <> <>> <FIELD PROGRAM <> <+ ,BLFP ,BFORWARD> <> "Programs" ,SPACE 
+"List the programs, separated by
+space, 'CR' or comma." 1 <> <>> <FIELD TO <> <+ ,BLFP ,BFORWARD ,BADDR> ,PTO 
+"To" ,SPACE "List the action addressees, separated by
+space, 'CR' or comma." 1 <> <>> <FIELD CARBON-COPY-TO <> <+ ,BLFP ,BADDR> <> 
+"Carbon-copy-to" ,SPACE 
+"List the names of recipients of a carbon
+copy.  Separate the names by space, 'CR' or
+comma." 1 <> <>> <FIELD BLIND <> <+ ,BLFP ,BADDR> <> "Blind-copy-to" ,SPACE 
+"List the names of recipients of 'Blind'
+carbons.  The people in the 'Carbon-copy'
+list will not be apprised of the names in
+the 'Blind' list." 1 <> <>> <FIELD SUBJECT <> ,BCRLF ,PSUBJ "Subject" ,SPACE 
+"Type a short description of the contents
+of the message." 1 <> <>> <FIELD IN-REPLY-TO <> ,BLFP ,PSTR "In reply to" ,SPACE
+"Type the Message id number(s) of the
+message(s) to which this is a reply." 1 <> <>> <FIELD FILES <> ,BLFP ,
+PFILE-OUTPUT "Output to" ,SPACE 
+"List the names of files to which you
+want the message to be sent, in addition
+to the primary addressees, using the
+FILE-OUTPUT process.  The names should be
+separated by 'CR' or comma." 1 <> <>> <FIELD MSG-FILE <> ,BCRLF ,PMSG-FILE 
+"Msg. File Name" ,SPACE 
+"Give the file-name-one, file-name-two
+pair to use for this message.  Name-one
+defaults to 'MSG->', name-two to '>'" 1 <> <>> <FIELD MSG-NO <> <+ ,BFORWARD ,
+BCRLF> ,PID "Message to forward" ,SPACE 
+"Type the Message id number of the message
+being forwarded." 1 <> <>> <FIELD ID-IRT <> ,BLFP ,PID "ID In reply to" ,SPACE 
+"Type the Message id number(s) of the
+message(s) to which this is a reply." 1 <> <>> <FIELD EXPUSING <> ,BLFP ,
+PEXPUSING "Expand-using" ,SPACE 
+"Type the names of additional expansion
+data base files to use in expanding the
+addressees of the message." 1 <> <>> <FIELD NOTES <> <+ ,BLFP ,BFORWARD ,BADDR> 
+,PNOTES "
+Note to" ,SPACE 
+"Addressee(s) for this note, separated by
+space, carriage return, or comma." 2 <> <>> <FIELD NOTE-TEXT <> ,BFORWARD <> 
+"Note text" ,SPEOL 
+"Text of this note.  It will be sent only
+to the addressees for this note." 2 <> <>> <FIELD ANNOTATION <> ,BFORWARD <> 
+"
+Annotation" ,SPEOL 
+"Type an annotation to the message.  You may
+edit it by typing 'Control E', or insert a
+file by typing 'Control Y'." 5 <> <>> <FIELD TEXT <> ,BTEXT ,PTEXT "
+Message" ,SPEOL 
+"Type the text of the message.  You may
+edit the message by typing 'Control E',
+or insert a file by typing 'Control Y'." 3 <> <>> <FIELD KEYWORDS <> ,BLFP ,PLST
+"Keywords" ,SPACE 
+"List any keywords, separated by comma,
+'CR' or space.  The keywords will be
+available for searching the data-base" 1 <> <>> <FIELD ENCLOSURES <> ,BLFP ,
+PENCLOSURES "Enclosures" ,SPACE 
+"List any files which are to be treated
+as enclosures, separated by 'CR' or comma.
+Enclosures will be copied to the message
+file at delivery time by the Daemon." 1 <> <>> <FIELD TEMPORARY <> <+ ,BFORWARD 
+,BCRLF ,BADDR> <> "" ,SPACE "" 1 <> <>> <FIELD CONSTANT <> 0 <> "" ,SPACE "" 1 <
+> <>>>> 
+
+<GDECL (FIELD-TABLE) <UVECTOR [REST FIELD]> (TO PROGRAM FROM SUBJECT TEXT 
+ANNOTATION CARBON-COPY-TO BLIND FULL-NAME TEMPORARY CONSTANT NOTE-TEXT NOTES 
+EXPUSING ENCLOSURES FILES MSG-NO KEYWORDS IN-REPLY-TO ID-IRT REPLY-TO MSG-FILE) 
+FIELD> 
+
+\ 
+
+"******************* 'EDIT' MODE DISPATCH TABLE ******************" 
+
+"Dispatch for 'Edit:' mode" 
+
+<SETG EDITBUF <BUFMAKE 80 "Edit: ">> 
+
+<SETG EDIT-COMMANDS %<RSUBR-ENTRY '[SAVE-MAIL EDIT-COMMANDS #DECL ("VALUE" ANY)]
+7846>> 
+
+<SETG EDIT-COMMAND %<RSUBR-ENTRY '[SAVE-MAIL EDIT-COMMAND #DECL ("VALUE" <OR 
+FALSE CIRCLE CIRCLE> ANY ANY)] 7869>> 
+
+<SETG SENDERS <CIRCLE [<ARC SEND-TABLE> <ARC>] "how">> 
+
+<SETG SEND-TABLE %<RSUBR-ENTRY '[SAVE-MAIL SEND-TABLE #DECL ("VALUE" <OR FALSE 
+CIRCLE> ANY ANY)] 8038>> 
+
+<SETG MEDIUM <CIRCLE [<ARC MEDIUM-TABLE> <ARC>] "medium" ''TEXT>> 
+
+<SETG MEDIUM-TABLE %<RSUBR-ENTRY '[SAVE-MAIL MEDIUM-TABLE #DECL ("VALUE" <OR 
+FALSE CIRCLE> ANY ANY)] 8087>> 
+
+<SETG RELATION <CIRCLE [<ARC RELATION-TABLE> <ARC>] "relation" ''SEQUENTIAL>> 
+
+<SETG RELATION-TABLE %<RSUBR-ENTRY '[SAVE-MAIL RELATION-TABLE #DECL ("VALUE" <OR
+FALSE CIRCLE> ANY ANY)] 8142>> 
+
+\ 
+
+<SETG EDITCMDS <CIRCLE [<ARC EDIT-COMMAND>] "edit command">> 
+
+<SETG LINE <CIRCLE [<ARC LINE-PARSE>] "text">> 
+
+<SETG DATE-NODE <CIRCLE [<ARC DATE-PARSE>] "date-time">> 
+
+<SETG TIME-OUT <CIRCLE [<ARC DATE-PARSE>] "time-out">> 
+
+<SETG IFILE <CIRCLE [<ARC INPUT-FILE>] "file">> 
+
+<SETG OFILE <CIRCLE [<ARC OUTPUT-FILE>] "file">> 
+
+\ 
+
+"********************* BUFFER SPECIAL CHARACTERS ********************" 
+
+"Buffer special character tables for Mail Composer" 
+
+<SETG EDIT-CHRS [!\ ,EDIT-LEVEL]> 
+
+<SETG REENTER-TECO-CHAR !\> 
+
+<SETG MAIL-CHRS [!\ ,ADDCHR !\ ,BUFTECO !\ ,BUFTECO !\ ,KEYWEX <ASCII 13
+> ,MAILCRLF !\ ,LAZY-NEXT !\ ,LAZY-PREVIOUS !\ ,TEXT-FILE !\ ,EDIT-ONCE 
+!\ ,LAZY-NEXT]> 
+
+<GDECL (MAIL-CHRS EDIT-CHRS SEND-CHRS) <VECTOR [REST CHARACTER ANY]>> 
+
+<ENDPACKAGE> 

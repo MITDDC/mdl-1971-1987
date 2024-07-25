@@ -1,0 +1,215 @@
+
+<PACKAGE "M-ERR">
+
+<ENTRY ERR-TO ERR-REPORT COMMON-ERR ERR-HEADER>
+
+<USE "M-DEFS" "M-PRCD" "MADMAN" "USRUTI" "PRTUTI" "PRTSTR"
+     "M-DATA" "M-READ" "FIELDS" "M-MSG">
+
+<SETG CR <STRING <ASCII 13> <ASCII 10>>>
+
+<GDECL (CR) STRING>
+
+\ 
+
+"ERR-TO -- given adr, returns list of string(s), to list for error
+  report.  for receiver-related errors, will include addressee in list
+  only if author of message is not communication-daemon to prevent looping
+
+ -- if reporter wants to send to communication-system-maintainer, and
+     losing message is from communication-daemon to maintainer, delivery
+     should be done 'directly' to prevent looping.  maintainer will not
+     be in the list in this case."
+
+<DEFINE ERR-TO (ADR "AUX" SS (RCV? T) (CSM <DATUM "COMSYS-MAINTAINER">) TO) 
+	#DECL ((SS) <OR <LIST [REST ADDRESS]> ADDRESS FALSE> (CSM ADR) ADDRESS
+	       (TO VALUE) <LIST [REST ADDRESS]> (RCV?) <OR 'T FALSE>)
+	<COND (<AEQUAL? ("COMMUNICATION-DAEMON") <DRD .ADR <GETFIX "AUTHOR">>>
+	       <COND (<=? .ADR .CSM>					 ;"OOPS"
+		      ())
+		     (ELSE <LIST .CSM>)>)
+	      (ELSE
+	       <COND (<EMPTY? .ADR>		        ;"AUTHOR PROCESS FAILED"
+		      <SET RCV? <>>
+		      <SET SS
+			   <OR <DRD () <GETFIX "ERROR-TO">>
+			       <DRD () <GETFIX "REPLY-TO">>
+			       <DRD () <GETFIX "FROM">>
+			       <DRD () <GETFIX "SENDER">>>>)
+		     (ELSE				     ;"RECEIVER FAILURE"
+		      <SET SS <DRD .ADR <GETFIX "ERROR-TO">>>)>
+	       <COND (<AND <TYPE? .SS LIST>
+			   <NOT <EMPTY? .SS>>
+			   <NOT <TYPE? <1 .SS> LIST>>>
+		      <SET SS (.SS)>)
+		     (<NOT .SS> <SET SS <LIST .CSM>>)>
+	       <COND (<EMPTY?
+		        <SET TO
+			     <MAPF ,LIST
+				   <FUNCTION (S) 
+					#DECL ((S) ADDRESS)
+					<COND (<AND .RCV? <=? .S .ADR>> <MAPRET>)
+					      (<KEYGET .S> <MAPRET .S>)
+					      (ELSE <MAPRET>)>>
+				   .SS>>>
+		      <LIST .CSM>)
+		     (ELSE .TO)>)>>
+
+\ 
+
+"ERR-REPORT -- given a process, addressee, and error result, reports the
+  error as required by process table, etc."
+
+<DEFINE ERR-REPORT (PRC ERR ADR "OPTIONAL" (MAIL? T)
+		    "AUX" (PVP <GET-PROCESS .PRC>) PATM
+			  (CURSPACE ,SCRATCH-SPACE) INFO (PRCP <>)
+			  (COMCOPY <>) (CSM <DATUM "COMSYS-MAINTAINER">))
+	#DECL ((ADR) ADDRESS (PRC) STRING (ERR) <FALSE FIX> (PVP) <OR FALSE PRCVEC>
+	       (INFO) <OR FALSE STRING <LIST [REST STRING]>> (CSM) ADDRESS
+	       (PRCM) <OR VECTOR FALSE> (PRCP) <OR FALSE FIX>
+	       (COMCOPY PATM) <OR ATOM FALSE> (CURSPACE) <SPECIAL SPACE>
+	       (MAIL?) <OR ATOM FALSE>)
+	<COND (.PVP
+	       <COND (<SET INFO <COMMON-ERR .PRC .ERR .ADR>>
+		      <SET COMCOPY T>)
+		     (<AND <SET PRCP <GET-ERROR .PVP .ERR>>
+			   <SET PATM <PRCERR .PVP>>
+			   <SET INFO <APPLY ,.PATM .PRC .ERR .ADR>>>)
+		     (ELSE
+		      <SET COMCOPY T>
+		      <SET INFO
+			   <ALIST .CURSPACE
+				  <ASTRING .CURSPACE
+"     An unrecognized error code was returned from the " .PRC
+"
+process.  The error code returned was:
+
+     ">
+				  <ASTRING .CURSPACE <UNPARSE .ERR>>>>)>)
+	      (ELSE
+	       <SET INFO
+		    <ALIST .CURSPACE
+			   <ASTRING .CURSPACE
+				    
+"     The " .PRC " process, an unknown process, signalled an error
+code of:
+
+     ">
+			   <ASTRING .CURSPACE <UNPARSE .ERR>>>>)>
+	<COND (.MAIL?
+	       <SENDMSG <COND (<OR <NOT .PRCP>
+				   <N==? <CHTYPE <ANDB .PRCP ,CCCSM> FIX> 0>>
+			       <SET COMCOPY T>
+			       <ACONS .CURSPACE <KEYGET .CSM> <ERR-TO .ADR>>)
+			      (<ERR-TO .ADR>)>
+			<ASTRING .CURSPACE
+				 <DRD .ADR <GETFIX "MESSAGE-ID">>
+				 ": "
+				 .PRC
+				 " Error">
+			<SET INFO
+			     <ASTRING .CURSPACE
+				      
+"     An error occurred during processing of the message described
+below:
+
+"
+				      !<ERR-HEADER .ADR .CURSPACE>
+				      ,CR
+				      !.INFO
+				      ,CR
+				      <COND (.COMCOPY
+					     "
+     The problem has also been reported to the message system
+maintainer.  If you do not understand the reasons for the problem,
+send a message to COMMUNICATION-SYSTEM-MAINTAINER@MIT-DMS for help.
+Please include the Message-id of the failing message.") ("")>>>
+		 "COMMUNICATION-DAEMON">)>
+	.INFO>
+
+\
+
+<DEFINE COMMON-ERR (PRC ERR ADR
+		      "AUX" ECOD RES (CURSPACE ,SCRATCH-SPACE))
+	#DECL ((PRC) STRING (ADR) ADDRESS
+	       (RES) <OR FALSE STRING <LIST [REST STRING]>>
+	       (ERR) FALSE (CURSPACE) <SPECIAL SPACE> (ECOD) FIX)
+	<COND (<EMPTY? .ERR>)
+	      (<==? <SET ECOD <1 .ERR>> 0>
+	       <ALIST .CURSPACE <ASTRING .CURSPACE
+
+"     An attempt to apply the " .PRC " process failed because no
+such process is known to the demon.">>)
+	      (<==? .ECOD -1>
+	       <ALIST .CURSPACE <ASTRING .CURSPACE
+
+"     The " .PRC " process failed because a MUDDLE error occurred
+during the processing.  This indicates a possible bug, and has been
+reported to the system maintainer(s).  The error was:
+
+" <2 .ERR>>>)
+	      (<==? .ECOD -2>
+	       <SET RES <ERR-REPORT .PRC <2 .ERR> .ADR <>>>
+	       <ALIST .CURSPACE <ASTRING .CURSPACE
+
+"     The " .PRC " process is considered to have failed, since
+a non-fatal error has been repeated on several successive attempts.
+This can indicate an internal bug, and has been reported. A
+description of the persistent non-fatal error follows.
+
+"> !.RES>)
+	      (<==? .ECOD -3>
+	       <ALIST .CURSPACE <ASTRING .CURSPACE
+
+"     The " .PRC " process failed because the handler returned a
+false with no error code.  This indicates a possible bug and has been
+reported to the system maintainer(s).">>)>>
+
+\ 
+
+"ERR-HEADER -- returns list of strings describing current message"
+
+<DEFINE ERR-HEADER (ADR SP "AUX" MSGID FRM ATO L WHEN) 
+	#DECL ((ADR) ADDRESS (SP) SPACE (VALUE) <LIST [REST STRING]>
+	       (MSGID) <OR STRING FALSE> (FRM) <OR ADDRESS FALSE>
+	       (L ATO) <OR FALSE LIST>
+	       (WHEN) <OR FALSE FIX>)
+	<SET L <ALIST .SP <ASTRING .SP "">>>
+	<COND (<SET MSGID <DRD .ADR <GETFIX "MESSAGE-ID">>>
+	       <ADDBACK .L
+			<ALIST .SP
+			       <ASTRING .SP
+"     Message-ID:  ">
+			       <ASTRING .SP .MSGID>
+			       <ASTRING .SP ,CR>>>)>
+	<COND (<SET WHEN <DRD .ADR "WHEN-ORIGINATED">>
+	       <ADDBACK .L
+			<ALIST .SP
+			       <ASTRING .SP 
+"     Sent:        ">
+			       <ASTRING .SP <S-TIME .WHEN>>
+			       <ASTRING .SP ,CR>>>)>
+	<COND (<SET FRM <DRD .ADR <GETFIX "AUTHOR">>>
+	       <ADDBACK .L
+			<ALIST .SP
+			       <ASTRING .SP
+"     From:        ">
+			       <S-ADDR .FRM .SP>
+			       <ASTRING .SP ,CR>>>)>	
+	<COND (<SET ATO <DRD .ADR <GETFIX "ACTION-TO">>>
+	       <ADDBACK .L
+			<ALIST .SP
+			       <ASTRING .SP
+"     To:          ">
+			       !<S-ADDRL .ATO .SP 18>
+			       <ASTRING .SP ,CR>>>)>
+	<COND (<SET FRM <DRD .ADR <GETFIX "SUBJECT">>>
+	       <ADDBACK .L
+			<ALIST .SP
+			       <ASTRING .SP
+"     Subject:     ">
+			       .FRM
+			       <ASTRING .SP ,CR>>>)>
+	.L>
+
+<ENDPACKAGE>

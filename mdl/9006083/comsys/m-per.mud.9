@@ -1,0 +1,191 @@
+
+<PACKAGE "M.PER">
+
+<ENTRY PERSONAL-PROCESSING
+       AUTHOR-PROCESSING
+       RECEIVER-PROCESSING>
+
+;"PERSONALIZING PROCESSES"
+
+<USE "AP"
+     "FIELDS"
+     "M.DEFS"
+     "M.READ"
+     "M.ERR"
+     "M.SET"
+     "M.PRCD"
+     "M.INP"
+     "MADMAN">
+
+<DEMON-PROCESS
+ "AUTHOR-PROCESSING"
+ AUTHOR-PROCESSING
+ PRC-ERR
+ [,FATAL
+  ,FATAL
+  ,FATAL
+  <>
+  ,FATAL
+  ,FATAL]>
+
+<DEMON-PROCESS
+ "RECEIVER-PROCESSING"
+ RECEIVER-PROCESSING
+ PRC-ERR
+ [,FATAL
+  ,FATAL
+  ,FATAL
+  <>
+  ,FATAL
+  ,FATAL]>
+
+<DEMON-PROCESS
+ "PERSONAL-PROCESSING"
+ PERSONAL-PROCESSING
+ PRC-ERR
+ [,FATAL
+  ,FATAL
+  ,FATAL
+  <>
+  ,FATAL
+  ,FATAL]>
+
+\
+
+<GDECL (EH) HANDLER>
+
+<DEFINE PERSONAL-PROCESSING (ADR "AUX" DATA SPECS LST TYP RES F (M ,MSG-SPACE)) 
+   #DECL ((VALUE) <OR ATOM FALSE> (ADR TYP) STRING (DATA) ANY (LST SPECS) LIST
+	  (M) SPACE (RES) <OR ATOM FALSE> (F) <OR FIX STRING>)
+   <PROG ()
+     <SET F
+	  <COND (<EMPTY? .ADR> <GETFIX "AUTHOR-PROCESSING">)
+		(ELSE <GETFIX "RECEIVER-PROCESSING">)>>
+     <COND (<SET DATA <DRD .ADR .F>>
+	    <COND (<OK? .F .DATA> <SET SPECS .DATA>)
+		  (ELSE <RETURN <AFALSE 1>>)>)
+	   (ELSE <RETURN>)>
+     <WATCH EH "ERROR" ,PERHND 4>
+     <SET RES
+      <REPEAT ()
+	<COND (<EMPTY? .SPECS> <RETURN T>)>
+	<SET LST <1 .SPECS>>
+	<SET TYP <1 .LST>>
+	<SET LST <REST .LST>>
+	<COND (<=? .TYP "INPUT">
+	       <OR <SET DATA
+			<PROG PRC-ACT ()
+			      #DECL ((PRC-ACT) <SPECIAL ACTIVATION>)
+			      <OR <SET DATA
+				       <LST-DO .LST <AVECTOR ,SCRATCH-SPACE
+							     <MVMSG ,MDB>
+							     .ADR
+							     <>>>>
+				  <RETURN <CHTYPE <ALIST .M
+							 2
+							 <ASTRING .M
+								  <UNPARSE <1 .DATA>>>>
+						  FALSE>>>>>
+		   <RETURN .DATA>>)
+	      (<=? .TYP "APPLY">
+	       <OR <SET DATA
+			<REPEAT PRC-ACT (AFN)
+				#DECL ((PRC-ACT) <SPECIAL ACTIVATION>
+				       (AFN) <OR APPLICABLE FALSE>)
+				<COND (<EMPTY? .LST> <RETURN T>)
+				      (<SET AFN <AP? <1 .LST>>> <APPLY .AFN .ADR>)
+				      (ELSE
+				       <RETURN
+					 <CHTYPE <ALIST .M
+							5
+							<ASTRING .M
+								 <UNPARSE <1 .LST>>>>
+						 FALSE>>)>
+				<SET LST <REST .LST>>>>
+		   <RETURN .DATA>>)
+	      (<=? .TYP "EVAL">
+	       <OR <SET DATA
+			<PROG PRC-ACT ()
+			      #DECL ((PRC-ACT) <SPECIAL ACTIVATION>)
+			      <MAPF <> ,EVAL .LST>
+			      T>>
+		   <RETURN <COND (<AND <NOT <EMPTY? .DATA>>
+				       <TYPE? <1 .DATA> FIX>>
+				  .DATA)
+				 (ELSE
+				  <CHTYPE <ALIST .M
+						 6
+						 <ASTRING .M "FALSE FROM EVAL">>
+					  FALSE>)>>>)
+	      (ELSE <RETURN <CHTYPE <ALIST .M 3 <ASTRING .M .TYP>> FALSE>>)>
+	<SET SPECS <REST .SPECS>>>>
+     <OFF ,EH>
+     .RES>>
+
+<SETG RECEIVER-PROCESSING ,PERSONAL-PROCESSING>
+
+<SETG AUTHOR-PROCESSING ,PERSONAL-PROCESSING>
+
+<DEFINE PERHND ("TUPLE" STUFF "AUX" (M ,MSG-SPACE) PA) 
+	#DECL ((STUFF) TUPLE (M) SPACE (PA) ACTIVATION)
+	<COND (<AND <NOT <MDBG?>>
+		    <ASSIGNED? PRC-ACT>
+		    <LEGAL? <SET PA .PRC-ACT>>>
+	       <DISMISS <CHTYPE <ALIST .M 6 <ASTRING .M <UNPARSE .STUFF>>>
+				FALSE>
+			.PA>)>>
+
+\ 
+
+"ERROR-ANALYZER"
+
+<DEFINE PRC-ERR (PRC ERR ADR "AUX" (ECOD <1 .ERR>) L (SS ,SCRATCH-SPACE)) 
+	#DECL ((ECOD) FIX (L) <OR FALSE LIST> (SS) SPACE
+	       (PRC ADR) STRING (ERR) <FALSE FIX>
+	       (VALUE) <OR LIST FALSE>)
+	<SET L <ALIST .SS <ASTRING .SS
+"     The " .PRC " process failed because ">>>
+	<COND (<==? .ECOD 1>
+	       <ADDBACK .L <ALIST .SS <ASTRING .SS
+			 		 "the specifications obtained
+were not in the proper format.  I.e., the data in the "
+			 <COND (<EMPTY? .ADR> "AUTHOR-PROCESSING")
+			       (ELSE "RECEIVER-PROCESSING")>
+			 "
+field was unusable.">>>)
+	      (<==? .ECOD 2>
+	       <ADDBACK .L <ALIST .SS <ASTRING .SS
+					 "an error occurred while
+processing an 'INPUT' command.  The error result from the input handler
+was:
+
+"
+			 <2 .ERR>>>>)
+	      (<==? .ECOD 3>
+	       <ADDBACK .L <ALIST .SS <ASTRING .SS
+					 "an unrecognized or
+unimplemented command was encountered in the processing specifications.
+The bad command was:
+
+"
+			 <2 .ERR>>>>)
+	      (<==? .ECOD 5>
+	       <ADDBACK .L <ALIST .SS <ASTRING .SS
+					 "a non-applicable object was
+encountered in a list of arguments to be APPLYed, i.e., using the
+APPLY command.  The bad object was:
+
+"
+			 <2 .ERR>>>>)
+	      (<==? .ECOD 6>
+	       <ADDBACK .L <ALIST .SS <ASTRING .SS
+					 "an MDL error was generated
+during processing of an APPLY, INPUT, or EVAL command.  The arguments
+to the ERROR call were:
+
+"
+			 <REST .ERR>>>>)
+	      (ELSE <SET L <>>)>
+	.L>
+
+<ENDPACKAGE>

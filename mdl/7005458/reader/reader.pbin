@@ -1,0 +1,2328 @@
+'<PCODE "3READE">
+
+<PACKAGE "DUMMY"> 
+
+<RENTRY READER-GROUP> 
+
+<BLOCK (<ROOT>)> 
+
+<SETG READER-GROUP  %<RSUBR!- '[ %<PCODE!- "3READE" 0> READER-GROUP #DECL (
+"VALUE" ATOM) AFALSE!-M-DEFS!-PACKAGE NMSGS!-R-UTIL!-PACKAGE 
+DO-OUTPUT!-M-DOUT!-PACKAGE DO-APPLY!-M-DOUT!-PACKAGE ALLIST!-MADMAN!-PACKAGE 
+PPRINT SCROUT!-IR-IO!-R-IO!-PACKAGE GET-LOC!-ASYLUM!-PACKAGE 
+ALLOC-MAP!-ASYLUM!-PACKAGE INDENT-TO SENDMSG!-M-MSG!-PACKAGE 
+SCROUT!-M-TIME!-PACKAGE SYMBOL!-SYMBOLS!-PACKAGE QUIT 
+MESSAGE-LOOP!-IMAIL!-MAIL!-PACKAGE XUNAME ADDSTRING!-BUF!-PACKAGE 
+INF-RESULT!-INFERIOR!-PACKAGE TECO-READ-BUFFER!-MUDTEC!-PACKAGE 
+TECO-BUFFER-SIZE!-MUDTEC!-PACKAGE INF-CONTIN!-INFERIOR!-PACKAGE 
+TECO-CLOSE!-MUDTEC!-PACKAGE TECO-OPEN!-MUDTEC!-PACKAGE 
+TECO-ALLOC!-MUDTEC!-PACKAGE TECO-KILL!-MUDTEC!-PACKAGE 
+INF-START!-INFERIOR!-PACKAGE TECO-LOAD!-MUDTEC!-PACKAGE LSH FILSTR MANIFEST T %<
+RGLOC HOSTNUMBER!-M-DEFS!-PACKAGE T> MSETG!-M-DEFS!-PACKAGE 
+ALREADY-GASSIGNED!-IM-DEFS!-M-DEFS!-PACKAGE %<RGLOC MSG-SPACE!-M-DEFS!-PACKAGE T
+> %<TYPE-W SPACE!-MADMAN!-PACKAGE VECTOR> %<INTERNAL-RSUBR 
+ALIST!-MADMAN!-PACKAGE -1> %<INTERNAL-RSUBR ARELEASE!-MADMAN!-PACKAGE 2> 
+%<INTERNAL-RSUBR AVECTOR!-MADMAN!-PACKAGE -1> %<INTERNAL-RSUBR 
+ASTRING!-MADMAN!-PACKAGE -1> " :;" INTERRUPT %<RGLOC 
+DEMON-DEBUG?!-M-DEFS!-PACKAGE T> %<RGLOC DUMMY-HANDLER!-IM-DEFS!-M-DEFS!-PACKAGE
+T> %<RGLOC INCHAN T> %<RGLOC OUTCHAN T> %<TYPE-W BUFFER!-BUF!-PACKAGE VECTOR> %<
+RGLOC BUFSIZE!-BUF!-PACKAGE T> %<RGLOC DISPLAY?!-BUF!-PACKAGE T> %<RGLOC 
+IMDEL!-BUF!-PACKAGE T> %<RGLOC DELPRINT!-BUF!-PACKAGE T> OUTCHAN "TTY" 
+"-continued-" "
+" (CHANNEL) "\\\"" "\\\\" %<TYPE-W INF!-INFERIOR!-PACKAGE VECTOR> ![
+*BREAK-16!-INFERIOR!-PACKAGE *VALUE!-INFERIOR!-PACKAGE!] %<RGLOC 
+REENTER-TECO-CHAR!-BUF!-PACKAGE T> TECO!-MUDTEC!-PACKAGE %<RGLOC 
+TECO!-MUDTEC!-PACKAGE T> %<TYPE-C INF!-INFERIOR!-PACKAGE VECTOR> "C" 
+"You are starting " %<RGLOC TECO-PROGRAM!-BUF!-PACKAGE T> 
+" for the first time.  If your INIT
+is unconventional, you may have to exit with ^C, ^K
+or their equivalents (not ^Z!) after it begins listening.
+" "Control-Z before ready? " " edit aborted.
+" "Back to " "An empty string was returned from " 
+".
+The buffer has been left unchanged.
+" "DONE" ^Z-TYPED!-INFERIOR!-PACKAGE "Please return from " 
+" with ^C, ^K, or their equivalents.
+Please re-enter with ^" ".
+You could get yourself into a bad state.
+" "An error occurred in returning from " ": " 
+" was not able to start up successfully: " (*BREAK-16!-INFERIOR!-PACKAGE 
+:KILL!-INFERIOR!-PACKAGE) *VALUE!-INFERIOR!-PACKAGE ":KILL" %<RGLOC 
+TTY1!-BUF!-PACKAGE T> %<RGLOC TTY2!-BUF!-PACKAGE T> %<RGLOC 
+TUV!-IBUF!-BUF!-PACKAGE T> GETSTRACT!-BUF!-PACKAGE OLD-TTY!-IBUF!-BUF!-PACKAGE 
+%<RGLOC GLOBL-GETSTR-HAND!-IBUF!-BUF!-PACKAGE T> ERROR!-INTERRUPTS ELSE %<RGLOC 
+GLOBL-GETSTR-CHAND!-IBUF!-BUF!-PACKAGE T> %<RGLOC BUF-CTL-G?!-BUF!-PACKAGE T> %<
+RGLOC BUF-CTL-S?!-BUF!-PACKAGE T> #DISMISS T CHRTABLE!-BUF!-PACKAGE 
+DELPRINT!-BUF!-PACKAGE (ACTIVATION) %<RGLOC BUF-ECHO-FLAG!-BUF!-PACKAGE T> %<
+RGLOC WORDBRKS!-BUF!-PACKAGE T> %<RGLOC LINEBRKS!-BUF!-PACKAGE T> " XXX?" "X" 
+"S" "R" "L" "U" %<RGLOC GARBS!-IBUF!-BUF!-PACKAGE T> "î" "File-name: " "READ" "DSK:" "[File-Input Aborted]" "[DONE]" 
+ARG-WRONG-TYPE!-ERRORS ADDSTRING!-BUF!-PACKAGE "" 
+DEFAULT-SYMBOL!-ISYMBOLS!-SYMBOLS!-PACKAGE (<OR FIX FALSE>) 
+EXPLANATION!-ISYMBOLS!-SYMBOLS!-PACKAGE (<OR STRING FALSE>) 
+TABLES!-ISYMBOLS!-SYMBOLS!-PACKAGE (<TUPLE [REST VECTOR]>) %<RGLOC 
+SYMBUF!-ISYMBOLS!-SYMBOLS!-PACKAGE T> "Input symbol " "(SYM) " 
+"[No information available]" LERR\ !-INTERRUPTS 
+SYMACT!-ISYMBOLS!-SYMBOLS!-PACKAGE %<RGLOC SYMBOL-CHRTABLE!-SYMBOLS!-PACKAGE T> 
+%<RGLOC ABORTED!-SYMBOLS!-PACKAGE T> %<RGLOC 
+BEST-VAL!-ISYMBOLS!-SYMBOLS!-PACKAGE T> FAIL-HOOK!-SYMBOLS!-PACKAGE %<RGLOC 
+FAIL-HOOK!-SYMBOLS!-PACKAGE T> %<RGLOC BEST-VALUE!-ISYMBOLS!-SYMBOLS!-PACKAGE T>
+ " (No symbol matches input)" %<RGLOC EMPTY-LINE!-SYMBOLS!-PACKAGE T> " [Abort]"
+ "(No matches)" COMMAND-LOOP-ACTIVATION!-SYMBOLS!-PACKAGE %<RGLOC 
+TABS!-ISYMBOLS!-SYMBOLS!-PACKAGE T> %<RGLOC SPACES!-ISYMBOLS!-SYMBOLS!-PACKAGE T
+> %<RGLOC TIME-LIST!-IITIME!-ITIME!-PACKAGE T> ![31 28 31 30 31 30 31 31 30 31 
+30 31!] %<RGLOC ZONELIST!-IITIME!-ITIME!-PACKAGE T> %<RGLOC 
+DAYS!-PARSE-DATE!-PACKAGE T> ["AM" "PM" "NOON" "MIDNIGHT"] ".-/" %<RGLOC 
+MONTHS!-PARSE-DATE!-PACKAGE T> ["NOON" "MIDNIGHT"] ["AM" "PM"] %<RGLOC 
+TBRKS!-LEXER!-PACKAGE T> %<RGLOC HOST-PAGE!-IHOSTS!-HOSTS!-PACKAGE T> 
+"SYSBIN;HOSTS2 >" %<RGLOC HOST-LEN!-IHOSTS!-HOSTS!-PACKAGE T> %<RGLOC 
+NET-SEARCH-LIST!-IHOSTS!-HOSTS!-PACKAGE T> %<RGLOC 
+GATEWAY-LIST!-IHOSTS!-HOSTS!-PACKAGE T> CANT-GET-PAGES!-IHOSTS!-HOSTS!-PACKAGE 
+CANT-LOAD-HOST-TABLE!-IHOSTS!-HOSTS!-PACKAGE NUMTBS!-IHOSTS!-HOSTS!-PACKAGE %<
+RGLOC MAP-CHAN!-ILSRTNS!-LSRTNS!-PACKAGE T> "READB" "INQUIR;LSR1 >" %<RGLOC 
+FILE-TIME!-ILSRTNS!-LSRTNS!-PACKAGE T> %<RGLOC 
+BUF-COUNT!-ILSRTNS!-LSRTNS!-PACKAGE T> %<RGLOC 
+PAGE-ZERO!-ILSRTNS!-LSRTNS!-PACKAGE T> %<RGLOC 
+BASE-ADDR!-ILSRTNS!-LSRTNS!-PACKAGE T> %<RGLOC 
+UNAME-TAB!-ILSRTNS!-LSRTNS!-PACKAGE T> %<RGLOC 
+LASTNAME-TAB!-ILSRTNS!-LSRTNS!-PACKAGE T> ("COMEXP") " -- " ", " "Okay." 
+"Illegal addressee." RECURSION-DEPTH-EXCESSIVE!-ICHKADR!-CHKADR!-PACKAGE 
+S-EXP!-ICHKADR!-CHKADR!-PACKAGE %<RGLOC HOSTNUMBER!-ICHKADR!-CHKADR!-PACKAGE T> 
+" -- Data base is not in proper format." " -- Data base not found: " " 	" %<
+RGLOC RCVR-STRING!-ICHKADR!-CHKADR!-PACKAGE T> "COMKEY" #FALSE (
+"Empty Addressee Name") #FALSE ("Empty Addressee in Forwarding Address") #FALSE 
+("Invalid Host Address") %<RGLOC BADHOST!-ICHKADR!-CHKADR!-PACKAGE T> ".FILE." 
+"(DIR)" "DSK" %<RGLOC ALLOW-TOURISTS!-ICHKADR!-CHKADR!-PACKAGE T> #FALSE (
+"Invalid Local Addressee") "UNKNOWN" #FALSE ("Addressee was UNKNOWN") "BUG-" %<
+RGLOC NOBOX!-ICHKADR!-CHKADR!-PACKAGE T> "Ambiguous Last Name" 
+"Ambiguous Local Name" ":; []{}" OBLIST ">" "COMDAT" %<RGLOC 
+SAVE-WHERE!-IMAIL!-MAIL!-PACKAGE T> %<RGLOC DIVERT-INT!-IMAIL!-MAIL!-PACKAGE T> 
+%<RGLOC DIVERT-HAND!-IMAIL!-MAIL!-PACKAGE T> INCHAN "MAIL" "SAVED" "CHAR" 
+" (Not logged in?) " %<RGLOC INITED!-IMAIL!-MAIL!-PACKAGE T> %<RGLOC QUIT T> %<
+RGLOC REP T> %<RGLOC COMPOSING?!-MAIL!-PACKAGE T> "FEA" %<RGLOC 
+FEATURE!-IMAIL!-MAIL!-PACKAGE T> "BUG" %<RGLOC BUG!-IMAIL!-MAIL!-PACKAGE T> 
+"REM" %<RGLOC REMIND!-IMAIL!-MAIL!-PACKAGE T> "MSG" %<RGLOC 
+MSG!-IMAIL!-MAIL!-PACKAGE T> "FOR" %<RGLOC FORWARD!-IMAIL!-MAIL!-PACKAGE T> 
+"ANS" %<RGLOC ANSWER!-IMAIL!-MAIL!-PACKAGE T> "COR" %<RGLOC 
+CORRECT!-IMAIL!-MAIL!-PACKAGE T> %<RGLOC IN-READER?!-MAIL!-PACKAGE T> %<RGLOC 
+FROM!-IMAIL!-MAIL!-PACKAGE T> %<RGLOC JCL-CTRL-C!-IMAIL!-MAIL!-PACKAGE T> 
+CLEVEL!-IMAIL!-MAIL!-PACKAGE (FIX) ANOTHER-MSG!-IMAIL!-MAIL!-PACKAGE %<RGLOC 
+MAIL-ASK-ME!-IMAIL!-MAIL!-PACKAGE T> %<RGLOC ASK-ME!-IMAIL!-MAIL!-PACKAGE T> %<
+RGLOC MSG-ASK-ME!-IMAIL!-MAIL!-PACKAGE T> %<RGLOC 
+MSGALWAYS!-IMAIL!-MAIL!-PACKAGE T> %<RGLOC ALWAYSFIELDS!-IMAIL!-MAIL!-PACKAGE T>
+ %<RGLOC SKIP-SUBJECT!-IMAIL!-MAIL!-PACKAGE T> %<RGLOC 
+BUGALWAYS!-IMAIL!-MAIL!-PACKAGE T> %<RGLOC BUG-ASK-ME!-IMAIL!-MAIL!-PACKAGE T> 
+%<RGLOC FORWARD-ASK-ME!-IMAIL!-MAIL!-PACKAGE T> %<RGLOC 
+FWDALWAYS!-IMAIL!-MAIL!-PACKAGE T> %<RGLOC IN-REPLY-TO!-MAIL!-PACKAGE T> 
+"IN-REPLY-TO" %<RGLOC CARBON-COPY-TO!-MAIL!-PACKAGE T> "CARBON-COPY-TO" %<RGLOC 
+CPU-START!-IMAIL!-MAIL!-PACKAGE T> %<RGLOC CONSOLE-START!-IMAIL!-MAIL!-PACKAGE T
+> CLOOP!-IMAIL!-MAIL!-PACKAGE "ERROR" %<RGLOC MORE-MSGS!-IMAIL!-MAIL!-PACKAGE T>
+ "A" %<RGLOC ACK-CONDS!-IMAIL!-MAIL!-PACKAGE T> %<RGLOC 
+TOALWAYS!-IMAIL!-MAIL!-PACKAGE T> %<RGLOC EXPIRES!-IMAIL!-MAIL!-PACKAGE T> %<
+RGLOC SKIP-TO!-IMAIL!-MAIL!-PACKAGE T> %<RGLOC 
+SKIP-MSG-FILE!-IMAIL!-MAIL!-PACKAGE T> %<RGLOC SKIP-MSG-NO!-MAIL!-PACKAGE T> %<
+RGLOC JCL-TEXT!-IMAIL!-MAIL!-PACKAGE T> %<RGLOC STIME!-IMAIL!-MAIL!-PACKAGE T> 
+%<RGLOC FIELD-TABLE!-IMAIL!-MAIL!-PACKAGE T> "TO" "PROGRAM" "SUBJECT" "MSG-FILE"
+ "MSG-NO" "(Done) " "Editor to use" %<RGLOC DBRKS!-IMAIL!-MAIL!-PACKAGE T> 
+"Using TECO (as 'TS " "')
+" 
+"I can't understand that.  Please type the name of the job to run,
+e.g., TECO, T, RMODE, EMACS, etc.
+" "WHEN-ORIGINATED" "SENDER" "EXPIRES" "ACKNOWLEDGE" "FAILED" "DELIVERY" %<RGLOC
+FAILED!-IMAIL!-MAIL!-PACKAGE T> "CONSOLE-MINUTES" "CPU-SECONDS" %<RGLOC TO T> %<
+RGLOC PROGRAM!-IMAIL!-MAIL!-PACKAGE T> "FEATURE-" %<RGLOC 
+BLIND!-IMAIL!-MAIL!-PACKAGE T> %<RGLOC NOTES-LIST!-IMAIL!-MAIL!-PACKAGE T> %<
+RGLOC NOTES!-IMAIL!-MAIL!-PACKAGE T> "ACTION-TO" "BLIND" "EMERGENCY" (
+"CORRECTION") "REMIND" "\"SCHEDULE\" (\"SENDING\"" 
+"You must give your name instead of" "Real name" "MORE-TO" 
+"(\"FORWARDING\" \"APPEND\")" "(((" ") ((" "))))" "Message id is not a number" 
+"Message id" "FEATURE" " => " "REMINDER" " for " ("EXPAND-USING" "ADD") %<RGLOC 
+ANNOTATION!-IMAIL!-MAIL!-PACKAGE T> " \"APPEND\")" "\"[From " "]\" " "))" 
+"SCHEDULE" ("FILE-OUTPUT" #FALSE ()) ("AUTHOR-FILE-OUTPUT" "APPEND") "APPEND" %<
+RGLOC FILEBRKS!-IMAIL!-MAIL!-PACKAGE T> "File name incomprehensible?" "File" %<
+RGLOC TOBRKS!-IMAIL!-MAIL!-PACKAGE T> %<RGLOC JCLBRKS!-IMAIL!-MAIL!-PACKAGE T> 
+"@%" "([{" %<RGLOC KEYBREAKS!-IMAIL!-MAIL!-PACKAGE T> %<RGLOC 
+KEYWORDS!-IMAIL!-MAIL!-PACKAGE T> "File to write to" ";M >" "[Aborted]" %<RGLOC 
+IFILE!-IMAIL!-MAIL!-PACKAGE T> "' empty? Specify it before sending." "PRINT" 
+"COMSYS" "SENT" "Open of " " failed" " 	î" %<RGLOC TEMPORARY!-IMAIL!-MAIL!-PACKAGE T> %<RGLOC TEXT!-MAIL!-PACKAGE T> %<
+RGLOC MSG-FILE!-IMAIL!-MAIL!-PACKAGE T> %<RGLOC SUBJECT!-MAIL!-PACKAGE T> %<
+RGLOC EOL!-IMAIL!-MAIL!-PACKAGE T> "JCL switches" "/ ," 
+"Uninterpreted switch ignored:  " %<RGLOC NOTE-TEXT!-IMAIL!-MAIL!-PACKAGE T> 
+NLEVEL!-IMAIL!-MAIL!-PACKAGE NOTES-LOOP!-IMAIL!-MAIL!-PACKAGE %<RGLOC 
+COMPOS-CHRTABLE!-MAIL!-PACKAGE T> COMPOS-CHRTABLE-MUNGED!-IMAIL!-MAIL!-PACKAGE 
+%<RGLOC PREVIOUS-NOTE!-IMAIL!-MAIL!-PACKAGE T> %<RGLOC 
+NOTE-LEVEL!-IMAIL!-MAIL!-PACKAGE T> %<RGLOC TIME T> 
+PROMPT-VERBOSE!-IMAIL!-MAIL!-PACKAGE (STRING) BUF!-IMAIL!-MAIL!-PACKAGE (
+BUFFER!-BUF!-PACKAGE) "You cannot change that field during Forwarding!" 
+"Terminate input with 'ESC'." "..." %<RGLOC SPACE!-IMAIL!-MAIL!-PACKAGE T> %<
+RGLOC SP!-IMAIL!-MAIL!-PACKAGE T> %<RGLOC DUMP-FILE!-IMAIL!-MAIL!-PACKAGE T> %<
+RGLOC INTERESTING-GVALS!-IMAIL!-MAIL!-PACKAGE T> SETG 
+NOTES-LIST!-IMAIL!-MAIL!-PACKAGE " (" ")]" "File to load from" 
+"[Illegal object of type " " in MAIL dump file]" %<RGLOC MSG-NO!-MAIL!-PACKAGE T
+> "When to remind" "Can't understand that date: " " Please try again." 
+"Disabled." "When to report if not delivered" 
+"Default failure acknowledgment (two days)." "When MSG expires" " numbers" %<
+RGLOC EXPUSING!-IMAIL!-MAIL!-PACKAGE T> "COMEXP" %<TYPE-C BUFFER!-BUF!-PACKAGE 
+VECTOR> "Unknown host given in addressee" "Host" "' field: " ": '" "'." 
+"More messages to come" "No more messages" %<RGLOC 
+EDIT-CHRTABLE!-IMAIL!-MAIL!-PACKAGE T> "Edit: " %<RGLOC 
+EDTEXPL!-IMAIL!-MAIL!-PACKAGE T> ["Edit-flush" "Send-level" "Reader" "Print" 
+"To" "Carbon-copy-to" "c" "cc" "Blind-carbon-copy-to" "bcc" "Subject" "From" 
+"Reply-to" "Message" "Keywords" "Note" "Last-note" "Enclosures" "In-reply-to" 
+"Full-name-of-sender" "Set-switches" "Select-editor" "Expansion-data-bases" 
+"File-output-to" "Program" "Annotation" "Msg-file" "Msg-expiration" 
+"Forward-message" "Muddle" "Save-mail" "Load-mail" "Quit"] %<RGLOC 
+REPLY-TO!-IMAIL!-MAIL!-PACKAGE T> %<RGLOC ENCLOSURES!-IMAIL!-MAIL!-PACKAGE T> %<
+RGLOC FULL-NAME!-IMAIL!-MAIL!-PACKAGE T> %<RGLOC FILES!-IMAIL!-MAIL!-PACKAGE T> 
+%<RGLOC SEND-CHRTABLE!-IMAIL!-MAIL!-PACKAGE T> "Send: " 
+"Send commands:
+
+	'Normally' to send the message (default)
+	'Save-mail' to save the current state of buffers and switches
+	'Load-mail' to load a previously saved state
+	'Tty' to print the message on the TTY
+	'File' to print the message to a File
+	'More-messages' to toggle multiple message mode
+
+	'Acknowledge-delivery' toggles delivery acknowledgment
+	'Acknowledge-failure' toggles delivery failure acknowledgment
+	
+	'Edit-level' to get to Edit level
+	'Reader' to return to the Reader (if you are in it)
+	'Quit' to quit the mailer" ["Edit-level" "Reader" "Normally" "File" 
+"Save-mail" "Load-mail" "More-messages" "Tty" "Muddle" "Quit" 
+"Acknowledge-delivery" "Acknowledge-failure"] %<RGLOC BUFTECO!-BUF!-PACKAGE T> 
+%<RGLOC READER-SPACE!-R-DEFS!-PACKAGE T> %<TYPE-C SPACE!-MADMAN!-PACKAGE VECTOR>
+ %<INTERNAL-RSUBR ARESTORE!-MADMAN!-PACKAGE 1> %<INTERNAL-RSUBR 
+AFIND!-MADMAN!-PACKAGE 1> "TEXT" "FROM" ("SENDING") SNM "COMSYS-MESSAGE-DIR" 
+"_RQST_" CANNOT-OPEN-REQUEST-FILE!-IM-MSG!-M-MSG!-PACKAGE RQOPEN!-M-MSG!-PACKAGE
+ "COMSYS-NEW-FILE" CANNOT-RENAME-REQUEST-FILE!-IM-MSG!-M-MSG!-PACKAGE 
+RQCLOSE!-M-MSG!-PACKAGE %<RGLOC CLOCK-QUEUE!-CLOCK!-PACKAGE T> %<RGLOC 
+CLOCK-INTERVAL!-CLOCK!-PACKAGE T> %<RGLOC CLOCK-HANDLER!-CLOCK!-PACKAGE T> 
+"REALT" %<RGLOC CLOCK-MANAGER!-ICLOCK!-CLOCK!-PACKAGE T> %<TYPE-W 
+CINT!-CLOCK!-PACKAGE VECTOR> %<RGLOC CLOCK-DEBUG?!-ICLOCK!-CLOCK!-PACKAGE T> 
+">>>> Stray alarm?: " " <<<<" ILLEGAL-ACTIVATION!-ERRORS %<TYPE-C 
+CINT!-CLOCK!-PACKAGE VECTOR> "#CINT [" " *" ":ACTIVATION" %<RGLOC 
+ZAP!-IM-TIME!-M-TIME!-PACKAGE T>  %<RSUBR!- '[ %<PCODE!- "3READE" 48602> 
+ANONF2!-TMP #DECL ("VALUE" ATOM ANY) T %<RGLOC 
+PRINTTIME!-IM-TIME!-M-TIME!-PACKAGE T>]> %<RGLOC 
+PRINTTIME!-IM-TIME!-M-TIME!-PACKAGE T> "***** " " " " *****" CRLF %<RGLOC 
+DATA!-IM-DATA!-M-DATA!-PACKAGE T> DATE!-IM-DATA!-M-DATA!-PACKAGE 
+"COMSYS-SORTED-DATA" "COMSYS-DATA-DIR" "??? Unsorted: " " from " " at " TO "?" 
+"??? Loaded datum chomps: " %<RGLOC GET-DATUM-ERRORS?!-M-DATA!-PACKAGE T> (
+"COMSYS") "COMSYS-Daemon" CANT-LOAD-DATUM!-IM-DATA!-M-DATA!-PACKAGE %<RGLOC 
+LOADED-STUFF!-M-DATA!-PACKAGE T> %<RGLOC PURIFIED?!-M-DATA!-PACKAGE T> 
+"ALREADY PURIFIED, SORRY." GETDERR!-IM-DATA!-M-DATA!-PACKAGE %<RGLOC 
+READ-ERROR!-IM-DATA!-M-DATA!-PACKAGE T> GETDACT!-IM-DATA!-M-DATA!-PACKAGE %<
+RGLOC GETDERR!-IM-DATA!-M-DATA!-PACKAGE T> "PURIFIED ALREADY:" 
+"NOT YET PURIFIED:" ")" %<RGLOC FLD!-FIELDS!-PACKAGE T> "COMSYS-STRING-FIELDS" 
+"COMSYS-FIX-FIELDS" "COMSYS-FIX-DECLS" "COMSYS-STRING-DECLS" #FALSE (
+"INVALID DATUM") "USERS1" %<RGLOC HSTABLE!-IUSRUTI!-USRUTI!-PACKAGE T> 
+"INQUIR;DIRS BIN" %<RGLOC JUNKUV!-IUSRUTI!-USRUTI!-PACKAGE T> "DEAD-HOSTS" %<
+RGLOC RCVR-STRING!-IUSRUTI!-USRUTI!-PACKAGE T> "COMSYS-KEY-DATA" %<RGLOC 
+BADHOST!-IUSRUTI!-USRUTI!-PACKAGE T> %<RGLOC ALLOW-TOURISTS!-USRUTI!-PACKAGE T> 
+%<INTERNAL-RSUBR ACOPY!-MADMAN!-PACKAGE 2> %<RGLOC 
+NOBOX!-IUSRUTI!-USRUTI!-PACKAGE T> %<INTERNAL-RSUBR ACONS!-MADMAN!-PACKAGE 3> 
+"[For " "] " "; " %<RGLOC LINE-LNTH!-PRTUTI!-PACKAGE T> "??" %<RGLOC 
+MONTHS!-PRTUTI!-PACKAGE T> %<RGLOC ITS-SITES!-PRTUTI!-PACKAGE T> "]" " by " 
+"Forwarded-by:" "on " " <[MIT-DMS]." "----- Enclosure #" ":  " " -----" ":" ";" 
+"Cannot read file: " "19" "Forwarded to: " "Forwarded by: " "Replied-to: " 
+"-----" "DEFAULT" %<RGLOC TAIU!-M-TAI!-PACKAGE T> %<RGLOC TAID!-M-TAI!-PACKAGE T
+> %<RGLOC TAINUM!-M-TAI!-PACKAGE T> %<RGLOC TAIC!-M-TAI!-PACKAGE T> %<RGLOC 
+TAICTR!-M-TAI!-PACKAGE T> %<RGLOC DEMON?!-M-DEFS!-PACKAGE T> 
+"Flushing Tailor Data for " "COMSYS-MSG-DATA" "DEFAULT-MSG-DATA" %<RGLOC 
+SCRATCH-SPACE!-M-DEFS!-PACKAGE T> %<RGLOC TAIDIR!-M-TAI!-PACKAGE T> %<RGLOC 
+TAIFIL!-M-TAI!-PACKAGE T> %<RGLOC DEMON!-IM-TAI!-M-TAI!-PACKAGE T> [] <VECTOR [
+REST STRING ANY]> "Loaded Tailor Data for " ">>>>> Bad Tailor Data for " 
+" <<<<<" "No Tailor Data found for " %<RGLOC SYSTEM-ASYLUM!-M-DEFS!-PACKAGE T> 
+%<INTERNAL-RSUBR RESET-DATA-FILE!-ASYLUM!-PACKAGE 1> "COMSYS-SYSTEM-ASYLUM" 
+%<INTERNAL-RSUBR OPEN-DATA-FILE!-ASYLUM!-PACKAGE 4> 
+CANT-OPEN-SYSTEM-ASYLUM!-ERRORS "COMSYS-MSG-ASYLUM" %<RGLOC MDB!-M-READ!-PACKAGE
+T> %<RGLOC COMSYS-OPEN-MSG-ASYLUM!-M-DEFS!-PACKAGE T> %<INTERNAL-RSUBR 
+OPEN-DATA-FILE!-ASYLUM!-PACKAGE 2> "FILE NOT FOUND" "COMSYS-LONGTERM" %<TYPE-W 
+ASYLUM!-ASYLUM!-PACKAGE VECTOR> %<INTERNAL-RSUBR 
+CLOSE-DATA-FILE!-ASYLUM!-PACKAGE 1> MESSAGE-NOT-WRITTEN!-ERRORS 
+DCLOSE!-M-READ!-PACKAGE %<INTERNAL-RSUBR AFIND!-MADMAN!-PACKAGE 3> %<RGLOC 
+QUEUE-SPACE!-M-DEFS!-PACKAGE T> NO-MESSAGE-OPEN!-ERRORS %<INTERNAL-RSUBR 
+DATA-AREAD!-ASYLUM!-PACKAGE 3> %<RGLOC READ-WRITE?!-M-READ!-PACKAGE T> "Read: " 
+<VECTOR [REST STRING VECTOR]> %<RGLOC LOSING-DATA!-M-READ!-PACKAGE T> #FALSE (
+"BAD MESSAGE DATA -- ,LOSING-DATA") %<RGLOC COMSYS-ASYLUM-MAP!-M-READ!-PACKAGE T
+> "Read Msg Map" MAP-DISAPPEARED!-ERRORS MSG-LOC!-M-READ!-PACKAGE 
+"LINK-TO-ADDRESSEE-AREA" "COPY-TO-ADDRESSEE-AREA" "MISCELLANEOUS" "TAILOR" 
+NO-MSG-OPEN!-ERRORS %<RGLOC ASYUV!-ASYSTAT!-PACKAGE T> %<RGLOC 
+DUV1!-IASYLUM!-ASYLUM!-PACKAGE T> %<RGLOC AUV2!-IASYSTAT!-ASYSTAT!-PACKAGE T> %<
+RGLOC DLEN!-IASYSTAT!-ASYSTAT!-PACKAGE T> %<RGLOC READER-ASYLUM!-R-DEFS!-PACKAGE
+T> %<RGLOC MESSAGE-TABLE!-R-DEFS!-PACKAGE T> "Last updated " %<RGLOC 
+UPDATE?!-R-DEFS!-PACKAGE T> "[No Reader-Asylum exists for " %<RGLOC 
+USER!-R-DEFS!-PACKAGE T> "ASYLUM" %<RGLOC READER-ASYLUM-FILE!-R-IO!-PACKAGE T> 
+%<RGLOC FOLDER-TABLE!-R-DEFS!-PACKAGE T> %<RGLOC FOLDER-SYMBOLS!-R-DEFS!-PACKAGE
+T> %<INTERNAL-RSUBR ARESET!-MADMAN!-PACKAGE 1> %<INTERNAL-RSUBR 
+AIUVECTOR!-MADMAN!-PACKAGE 3> %<INTERNAL-RSUBR OPEN-DATA-FILE!-ASYLUM!-PACKAGE 1
+> "[Reader-Asylum for " " already exists.]" "Initializing Reader-Asylum for " 
+" [Ready]" %<INTERNAL-RSUBR DATA-RESERVE!-ASYLUM!-PACKAGE 2> %<INTERNAL-RSUBR 
+DATA-APRINT!-ASYLUM!-PACKAGE 4> "Failed: " %<RGLOC UPDATE-ALWAYS?!-R-IO!-PACKAGE
+T> %<RGLOC USED-READER-FILE!-R-IO!-PACKAGE T> 
+CANT-DELETE-READER-FILE!-IR-IO!-R-IO!-PACKAGE %<RGLOC 
+READER-TAILOR!-R-DEFS!-PACKAGE T> %<RGLOC RENUMBER?!-R-IO!-PACKAGE T> " message"
+ " copied to the user asylum." %<RGLOC LOCAL-MESSAGES!-R-DEFS!-PACKAGE T> 
+%<INTERNAL-RSUBR DATA-DELETE!-ASYLUM!-PACKAGE 2> %<INTERNAL-RSUBR 
+DATA-READW!-ASYLUM!-PACKAGE 2> %<RGLOC RDEBUG?!-R-IO!-PACKAGE T> 
+%<INTERNAL-RSUBR DATA-PRINTW!-ASYLUM!-PACKAGE 3> "Can't read " %<RGLOC 
+DATA-ERRORS!-ASYLUM!-PACKAGE T> "(Empty False?)" %<INTERNAL-RSUBR 
+DATA-OPEN!-ASYLUM!-PACKAGE 3> ABOUT-TO-CLOBBER!-IR-IO!-R-IO!-PACKAGE 
+%<INTERNAL-RSUBR DATA-IPRINT!-ASYLUM!-PACKAGE 4> %<INTERNAL-RSUBR 
+DATA-CLOSE!-ASYLUM!-PACKAGE 2> "Write of " " Failed: " 
+ALLOCATOR-ABOUT-TO-CLOBBER!-IR-IO!-R-IO!-PACKAGE %<INTERNAL-RSUBR 
+ALLOC-MAP!-ASYLUM!-PACKAGE 1> %<RGLOC XUV!-IR-IO!-R-IO!-PACKAGE T> 
+%<INTERNAL-RSUBR GET-LOC!-ASYLUM!-PACKAGE 2> ["% of the allocator is used." 
+"  words is the largest single block available." 
+"  words are free in the asylum." 
+"  words is the total length of the data area." 
+"% of the data area has ever been used."] %<RGLOC NULL T> "PRINTB" 
+IHAN!-IR-IO!-R-IO!-PACKAGE "IOC" %<RGLOC IOCHAND!-IR-IO!-R-IO!-PACKAGE T> 
+DBACT!-IR-IO!-R-IO!-PACKAGE %<RGLOC IHAN!-IR-IO!-R-IO!-PACKAGE T> 
+">>>> Ioc During Data Base Creation: " AND OR NOT MEMBER BEFORE!-R-UTIL!-PACKAGE
+ AFTER!-R-UTIL!-PACKAGE ON BETWEEN!-R-UTIL!-PACKAGE 
+BAD-OP!-IR-UTIL!-R-UTIL!-PACKAGE BAD-KEY!-IR-UTIL!-R-UTIL!-PACKAGE 
+"No messages?" "Empty bin?" "No such message(s)?" "Nothing matched?" 
+"No messages with that tag?" "No such message?" "Empty folder?" 
+"Nothing matches?" "No more messages?" "Bad search key?" "  " "No" "[Message #" 
+%<RGLOC FIX-TABLE!-R-DEFS!-PACKAGE T> "No Reader Asylum?" " NEW" " OLD" 
+"Compaction successful." "Reader Asylum compaction failed:" "NEW ASYLUM" 
+%<INTERNAL-RSUBR AGC!-MADMAN!-PACKAGE 2> OVERWROTE-RESERVED-MANIAC!-ERRORS 
+READER-GC MESSAGE-PRINT-FAILED!-ERRORS MESSAGE-READ-FAILED!-ERRORS 
+%<INTERNAL-RSUBR AIVECTOR!-MADMAN!-PACKAGE 3> %<INTERNAL-RSUBR 
+AGIVE!-MADMAN!-PACKAGE 1> OPEN-FAILED!-ERRORS GET-LENGTH %<RGLOC 
+READER-INPUT-FILE!-IR-INP!-R-INP!-PACKAGE T> %<RGLOC 
+OLD-READER-INPUT-FILE!-IR-INP!-R-INP!-PACKAGE T> " new message" " sent" 
+"Recovered " CANT-RENAME-READER-FILE!-IR-INP!-R-INP!-PACKAGE (() ()) 
+"No new messages." ![0 0!] GETDERR!-IR-INP!-R-INP!-PACKAGE %<RGLOC 
+READ-ERROR!-IR-INP!-R-INP!-PACKAGE T> GETDACT!-IR-INP!-R-INP!-PACKAGE #FALSE (
+"Bad data in Reader input file?") %<RGLOC GETDERR!-IR-INP!-R-INP!-PACKAGE T> 
+FIX-TABLE-CHOMPS!-IR-INP!-R-INP!-PACKAGE SOURCE-TOO-BIG!-IR-INP!-R-INP!-PACKAGE 
+"REPLIED-TO" "FULL-NAME" " (Sent by " "Re: " "In reply to: " "FORWARDING" 
+"REPLY-TO" "Reply to: " "To: " "CC To: " "Blind CC To: " "NOTES" "--Notes--" 
+"ENCLOSURES" "KEYWORDS" "Keywords: " "" "MESSAGE" "\"" " 	
+" "   " "    " "     " " [" "  => " "REMINDER for " "??/?? ??:??" 
+ERRLOC!-IAP!-AP!-PACKAGE EH!-IAP!-AP!-PACKAGE %<RGLOC APHAND!-IAP!-AP!-PACKAGE T
+> #FALSE ("CANNOT FIND ATOM VALUE") #FALSE ("UNUSABLE OBJECT DESCRIPTION") %<
+RGLOC EH!-IAP!-AP!-PACKAGE T> #FALSE ("ERROR IN AP?") 
+OUT!-IM-DOUT!-M-DOUT!-PACKAGE "IOC DURING OUTPUT: " "ERROR IN OUTPUT: " 
+IH!-IM-DOUT!-M-DOUT!-PACKAGE %<RGLOC DO-OUTPUT-IHAND!-IM-DOUT!-M-DOUT!-PACKAGE T
+> EH!-IM-DOUT!-M-DOUT!-PACKAGE %<RGLOC DO-OUTPUT-EHAND!-IM-DOUT!-M-DOUT!-PACKAGE
+T> %<RGLOC EH!-IM-DOUT!-M-DOUT!-PACKAGE T> %<RGLOC IH!-IM-DOUT!-M-DOUT!-PACKAGE 
+T> "Bad Output Function Type: " "Illegal Function Specification: " 
+"Improper Field Format Element: " "Bad Format Element: " 
+CURSPACE!-MADMAN!-PACKAGE (SPACE!-MADMAN!-PACKAGE) "*" "[Author]" %<RGLOC 
+PROCESSES!-M-HIST!-PACKAGE T> ["DELIVERY" "RECEIVER-PROCESSING"] "  >> " 
+" scheduled." " completed." "  ** " " is in Error Hold; " "     <>" "(ditto)" 
+"ASAP" "A user-specified function returned a failure value of:  " 
+"The DELIVERY-SPECIFICATIONS field was not in the correct format." 
+"
+The unusable specification was:
+
+" 
+"The format to use for outputting the message was ill-formed in the way
+described below:
+
+" "The format to use for " " output was ill-formed.
+The format was:
+
+" "The format of the " " field was ill-formed.  The format was:
+
+" "The MAIL output file could not be opened.  The error code returned was:
+
+" "The user specified for output did not exist: " 
+"The datum specified to contain the output format for " 
+" was not a valid format:
+
+" 
+"The foreign host refused the message.  I.e., the FTP connection was
+made, but no 350 reply was received on attempting to transfer the mail." 
+"An MDL error occurred during the network transfer procedure.  This
+indicates a bug in the mailer demon code, and has been reported.  The
+error arguments were:
+
+" "It was applied to the author area of the message." 
+"The ICP attempt was unsuccessful." 
+"An I/O channel error occurred during the network transfer.  Generally
+this occurs when the foreign host or net crashes.  The reason given was:
+" "An IO-channel error occured as the mail was being output:
+
+" 
+"A MDL error occured while the mail was being output.  This indicates
+a bug in one of the mail printing routines and has been reported.  The
+error was:
+
+" "The transfer was terminated by a (supposedly) transient error.
+" "The FTP error reply was:" 
+"The probable cause is overloading of the recipient site." 
+"The transfer was not acknowledged by the foreign site.  I.e., the
+message was transferred, but no 256 reply was received." 
+"The foreign site refused the message.  " "The FTP error reply was:
+
+" 
+"The probable cause is that
+the specified user does not have a mailbox at the site." 
+"The destination host was known to be down." 
+"An FTP connection was established but no herald was ever received.
+This indicates a problem with the remote site's FTP server." "Unknown error: " 
+" was not a message you sent." MORE-ACTIVATION!-IR-SHOW!-R-SHOW!-PACKAGE %<RGLOC
+DDT-FORMAT!-M-FORM!-PACKAGE T> "****BAD TAILOR DATA****" "Flushed" "--More--" 
+"TPL:" %<RGLOC APPSTR!-IR-SHOW!-R-SHOW!-PACKAGE T> "File to append to" "\" 
+"PRINTO" "77" "78" %<INTERNAL-RSUBR AISTRING!-MADMAN!-PACKAGE 3> %<RGLOC 
+SNARF-TEXT!-IR-MAIL!-R-MAIL!-PACKAGE T> 
+"You will destroy a message in composition" "ANSWER" 
+" is Locally-stored.  Reader can't forward it.  Sorry." "FORWAR" %<RGLOC 
+ID-IRT!-MAIL!-PACKAGE T> "RECEIVED-FROM-HOST" "MESSAGE-ID" "Message of " "[Re: "
+ "," "[No 'Text' field?]" " (Confirm?)" "Please answer Yes or No." ["Yes" "No"] 
+"which " %<RGLOC SCANNING?!-R-WHICH!-PACKAGE T> %<RGLOC 
+WHICH-CHRTABLE!-IR-WHICH!-R-WHICH!-PACKAGE T> %<RGLOC 
+READ-MESSAGE-NUMBERS!-IR-WHICH!-R-WHICH!-PACKAGE T> 
+"Selection:
+
+	'Current' message (the default)
+	'Next' message from open bin
+	'Previous' message from open bin
+	'Top' message in open bin
+	'Rest' of the messages in the open bin
+	'Open' folder or bin (initially New, Unread, or In-Box)
+	'Last' to get the last selection again
+	'Search-result' for the last result of a 'Find'
+	'in-folder' for all messages in folders
+	(or the name of a folder to get its contents,
+	 or a list of message numbers)
+
+	'All' for all messages
+	 'File' for all filed messages
+	 'Workspace' for all messages not filed
+	  'In-Box'
+	  'Out-Box' for messages recently sent
+	  'Pending'
+	 'Discarded'
+
+	'Summary-not-seen' or 'sns'
+	'Text-not-seen' or 'tns'
+	'Recently-received' or 'rr' (since last session)
+	'Received-during-session' or 'rds'
+	'Action-completed' or 'ac'
+	 'Answered' and 'Forwarded'
+	'Sent' by the user
+	'From' a given sender or senders (searches 'Open')
+	'Locally-stored' or 'ls' messages actually in the user's asylum
+
+	'Before' 'Since' 'On' a date or 'Between' two dates
+	 or 'Today' 'Yesterday', and (last) 'Sunday' through 'Saturday'
+
+	'not' 'and' 'or' of any of the above" ["Current" "Next" "Previous" "Top"
+"Rest" "Open" "Last" "Search-result" "All" "File" "Workspace" "In-Box" "ib" 
+"Out-Box" "ob" "Pending" "Discarded" "Summary-not-seen" "sns" "Text-not-seen" 
+"tns" "Recently-received" "rr" "Received-during-session" "rds" 
+"Action-completed" "ac" "Answered" "Forwarded" "Sent" "Reminders" 
+"Locally-stored" "ls" "To" "From" "Subject" "Text" "in-folder" "and" "or" "not" 
+"before" "after" "since" "between" "on"] %<RGLOC OPEN-INV!-R-WHICH!-PACKAGE T> 
+"Nothing is open?" %<RGLOC LAST-INV!-IR-WHICH!-R-WHICH!-PACKAGE T> 
+"No previous selection exists?" %<RGLOC SEARCH-INV!-IR-WHICH!-R-WHICH!-PACKAGE T
+> "No previous searches?" %<RGLOC I-ALL!-R-WHICH!-PACKAGE T> %<RGLOC 
+I-FILE!-IR-WHICH!-R-WHICH!-PACKAGE T> %<RGLOC 
+I-WORKSPACE!-IR-WHICH!-R-WHICH!-PACKAGE T> %<RGLOC I-IN-BOX!-R-WHICH!-PACKAGE T>
+ %<RGLOC I-OUT-BOX!-IR-WHICH!-R-WHICH!-PACKAGE T> %<RGLOC 
+I-PENDING!-IR-WHICH!-R-WHICH!-PACKAGE T> %<RGLOC I-DISCARDED!-R-WHICH!-PACKAGE T
+> %<RGLOC I-UNSUMMARIZED!-IR-WHICH!-R-WHICH!-PACKAGE T> %<RGLOC 
+I-UNREAD!-IR-WHICH!-R-WHICH!-PACKAGE T> %<RGLOC I-RECENT!-R-WHICH!-PACKAGE T> %<
+RGLOC I-NEW!-R-WHICH!-PACKAGE T> %<RGLOC I-ACTION!-IR-WHICH!-R-WHICH!-PACKAGE T>
+ %<RGLOC I-ANSWERED!-IR-WHICH!-R-WHICH!-PACKAGE T> %<RGLOC 
+I-FORWARDED!-IR-WHICH!-R-WHICH!-PACKAGE T> %<RGLOC 
+I-SENT!-IR-WHICH!-R-WHICH!-PACKAGE T> %<RGLOC 
+I-REMIND!-IR-WHICH!-R-WHICH!-PACKAGE T> %<RGLOC 
+I-ASYLUM!-IR-WHICH!-R-WHICH!-PACKAGE T> ["ADDRESSED-TO" "ACTION-TO" 
+"CARBON-COPY-TO" "BLIND"] " addressees" ["FROM"] " senders" ["SUBJECT"] 
+" containing" ["TEXT"] "and " "or " "tag " 
+"Tags:	'Search-result' for the last result of a 'Find'
+	'Summary-not-seen' or 'sns'
+	'Text-not-seen' or 'tns'
+	'Recently-received' or 'rr' (since last session)
+	'Received-during-session' or 'rds'
+	'Action-completed' or 'ac'
+	 'Answered' and 'Forwarded'
+	'Sent' by the user
+	'Reminders'" ["Search-result" "Summary-not-seen" "sns" "Text-not-seen" 
+"tns" "Recently-received" "rr" "Received-during-session" "rds" 
+"Action-completed" "ac" "Answered" "Forwarded" "Sent" "Reminders"] %<RGLOC 
+BOOL-INV!-IR-WHICH!-R-WHICH!-PACKAGE T> "Not-" %<RGLOC 
+IN-FOLDER-INV!-IR-WHICH!-R-WHICH!-PACKAGE T> "Search" "when" "and" 
+"That date is in the future?" "Can't understand that date." %<RGLOC 
+USER-INV!-IR-WHICH!-R-WHICH!-PACKAGE T> " [Can't mix small and large IDs]" %<
+RGLOC CURRENT-INV!-IR-WHICH!-R-WHICH!-PACKAGE T> "(" ") " "[Already open]" %<
+RGLOC REST-INV!-IR-WHICH!-R-WHICH!-PACKAGE T> "[No open inversion?]" 
+"Inversion is empty?" "No more messages." "No previous messages." "to folder " 
+"from folder " "[Folders require a Reader-Asylum]" "folder named" "Folder '" 
+"' already exists." "' created." "folder named " "' destroyed." "[No folders]" 
+" in " %<RGLOC FOLDER-INV!-IR-FOLD!-R-FOLD!-PACKAGE T> 
+"Type the name of the folder to use." %<INTERNAL-RSUBR AIVECTOR!-MADMAN!-PACKAGE
+ 2> "INCONSISTENT FOLDER TABLE" "PLEASE INFORM PDL" 
+TOO-MANY-FOLDERS!-IR-FOLD!-R-FOLD!-PACKAGE "topic " 
+"Select a topic for which you wish to see help." ["Stop-helping" "Reader" 
+"Calico" "Which" "Bins" "Tags" "Help" "Status" "Summarize" "Show" "Next" 
+"Previous" "Top" "Rest" "Discard" "Expunge" "File" "Hold" "Count" "Answer" 
+"Forward" "Inform" "Send" "Bug" "Feature" "Msg" "Remind" "Correct" "Print" 
+"Append" "Create" "Destroy" "Add" "Remove" "Folders" "Where" "Attach" "Detach" 
+"Build" "Asylum-info" "Compact-asylum" "Tailor" "Check" "Renumber" "Update" 
+"Quit" "Exit" "Current" "Open" "Scan" "Briefly-scan" "End-scan" "Peek" "Push" 
+"Pop" "History" "Last" "Search-result" "All" "Workspace" "In-Box" "ib" "Out-Box"
+"ob" "Pending" "Discarded" "Summary-not-seen" "sns" "Text-not-seen" "tns" 
+"Recently-received" "rr" "Received-during-session" "rds" "Action-completed" "ac"
+"Answered" "Forwarded" "Sent" "Locally-stored" "ls" "To" "From" "Subject" "Text"
+"and" "or" "not" "before" "after" "since" "between" "on"] 
+"READER is a mail reader-composer-filer written in MDL and interfaced to
+the Comsys mail daemon.  It includes facilities for reading, answering,
+and forwarding mail as well as a filing system for old mail.  Keyword,
+date, sender, and receiver-based searching is possible, as well as
+boolean operations on the results of searches.  Input is through a
+symbolic command reader and a buffered input reader.  The Reader
+incorporates a simple office model based on that of the Data-based
+Message System." 
+"Calico is a symbolic command reader.  It allows command input with
+prompting, completion, listing of possibilities at any point, and so on.
+It is similar to the Tops-20 command reader.  All special functions are
+invoked by single characters as listed below.
+
+<space> - complete symbol as far as possible.  & is printed if there is
+  still ambiguity.  ! is printed if there is already a symbol specified. 
+<escape> - like space, but terminate if the result is a complete symbol.
+<crlf> - terminate the command if it is unambiguous.
+ctrl-F - show all symbols which are still possibilities.
+<delete> - delete a character.
+ctrl-U or ctrl-X - delete last line of input.
+ctrl-W - delete a word.
+ctrl-@ - delete entire input buffer.
+ctrl-R - return to Reader command level (@ prompt).  Aborts commands.
+? - if input buffer is empty, print an explanatory message, otherwise
+  inserted in buffer.
+ctrl-D - reprint prompt and input buffer.
+ctrl-L - clear screen and reprint prompt and input buffer.
+ctrl-C - if a message is being composed, return to composing it.
+ctrl-H - if scanning (prompt @@) return for one command to non-scanning." 
+"Many Reader commands prompt with 'which', and when that is done, the
+user is expected to specify which messages are to be acted on by the
+command.  There are several general types of answer to this question.
+
+(a) an escape.  As 'Current' is the default answer to 'which', this
+means 'the current message'.
+(b) a Bin name, such as 'In-box'.  This means 'all messages in that
+bin.'
+(c) a Tag name, such as 'Recently-received'.  This means 'all messages
+with that tag'.
+(d) a Folder name.  This means 'all messages in that folder.'
+(e) a Day, such as 'Today' or 'Monday'.  This means all messages
+received on that day.
+(f) a number or series of numbers.  This means those specific messages. 
+The format is numbers separated by commas or ranges of numbers separated
+by hyphens or > and <.  For example, '32,37,40-43,>50' means message 32,
+message 37, messages 40, 41, 42, and 43, and messages greater than 50.
+
+Once a set is specified to 'which' it becomes the 'Last' set used and
+may be respecified by responding 'Last' to the 'which' prompt." 
+"Bins represent the physical location of a message in your 'office'.
+The office consists of a desk (the 'Workspace'), a file cabinet (the
+'File'), and a wastebasket ('Discarded').  On the desk are the 'In-box',
+the 'Out-box', and the 'Pending' box.  New messages received appear in
+the In-box, messages sent appear in the Out-box, and messages can be
+held in the Pending box.  Various commands move messages from the In-box
+and Out-box to other locations in the office.  For example, 'File' moves
+a message into the File, and 'Hold' moves a message into the Pending
+box.  Messages also have Tags attached to them, and these are more or
+less independent of location (see 'Tags').  Finally there exist Folders
+which may be used to store related messages under a mnemonic name.  See
+'Folders'." 
+"Tags represent an aspect of a message's status, for example
+'Text-not-seen', which indicates that a message has not been read.  Many
+commands add or remove tags, for example 'Show' removes the tags
+'Text-not-seen' and Summary-not-seen' from a message.  When messages
+are first processed, the tag 'Recently-received' is added, and so on.
+Tags are independent from the location of a message, that is, what bin
+it is in.  Read Help 'Bins' for more information." 
+"Format: 'Help <topic>'. Used to find information about the Reader. Exit
+from helping by typing <crlf> alone or selecting the 'topic'
+'Stop-helping'.  <topics> include each of the Reader commands and some
+overviews.  The beginner should read the <topics> 'Reader', 'Which', and
+(if unfamiliar with the Calico user interface) 'Calico'.  The general
+format of each command is given in the help for that command.  In that
+format, Calico symbolic input is shown in brackets <thus>, buffered
+input terminated by escape is shown in braces [thus]$ and prompts are
+shown in parentheses (thus)." 
+"Format: 'Status'. Lists the locations of messages ('BINS') and their
+status ('TAGS') and how many messages are in each.  All bins are shown
+but not all possible tags. Read Help topics 'Bins' and 'Tags' for more
+information on these." 
+"Format: 'Summarize <which>'.  Show a one or two line summary of each
+specified message.  The summary shows date, sender, addressee, and
+subject of each message, along with a short status report giving the
+location of the message: F(ile), O(ut-box), D(iscarded) and space for
+In-box.  It also tells whether the message is recent ('r') or new ('n')
+and whether it still has it's 'Text-not-seen' ('t') and
+'Summary-not-seen' ('s') tags.  You can cause Reader to automatically
+'Summarize recently-received' on startup; see 'Tailor'." 
+"Format: 'Show <which>'.  Prints each specified message.  Removes the
+'Text-not-seen' tag for each message." 
+"Moves to the next message in the open set (usually this set is
+'Recently-received').  If the message has not been seen, 'Shows' it.
+'Next' may also be given as the answer to 'which', referring to the
+message that would have been gotten by the 'Next' command." 
+"Moves to the previous message in the open set.  May also be used to
+refer to this message (see 'Next')." 
+"Moves to the first message in the open set.  May also be used to refer
+to this message (see 'Next')." 
+"Matches the rest of the messages in the currently open set.  'Hold Rest'
+would be useful if you have to interrupt a reader session, or 'Summarize
+Rest' to see if a message you are currently looking at has already been
+answered." 
+"Format: 'Discard <which>'.  Moves the messages specified to the
+discarded bin.  Once discarded, a message may be completely removed by
+'Expunge'." 
+"Format: 'Expunge'.  This command 'empties the wastebasket,' so to
+speak.  It removes all trace of any message in the 'Discarded' bin.
+Until an 'Expunge' is performed, discarded messages are still accessible
+and can be retrieved by 'Hold' or 'File'.  If a discarded message has
+not been read, you will be asked to confirm that you wish it expunged.
+Typing escape or 'Y$' to assent, 'N$' to save the message (it will still
+be in the discarded bin after the expunge completes).  Expunge causes
+the message table to be written to disk.  See also 'Exit'." 
+"Format: 'File <which> (in) <folder>'.  Moves the specified messages to
+the File and places them in the specified folder.  If <crlf> alone is
+typed when the folder is asked for, the messages are not placed in a
+folder.  'Filed' messages have their 'Action-completed' tag removed if
+they have one.
+
+As a response to 'which', 'File' specifies all messages in the File
+(i.e., all messages not in the Workspace and not Discarded).  Messages
+may be placed in the File using the 'File' command.  Some other commands
+'auto-file', such as 'Answer' and 'Forward'." 
+"Format: 'Hold <which> (in) <folder>'.  Moves the specified messages to
+the Pending bin and places them in the specified folder.  If <crlf>
+alone is typed when the folder is asked for, the messages are not placed
+in a folder." 
+"Format: 'Count <which>'.  Tells how many messages match the
+specification." 
+"Format: 'Answer <which>'.  Invokes the mail composer for each message.
+When the composer is started, some fields will already have 'suggested'
+values in them.  To accept these values, type an escape.  To reject
+them, edit them as you would any buffer (^U will erase the suggested
+value entirely).  While composing a message, you may return to the
+Reader's command level by typing 'Reader' to the composer's command
+level.  Sets the 'Answered' and 'Action-completed' tags on the message
+and moves it to the File if it is not already there." 
+"Format: 'Forward <which>'.  Like 'Answer', except that the composer is
+called differently and only asks for whom to forward the message.  Sets
+the 'Forwarded' and 'Action-completed' tags on the message and moves the
+message to the File if it is not already there." 
+"Format: 'Inform <which>'.  Like 'Forward', but does not set the
+'Action-completed' tag." "Format: 'Send'.  Invokes the mail composer directly." 
+"Like the :BUG command to DDT." "Like the :FEATURE command to DDT." 
+"Like the :MSG command to DDT." "Like the :REMIND command to DDT." 
+"Like the :CORREC command to DDT." 
+"Format: 'Print <which> (to) [file]$'.  Outputs a summary of <which> and
+then a 'Show' of which to [file].  The default file is 'TPL:', the
+line-printer.  Type ctrl-U to erase that if you wish to give a different
+file name." 
+"Format: 'Append <which> (to) [file]$'.  Exactly like 'Print' except
+that the information is appended to the [file] if it exists." 
+"Format: 'Create [folder-name]$'.  Creates a folder with the name given.
+The new folder is added to the folder table and its name may be given as
+a response to ' which ' and other symbol prompts." 
+"Format: 'Destroy <folder>'.  Destroys a folder.  The messages which
+were in it are not affected." 
+"Format: 'Add <which> (to) <folder>'.  Adds the specified messages to
+the folder.  The folder must already exist (see 'Create').  Adding a
+message to a folder has no effect on its location in the Bins nor does
+it add or remove any Tags." 
+"Format: 'Remove <which> (from) <folder>'.  Removes the specified
+messages from the folder.  An empty folder does not disappear, it must
+be 'Destroy'ed." 
+"Format: 'Folders'.  This command prints the name of each folder that
+exists and how many messages are in it.  Folders are created by the
+'Create' command.  Messages may be put in a folder using 'Add' and
+removed with 'Remove'.  Note that a message may be in several folders,
+and that a message's presence in a folder (or folders) is independent of
+its location in the Bins.  In this way they are somewhat more general
+than their real-life counterparts." 
+"Format: 'Where <which>'.  Prints the folders each message in <which>
+are in.  This command is useful for finding messages that are 'lost in
+the file cabinet.'" 
+"Format: 'Attach (tag) <tag> (to) <which>'.  Attaches the tag named to
+the messages specified.  Only some tags may be manipulated with 'Attach'
+and 'Detach'; type ^F to the (tag) prompt for a list." 
+"Format: 'Detach (tag) <tag> (from) <which>'.  Detaches the tag named
+from the messages specified.  You can use this to remove (for example)
+'Text-not-seen' from a message you don't want to see.  Only some tags
+may be manipulated with 'Attach' and 'Detach'; type ^F to the (tag)
+prompt for a list." 
+"Format: 'Build'.  This command builds a Reader-asylum for you.  It is
+necessary to have a Reader-asylum if you wish to save messages beyond a
+single session or to use Folders.  The Reader-asylum is named:
+	<hsname>;<xuname> ASYLUM" 
+"Format: 'Asylum-info'.  Prints statistics on your usage of your Reader
+Asylum.  If your asylum is largely free space or you have recently removed
+a large number of locally-stored messages, you might want to try 'Compact-
+asylum'." 
+"Format: 'Compact-asylum'.  Creates a new asylum named \"<you> NEW\", and
+copies all good data from your current Reader Asylum into it.  The new
+asylum will be built slightly larger than is needed for all the good data
+in the current one.  If the compaction is successful, it then renames the
+current asylum to \"OLD\" and makes the \"NEW\" asylum the current one,
+re-opening it.  The \"OLD\" asylum is NOT deleted.  If any errors or other
+problems occur during compaction, the rename will not happen and the problem
+should be reported." 
+"Format: 'Tailor (what) <feature>'.  ('Tailor show' shows the current
+status of all tailoring settings.)
+	This command is for:
+	(a) 'formats':  changing the output format used by 'Show'.  (You
+probably don't want to use it).
+	(b) 'editor':  changing the default editor program to use.
+	(c) specifying what actions to perform when the Reader starts up;
+'scan-recently-received', 'summarize-recently-received', and their
+inverses (just say 'no' or 'don't' first).
+	(d) determining whether to clear the screen before showing the
+next message during 'scan'; '(no) clear-screen-before-messages'.
+	(e) '(no) renumber-after-expunge' controls whether the local
+message numbers are to be recreated after an expunge.  Normally they
+are not.
+	(f) '(no) update-after-each-command'  The message table may be
+written either each time it is changed (inefficient) or only when it is
+mandatory (such as when you leave the Reader).  This command sets this
+switch.  The initial state is to update only when forced.  This is
+normally off (and probably should not be changed -- it slows things down
+a lot)." 
+"Format: 'Check'.  Checks for new mail.  This command writes the
+message table to disk.  Messages read as the result of a 'Check' command
+have the tag 'Received-during-session' (or 'rds') in addition to the
+usual tags for new messages.  'Check' runs the user's initialization
+sequence if new mail if found." 
+"Format: 'Renumber'.  Messages in the Workspace may be referred to by a
+small number which is assigned to each message as it is read.  These
+numbers increase until either the Workspace is empty when the Reader
+starts up or the 'Renumber' command is executed.  See 'Tailor'." 
+"Format: 'Update'.  Causes the message table to be written out." 
+"Format: 'Quit'.  Causes Reader to terminate.  The message table is
+written out if it has been changed.  See also 'Exit'." 
+"Format: 'Exit'.  First expunges, then quits." 
+"Specifies the message currently being worked on in the open set. 
+Typing only escape to the 'which' prompt selects 'Current'." 
+"'Open' is both a command and the name of a set.
+
+Format: 'Open <which>'.  Selects which set of messages 'Next',
+'Previous', 'Current' and 'Top' refer to.  Normally this set is the set
+of messages with the 'Recently-received' tag, but it can be any set,
+including 'All'.
+
+Specifies the 'Open' set, usually 'Recently-received' but more
+generally any set given to the 'Open' command." 
+"Format: 'Scan <which>'.  'Scan' puts the Reader into a mode in which
+all the messages specified by <which> are visited sequentially, shown,
+and then available for any appropriate action.  When scanning, the set
+of messages which is the <which> argument to any command is always
+'Current-message'.  For example, in scanning mode, 'Discard'
+automatically discards the current message, and 'File' becomes 'File (in
+folder) <folder>'.  When one is scanning, typing only <crlf> moves to
+the next message in the scanning set (as does <escape>).  When the last
+message in the set has been processed, scanning mode is turned off.
+When in scanning mode the prompt is '@@' rather than '@'.  To exit
+scanning mode, type the 'End-scan' command.  To exit the scan for one
+command, type ctrl-H to the '@@' prompt.  To exit for several commands,
+use the 'Push' command.  'Scan Recently-received' would be a useful
+first command to type if you have new messages on starting the Reader.
+(It's sufficiently useful that you can do it automatically on startup;
+see 'Tailor'.)" 
+"Format:  'Briefly-scan <which>'.  This command is identical to 'Scan'
+except that each message is summarized rather than shown when its turn
+comes." "Format:  'End-scan'.  Exits scanning mode." 
+"Format:  'Peek'.  Equivalent to 'Summarize Rest,' but has the advantage
+that it works during scanning." 
+"Format:  'Push'.  Reinvokes the command reader with scanning turned off
+if it was on.  See 'Pop'." 
+"Format:  'Pop'.  Returns from a 'Push'.  The state of scanning and of
+the open inversion are restored." 
+"Format:  'History <which>'.  For messages you have sent, tells the
+history of their processing by COMSYS.  This command is somewhat less
+useful than one would like and will be improved in the future." 
+"Re-uses the last set given to 'which'.  Sometimes an action will change
+the set, so you won't always get the same result from 'Last' as you did
+originally.  For example, 'Discard In-box', 'Summarize Last' will give
+'Summarize' an empty set." 
+"Whenever a search is done by using the 'not', 'and', 'or', 'To',
+'From', 'Subject', 'Text', 'Before', etc. commands, a search-result is
+produced which may referenced analogously to 'Last'.  It stays around
+until the next such search is done." 
+"Specifies every message in the message-table." 
+"Specifies the messages not in the File and not Discarded:  the current
+working set.  Consists of the In-box, the Out-box, and the Pending bin." 
+"Newly received messages are put in the In-box and stay there until
+removed.  'ib' is a synonym for 'In-box'." "A synonym for 'In-box'." 
+"Messages sent by the user are put in the Out-box and stay there until
+removed.  Such messages also get the 'Sent' tag attached.  A message
+sent by the user to himself will only appear in his Out-box.  'ob' is a
+synonym for 'Out-box'." "A synonym for 'Out-box'." 
+"Messages may at any time be placed in the 'Pending' bin by using the
+'Hold' command.  Use it for whatever purpose you desire." 
+"Messages are placed in the Discarded bin by the 'Discard' command. 
+They stay there until removed with 'Hold' or 'File' or an 'Expunge' is
+performed." 
+"Specifies messages which have not been summarized or shown.  All newly
+received messages have this tag set.  'sns' is a synonym." 
+"A synonym of 'Summary-not-seen'." 
+"Specifies messages which have not been shown.  All newly received
+messages have this tag set.  'tns' is a synonym." 
+"A synonym of 'Text-not-seen'." 
+"Specifies messages received since Reader was last run.  All newly
+received messages have this tag set.  It is cleared by starting a new
+copy of the Reader.  'rr' is a synonym." "A synonym of 'Recently-received'." 
+"Specifies messages received since Reader was started.  Such messages
+are read by doing a 'Check'.  'rds' is a synonym." 
+"A synonym of 'Received-during-session'." 
+"Messages 'Answer'ed or 'Forward'ed have this tag set.  It is cleared by
+putting the message in a folder or moving it explicitly.  'ac' is a
+synonym." "A synonym of 'Action-completed'." 
+"Specifies messages that have been 'Answer'ed.  This is particularly
+useful with the 'Not' construct." 
+"Specifies messages that have been 'Forward'ed or 'Inform'ed.  This is
+particularly useful with the 'Not' construct." 
+"Messages the user sends are given this tag." 
+"After a message has been around for a few weeks in the 'public' data
+base, only a few users (the author, perhaps, and the receivers) will
+still point to it.  At this time it is copied to these users' reader
+asylums.  When this happens the message is given this tag; the more of
+them there are the larger your reader asylum will be.  Whenever messages
+are copied into your reader asylum you will be informed the next time
+you run the Reader.  'ls' is a synonym." 
+"'ls' is a synonym of 'Locally-stored'." 
+"Format: 'To [addressees]$'.  Specifies messages addressed to particular
+addressees.  They should be input as they would be to the 'To' prompt of
+the composer.  All addressee fields (To, Carbon-Copy, etc.) are
+searched.  Case is not significant and partial matches are accepted
+(i.e., 'foo' would match 'FOOBAR').  Sets up the 'Search-result' set." 
+"Format: 'From [senders]$'.  Specifies messages sent by particular
+addressees.  They should be input as they would be to the composer. Case
+is not significant and partial matches are accepted (i.e., 'foo' would
+match 'FOOBAR').  Sets up the 'Search-result' set." 
+"Format: 'Subject [words]$'.  Specifies messages whose Subject fields
+contain one of the words specified.  They should be input separated by
+commas.  Case is not significant and partial matches are accepted (i.e.,
+'foo' would match 'FOOBAR').  Sets up the 'Search-result' set." 
+"Format: 'Text [words]$'.  Specifies messages whose Text fields contain
+one of the words specified.  They should be input separated by commas.
+Case is not significant and partial matches are accepted (i.e., 'foo'
+would match 'FOOBAR').  Sets up the 'Search-result' set." 
+"Format: 'And <which> (and) <which> ... (and) <crlf>'.  Specifies a
+boolean search where all specifications must be true.  For example, 'And
+In-box (and) From PDL$ (and) <crlf>'.  Sets up the 'Search-result' set
+to those messages which meet the conditions." 
+"Format: 'Or <which> (or) <which> ... (or) <crlf>'.  Specifies a boolean
+search where at least one specification must be true.  For example, 'Or
+From PDL$ (or) Text Foobar$ (or) <crlf>'.  Sets up the 'Search-result' set
+to those messages which meet the conditions." 
+"Format: 'Not <which>'.  Specifies messages which are not in the set
+specified.  For example, 'And Not Discarded (and) Not File (and) <crlf>'
+specifies all messages in the Workspace.  Sets up the 'Search-result'
+set to those messages which meet the conditions." 
+"Format: 'Before [when]$'.  Specifies messages sent before a certain
+date.  Dates are specified as (for example) '9/1', 'August 12', 'Aug
+21', 'Today', 'Monday', etc.  Sets up the 'Search-result' set to those
+messages which meet the conditions." 
+"Format: 'After [when]$'.  Specifies messages sent after a certain
+date.  Dates are specified as (for example) '9/1', 'August 12', 'Aug
+21', 'Today', 'Monday', etc.  Sets up the 'Search-result' set to those
+messages which meet the conditions.  'Since' is a synonym of 'After'." 
+"'Since' is a synonym of 'After'." 
+"Format: 'Between [when]$ (and) [when]$'.  Specifies messages sent
+between two dates.  Dates are specified as (for example) '9/1', 'August
+12', 'Aug 21', 'Today', 'Monday', etc.  Sets up the 'Search-result' set
+to those messages which meet the conditions." 
+"Format: 'On [when]$'.  Specifies messages sent on a certain
+date.  Dates are specified as (for example) '9/1', 'August 12', 'Aug
+21', 'Today', 'Monday', etc.  Sets up the 'Search-result' set to those
+messages which meet the conditions." %<RGLOC VERNUM!-IREADER!-READER!-PACKAGE T>
+ "SAVE" %<RGLOC READER-DIR!-IREADER!-READER!-PACKAGE T> "MUDSUB" "COMMUD" 
+"Reader-Composer." %<RGLOC MORE!-R-SHOW!-PACKAGE T> "A--Show?--" %<RGLOC 
+OSCANNING?!-IREADER!-READER!-PACKAGE T> PUSH-ACT!-IREADER!-READER!-PACKAGE 
+"There is no 'push' to 'pop'." "@" "what " 
+"Tailoring commands:
+
+	'show'		shows current state of tailoring
+
+Tailorable things:
+
+	'formats'	set up output formats for 'show' command
+	'editor'	set up default editor (e.g., RMODE, EMACS)
+
+Toggles: (turn them off by saying 'no' or 'don't' first)
+
+	'renumber-after-expunge'
+	'clear-screen-between-messages'
+	'update-after-each-command'
+
+Things to do on startup: (turn off with 'no' or 'don't')
+
+	'scan-recently-received'
+	'summarize-recently-received'" ["show" "no" "don't" "formats" "editor" 
+"renumber-after-expunge" "clear-screen-between-messages" 
+"update-after-each-command" "scan-recently-received" 
+"summarize-recently-received"] "Formats " "Default" " (for Local messages), " 
+" (for Foreign messages).
+Editor " ".
+" "Don't " "Renumber-after-Expunge.
+" "Clear-screen-between-messages.
+" "Update-after-each-command.
+" "Scan-Recently-Received.
+" "Summarize-Recently-Received.
+" "Formats for output" "         BINS" "            TAGS" "All" 
+"Summary-not-seen" "  File" "Text-not-seen" "  Workspace" "Recently-received" 
+"    In-Box" "Received-during-session" "    Out-Box" "Sent" "    Pending" 
+"Action-completed" "  Discarded" %<INTERNAL-RSUBR ALENGTH!-MADMAN!-PACKAGE 1> 
+" has not been read, expunge anyway?" " expunged" 
+"There are no discarded messages." "in folder " "None." "1 message." 
+" messages." %<RGLOC READER-CHRTABLE!-IREADER!-READER!-PACKAGE T> "@@" 
+"Reader commands:
+	'Help' to ask for help on a topic
+	^C to reenter the mailer
+	'Status' to give situation report
+	'Summarize' to summarize messages
+	'Show' to read messages
+
+	'Next' (default) to move to next message
+	'Previous' to move to previous message
+	'Top' to move to the first message
+
+	'Open' to select a bin or folder to scan
+	'Scan' to move sequentially through a set
+	'Push' to go to a lower level of the command loop
+	'Pop' to return to a higher level
+	'Briefly-scan' is similar put shows summaries only
+	'End-scan' stops scanning
+	'Peek' to summarize remaining messages in a scan
+
+	'Discard' to get rid of messages
+	'Expunge' to empty the discarded bin
+	'File' to file messages
+	'Hold' to put a message aside
+	'Count' to count messages
+
+	'Answer' to answer messages
+	'Forward' and 'Inform' to forward messages
+	'Send' to send a message (in general)
+	  (also 'Bug', 'Msg', 'Remind', and 'Correct' exist,
+	   analogous to the programs of the same names)
+
+	'Print' to TPL messages (or copy them to any file)
+	'Append' to append messages to a file
+
+	'Add' to add messages to a folder
+	'Remove' to remove messages from a folder
+	'Create' to create a folder
+	'Destroy' to destroy a folder
+	'Folders' to show folder names
+	'Where' to show which folders messages are in
+
+	'Attach' a tag to a folder
+	'Detach' a tag from a folder
+
+	'Build' to build the initial Reader Asylum
+	'Asylum-info' for status of your Reader Asylum
+	'Compact-asylum' to shrink your Reader Asylum if possible
+	'Tailor' to set up your own output tailoring
+	'Check' to check mailbox for new messages
+	'Renumber' to renumber the workspace
+	'Update' will update the table once regardless of the mode
+	'Quit' to quit the reader
+	'Exit' expunges and then quits" ["Help" "Status" "Summarize" "Show" 
+"Peek" "Next" "Previous" "Top" "Discard" "Expunge" "File" "Hold" "Count" 
+"Answer" "Forward" "Inform" "Send" "Bug" "Feature" "Msg" "Remind" "Correct" 
+"Print" "Append" "Scan" "Push" "Pop" "Briefly-scan" "End-scan" "Open" "Create" 
+"Destroy" "Add" "Remove" "Folders" "Attach" "Detach" "Where" "Build" "History" 
+"Asylum-info" "Compact-asylum" "Tailor" "Check" "Renumber" "Update" "Muddle" 
+"Quit" "Exit"] "FEATUR" "CORREC" "to which " "from which "]>> 
+<AND <ASSIGNED? GLUE> .GLUE <PUT ,READER-GROUP PGLUE ![715827882 -22906492225 -1
+-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+-1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 
+-64 0 0 0 0 0 0 0!]>> 
+
+<ENDBLOCK> 
+
+<ENDPACKAGE> 
+
+<USE "DUMMY"> 
+
+<PACKAGE "M-DEFS"> 
+
+<ENTRY MDEBUG? DEMON? DEMON-DEBUG? HOME? HOSTNUMBER VER PENDING-QUEUE 
+SYSTEM-ASYLUM COMSYS-OPEN-MSG-ASYLUM MSG-SPACE SCRATCH-SPACE QUEUE-SPACE> 
+
+<ENTRY AFALSE ARLIST ARVECTOR ARSTRING> 
+
+<ENTRY MDBVEC> 
+
+<ENTRY PNQENTRY> 
+
+<ENTRY PRCSTATE> 
+
+<ENTRY ERRCOND> 
+
+<ENTRY RQVECTOR> 
+
+<ENTRY WSPEC> 
+
+<USE "MADMAN" "ASYLUM"> 
+
+<AND <NOT <GASSIGNED? MSG-SPACE>> <SETG MSG-SPACE <>>> 
+
+<AND <NOT <GASSIGNED? SCRATCH-SPACE>> <SETG SCRATCH-SPACE <>>> 
+
+<AND <NOT <GASSIGNED? QUEUE-SPACE>> <SETG QUEUE-SPACE <>>> 
+
+<SETG SYSTEM-ASYLUM <>> 
+
+<SETG COMSYS-OPEN-MSG-ASYLUM <>> 
+
+<SETG HOSTNUMBER 1342180353> 
+
+<SETG HOME? %<RSUBR-ENTRY '[READER-GROUP HOME? #DECL ("VALUE" <OR ATOM FALSE FIX
+> "OPTIONAL" FIX)] 8>> 
+
+<SETG MDEBUG? T> 
+
+<SETG VER -1> 
+
+<SETG AFALSE %<RSUBR-ENTRY '[READER-GROUP AFALSE #DECL ("VALUE" FALSE "TUPLE" 
+ANY)] 149>> 
+
+<SETG ARLIST %<RSUBR-ENTRY '[READER-GROUP ARLIST #DECL ("VALUE" LIST SPACE LIST 
+"TUPLE" TUPLE)] 192>> 
+
+<SETG ARVECTOR %<RSUBR-ENTRY '[READER-GROUP ARVECTOR #DECL ("VALUE" VECTOR SPACE
+VECTOR "TUPLE" TUPLE)] 225>> 
+
+<SETG ARSTRING %<RSUBR-ENTRY '[READER-GROUP ARSTRING #DECL ("VALUE" STRING SPACE
+STRING "TUPLE" <TUPLE [REST <OR STRING CHARACTER>]>)] 258>> 
+
+<SETG DUMMY-HANDLER %<RSUBR-ENTRY '[READER-GROUP DUMMY-HANDLER #DECL ("VALUE" 
+FIX "TUPLE" TUPLE)] 459>> 
+
+<SETG DEMON? <>> 
+
+<SETG DEMON-DEBUG? <>> 
+
+<ENDPACKAGE> 
+
+<USE "M-DEFS"> 
+
+<PACKAGE "BUF"> 
+
+<ENTRY ADDCHR ADDCRLF ADDSTRING BUF-BITS BUF-CTL-G? BUF-CTL-S? BUF-ECHO-FLAG 
+BUFFER BUFMAKE BUFSIZE BUFTECO CHRTABLE DELPRINT DISPLAY? DLINE DWORD FILEINP 
+FORMATEFFS GETSTRACT IBUFCLEAR IBUFPRINT IDELCHR IMDEL LINEBRKS QUOTECHR 
+REENTER-TECO-CHAR TECO-PROGRAM TTY1 TTY2 UNKILL WORDBRKS> 
+
+<USE "MUDTEC" "INFERIOR"> 
+
+<NEWTYPE BUFFER VECTOR '<<PRIMTYPE VECTOR> [4 STRING] FIX <PRIMTYPE WORD> STRING
+FIX>> 
+
+<SETG REENTER-TECO-CHAR !\> 
+
+<SETG FORMATEFFS <MAPF ,STRING ,ASCII [13 10 14 9 32 8]>> 
+
+<SETG WORDBRKS <STRING <ASCII 13> <ASCII 10> "	, ;:.">> 
+
+<SETG LINEBRKS <STRING <ASCII 13> <ASCII 10>>> 
+
+<SETG BUFSIZE 200> 
+
+<SETG BUF-ECHO-FLAG <>> 
+
+<SETG ADDCHR %<RSUBR-ENTRY '[READER-GROUP ADDCHR #DECL ("VALUE" BUFFER BUFFER 
+CHARACTER)] 1007>> 
+
+<SETG UNKILL %<RSUBR-ENTRY '[READER-GROUP UNKILL #DECL ("VALUE" BUFFER BUFFER 
+CHARACTER)] 2122>> 
+
+<SETG TECO-PROGRAM "T"> 
+
+<SETG BUFTECO %<RSUBR-ENTRY '[READER-GROUP BUFTECO #DECL ("VALUE" BUFFER BUFFER 
+"OPTIONAL" CHARACTER)] 2157>> 
+
+<SETG TTY1 #WORD *020202020202*> 
+
+<SETG TTY2 #WORD *030202020202*> 
+
+<SETG TUV <IUVECTOR 3 #WORD *000000000000*>> 
+
+<SETG ERRFCN %<RSUBR-ENTRY '[READER-GROUP ERRFCN #DECL ("VALUE" ANY FRAME 
+"TUPLE" ANY)] 2664>> 
+
+<SETG BUF-CTL-G? T> 
+
+<SETG BUF-CTL-S? T> 
+
+<SETG CHARFCN %<RSUBR-ENTRY '[READER-GROUP CHARFCN #DECL ("VALUE" <OR DISMISS 
+FALSE> CHARACTER CHANNEL)] 2748>> 
+
+<OFF <SETG GLOBL-GETSTR-HAND <ON "ERROR" ,ERRFCN 3 0>>> 
+
+<OFF <SETG GLOBL-GETSTR-CHAND <ON "CHAR" ,CHARFCN 7 0 ,INCHAN>>> 
+
+<SETG DWORD %<RSUBR-ENTRY '[READER-GROUP DWORD #DECL ("VALUE" FIX BUFFER 
+CHARACTER)] 3225>> 
+
+<SETG DLINE %<RSUBR-ENTRY '[READER-GROUP DLINE #DECL ("VALUE" FIX BUFFER 
+CHARACTER)] 3245>> 
+
+<SETG QUOTECHR %<RSUBR-ENTRY '[READER-GROUP QUOTECHR #DECL ("VALUE" BUFFER 
+BUFFER CHARACTER)] 3267>> 
+
+<SETG ADDCRLF %<RSUBR-ENTRY '[READER-GROUP ADDCRLF #DECL ("VALUE" BUFFER BUFFER 
+CHARACTER)] 3312>> 
+
+<SETG IDELCHR %<RSUBR-ENTRY '[READER-GROUP IDELCHR #DECL ("VALUE" <OR CHARACTER 
+FALSE> BUFFER CHARACTER)] 3379>> 
+
+<SETG IMDEL %<RSUBR-ENTRY '[READER-GROUP IMDEL #DECL ("VALUE" <OR CHARACTER FIX>
+BUFFER <OR CHARACTER FIX>)] 3394>> 
+
+<SETG IBUFCLEAR %<RSUBR-ENTRY '[READER-GROUP IBUFCLEAR #DECL ("VALUE" BUFFER 
+BUFFER CHARACTER)] 3558>> 
+
+<SETG IBUFPRINT %<RSUBR-ENTRY '[READER-GROUP IBUFPRINT #DECL ("VALUE" FIX BUFFER
+CHARACTER)] 3581>> 
+
+<SETG GARBS "H"> 
+
+<SETG FILEINP %<RSUBR-ENTRY '[READER-GROUP FILEINP #DECL ("VALUE" BUFFER BUFFER 
+"OPTIONAL" CHARACTER)] 3850>> 
+
+<SETG ADDSTRING %<RSUBR-ENTRY '[READER-GROUP ADDSTRING #DECL ("VALUE" BUFFER 
+BUFFER "TUPLE" <TUPLE [REST <OR STRING CHARACTER FIX>]>)] 4133>> 
+
+<SET CHRTABLE [!\ ,BUFTECO !\ ,BUFTECO !\ ,FILEINP !\ ,IDELCHR <ASCII 13>
+,ADDCRLF <ASCII 12> ,IBUFPRINT !\ ,IBUFPRINT !\ ,UNKILL !\ ,QUOTECHR !\ 
+<FUNCTION (BUF CHR) <RETURN .BUF .GETSTRACT>> !\ ,DLINE !\ ,DWORD !\ ,
+DLINE <ASCII 0> ,IBUFCLEAR]> 
+
+<SETG BUFMAKE %<RSUBR-ENTRY '[READER-GROUP BUFMAKE #DECL ("VALUE" BUFFER FIX 
+"OPTIONAL" STRING STRING)] 4531>> 
+
+<SETG BUFFER-PRINT %<RSUBR-ENTRY '[READER-GROUP BUFFER-PRINT #DECL ("VALUE" ANY 
+BUFFER)] 4597>> 
+
+<PRINTTYPE BUFFER ,BUFFER-PRINT> 
+
+<ENDPACKAGE> 
+
+<USE "BUF"> 
+
+<PACKAGE "SYMBOLS"> 
+
+<ENTRY SYMBOL SYMBOL-CHRTABLE SYMBOL-CHRS FAIL-HOOK> 
+
+<ENTRY COMMAND-LOOP-ACTIVATION ABORTED EMPTY-LINE> 
+
+<ENTRY SVALUE> 
+
+<USE "BUF"> 
+
+<SETG SYMBUF <BUFMAKE 50>> 
+
+<SETG BUF-ECHO-FLAG <>> 
+
+<SETG SYMBOL %<RSUBR-ENTRY '[READER-GROUP SYMBOL #DECL ("VALUE" <OR ATOM BUFFER 
+FALSE FIX> <OR FIX FALSE> STRING STRING <OR STRING FALSE> "TUPLE" <TUPLE [REST 
+VECTOR]>)] 4639>> 
+
+<SETG BEST-VAL <VECTOR 0 "" 0 0 0>> 
+
+<SETG ABORTED #FALSE ("ABORTED")> 
+
+<SETG EMPTY-LINE #FALSE ("EMPTY-LINE")> 
+
+<SETG TERMINATE %<RSUBR-ENTRY '[READER-GROUP TERMINATE #DECL ("VALUE" ANY BUFFER
+CHARACTER)] 5387>> 
+
+<SETG COMTERM %<RSUBR-ENTRY '[READER-GROUP COMTERM #DECL ("VALUE" ANY BUFFER 
+CHARACTER)] 5553>> 
+
+<SETG COM-OR-TERM %<RSUBR-ENTRY '[READER-GROUP COM-OR-TERM #DECL ("VALUE" ANY 
+BUFFER CHARACTER)] 5581>> 
+
+<SETG ABORT %<RSUBR-ENTRY '[READER-GROUP ABORT #DECL ("VALUE" ANY BUFFER 
+CHARACTER)] 5620>> 
+
+<SETG COMEXPL %<RSUBR-ENTRY '[READER-GROUP COMEXPL #DECL ("VALUE" <OR BUFFER FIX
+> BUFFER CHARACTER)] 5658>> 
+
+<SETG LISTSYMS %<RSUBR-ENTRY '[READER-GROUP LISTSYMS #DECL ("VALUE" FIX BUFFER 
+CHARACTER)] 5706>> 
+
+<SETG TABS <PROG ((I -1)) <IVECTOR 15 '<ISTRING <SET I <+ .I 1>> !\	>>>> 
+
+<SETG SPACES <PROG ((I -1)) <IVECTOR 8 '<ISTRING <SET I <+ .I 1>> !\ >>>> 
+
+<SETG SYMBOL-CHRS [!\  ,IBUFCLEAR !\ ,IBUFPRINT !\ ,LISTSYMS <ASCII 12> ,
+IBUFPRINT <ASCII 13> ,TERMINATE !\ ,QUOTECHR !\ ,ABORT !\ ,DLINE !\ ,
+DWORD !\ ,DLINE !\ ,COMTERM !\  ,COM-OR-TERM !\? ,COMEXPL <ASCII 127> ,
+IDELCHR]> 
+
+<SETG SYMBOL-CHRTABLE ,SYMBOL-CHRS> 
+
+<ENDPACKAGE> 
+
+<USE "SYMBOLS"> 
+
+<PACKAGE "ITIME"> 
+
+<ENTRY ITIME> 
+
+<SETG TIME-LIST ((0 0 0) (0 0 0) "EST")> 
+
+<SETG ZONELIST '["EST" 5 "EDT" 262149 "CST" 6 "CDT" 262150 "MST" 7 "MDT" 262151 
+"PST" 8 "PDT" 262152 "YST" 9 "YDT" 262153 "HST" 10 "HDT" 262154 "BST" 11 "BDT" 
+262155 "AST" 4 "ADT" 262148 "NST" 3 "GMT" 0]> 
+
+<SETG ITIME %<RSUBR-ENTRY '[READER-GROUP ITIME #DECL ("VALUE" FIX "OPTIONAL" FIX
+)] 6385>> 
+
+<ENDPACKAGE> 
+
+<USE "ITIME"> 
+
+<RPACKAGE "DDT"> 
+
+<ENTRY DDT? GETFNM SETFNM XUNAME XJNAME> 
+
+<SETG DDT? %<RSUBR-ENTRY '[READER-GROUP DDT? #DECL ("VALUE" <OR 'T FALSE>)] 6493
+>> 
+
+<SETG XJNAME %<RSUBR-ENTRY '[READER-GROUP XJNAME #DECL ("VALUE" STRING)] 6543>> 
+
+<SETG XUNAME %<RSUBR-ENTRY '[READER-GROUP XUNAME #DECL ("VALUE" STRING)] 6541>> 
+
+<SETG SETFNM %<RSUBR-ENTRY '[READER-GROUP SETFNM #DECL ("VALUE" <VECTOR [4 
+STRING]> <VECTOR [4 STRING]>)] 6522>> 
+
+<SETG GETFNM %<RSUBR-ENTRY '[READER-GROUP GETFNM #DECL ("VALUE" <VECTOR [4 
+STRING]>)] 6502>> 
+
+<ENDPACKAGE> 
+
+<USE "DDT"> 
+
+<PACKAGE "JCL"> 
+
+<ENTRY JCL?> 
+
+<SETG JCL? %<RSUBR-ENTRY '[READER-GROUP JCL? #DECL ("VALUE" <OR FIX FALSE>)] 
+6591>> 
+
+<ENDPACKAGE> 
+
+<USE "JCL"> 
+
+<PACKAGE "PARSE-DATE"> 
+
+<ENTRY MONTH-SIZE DAYS MONTHS> 
+
+<USE "ITIME"> 
+
+<SETG MONTH-SIZE '<UVECTOR 31 29 31 30 31 30 31 31 30 31 30 31>> 
+
+<SETG DAYS '["TOMORROW" "YESTERDAY" "TODAY" "SUNDAY" "MONDAY" "TUESDAY" 
+"WEDNESDAY" "THURSDAY" "FRIDAY" "SATURDAY"]> 
+
+<SETG MONTHS '["JANUARY" "FEBRUARY" "MARCH" "APRIL" "MAY" "JUNE" "JULY" "AUGUST"
+"SEPTEMBER" "OCTOBER" "NOVEMBER" "DECEMBER"]> 
+
+<ENDPACKAGE> 
+
+<USE "PARSE-DATE"> 
+
+<PACKAGE "LEXER"> 
+
+<ENTRY TBRKS> 
+
+<SETG TBRKS " 	
+:.,/-"> 
+
+<ENDPACKAGE> 
+
+<USE "LEXER"> 
+
+<PACKAGE "HOSTS"> 
+
+<ENTRY DO-HOST-LOAD HOST> 
+
+<OR <GASSIGNED? HOST-PAGE> <SETG HOST-PAGE <>>> 
+
+<OR <GASSIGNED? HOST-LEN> <SETG HOST-LEN 0>> 
+
+<SETG NET-SEARCH-LIST <UVECTOR 10 7>> 
+
+<SETG GATEWAY-LIST [7 ["MIT-MC" "MIT-AI"]]> 
+
+<SETG DO-HOST-LOAD %<RSUBR-ENTRY '[READER-GROUP DO-HOST-LOAD #DECL ("VALUE" <OR 
+FIX FALSE> "OPTIONAL" <OR ATOM FALSE>)] 7390>> 
+
+<SETG HOST %<RSUBR-ENTRY '[READER-GROUP HOST #DECL ("VALUE" <OR FALSE STRING FIX
+> <OR FIX STRING> "OPTIONAL" <OR FIX FALSE>)] 7478>> 
+
+<ENDPACKAGE> 
+
+<USE "HOSTS"> 
+
+<PACKAGE "LSRTNS"> 
+
+<ENTRY LSR-INIT> 
+
+<SETG BUF-COUNT -7> 
+
+<SETG MAP-CHAN <>> 
+
+<SETG LSR-INIT %<RSUBR-ENTRY '[READER-GROUP LSR-INIT #DECL ("VALUE" <OR CHANNEL 
+FALSE>)] 7899>> 
+
+<ENDPACKAGE> 
+
+<USE "LSRTNS"> 
+
+<PACKAGE "CHKADR"> 
+
+<USE "HOSTS" "LSRTNS"> 
+
+<SETG HOSTNUMBER 3073> 
+
+<SETG ALLOW-TOURISTS <>> 
+
+<SETG RCVR-STRING <REST <ISTRING 30 !\ > 30>> 
+
+<SETG BADHOST #FALSE ("Invalid Host in Forwarding Address")> 
+
+<SETG NOBOX #FALSE ("No Mailbox for that name")> 
+
+<ENDPACKAGE> 
+
+<USE "CHKADR"> 
+
+<PACKAGE "MAIL"> 
+
+<ENTRY SAVE-MAIL> 
+
+<ENTRY COMPOSING? IN-READER? COMPOS-CHRTABLE MSG-NO IN-REPLY-TO ID-IRT SUBJECT 
+CARBON-COPY-TO TEXT SKIP-MSG-NO> 
+
+<USE "SYMBOLS" "BUF" "ITIME" "DDT" "JCL" "PARSE-DATE" "LEXER" "HOSTS" "LSRTNS" 
+"CHKADR"> 
+
+<SETG COMPOSING? <>> 
+
+<SETG IN-READER? <>> 
+
+<SETG MORE-MSGS <>> 
+
+<SETG IFILE "COMSYS;M >"> 
+
+<SETG DUMP-FILE ".MAIL >"> 
+
+<SETG SAVE-WHERE "DSK:LIBRDR;"> 
+
+<SETG DIVERT-HAND <HANDLER <SETG DIVERT-INT <EVENT "DIVERT-AGC" 1000>> <FUNCTION
+(AMT REASON) <BLOAT <+ .AMT 4000>>>>> 
+
+<OFF ,DIVERT-HAND> 
+
+<SETG TTY2 #WORD *030202020202*> 
+
+<SETG BUF-CTL-G? <>> 
+
+<SETG INITED <>> 
+
+<SETG ASK-ME <SETG MAIL-ASK-ME '("TO" "SUBJECT" "TEXT")>> 
+
+<SETG MSG-ASK-ME '("MSG-FILE" "SUBJECT" "TO" "TEXT")> 
+
+<SETG FORWARD-ASK-ME '("MSG-NO" "TO" "ANNOTATION")> 
+
+<SETG BUG-ASK-ME '("PROGRAM" "SUBJECT" "TEXT")> 
+
+<SETG SAVE-MAIL %<RSUBR-ENTRY '[READER-GROUP SAVE-MAIL #DECL ("VALUE" ANY <OR 
+FIX FALSE> "OPTIONAL" STRING)] 10305>> 
+
+<SETG MESSAGE-LOOP %<RSUBR-ENTRY '[READER-GROUP MESSAGE-LOOP #DECL ("VALUE" ANY 
+FIX)] 10672>> 
+
+<SETG EDIT-LEVEL %<RSUBR-ENTRY '[READER-GROUP EDIT-LEVEL #DECL ("VALUE" ANY 
+"OPTIONAL" ANY ANY)] 11171>> 
+
+<SETG EDIT-ONCE %<RSUBR-ENTRY '[READER-GROUP EDIT-ONCE #DECL ("VALUE" FIX BUFFER
+CHARACTER)] 11257>> 
+
+<SETG EDIT-SEND %<RSUBR-ENTRY '[READER-GROUP EDIT-SEND #DECL ("VALUE" ANY BUFFER
+CHARACTER)] 11283>> 
+
+<SETG LAZY-CTRL-R %<RSUBR-ENTRY '[READER-GROUP LAZY-CTRL-R #DECL ("VALUE" ANY 
+ANY ANY)] 11610>> 
+
+<SETG ACK-CONDS (<> <>)> 
+
+<SETG PTO %<RSUBR-ENTRY '[READER-GROUP PTO #DECL ("VALUE" <OR CHARACTER FALSE !<
+LIST STRING!>> VECTOR)] 12015>> 
+
+<SETG PFROM %<RSUBR-ENTRY '[READER-GROUP PFROM #DECL ("VALUE" ATOM VECTOR)] 
+12393>> 
+
+<SETG PMSG-FILE %<RSUBR-ENTRY '[READER-GROUP PMSG-FILE #DECL ("VALUE" <OR BUFFER
+FALSE> VECTOR)] 12642>> 
+
+<SETG PID %<RSUBR-ENTRY '[READER-GROUP PID #DECL ("VALUE" <OR FALSE STRING> 
+VECTOR)] 12710>> 
+
+<SETG PSTR %<RSUBR-ENTRY '[READER-GROUP PSTR #DECL ("VALUE" <OR ATOM BUFFER> 
+VECTOR)] 12959>> 
+
+<SETG PLST %<RSUBR-ENTRY '[READER-GROUP PLST #DECL ("VALUE" <OR ATOM FALSE <LIST
+[REST STRING]>> VECTOR)] 13001>> 
+
+<SETG PSUBJ %<RSUBR-ENTRY '[READER-GROUP PSUBJ #DECL ("VALUE" <OR BUFFER FALSE> 
+VECTOR)] 13096>> 
+
+<SETG PEXPUSING %<RSUBR-ENTRY '[READER-GROUP PEXPUSING #DECL ("VALUE" ATOM 
+VECTOR)] 13256>> 
+
+<SETG PNOTES %<RSUBR-ENTRY '[READER-GROUP PNOTES #DECL ("VALUE" ATOM VECTOR)] 
+13307>> 
+
+<SETG PENCLOSURES %<RSUBR-ENTRY '[READER-GROUP PENCLOSURES #DECL ("VALUE" <OR 
+ATOM CHARACTER> VECTOR)] 13912>> 
+
+<SETG PFILE-OUTPUT %<RSUBR-ENTRY '[READER-GROUP PFILE-OUTPUT #DECL ("VALUE" <OR 
+ATOM FALSE> VECTOR)] 14035>> 
+
+<SETG FILEBRKS ",
+"> 
+
+<SETG MAILCRLF %<RSUBR-ENTRY '[READER-GROUP MAILCRLF #DECL ("VALUE" ANY BUFFER 
+CHARACTER)] 14978>> 
+
+<SETG RETBUF %<RSUBR-ENTRY '[READER-GROUP RETBUF #DECL ("VALUE" ANY BUFFER ANY)]
+15020>> 
+
+<SETG KEYWEX %<RSUBR-ENTRY '[READER-GROUP KEYWEX #DECL ("VALUE" BUFFER BUFFER 
+CHARACTER)] 15048>> 
+
+<SETG JCLBRKS ","> 
+
+<SETG HACK-NOTES %<RSUBR-ENTRY '[READER-GROUP HACK-NOTES #DECL ("VALUE" ANY 
+"OPTIONAL" ANY)] 15949>> 
+
+<SETG NOTE-LEVEL %<RSUBR-ENTRY '[READER-GROUP NOTE-LEVEL #DECL ("VALUE" ANY ANY 
+ANY)] 16332>> 
+
+<SETG PREVIOUS-NOTE %<RSUBR-ENTRY '[READER-GROUP PREVIOUS-NOTE #DECL ("VALUE" 
+ANY ANY ANY)] 16363>> 
+
+<SETG APPEND-BUF %<RSUBR-ENTRY '[READER-GROUP APPEND-BUF #DECL ("VALUE" BUFFER 
+VECTOR "OPTIONAL" <OR ATOM FALSE> ANY)] 16452>> 
+
+<SETG APPEND-MESSAGE %<RSUBR-ENTRY '[READER-GROUP APPEND-MESSAGE #DECL ("VALUE" 
+BUFFER ANY "OPTIONAL" <OR ATOM FALSE>)] 16562>> 
+
+<SETG SPACE ": "> 
+
+<SETG SPEOL ":
+"> 
+
+<SETG QUESTION %<RSUBR-ENTRY '[READER-GROUP QUESTION #DECL ("VALUE" <OR BUFFER 
+FIX> BUFFER CHARACTER)] 16608>> 
+
+<SETG QNOTES %<RSUBR-ENTRY '[READER-GROUP QNOTES #DECL ("VALUE" <OR FALSE <
+VECTOR ANY <OR BUFFER FALSE>>> VECTOR)] 16764>> 
+
+<SETG FIELDPRINT %<RSUBR-ENTRY '[READER-GROUP FIELDPRINT #DECL ("VALUE" <OR ATOM
+FALSE FIX> VECTOR)] 16867>> 
+
+<SETG FIELD& %<RSUBR-ENTRY '[READER-GROUP FIELD& #DECL ("VALUE" <OR ATOM FALSE 
+STRING> VECTOR)] 16932>> 
+
+<SETG INTERESTING-GVALS '<UVECTOR BUG FEATURE REMIND MSG FORWARD CORRECT 
+ACK-CONDS ASK-ME ALWAYSFIELDS EXPIRES STIME TECO-PROGRAM>> 
+
+<SETG CHECKER %<RSUBR-ENTRY '[READER-GROUP CHECKER #DECL ("VALUE" <OR FALSE FIX>
+BUFFER CHARACTER)] 18155>> 
+
+<SETG TOBRKS " ,
+"> 
+
+<SETG KEYBREAKS <MAPF ,STRING ,ASCII (13 9 10 32 <ASCII !\,> <ASCII !\.>)>> 
+
+<SETG EOL "
+"> 
+
+<SETG SP <ISTRING 15 '<ASCII 32>>> 
+
+<SETG DBRKS ".,/ 	
+"> 
+
+<SETG ALWAYSFIELDS <SETG TOALWAYS '(TO FROM TEXT)>> 
+
+<SETG MSGALWAYS (MSG-FILE SUBJECT !,ALWAYSFIELDS)> 
+
+<SETG FWDALWAYS '(MSG-NO TO)> 
+
+<SETG BUGALWAYS '(PROGRAM FROM TEXT)> 
+
+<SETG FIELD-TABLE <UVECTOR [FROM <> 10 <+ 1 8 16> ,APPEND-BUF <> ,PFROM ,
+FIELDPRINT "From" ,SPACE "Type the name of the principal author."] [FULL-NAME <>
+100 8 ,APPEND-BUF <> ,PSTR ,FIELDPRINT "Full name" ,SPACE 
+"Type the full name of the author; it will
+be printed in addition to the mailbox name
+in the 'From' field.  (This is not necessary
+if you are known to INQUIR.)"] [REPLY-TO <> 20 <+ 4 16> ,APPEND-BUF !\, ,PLST ,
+FIELDPRINT "Reply-to" ,SPACE 
+"The return address, if it is different from the From
+or Sender fields.  Separated by space, 'CR'
+or comma."] [PROGRAM <> 100 <+ 4 2> ,APPEND-BUF !\, <> ,FIELDPRINT "Programs" ,
+SPACE "List the programs, separated by
+space, 'CR' or comma."] [TO <> 100 <+ 4 2 16> ,APPEND-BUF !\, ,PTO ,FIELDPRINT 
+"To" ,SPACE "List the action addressees, separated by
+space, 'CR' or comma."] [SUBJECT <> 100 8 ,APPEND-BUF <> ,PSUBJ ,FIELDPRINT 
+"Subject" ,SPACE "Type a short description of the contents
+of the message."] [IN-REPLY-TO <> 10 4 ,APPEND-BUF <> ,PSTR ,FIELDPRINT 
+"In reply to" ,SPACE 
+"Type the Message id number(s) of the
+message(s) to which this is a reply."] [CARBON-COPY-TO <> 40 <+ 4 16> ,
+APPEND-BUF !\, <> ,FIELDPRINT "Carbon-copy-to" ,SPACE 
+"List the names of recipients of a carbon
+copy.  Separate the names by space, 'CR' or
+comma."] [BLIND <> 20 <+ 4 16> ,APPEND-BUF !\, <> ,FIELDPRINT "Blind-copy-to" ,
+SPACE 
+"List the names of recipients of 'Blind'
+carbons.  The people in the 'Carbon-copy'
+list will not be apprised of the names in
+the 'Blind' list."] [FILES <> 20 4 ,APPEND-BUF !\, ,PFILE-OUTPUT ,FIELDPRINT 
+"Output to" ,SPACE 
+"List the names of files to which you
+want the message to be sent, in addition
+to the primary addressees, using the
+FILE-OUTPUT process.  The names should be
+separated by 'CR' or comma."] [ENCLOSURES <> 20 4 ,APPEND-BUF !\, ,PENCLOSURES ,
+FIELDPRINT "Enclosures" ,SPACE 
+"List any files which are to be treated
+as enclosures, separated by 'CR' or comma.
+Enclosures will be copied to the message
+file at delivery time by the Daemon."] [MSG-FILE <> 10 8 ,APPEND-BUF !\, ,
+PMSG-FILE ,FIELDPRINT "Msg. File Name" ,SPACE 
+"Give the file-name-one, file-name-two
+pair to use for this message.  Name-one
+defaults to 'MSG->', name-two to '>'"] [MSG-NO <> 10 <+ 2 8> ,APPEND-BUF <> ,PID
+,FIELDPRINT "Message to forward" ,SPACE 
+"Type the Message id number of the message
+being forwarded."] [ID-IRT <> 10 4 ,APPEND-BUF <> ,PID ,FIELDPRINT 
+"ID In reply to" ,SPACE 
+"Type the Message id number(s) of the
+message(s) to which this is a reply."] [EXPUSING <> 20 4 ,APPEND-BUF !\, ,
+PEXPUSING ,FIELDPRINT "Expand-using" ,SPACE 
+"Type the names of additional expansion
+data base files to use in expanding the
+addressees of the message."] [TEXT <> 400 0 ,APPEND-MESSAGE <> ,PSTR ,FIELD& 
+"Message" ,SPEOL 
+"Type the text of the message.  You may
+edit the message by typing 'Control E',
+or insert a file by typing 'Control Y'."] [ANNOTATION <> 100 2 ,APPEND-MESSAGE <
+> <> ,FIELD& "Annotation" ,SPEOL 
+"Type an annotation to the message.  You may
+edit it by typing 'Control E', or insert a
+file by typing 'Control Y'."] [KEYWORDS <> 100 4 ,APPEND-BUF !\, ,PLST ,
+FIELDPRINT "Keywords" ,SPACE 
+"List any keywords, separated by comma,
+'CR' or space.  The keywords will be
+available for searching the data-base"] [NOTES <> 50 <+ 4 2 16> ,HACK-NOTES <> ,
+PNOTES ,QNOTES "Note to" ,SPACE 
+"Addressee(s) for this note, separated by
+space, carriage return, or comma."] [NOTE-TEXT <> 200 2 <> <> <> <> "Note text" 
+,SPEOL 
+"Text of this note.  It will be sent only
+to the addressees for this note."] [TEMPORARY <> 20 <+ 2 8 16> <> <> <> <> "" ,
+SPACE ""]>> 
+
+<SETG EDTEXPL 
+"Edit commands:
+
+	'Edit-flush' (default) to leave Edit level
+	'Send-level' to move to Send level
+	'Reader' to return to Reader (if you are in it)
+	'Print' to print the current state of the message
+	'Save-mail' to save the current state of buffers and switches
+	'Load-mail' to load a previously saved state
+	'Quit' quits out of the mailer
+
+Standard fields:
+	'To'
+	'Carbon-copy-to' or 'cc'
+	'Blind-carbon-copy-to' or 'bcc'
+	'Subject'
+	'From'
+	'Reply-to'
+	'Message'
+	'Keywords'
+	'Note'
+	'Last-note'
+	'Enclosures'
+
+Esoteric fields:
+	'In-reply-to' (READER only) is normally filled in automatically
+	'Full-name-of-sender' is paired with 'Sender'
+
+	'Set-switches' processes a new set of JCL switches
+	'Select-editor'	allows you to change the TECO editor
+
+	'Expansion-data-bases' specifies your own addressee expansions
+	'File-output-to' specifies files to get a copy of the mail
+
+	'Program' contains the programs being 'BUGged' or 'FEATURed'
+	'Annotation' is explanatory text for a forwarded message
+
+	'Msg-file' (:MSG only) specifies the file name for the MSGS file
+	'Msg-expiration' (:MSG only) specifies the expiration for a MSGS file
+	'Forward-message' (:FORWARD only) specifies the message to forward"> 
+
+<SETG EDIT-CHRS [!\ ,EDIT-LEVEL]> 
+
+<SETG EDIT-CHRTABLE <LIST ,EDIT-CHRS ,SYMBOL-CHRS>> 
+
+<SETG SEND-CHRS [!\ ,EDIT-SEND]> 
+
+<SETG SEND-CHRTABLE <LIST ,SEND-CHRS ,SYMBOL-CHRS>> 
+
+<SETG REENTER-TECO-CHAR !\> 
+
+<SETG SAFETECO %<RSUBR-ENTRY '[READER-GROUP SAFETECO #DECL ("VALUE" ANY "TUPLE" 
+ANY)] 19156>> 
+
+<SETG COMPOS-CHRTABLE [!\  ,IBUFCLEAR !\ ,ADDCHR !\ ,SAFETECO !\ ,
+EDIT-ONCE !\ ,IBUFPRINT !\ ,SAFETECO !\ ,CHECKER !\ ,KEYWEX <ASCII 12> ,
+IBUFPRINT <ASCII 13> ,MAILCRLF !\ ,TIME !\ ,QUOTECHR !\ ,LAZY-CTRL-R !\ 
+,TIME !\ ,DLINE !\ ,DWORD !\ ,DLINE !\ ,FILEINP !\ ,RETBUF !\? ,
+QUESTION <ASCII 127> ,IDELCHR]> 
+
+<ENDPACKAGE> 
+
+<USE "MAIL"> 
+
+<PACKAGE "R-DEFS"> 
+
+<ENTRY READER-SPACES USER> 
+
+<ENTRY UPDATE?> 
+
+<ENTRY READER-ASYLUM READER-SPACE READER-TAILOR MESSAGE-TABLE FIX-TABLE 
+LOCAL-MESSAGES FOLDER-TABLE FOLDER-SYMBOLS> 
+
+<ENTRY MTABLE INVERSION BIT> 
+
+<ENTRY ON? ONBITS OFFBITS MSG> 
+
+<USE "MADMAN" "ASYLUM"> 
+
+<SETG UPDATE? <>> 
+
+<SETG READER-ASYLUM <>> 
+
+<SETG READER-SPACE <>> 
+
+<SETG READER-TAILOR <>> 
+
+<SETG FIX-TABLE <>> 
+
+<SETG LOCAL-MESSAGES <>> 
+
+<SETG FOLDER-TABLE '[]> 
+
+<SETG FOLDER-SYMBOLS '[]> 
+
+<SETG INVERSION %<RSUBR-ENTRY '[READER-GROUP INVERSION #DECL ("VALUE" <VECTOR 
+STRING ANY ANY> STRING ANY)] 19197>> 
+
+<SETG READER-SPACES %<RSUBR-ENTRY '[READER-GROUP READER-SPACES #DECL ("VALUE" <
+OR FALSE FIX SPACE>)] 19219>> 
+
+<ENDPACKAGE> 
+
+<USE "R-DEFS"> 
+
+<PACKAGE "R-UTIL"> 
+
+<ENTRY AFTER BETWEEN ITERATE NMSGS IR-UTIL BEFORE> 
+
+<ENDPACKAGE> 
+
+<USE "R-UTIL"> 
+
+<PACKAGE "R-UTIL"> 
+
+<ENTRY AFTER BETWEEN ITERATE NMSGS IR-UTIL BEFORE> 
+
+<ENDPACKAGE> 
+
+<USE "R-UTIL"> 
+
+<PACKAGE "M-DATA"> 
+
+<ENTRY LOADED-STUFF!-M-DATA!-PACKAGE DDATUMS!-M-DATA!-PACKAGE 
+GET-DATUM!-M-DATA!-PACKAGE DATUM!-M-DATA!-PACKAGE MAKE-DATUM!-M-DATA!-PACKAGE 
+PURIFIED?!-M-DATA!-PACKAGE IM-DATA!-M-DATA!-PACKAGE 
+GET-DATUM-ERRORS?!-M-DATA!-PACKAGE> 
+
+<ENDPACKAGE> 
+
+<USE "M-DATA"> 
+
+<PACKAGE "M-MSG"> 
+
+<ENTRY SENDMSG> 
+
+<USE "M-DEFS" "M-DATA" "ITIME"> 
+
+<SETG SENDMSG %<RSUBR-ENTRY '[READER-GROUP SENDMSG #DECL ("VALUE" ATOM LIST 
+STRING "OPTIONAL" STRING STRING "TUPLE" TUPLE)] 19355>> 
+
+<ENDPACKAGE> 
+
+<USE "M-MSG"> 
+
+<PACKAGE "CLOCK"> 
+
+<ENTRY CLOCK-QUEUE CLOCK-HANDLER CLOCK-INTERVAL CINT> 
+
+<USE "ITIME"> 
+
+<NEWTYPE CINT VECTOR '<<PRIMTYPE VECTOR> FIX FIX <OR ATOM APPLICABLE>>> 
+
+<SETG CLOCK-DEBUG? <>> 
+
+<SETG CLOCK-QUEUE ()> 
+
+<SETG CLOCK-HANDLER <>> 
+
+<SETG CLOCK-INTERVAL 60> 
+
+<SETG CLOCK-MANAGER %<RSUBR-ENTRY '[READER-GROUP CLOCK-MANAGER #DECL ("VALUE" 
+ATOM)] 19628>> 
+
+<SETG CINT-PRINT %<RSUBR-ENTRY '[READER-GROUP CINT-PRINT #DECL ("VALUE" 
+CHARACTER CINT "OPTIONAL" ANY)] 19890>> 
+
+<PRINTTYPE CINT ,CINT-PRINT> 
+
+<ENDPACKAGE> 
+
+<USE "CLOCK"> 
+
+<PACKAGE "M-TIME"> 
+
+<ENTRY SCROUT> 
+
+<USE "CLOCK" "ITIME"> 
+
+<SETG ZAP T> 
+
+<SETG SCROUT %<RSUBR-ENTRY '[READER-GROUP SCROUT #DECL ("VALUE" ATOM "TUPLE" 
+TUPLE)] 20072>> 
+
+<ENDPACKAGE> 
+
+<USE "M-TIME"> 
+
+<PACKAGE "M-DATA"> 
+
+<ENTRY GET-DATUM-ERRORS? PURIFIED? DDATUMS LOADED-STUFF DATUM GET-DATUM 
+MAKE-DATUM> 
+
+<USE "M-DEFS" "M-MSG" "M-TIME" "SORTX"> 
+
+<SETG GET-DATUM-ERRORS? <>> 
+
+<SETG DATA <MOBLIST DATUM>> 
+
+<SETG GET-ATOMD %<RSUBR-ENTRY '[READER-GROUP GET-ATOMD #DECL ("VALUE" ATOM 
+STRING)] 20311>> 
+
+<SETG MAKE-DATUM %<RSUBR-ENTRY '[READER-GROUP MAKE-DATUM #DECL ("VALUE" STRING 
+STRING ANY)] 20336>> 
+
+<SETG DDATUMS %<RSUBR-ENTRY '[READER-GROUP DDATUMS #DECL ("VALUE" ATOM <VECTOR [
+REST STRING]>)] 20472>> 
+
+<SETG DATUM %<RSUBR-ENTRY '[READER-GROUP DATUM #DECL ("VALUE" ANY STRING)] 20681
+>> 
+
+<SETG LOADED-STUFF (T)> 
+
+<SETG PURIFIED? <>> 
+
+<SETG GET-DATUM %<RSUBR-ENTRY '[READER-GROUP GET-DATUM #DECL ("VALUE" ANY STRING
+"OPTIONAL" ANY)] 21017>> 
+
+<SETG READ-ERROR %<RSUBR-ENTRY '[READER-GROUP READ-ERROR #DECL ("VALUE" ANY 
+"TUPLE" TUPLE)] 21179>> 
+
+<ENDPACKAGE> 
+
+<USE "M-DATA"> 
+
+<PACKAGE "FIELDS"> 
+
+<ENTRY GETFIX FGETFIX FLD IFIELDS> 
+
+<ENDPACKAGE> 
+
+<USE "FIELDS"> 
+
+<PACKAGE "FIELDS"> 
+
+<ENTRY FLD GETFIX FGETFIX> 
+
+<USE "M-DEFS" "M-DATA" "MADMAN"> 
+
+<SETG FLD <MOBLIST FLD>> 
+
+<USE "FIELDS"> 
+
+<COND (<LOOKUP "MSG-NO" ,FLD>) (ELSE <SETG <INSERT "MSG-NO" ,FLD> 1> <SETG <
+INSERT "MESSAGE-ID" ,FLD> 2> <SETG <INSERT "FROM" ,FLD> 3> <SETG <INSERT 
+"SENDER" ,FLD> 4> <SETG <INSERT "RECEIVED-FROM-HOST" ,FLD> 5> <SETG <INSERT "TO"
+,FLD> 6> <SETG <INSERT "ADDRESSED-TO" ,FLD> 7> <SETG <INSERT "ACTION-TO" ,FLD> 8
+> <SETG <INSERT "CARBON-COPY-TO" ,FLD> 9> <SETG <INSERT "WHEN-ORIGINATED" ,FLD> 
+10> <SETG <INSERT "SUBJECT" ,FLD> 11> <SETG <INSERT "TEXT" ,FLD> 12> <SETG <
+INSERT "CPU-SECONDS" ,FLD> 13> <SETG <INSERT "CONSOLE-MINUTES" ,FLD> 14> <SETG <
+INSERT "DAEMON" ,FLD> 15> <SETG <INSERT "WHEN-RECEIVED" ,FLD> 16> <SETG <INSERT 
+"WHEN-DELIVERED" ,FLD> 17> <SETG <INSERT "PROCESSING-NEEDED" ,FLD> 18> <SETG <
+INSERT "PROCESSING-COMPLETED" ,FLD> 19> <SETG <INSERT "CPU-TIME" ,FLD> 20> <SETG
+<INSERT "EXPANDED-ADDRESSEE-LIST" ,FLD> 21> <SETG <INSERT 
+"UNPROCESSABLE-ADDRESSEES" ,FLD> 22> <SETG <INSERT "DELIVERY-COMPLETED" ,FLD> 23
+> <SETG <INSERT "DELIVERY-ATTEMPTS" ,FLD> 24> <SETG <INSERT 
+"NET-DELIVERY-ERRORS" ,FLD> 25> <SETG <INSERT "CONDITIONS" ,FLD> 26> <SETG <
+INSERT "PENDING-CONDITIONS" ,FLD> 27> <SETG <INSERT "ACKNOWLEDGED-CONDITIONS" ,
+FLD> 28> <SETG <INSERT "WATCH-CONDITIONS" ,FLD> 29> <SETG <INSERT 
+"ERROR-CONDITIONS" ,FLD> 30> <SETG <INSERT "ERROR-TO" ,FLD> 31>)> 
+
+<DEFMAC GETFIX ('X "AUX" N) <COND (<TYPE? .X STRING> <COND (<SET N <LOOKUP .X ,
+FLD>> ,.N) (ELSE .X)>) (ELSE <FORM FGETFIX .X>)>> 
+
+<SETG FGETFIX %<RSUBR-ENTRY '[READER-GROUP FGETFIX #DECL ("VALUE" <OR FIX STRING
+> <OR FIX STRING>)] 21359>> 
+
+<ENDPACKAGE> 
+
+<USE "FIELDS"> 
+
+<PACKAGE "USRUTI"> 
+
+<ENTRY ALLOW-TOURISTS> 
+
+<USE "M-DATA" "HOSTS" "LSRTNS" "M-DEFS" "MADMAN"> 
+
+<SETG ALLOW-TOURISTS <>> 
+
+<SETG HSTABLE <>> 
+
+<SETG JUNKUV <IUVECTOR 10 0>> 
+
+<SETG RCVR-STRING <REST <ISTRING 30 !\ > 30>> 
+
+<SETG BADHOST #FALSE ("Invalid Host in Forwarding Address")> 
+
+<SETG NOBOX #FALSE ("No Mailbox for that name")> 
+
+<ENDPACKAGE> 
+
+<USE "USRUTI"> 
+
+<PACKAGE "PRTUTI"> 
+
+<ENTRY LINE-LNTH MONTHS P-ADDRL P-ADDR P-SPLIT P-SLIST P-TIME P-NOTES 
+P-TEXT-SPLIT P-ENCLOSURES P-FORWARD P-AUTHOR-FORWARD P-FULNAM P-REPLIED-TO 
+FROM-ITS? ITS-SITES NET-P-DATE NET-P-LINE NET-FROM DDT-ADRL DDT-ADR DDT-SPLIT 
+MSG-FROM DDT-LIST DDT-FORWARD DDT-AUTHOR-FORWARD DDT-REPLIED-TO DDT-TEXT-LIST 
+DDT-TEXT-SPLIT QUICK-DATE> 
+
+<USE "M-DEFS" "ITIME" "USRUTI" "HOSTS" "LSRTNS"> 
+
+<SETG MONTHS '["Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov"
+"Dec"]> 
+
+<SETG LINE-LNTH 65> 
+
+<SETG P-ADDRL %<RSUBR-ENTRY '[READER-GROUP P-ADDRL #DECL ("VALUE" <OR ATOM 
+STRING> <OR STRING LIST> CHANNEL "OPTIONAL" FIX)] 23194>> 
+
+<SETG P-SPLIT %<RSUBR-ENTRY '[READER-GROUP P-SPLIT #DECL ("VALUE" ATOM <LIST [
+REST LIST]> CHANNEL)] 23265>> 
+
+<SETG P-ADDR %<RSUBR-ENTRY '[READER-GROUP P-ADDR #DECL ("VALUE" STRING STRING 
+CHANNEL "OPTIONAL" FIX)] 23323>> 
+
+<SETG P-SLIST %<RSUBR-ENTRY '[READER-GROUP P-SLIST #DECL ("VALUE" ATOM <LIST [
+REST STRING]> CHANNEL)] 23409>> 
+
+<SETG P-TIME %<RSUBR-ENTRY '[READER-GROUP P-TIME #DECL ("VALUE" STRING <OR FIX 
+LIST UVECTOR> CHANNEL)] 23473>> 
+
+<SETG NET-FROM %<RSUBR-ENTRY '[READER-GROUP NET-FROM #DECL ("VALUE" <OR ATOM 
+CHARACTER FALSE> <OR STRING <LIST STRING <OR STRING FALSE>>> CHANNEL)] 23590>> 
+
+<SETG P-FULNAM %<RSUBR-ENTRY '[READER-GROUP P-FULNAM #DECL ("VALUE" <OR ATOM 
+CHARACTER FALSE> STRING CHANNEL "OPTIONAL" <OR STRING FALSE>)] 23662>> 
+
+<SETG ITS-SITES <UVECTOR <HOST "MIT-DMS"> <HOST "MIT-ML"> <HOST "MIT-MC"> <HOST 
+"MIT-AI">>> 
+
+<SETG FROM-ITS? %<RSUBR-ENTRY '[READER-GROUP FROM-ITS? #DECL ("VALUE" <OR FALSE 
+FIX> STRING)] 23837>> 
+
+<SETG P-NOTES %<RSUBR-ENTRY '[READER-GROUP P-NOTES #DECL ("VALUE" FALSE LIST 
+CHANNEL)] 23875>> 
+
+<SETG P-TEXT-SPLIT %<RSUBR-ENTRY '[READER-GROUP P-TEXT-SPLIT #DECL ("VALUE" ATOM
+<LIST [REST LIST]> CHANNEL)] 23917>> 
+
+<SETG P-FORWARD %<RSUBR-ENTRY '[READER-GROUP P-FORWARD #DECL ("VALUE" <OR FALSE 
+STRING> LIST CHANNEL)] 23976>> 
+
+<SETG P-REPLIED-TO %<RSUBR-ENTRY '[READER-GROUP P-REPLIED-TO #DECL ("VALUE" 
+STRING <LIST FIX FIX> CHANNEL)] 24100>> 
+
+<SETG P-AUTHOR-FORWARD %<RSUBR-ENTRY '[READER-GROUP P-AUTHOR-FORWARD #DECL (
+"VALUE" ATOM <LIST [REST LIST]> CHANNEL)] 24136>> 
+
+<SETG P-ENCLOSURES %<RSUBR-ENTRY '[READER-GROUP P-ENCLOSURES #DECL ("VALUE" 
+FALSE LIST CHANNEL)] 24194>> 
+
+<SETG NET-P-DATE %<RSUBR-ENTRY '[READER-GROUP NET-P-DATE #DECL ("VALUE" STRING <
+OR FIX LIST UVECTOR> CHANNEL)] 24391>> 
+
+<SETG NET-P-LINE %<RSUBR-ENTRY '[READER-GROUP NET-P-LINE #DECL ("VALUE" ATOM 
+STRING CHANNEL)] 24506>> 
+
+<SETG DDT-ADR %<RSUBR-ENTRY '[READER-GROUP DDT-ADR #DECL ("VALUE" <OR FALSE 
+STRING> STRING CHANNEL "OPTIONAL" <OR ATOM FALSE>)] 24615>> 
+
+<SETG DDT-ADRL %<RSUBR-ENTRY '[READER-GROUP DDT-ADRL #DECL ("VALUE" <OR ATOM 
+FALSE STRING> <OR STRING <LIST [REST STRING]>> CHANNEL "OPTIONAL" <OR ATOM FALSE
+>)] 24696>> 
+
+<SETG DDT-SPLIT %<RSUBR-ENTRY '[READER-GROUP DDT-SPLIT #DECL ("VALUE" ATOM <LIST
+[REST LIST]> CHANNEL "OPTIONAL" ANY)] 24762>> 
+
+<SETG DDT-FORWARD %<RSUBR-ENTRY '[READER-GROUP DDT-FORWARD #DECL ("VALUE" <OR 
+ATOM FALSE FIX> LIST CHANNEL)] 24833>> 
+
+<SETG DDT-AUTHOR-FORWARD %<RSUBR-ENTRY '[READER-GROUP DDT-AUTHOR-FORWARD #DECL (
+"VALUE" ATOM <LIST [REST LIST]> CHANNEL)] 24935>> 
+
+<SETG DDT-REPLIED-TO %<RSUBR-ENTRY '[READER-GROUP DDT-REPLIED-TO #DECL ("VALUE" 
+STRING <LIST FIX FIX> CHANNEL)] 24993>> 
+
+<SETG DDT-LIST %<RSUBR-ENTRY '[READER-GROUP DDT-LIST #DECL ("VALUE" <OR ATOM 
+FALSE STRING> <OR STRING LIST> CHANNEL)] 25034>> 
+
+<SETG MSG-FROM %<RSUBR-ENTRY '[READER-GROUP MSG-FROM #DECL ("VALUE" <OR FALSE 
+STRING> STRING CHANNEL)] 25053>> 
+
+<SETG DDT-TEXT-LIST %<RSUBR-ENTRY '[READER-GROUP DDT-TEXT-LIST #DECL ("VALUE" <
+OR FALSE STRING> LIST CHANNEL)] 25073>> 
+
+<SETG DDT-TEXT-SPLIT %<RSUBR-ENTRY '[READER-GROUP DDT-TEXT-SPLIT #DECL ("VALUE" 
+ATOM <LIST [REST LIST]> CHANNEL "OPTIONAL" <OR ATOM FALSE>)] 25129>> 
+
+<SETG QUICK-DATE %<RSUBR-ENTRY '[READER-GROUP QUICK-DATE #DECL ("VALUE" FIX <OR 
+FIX LIST UVECTOR> CHANNEL)] 25198>> 
+
+<ENDPACKAGE> 
+
+<USE "PRTUTI"> 
+
+<PACKAGE "M-TAI"> 
+
+<ENTRY TAIU TAID TAIC TAIDIR TAIFIL TAINUM TAICTR> 
+
+<USE "M-DATA" "M-TIME" "PRTUTI" "USRUTI" "FIELDS" "M-DEFS" "MADMAN"> 
+
+<PROG () <SETG TAIDIR "COMSAV"> <SETG TAIFIL "TAILOR"> <SETG TAINUM 10> <SETG 
+TAICTR 1> <SETG TAIU <IVECTOR ,TAINUM "">> <SETG TAIC <IUVECTOR ,TAINUM 1>> <
+SETG TAID <IVECTOR ,TAINUM '[]>>> 
+
+<ENDPACKAGE> 
+
+<USE "M-TAI"> 
+
+<PACKAGE "M-READ"> 
+
+<ENTRY LOSING-DATA INIT-SPACES> 
+
+<ENTRY MDB COMSYS-ASYLUM-MAP> 
+
+<ENTRY READ-WRITE?> 
+
+<USE "M-DEFS" "M-TIME" "MADMAN" "ASYLUM" "M-DATA" "FIELDS" "M-TAI" "USRUTI"> 
+
+<SETG LOSING-DATA <>> 
+
+<SETG READ-WRITE? <>> 
+
+<OR <GASSIGNED? MDB> <SETG MDB <VECTOR 0 <> [] () <>>>> 
+
+<SETG INIT-SPACES %<RSUBR-ENTRY '[READER-GROUP INIT-SPACES #DECL ("VALUE" ATOM)]
+26161>> 
+
+<SETG COMSYS-ASYLUM-MAP <>> 
+
+<ENDPACKAGE> 
+
+<USE "M-READ"> 
+
+<PACKAGE "FILINF"> 
+
+<ENTRY DUMPED?> 
+
+<SETG DUMPED? %<RSUBR-ENTRY '[READER-GROUP DUMPED? #DECL ("VALUE" <OR ATOM FALSE
+> CHANNEL "OPTIONAL" <OR ATOM FALSE>)] 27131>> 
+
+<ENDPACKAGE> 
+
+<USE "FILINF"> 
+
+<PACKAGE "ASYSTAT"> 
+
+<ENTRY ASYUV> 
+
+<USE-TOTAL "ASYLUM"> 
+
+<SETG DLEN 4> 
+
+<SETG ASYUV <IUVECTOR 5 0>> 
+
+<SETG AUV2 <IUVECTOR 2 #WORD *000000000000*>> 
+
+<ENDPACKAGE> 
+
+<USE "ASYSTAT"> 
+
+<PACKAGE "R-IO"> 
+
+<ENTRY RDEBUG?> 
+
+<ENTRY READER-ASYLUM-FILE USED-READER-FILE> 
+
+<ENTRY RENUMBER? UPDATE-ALWAYS?> 
+
+<USE "R-DEFS" "R-UTIL"> 
+
+<USE "MADMAN" "ASYLUM" "M-DEFS" "FIELDS" "M-READ" "M-DATA" "USRUTI" "PRTUTI" 
+"BUF" "FILINF" "ITIME" "MAIL" "ASYSTAT"> 
+
+<SETG RDEBUG? T> 
+
+<SETG READER-ASYLUM-FILE "FOO"> 
+
+<SETG UPDATE-ALWAYS? <>> 
+
+<SETG USED-READER-FILE <>> 
+
+<SETG XUV <UVECTOR 0>> 
+
+<SETG IOCHAND %<RSUBR-ENTRY '[READER-GROUP IOCHAND #DECL ("VALUE" ANY FALSE 
+CHANNEL)] 29449>> 
+
+<ENDPACKAGE> 
+
+<USE "R-IO"> 
+
+<PACKAGE "R-UTIL"> 
+
+<ENTRY ITERATE> 
+
+<ENTRY BEFORE AFTER BETWEEN> 
+
+<ENTRY NMSGS> 
+
+<USE "R-DEFS" "R-IO"> 
+
+<SETG NMSGS %<RSUBR-ENTRY '[READER-GROUP NMSGS #DECL ("VALUE" FIX FIX "TUPLE" 
+TUPLE)] 30320>> 
+
+<ENDPACKAGE> 
+
+<USE "R-UTIL"> 
+
+<PACKAGE "R-INP"> 
+
+<ENTRY INPUT-READER-FILE> 
+
+<USE "R-DEFS" "R-IO"> 
+
+<USE "MADMAN" "M-DEFS" "USRUTI"> 
+
+<SETG READER-INPUT-FILE "READER"> 
+
+<SETG OLD-READER-INPUT-FILE "OREADE"> 
+
+<SETG INPUT-READER-FILE %<RSUBR-ENTRY '[READER-GROUP INPUT-READER-FILE #DECL (
+"VALUE" <OR ATOM FALSE FIX> STRING <OR ATOM FALSE>)] 31476>> 
+
+<SETG READ-ERROR %<RSUBR-ENTRY '[READER-GROUP READ-ERROR #DECL ("VALUE" ANY 
+"TUPLE" TUPLE)] 32225>> 
+
+<ENDPACKAGE> 
+
+<USE "R-INP"> 
+
+<PACKAGE "R-FOLD"> 
+
+<ENTRY IR-FOLD> 
+
+<ENDPACKAGE> 
+
+<USE "R-FOLD"> 
+
+<PACKAGE "R-WHICH"> 
+
+<ENTRY SCANNING? I-ALL I-NEW I-DISCARDED I-RECENT I-IN-BOX OPEN-INV IR-WHICH> 
+
+<ENDPACKAGE> 
+
+<USE "R-WHICH"> 
+
+<PACKAGE "M-FORM"> 
+
+<ENTRY DDT-FORMAT> 
+
+<USE "M-DEFS" "M-READ" "FIELDS" "PRTUTI"> 
+
+<SETG DDT-FORMAT %<RSUBR-ENTRY '[READER-GROUP DDT-FORMAT #DECL ("VALUE" ATOM 
+STRING CHANNEL)] 32889>> 
+
+<ENDPACKAGE> 
+
+<USE "M-FORM"> 
+
+<PACKAGE "AP"> 
+
+<ENTRY AP?> 
+
+<USE "M-DEFS"> 
+
+<SETG AP? %<RSUBR-ENTRY '[READER-GROUP AP? #DECL ("VALUE" <OR FALSE APPLICABLE> 
+ANY)] 34467>> 
+
+<SETG APHAND %<RSUBR-ENTRY '[READER-GROUP APHAND #DECL ("VALUE" ANY "TUPLE" 
+TUPLE)] 34581>> 
+
+<ENDPACKAGE> 
+
+<USE "AP"> 
+
+<PACKAGE "M-DOUT"> 
+
+<ENTRY DO-OUTPUT DO-APPLY ADR> 
+
+<USE "M-READ" "PRTUTI" "AP" "M-DEFS" "MADMAN"> 
+
+<SETG DO-OUTPUT-IHAND %<RSUBR-ENTRY '[READER-GROUP DO-OUTPUT-IHAND #DECL (
+"VALUE" ANY "TUPLE" TUPLE)] 34619>> 
+
+<SETG DO-OUTPUT-EHAND %<RSUBR-ENTRY '[READER-GROUP DO-OUTPUT-EHAND #DECL (
+"VALUE" ANY "TUPLE" TUPLE)] 34679>> 
+
+<SETG DO-APPLY %<RSUBR-ENTRY '[READER-GROUP DO-APPLY #DECL ("VALUE" <OR FALSE 
+ATOM> STRING ANY CHANNEL)] 34739>> 
+
+<SETG DO-OUTPUT %<RSUBR-ENTRY '[READER-GROUP DO-OUTPUT #DECL ("VALUE" <OR FALSE 
+ATOM> STRING LIST CHANNEL)] 34819>> 
+
+<ENDPACKAGE> 
+
+<USE "M-DOUT"> 
+
+<PACKAGE "M-HIST"> 
+
+<ENTRY PROCESSES> 
+
+<USE "M-READ" "M-DEFS" "ITIME" "FIELDS"> 
+
+<SETG PROCESSES ["SENDING" "PARSING" "EXPANSION" "TRANSMISSION" 
+"PERSONAL-PROCESSING" "AUTHOR-PROCESSING" "RECEIVER-PROCESSING" "FILE-OUTPUT" 
+"DELIVERY" "ACKNOWLEDGMENT" "CORRECTION"]> 
+
+<ENDPACKAGE> 
+
+<USE "M-HIST"> 
+
+<PACKAGE "R-SHOW"> 
+
+<ENTRY MORE> 
+
+<USE "R-DEFS" "R-UTIL" "R-IO" "R-FOLD" "R-WHICH"> 
+
+<USE "M-FORM" "M-DEFS" "M-DATA" "M-READ" "M-DOUT" "M-HIST" "MAIL" "SYMBOLS" 
+"BUF" "FIELDS"> 
+
+<SETG MORE %<RSUBR-ENTRY '[READER-GROUP MORE #DECL ("VALUE" ANY <OR CHANNEL FIX>
+"OPTIONAL" CHANNEL)] 37052>> 
+
+<SETG APPSTR <ISTRING 5>> 
+
+<ENDPACKAGE> 
+
+<USE "R-SHOW"> 
+
+<PACKAGE "R-FOLD"> 
+
+<ENTRY IR-FOLD> 
+
+<ENDPACKAGE> 
+
+<USE "R-FOLD"> 
+
+<PACKAGE "R-MAIL"> 
+
+<ENTRY RETURN-TO-MAILER> 
+
+<USE "R-DEFS" "R-UTIL" "R-IO"> 
+
+<USE "MAIL" "BUF" "M-DEFS" "M-READ" "PRTUTI" "USRUTI" "SYMBOLS"> 
+
+<SETG RETURN-TO-MAILER %<RSUBR-ENTRY '[READER-GROUP RETURN-TO-MAILER #DECL (
+"VALUE" ANY "OPTIONAL" ANY ANY)] 38697>> 
+
+<SETG SNARF-TEXT %<RSUBR-ENTRY '[READER-GROUP SNARF-TEXT #DECL ("VALUE" STRING 
+BUFFER CHARACTER)] 39896>> 
+
+<ENDPACKAGE> 
+
+<USE "R-MAIL"> 
+
+<PACKAGE "R-WHICH"> 
+
+<ENTRY SCANNING?> 
+
+<ENTRY I-RECENT I-NEW I-ALL I-IN-BOX I-DISCARDED OPEN-INV> 
+
+<USE "R-DEFS" "R-UTIL" "R-IO" "R-SHOW" "R-FOLD" "R-MAIL"> 
+
+<USE "MAIL" "SYMBOLS" "BUF" "PARSE-DATE" "LEXER" "ITIME"> 
+
+<SETG SCANNING? <>> 
+
+<SETG WHICH-CHRS [!\ ,RETURN-TO-MAILER]> 
+
+<SETG WHICH-CHRTABLE <LIST ,WHICH-CHRS ,SYMBOL-CHRS>> 
+
+<SETG READ-MESSAGE-NUMBERS %<RSUBR-ENTRY '[READER-GROUP READ-MESSAGE-NUMBERS #
+DECL ("VALUE" <OR FALSE <VECTOR STRING ANY ANY>> BUFFER <OR CHARACTER FALSE>)] 
+40773>> 
+
+<SETG I-ALL <INVERSION "All" T>> 
+
+<SETG I-FILE <INVERSION "File" <FORM NOT <ORB #WORD *400000000000* #WORD 
+*200000000000* #WORD *100000000000* #WORD *040000000000*>>>> 
+
+<SETG I-WORKSPACE <INVERSION "Workspace" <ORB #WORD *400000000000* #WORD 
+*200000000000* #WORD *100000000000*>>> 
+
+<SETG I-IN-BOX <INVERSION "In-Box" #WORD *400000000000*>> 
+
+<SETG I-OUT-BOX <INVERSION "Out-Box" #WORD *200000000000*>> 
+
+<SETG I-PENDING <INVERSION "Pending" #WORD *100000000000*>> 
+
+<SETG I-DISCARDED <INVERSION "Discarded" #WORD *040000000000*>> 
+
+<SETG I-UNSUMMARIZED <INVERSION "Summary-not-seen" #WORD *020000000000*>> 
+
+<SETG I-UNREAD <INVERSION "Text-not-seen" #WORD *010000000000*>> 
+
+<SETG I-RECENT <INVERSION "Recently-received" #WORD *004000000000*>> 
+
+<SETG I-NEW <INVERSION "Received-during-session" #WORD *002000000000*>> 
+
+<SETG I-SENT <INVERSION "Sent" #WORD *001000000000*>> 
+
+<SETG I-ASYLUM <INVERSION "Locally-stored" #WORD *000400000000*>> 
+
+<SETG I-ACTION <INVERSION "Action-completed" #WORD *000200000000*>> 
+
+<SETG I-ANSWERED <INVERSION "Answered" #WORD *000100000000*>> 
+
+<SETG I-FORWARDED <INVERSION "Forwarded" #WORD *000040000000*>> 
+
+<SETG I-REMIND <INVERSION "Reminders" #WORD *000004000000*>> 
+
+<SETG CURRENT-INV <INVERSION "Current" T>> 
+
+<SETG BOOL-INV <INVERSION "Not" '<NOT T>>> 
+
+<SETG USER-INV <INVERSION "User's" #WORD *000020000000*>> 
+
+<SETG OPEN-INV <>> 
+
+<SETG LAST-INV <>> 
+
+<SETG REST-INV <INVERSION "Rest" T>> 
+
+<SETG SEARCH-INV <INVERSION "Search-result" #WORD *000010000000*>> 
+
+<SETG IN-FOLDER-INV <INVERSION "In-folder" [2 0]>> 
+
+<ENDPACKAGE> 
+
+<USE "R-WHICH"> 
+
+<PACKAGE "R-FOLD"> 
+
+<USE "R-DEFS" "R-UTIL" "R-IO" "R-WHICH"> 
+
+<USE "MADMAN" "M-DEFS" "SYMBOLS" "MAIL"> 
+
+<SETG FOLDER-INV <INVERSION "Folder" '[2 0]>> 
+
+<ENDPACKAGE> 
+
+<USE "R-FOLD"> 
+
+<PACKAGE "READER"> 
+
+<ENTRY SAVE-READER READER READER-LOOP> 
+
+<USE "MADMAN" "M-DEFS" "BUF" "SYMBOLS" "MAIL"> 
+
+<USE "R-DEFS" "R-UTIL" "R-IO" "R-INP" "R-FOLD" "R-MAIL" "R-SHOW" "R-WHICH"> 
+
+<SETG VERNUM 0> 
+
+<SETG READER-DIR "LIBRDR"> 
+
+<SETG SAVE-READER %<RSUBR-ENTRY '[READER-GROUP SAVE-READER #DECL ("VALUE" ANY <
+OR FIX FALSE>)] 44239>> 
+
+<SETG READER %<RSUBR-ENTRY '[READER-GROUP READER #DECL ("VALUE" ANY "OPTIONAL" 
+STRING)] 44309>> 
+
+<SETG SCANNING? <>> 
+
+<SETG OSCANNING? <>> 
+
+<SETG READER-LOOP %<RSUBR-ENTRY '[READER-GROUP READER-LOOP #DECL ("VALUE" ANY 
+"OPTIONAL" <OR ATOM FALSE>)] 44513>> 
+
+<SETG WHICH-ESCAPE %<RSUBR-ENTRY '[READER-GROUP WHICH-ESCAPE #DECL ("VALUE" <OR 
+FALSE STRING> BUFFER CHARACTER)] 44726>> 
+
+<SETG READER-CHRS [!\ ,RETURN-TO-MAILER !\ ,WHICH-ESCAPE]> 
+
+<SETG READER-CHRTABLE <LIST ,READER-CHRS ,SYMBOL-CHRS>> 
+
+<ENDPACKAGE> 

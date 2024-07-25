@@ -1,0 +1,443 @@
+
+<PACKAGE "M-ACK">
+
+;"ACKNOWLEDGMENT STUFF"
+
+<ENTRY ACKNOWLEDGMENT SET-CONDITIONS COND-SIGNAL ACK-ERR>
+
+<USE "NEWSTRUC"
+     "M-DEFS"
+     "M-READ"
+     "M-DAC"
+     "M-PRCD"
+     "M-MSG"
+     "ITIME"
+     "FIELDS"
+     "PRTUTI"
+     "PRTSTR"
+     "M-ERR"
+     "USRUTI"
+     "MADMAN"
+     "HOSTS">
+
+"ACKNOWLEDGMENT PROCESS"
+
+<DEMON-PROCESS
+ "ACKNOWLEDGMENT"
+ ACKNOWLEDGMENT
+ ACK-ERR
+ [,FATAL	;1
+  ,FATAL	;2
+  ,FATAL	;3]>
+
+"SUBTITLE Offsets in CONDITIONS Elements"
+
+<PUT CSPEC
+     DECL
+     '<LIST [REST STRING <OR FIX FALSE>]>>
+
+<MSETG CCND 1>		;"condition name"
+<MSETG CTIM 2>		;"time condition is run"
+
+"SUBTITLE Offsets in ACKNOWLEDGE elements"
+
+<PUT ASPEC
+     DECL
+     '<LIST STRING <OR FIX FALSE> ANY>>
+
+<MSETG ACND 1>		;"condition name"
+<MSETG ATIM 2>		;"increment or time for condition"
+<MSETG AFNC 3>		;"process code for condition handler"
+
+"SUBTITLE Offsets in PENDING-CONDITIONS elements"
+
+<PUT PSPEC
+     DECL
+     '<LIST STRING ADDRESS <OR FALSE FIX> [REST FIX]>>
+
+<MSETG PCND 1>		;"name of condition"
+<MSETG PADR 2>		;"addressee for whom condition happened"
+<MSETG PVAL 3>		;"condition failed/succeeded <>/0"
+
+"SUBTITLE Offsets in ACKNOWLEDGED-CONDITIONS elements"
+
+<MSETG PACK 4>		;"as above with when ack'ed added"
+
+\
+
+"SUBTITLE Acknowledgement Process"
+
+<DEFINE ACKNOWLEDGMENT (ADR
+			"AUX" PC AC ACK (ACKL <>) (FLG <>) NWCN WCN
+			      CADR CTIME CACK (NXRUN <>)
+			      ADRCON (MS ,MSG-SPACE))
+   #DECL ((ADR CADR) ADDRESS (PC AC) <LIST [REST PSPEC]>
+	  (ACK) <OR FALSE <LIST [REST ASPEC]>> (ACKL) <OR FALSE ASPEC>
+	  (MS) SPACE (WCN NWCN) WSPEC (CTIME) <OR FALSE FIX> (FLG) <OR ATOM FALSE>
+	  (ADRCON) <OR FALSE <LIST [REST CSPEC]>> (CACK) CSPEC (NXRUN) <OR FALSE FIX>)
+   <COND (<SET ACK <DRD () <GETFIX "ACKNOWLEDGE">>>
+	  <SET PC <OR <DRDMSG () <GETFIX "PENDING-CONDITIONS">> ()>>
+	  <SET AC <OR <DRDMSG () <GETFIX "ACKNOWLEDGED-CONDITIONS">> ()>>
+	  <SET NWCN <SET WCN <OR <DRDMSG () <GETFIX "WATCH-CONDITIONS">> ()>>>
+	  <REPEAT ()
+		  <COND (<EMPTY? .WCN> <RETURN>)>
+		  <SET CADR <WADR .WCN>>
+		  <SET CACK <WACK .WCN>>
+		  <SET ADRCON <DRDMSG .CADR <GETFIX "CONDITIONS">>>
+		  <PROG ()
+			<COND (<EMPTY? .CACK>
+			       <PUT .WCN ,WACK ()>
+			       <RETURN>)
+			      (<OR <NOT <SET CTIME <CTIM .CACK>>>
+				   <L? .CTIME <ITIME>>>
+			       <COND (<OR <NOT .ADRCON>
+					  <NOT <COND-HAP <CCND .CACK>
+							 .ADRCON>>>
+				      <SET PC
+					   <ACONS .MS
+						  <ALIST .MS
+							 <CCND .CACK>
+							 .CADR
+							 <>>
+						  .PC>>)>
+			       <SET CACK <REST .CACK 2>>
+			       <AGAIN>)
+			      (ELSE
+			       <COND (.ADRCON
+				      <SET CACK <PRUNE-COND .CACK .ADRCON>>
+				      <PUT .WCN ,WACK .CACK>)>
+			       <COND (<AND <NOT <EMPTY? .CACK>>
+					   <OR <NOT .NXRUN>
+					       <AND <SET CTIME <CTIM .CACK>>
+						    <L? .CTIME .NXRUN>>>>
+				      <SET NXRUN <CTIM .CACK>>)>)>>
+		  <SET WCN <REST .WCN 2>>>
+	  <REPEAT ()
+		  <COND (<EMPTY? .NWCN> <RETURN>)>
+		  <COND (<NOT <EMPTY? <WACK .NWCN>>>
+			 <SET WCN
+			      <ACONS .MS
+				     <WADR .NWCN>
+				     <ACONS .MS
+					    <WACK .NWCN>
+					    .WCN>>>)>
+		  <SET NWCN <REST .NWCN 2>>>
+	  <DWT <COND (<EMPTY? .WCN> <>) (ELSE .WCN)>
+	       ()
+	       <GETFIX "WATCH-CONDITIONS">>
+	  <SET FLG T>
+	  <MAPF <>
+		<FUNCTION (CONDL
+			   "AUX" (CNAM <PCND .CONDL>) (TOUT <PVAL .CONDL>))
+		    #DECL ((CONDL) PSPEC (CNAM) STRING (TOUT) <OR FIX FALSE>)
+		    <MAPF <>
+			  <FUNCTION (ACKE)
+			       #DECL ((ACKE) ASPEC)
+			       <COND (<AND <OR <AND .TOUT <NOT <ATIM .ACKE>>>
+					       <AND <NOT .TOUT> <ATIM .ACKE>>>
+					   <=? .CNAM <ACND .ACKE>>>
+				      <SET ACKL .ACKE>
+				      <MAPLEAVE>)>>
+			  .ACK>
+		    <COND (.ACKL
+			   <COND (<SET FLG <COND-APPLY <AFNC .ACKL> .CONDL>>
+				  <SET AC
+				       <ACONS .MS
+					      <ALIST .MS
+						     !.CONDL
+						     <ITIME>>
+					      .AC>>)
+				 (ELSE <MAPLEAVE>)>)>>
+	       .PC>
+	  <COND (.FLG
+		 <DWT () () <GETFIX "PENDING-CONDITIONS">>
+		 <DWT .AC () <GETFIX "ACKNOWLEDGED-CONDITIONS">>
+		 <COND (.NXRUN <PRCADD () "ACKNOWLEDGMENT" .NXRUN 10 <>>)
+		       (ELSE T)>)>)
+	 (ELSE <AFALSE 2>)>>
+
+"COND-APPLY -- apply the handler for a particular condition"
+
+<DEFINE COND-APPLY (AFN CONDL
+		    "AUX" (CNAM <CCND .CONDL>) ACOD AAFN AATM
+		    (OUTCHAN .OUTCHAN))
+	#DECL ((CONDL) PSPEC (ACOD) FIX (AFN) ANY (AAFN) APPLICABLE
+	       (OUTCHAN) CHANNEL (CNAM) STRING (AATM) ATOM)
+	<COND (<TYPE? .AFN FIX>
+	       <SET ACOD .AFN>
+	       <COND (<==? .ACOD 1> <PRINC " Fail="> <DLV-TIMEOUT .CONDL>)
+		     (<==? .ACOD 2> <PRINC " Win="> <DLV-HAP .CONDL>)
+		     (ELSE
+		      <AFALSE 1 .CNAM>)>)
+	      (<APPLICABLE? .AFN>
+	       <SET AAFN .AFN>
+	       <APPLY .AAFN .CONDL>)
+	      (<AND <TYPE? .AFN ATOM>
+		    <GASSIGNED? <SET AATM .AFN>>
+		    <APPLICABLE? ,.AATM>>
+	       <SET AAFN ,.AATM>
+	       <APPLY .AAFN .CONDL>)
+	      (ELSE
+	       <AFALSE 3 .CNAM>)>>
+
+\ 
+
+"utilities for condition handling"
+
+"COND-HAP -- checks to see if a particular condition has happened
+by searching a CONDITIONS field" 
+
+<DEFINE COND-HAP (CON CONL) 
+	#DECL ((CON) STRING (CONL) <LIST [REST CSPEC]>)
+	<REPEAT ()
+		<COND (<EMPTY? .CONL> <RETURN <>>)
+		      (<=? .CON <CCND <1 .CONL>>> <RETURN T>)>
+		<SET CONL <REST .CONL>>>>
+
+"PRUNE-COND -- takes WATCH-CONDITIONS list and CONDITIONS list
+  returns pruned WATCH-CONDITIONS list.  In other words, flushes conditions
+  which have occurred already."
+
+<DEFINE PRUNE-COND (CACK ADRCON) 
+	#DECL ((CACK) CSPEC (ADRCON) <LIST [REST CSPEC]> (VALUE) LIST)
+	<REPEAT ()
+		<COND (<EMPTY? .CACK> <RETURN>)
+		      (<COND-HAP <CCND .CACK> .ADRCON>
+		       <SET CACK <REST .CACK 2>>)
+		      (ELSE <RETURN>)>>
+	<COND (<EMPTY? .CACK>)
+	      (ELSE
+	       <REPEAT ((CACK <REST .CACK>))
+		       #DECL ((CACK) LIST)
+		       <COND (<LENGTH? .CACK 1> <RETURN>)>
+		       <COND (<COND-HAP <CCND <REST .CACK>> .ADRCON>
+			      <PUTREST .CACK <REST .CACK 3>>)
+			     (ELSE <SET CACK <REST .CACK 2>>)>>)>
+	.CACK>
+
+\
+
+"SUBTITLE Initialize Acknowledgement Goodies"
+
+"SET-CONDITIONS -- sets up fields for acknowledgement process"
+
+<DEFINE SET-CONDITIONS ("AUX" ACK ACKL CTA (CLIST ()) (MS ,MSG-SPACE))
+   #DECL ((CLIST) WSPEC (ACK) LIST (ACKL) CSPEC (CTA) <OR FALSE LIST>
+	  (MS) SPACE)
+   <COND (<SET ACK <DRD () <GETFIX "ACKNOWLEDGE">>>
+	  <SET CTA <DRD () <GETFIX "COPY-TO-ADDRESSEE-AREA">>>
+	  <COND (<OR <NOT .CTA> <EMPTY? .CTA> <NOT <MEMF "ACKNOWLEDGE" .CTA>>>
+		 <SET ACKL <ACK-SCAN .ACK <ITIME>>>
+		 <COND (<NOT <EMPTY? .ACKL>>
+			<MAPF <>
+			      <FUNCTION (US)
+				   #DECL ((US) ADDRESS)
+				   <COND (<NOT <EMPTY? .US>>
+					  <SET CLIST
+					       <ACONS .MS
+						      .US
+						      <ACONS .MS
+							     .ACKL
+							     .CLIST>>>)>>
+			      <DUSERS>>)>)
+		(ELSE
+		 <MAPF <>
+		       <FUNCTION (PAIR)
+			    #DECL ((PAIR) <LIST LIST>)
+			    <SET ACKL <ACK-SCAN <2 .PAIR> <ITIME>>>
+			    <COND (<EMPTY? .ACKL>)
+				  (ELSE
+				   <MAPF <>
+					 <FUNCTION (STR) 
+					      #DECL ((STR) STRING)
+					      <SET CLIST
+						   <ACONS .MS
+							  .STR
+							  <ACONS .MS
+								 .ACKL
+								 .CLIST>>>>
+					 <1 .PAIR>>)>>
+		       .ACK>)>     
+	  <COND (<NOT <EMPTY? .CLIST>>
+		 <DWT .CLIST () <GETFIX "WATCH-CONDITIONS">>
+		 <REPEAT ((BEST <>) CELE)
+			 #DECL ((BEST CELE) <OR FIX FALSE>)
+			 <COND (<EMPTY? .CLIST>
+				<COND (.BEST
+				       <PRCADD () "ACKNOWLEDGMENT" .BEST>)>
+				<RETURN>)>
+			 <SET CELE <CTIM <WACK .CLIST>>>
+			 <COND (<OR <NOT .BEST>
+				    <NOT .CELE>
+				    <L? .CELE .BEST>>
+				<SET BEST .CELE>)>
+			 <SET CLIST <REST .CLIST 2>>>)>)>>
+
+\
+
+"ACK-SCAN -- create WACK part of WATCH-CONDITIONS list.  Returns a sorted
+(by time) list of conditions and the times they run."
+
+<DEFINE ACK-SCAN (ACK TIM "AUX" (VL ()) (MS ,MSG-SPACE)) 
+	#DECL ((ACK) <LIST [REST ASPEC]> (VALUE VL) CSPEC
+	       (TIM) FIX (MS) SPACE)
+	<MAPF <>
+	      <FUNCTION (ACKL "AUX" TSPEC NTIM NVL)
+		   #DECL ((ACKL) ASPEC (NVL) CSPEC (TSPEC) <OR FIX FALSE>
+			  (NTIM) FIX)
+		   <COND (<SET TSPEC <ATIM .ACKL>>
+			  <COND (<G? .TSPEC *1000000000*>
+				 <SET NTIM .TSPEC>)
+				(<SET NTIM <+ .TIM .TSPEC>>)>
+			  <SET NVL
+			       <ALIST .MS <ASTRING .MS <ACND .ACKL>> .NTIM>>
+			  <COND (<EMPTY? .VL> <SET VL .NVL>)
+				(<L? .NTIM <2 .VL>>
+				 <PUTREST <REST .NVL> .VL>
+				 <SET VL .NVL>)
+				(ELSE
+				 <REPEAT ((OVL .VL))
+					 #DECL ((OVL) <LIST ANY>)
+					 <COND (<LENGTH? .OVL 2>
+						<PUTREST <REST .OVL> .NVL>
+						<RETURN>)>
+					 <SET OVL <REST .OVL>>
+					 <COND (<L? .NTIM <3 .OVL>>
+						<PUTREST <REST .NVL>
+							 <REST .OVL>>
+						<PUTREST .OVL .NVL>
+						<RETURN>)>
+					 <SET OVL <REST .OVL>>>)>)
+			 (ELSE
+			  <SET VL
+			       <ACONS .MS
+				      <ASTRING .MS <ACND .ACKL>>
+				      <ACONS .MS <> .VL>>>)>>
+	      .ACK>
+	.VL>
+
+\ 
+
+"COND-SIGNAL -- signal that a condition has occurred"
+
+<DEFINE COND-SIGNAL (ADR CONDNAM "AUX" ACK (MS ,MSG-SPACE))
+	#DECL ((ADR) ADDRESS (CONDNAM) STRING (ACK) <LIST [REST ASPEC]>
+	       (MS) SPACE)
+	<DAPPMSG <ALIST .MS 
+			<ALIST .MS <ACOPY .MS .CONDNAM> <ITIME>>>
+		 .ADR
+		 <GETFIX "CONDITIONS">>
+	<COND (<SET ACK <DRD () <GETFIX "ACKNOWLEDGE">>>
+	       <MAPF <>
+		     <FUNCTION (ACKL)
+			  #DECL ((ACKL) ASPEC)
+			  <COND (<=? <ACND .ACKL> .CONDNAM>
+				 <COND (<NOT <ATIM .ACKL>>
+					<DAPPMSG
+					  <ALIST
+					   .MS
+					   <ALIST .MS
+						  <ACOPY .MS .CONDNAM>
+						  <ACOPY .MS .ADR>
+						  0>>
+					  ()
+					  <GETFIX "PENDING-CONDITIONS">>)>
+				 <PRCADD ()
+					 "ACKNOWLEDGMENT"
+					 <>
+					 10
+					 <>>
+				 <MAPLEAVE>)>>
+		     .ACK>)>
+	T>
+
+\ 
+
+"DLV-TIMEOUT -- delivery timeout :  send message admitting failure"
+
+<DEFINE DLV-TIMEOUT (CONDL
+		     "AUX" S (ADR <PADR .CONDL>) (SS ,SCRATCH-SPACE) WHOTO) 
+	#DECL ((CONDL) PSPEC (SS) SPACE
+	       (ADR) ADDRESS (S) STRING (WHOTO) <OR FALSE ADDRESS>)
+	<COND (<SET WHOTO <DRDMSG () <GETFIX "AUTHOR">>>
+	       <SENDMSG <ALIST .SS .WHOTO>
+			<ASTRING .SS
+				 "Message to "
+				 <SET S <S-ADDR .ADR .SS>>
+				 " has not yet been delivered.">
+			<ASTRING .SS
+
+"     The message described below has not been successfully delivered
+to " .S
+<COND (<BEDRIDDEN? <HOST <AHOST .ADR>>>
+       ".
+     This is because the host has been down for an extended period.
+The message will be delivered when the host comes up again.
+
+")
+      (ELSE ".
+
+")>
+		      		 !<ERR-HEADER .ADR .SS>>
+			"COMMUNICATION-DEMON">)>
+	T>
+
+"DLV-HAP -- delivery successful"
+
+<DEFINE DLV-HAP (CONDL
+		 "AUX" S (ADR <PADR .CONDL>) (SS ,SCRATCH-SPACE) MWHEND WHOTO) 
+	#DECL ((CONDL) PSPEC (SS) SPACE (ADR) ADDRESS (S) STRING
+	       (WHOTO) <OR FALSE ADDRESS> (MWHEND) <OR FALSE FIX>)
+	<COND (<SET WHOTO <DRDMSG () <GETFIX "AUTHOR">>>
+	       <SENDMSG <ALIST .SS .WHOTO>
+			<ASTRING .SS
+				 "Message to "
+				 <SET S <S-ADDR .ADR .SS>>
+				 " has been delivered.">
+			<ASTRING .SS
+"     The message described below was successfully delivered to
+"
+		      		 .S
+				 <COND (<SET MWHEND
+					     <DRDMSG .ADR <GETFIX "WHEN-DELIVERED">>>
+					<ASTRING .SS
+						 " on "
+						 <S-TIME .MWHEND .SS>>)
+				       (ELSE ())>
+				 ".
+
+"
+				 !<ERR-HEADER .ADR .SS>>
+			"COMMUNICATION-DEMON">)>
+	T>
+
+\
+
+"SUBTITLE Acknowledgement Errors"
+
+<DEFINE ACK-ERR (PRC ERR ADR "AUX" (ECOD <1 .ERR>) L (SS ,SCRATCH-SPACE)) 
+   #DECL ((PRC) STRING (ADR) STRING (ERR) <FALSE FIX> (ECOD) FIX
+	  (L VALUE) <OR LIST FALSE> (SS) SPACE)
+   <SET L <ALIST .SS <ASTRING .SS
+"     The ACKNOWLEDGMENT process failed because:
+
+">>>
+   <COND (<==? .ECOD 1>
+	  <ADDBACK .L
+		   <ALIST .SS <ASTRING .SS
+"A predefined condition was specified which does not correspond to any
+existing predefined condition:  " <2 .ERR>>>>)
+	 (<==? .ECOD 2>
+	  <ADDBACK .L
+		   <ALIST .SS <ASTRING .SS
+"A condition was signalled and a corresponding specification of
+action to take could not be found.  Generally, this indicates an
+internal demon bug, or a clobbered data base.  The condition was
+" <2 .ERR>>>>)
+	 (<==? .ECOD 3>
+	  <ADDBACK .L <ALIST .SS <ASTRING .SS
+"The handler associated with the condition " <2 .ERR> " is not an
+applicable type.">>>)>
+   .L>
+
+<ENDPACKAGE>

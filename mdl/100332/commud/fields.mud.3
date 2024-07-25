@@ -1,0 +1,128 @@
+<PACKAGE "FIELDS">
+
+"communication system message field utilities"
+
+<ENTRY FLD GETFIX FGETFIX GETSTRING F==? MEMF OK?>
+
+<USE "M-DEFS" "M-DATA" "MADMAN" "VCTSRC" "OPSYS">
+
+<SETG FLD <MOBLIST FLD>>
+
+"Here we set up the 'constant' fields of a message"
+
+<COND (<LOOKUP "MSG-NO" ,FLD>)
+      (ELSE
+<SETG <INSERT "MSG-NO" ,FLD> 1>
+<SETG <INSERT "MESSAGE-ID" ,FLD> 2>
+<SETG <INSERT "FROM" ,FLD> 3>
+<SETG <INSERT "SENDER" ,FLD> 4>
+<SETG <INSERT "RECEIVED-FROM-HOST" ,FLD> 5>
+<SETG <INSERT "TO" ,FLD> 6>
+<SETG <INSERT "ADDRESSED-TO" ,FLD> 7>
+<SETG <INSERT "ACTION-TO" ,FLD> 8>
+<SETG <INSERT "CARBON-COPY-TO" ,FLD> 9>
+<SETG <INSERT "WHEN-ORIGINATED" ,FLD> 10>
+<SETG <INSERT "SUBJECT" ,FLD> 11>
+<SETG <INSERT "TEXT" ,FLD> 12>
+<SETG <INSERT "CPU-SECONDS" ,FLD> 13>
+<SETG <INSERT "CONSOLE-MINUTES" ,FLD> 14>
+<SETG <INSERT "DAEMON" ,FLD> 15>
+<SETG <INSERT "WHEN-RECEIVED" ,FLD> 16>
+<SETG <INSERT "WHEN-DELIVERED" ,FLD> 17>
+<SETG <INSERT "PROCESSING-NEEDED" ,FLD> 18>
+<SETG <INSERT "PROCESSING-COMPLETED" ,FLD> 19>
+<SETG <INSERT "CPU-TIME" ,FLD> 20>
+<SETG <INSERT "EXPANDED-ADDRESSEE-LIST" ,FLD> 21>
+<SETG <INSERT "UNPROCESSABLE-ADDRESSEES" ,FLD> 22>
+<SETG <INSERT "DELIVERY-COMPLETED" ,FLD> 23>
+<SETG <INSERT "DELIVERY-ATTEMPTS" ,FLD> 24>
+<SETG <INSERT "NET-DELIVERY-ERRORS" ,FLD> 25>
+<SETG <INSERT "CONDITIONS" ,FLD> 26>
+<SETG <INSERT "PENDING-CONDITIONS" ,FLD> 27>
+<SETG <INSERT "ACKNOWLEDGED-CONDITIONS" ,FLD> 28>
+<SETG <INSERT "WATCH-CONDITIONS" ,FLD> 29>
+<SETG <INSERT "ERROR-CONDITIONS" ,FLD> 30>
+<SETG <INSERT "ERROR-TO" ,FLD> 31>
+)>
+
+;"symbol table for field atoms"
+
+"GETFIX -- get the FIX representation of a field id"
+
+<DEFMAC GETFIX ('X "AUX" N)
+	<COND (<TYPE? .X STRING>
+	       <COND (<SET N <LOOKUP .X ,FLD>>
+		      <GVAL .N>)
+		     (ELSE .X)>)
+	      (ELSE <FORM FGETFIX .X>)>>
+
+"FGETFIX -- get the FIX representation of a field id"
+
+<DEFINE FGETFIX (FS "AUX" S IV (FLD ,FLD) ATM)
+	#DECL ((FS) <OR FIX STRING> (S) VECTOR (IV) <OR VECTOR FALSE>
+	       (ATM) <OR ATOM FALSE> (FLD) OBLIST (VALUE) <OR FIX STRING>)
+	<COND (<TYPE? .FS FIX> .FS)
+	      (<SET ATM <LOOKUP .FS .FLD>> ,.ATM)
+	      (ELSE
+	       <SET S <DATUM "COMSYS-STRING-FIELDS">>
+	       <SETG <INSERT .FS .FLD>
+		     <COND (<SET IV <VCTSRC .S .FS>> <2 .IV>)
+			   (ELSE <STRING .FS>)>>)>>
+
+"GETSTRING -- get the STRING version of a field id"
+
+<DEFINE GETSTRING (FS "AUX" S)
+	#DECL ((FS) <OR STRING FIX> (S) VECTOR (VALUE) <OR FIX STRING>)
+	<COND (<TYPE? .FS STRING> .FS)
+	      (ELSE
+	       <SET S <DATUM "COMSYS-FIX-FIELDS">>
+	       <COND (<L=? .FS <LENGTH .S>> <NTH .S .FS>)
+		     (ELSE .FS)>)>>
+
+"F==? -- predicate to determine equality of two fields (fix's or strings)"
+
+<DEFINE F==? (F1 F2) 
+	#DECL ((F1 F2) <OR FIX STRING>)
+	<COND (<TYPE? .F1 FIX>
+	       <COND (<TYPE? .F2 FIX> <==? .F1 .F2>)
+		     (ELSE <==? .F1 <FGETFIX .F2>>)>)
+	      (<TYPE? .F2 FIX> <==? .F2 <FGETFIX .F1>>)
+	      (<=? .F1 .F2>)>>
+
+"MEMF -- given a field descriptor (fix|string) and a list, acts like
+  a memq for a list of field names or fixes..."
+
+<DEFINE MEMF (F L "AUX" FO) 
+	#DECL ((FO F) <OR FIX STRING> (L) LIST (VALUE) <OR LIST FALSE>)
+	<COND (<TYPE? .F STRING> <SET FO <FGETFIX .F>>)
+	      (ELSE <SET FO .F>)>
+	<MAPR <>
+	      <FUNCTION (L)
+		#DECL ((L) <LIST [REST <OR FIX STRING>]>)
+		<AND <F==? .FO <1 .L>> <MAPLEAVE .L>>>
+	      .L>>
+
+"OK? -- given a field descriptor and a data item, does decl? check
+  to see if data is valid.  returns t if ok or if no data
+  for that field, and #false(\"invalid-datum\") otherwise"
+
+<DEFINE OK? (F D
+	     "AUX" IV DCL (DDF <DATUM "COMSYS-FIX-DECLS">)
+		   (DDS <DATUM "COMSYS-STRING-DECLS">))
+	#DECL ((F) <OR FIX STRING> (D) ANY (VALUE) <OR 'T FALSE> (DCL) ANY
+	       (DDS DDF) <OR FALSE VECTOR> (IV) <OR FALSE VECTOR>)
+	<PROG ()
+	      <SET F <FGETFIX .F>>
+	      <COND (<AND <TYPE? .F FIX> .DDF <NOT <LENGTH? .DDF .F>>>
+		     <SET DCL <NTH .DDF .F>>)
+		    (<AND <SET F <GETSTRING .F>>
+			  <TYPE? .F STRING>
+			  .DDS
+			  <SET IV <VCTSRC .DDS .F>>>
+		     <SET DCL <2 .IV>>)
+		    (ELSE <RETURN T>)>
+	      <COND (<NOT .DCL> <RETURN T>)
+		    (<DECL? .D .DCL> <RETURN T>)
+		    (ELSE <RETURN #FALSE ("INVALID DATUM")>)>>>
+
+<ENDPACKAGE>

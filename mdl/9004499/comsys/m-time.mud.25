@@ -1,0 +1,61 @@
+<PACKAGE "M-TIME">
+
+<ENTRY SCROUT
+       PFL
+       CLKINTVAL>
+
+<USE "ITIME">
+
+<SETG ZAP T>
+<SETG PRINTTIME <>>
+<SETG CLKINTVAL 300>
+
+<GDECL (ZAP PRINTTIME) <OR ATOM FALSE>
+       (CLKINTVAL) FIX>
+
+\
+
+"SCROUT -- script outputter, intersperses with time identifications"
+
+<DEFINE SCROUT ("TUPLE" STS "AUX" (OUTCHAN .OUTCHAN)) 
+	#DECL ((STS) TUPLE (OUTCHAN) CHANNEL)
+	<COND (<AND <L? ,MUDDLE 100> ,ZAP>
+	       <ON "REALT" <FUNCTION () <SETG PRINTTIME T>> 3>
+	       <REALTIMER ,CLKINTVAL>
+	       <INTERRUPT "REALT">
+	       <SETG ZAP <>>)>
+	<COND (<NOT <0? <14 .OUTCHAN>>> <CRLF>)>
+	<COND (,PRINTTIME
+	       <SETG PRINTTIME <>>   ;"PRINTED -- NO NEED UNTIL NEXT CLOCK TICK"
+	       <PRINC "***** ">
+	       <PROG ((M <LTIME>) (TIM <2 .M>) (D <1 .TIM>))
+		     #DECL ((M) <LIST [2 LIST] STRING> (TIM) <LIST [3 FIX]>
+			    (D) FIX)
+		     <COND (<L? .D 10> <PRINC !\0>)>
+		     <PRINC .D>
+		     <COND (<L? <SET D <2 .TIM>> 10> <PRINC !\0>)>
+		     <PRINC .D>
+		     <PRINC " ">
+		     <PRINC <3 .M>>>
+	       <PRINC " *****">
+	       <CRLF>)>
+	<REPEAT ((S ""))
+		<COND (<EMPTY? .STS> <RETURN T>)>
+		<COND (<OR <TYPE? .S STRING ATOM> <TYPE? <1 .STS> STRING>>)
+		      (ELSE <PRINC !\ >)>
+		<COND (<==? <SET S <1 .STS>> CRLF> <CRLF>)
+		      (ELSE <PRINC .S>)>
+		<SET STS <REST .STS>>>>
+
+"PFL -- print a float"
+
+<DEFINE PFL (FL "AUX" (FX <FIX <+ 0.5 <* .FL 100.0>>>) I (OUTCHAN .OUTCHAN))
+	#DECL ((FL) FLOAT (FX I) FIX (OUTCHAN) CHANNEL)
+	<SET I </ .FX 100>>
+	<SET FX <MOD .FX 100>>
+	<PRINC .I>
+	<PRINC !\.>
+	<COND (<L? .FX 10> <PRINC !\0>)>
+	<PRINC .FX>>
+
+<ENDPACKAGE>

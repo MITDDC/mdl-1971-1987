@@ -1,0 +1,360 @@
+
+<PACKAGE "M.TRA">
+
+<ENTRY SENDING SND-ERR
+       TRANSMISSION TRA-ERR
+       CORRECTION CORR-ERR
+       FILE-ADDR-FORMAT
+       NET-FILE-ADDR-FORMAT>
+
+<USE "M.READ"
+     "M.DAC"
+     "M.ACK"
+     "M.PRCD"
+     "M.SET"
+     "M.ERR"
+     "M.TIME"
+     "PRTUTI"
+     "PRTSTR"
+     "USRUTI"
+     "FIELDS"
+     "M.DEFS"
+     "ITIME"
+     "MADMAN"
+     "SORTX">
+
+<DEMON-PROCESS
+ "TRANSMISSION"
+ TRANSMISSION
+ TRA-ERR
+ [,FATAL	;1
+  ,FATAL	;2
+  ,FATAL	;3]>
+
+<DEMON-PROCESS
+ "SENDING"
+ SENDING
+ SND-ERR
+ [,FATAL	;1]>
+
+<DEMON-PROCESS
+ "CORRECTION"
+ CORRECTION
+ CORR-ERR
+ [,FATAL	;1
+  ,FATAL	;2]>
+
+\
+
+<SETG FILE-ADDR-FORMAT "COMDAT;F.RCV1 DATA">
+
+<SETG NET-FILE-ADDR-FORMAT "COMDAT;F.RCV2 DATA">
+
+"format used for file-addressees"
+
+<SETG FILE-ADDR-TYPE "APPEND-NEW">
+
+"default output method"
+
+<DEFINE TRANSMISSION (ADR
+		      "AUX" LCL? EAL (MORADR <>) LL FR FNM RX V
+		      (MS ,MSG-SPACE) (CURSPACE .MS) TIM)
+   #DECL ((ADR) STRING (EAL LL MORADR) <OR LIST FALSE> (TIM) <OR FALSE FIX>
+	  (V) <VECTOR [REST STRING]> (RX FNM FR) <OR FALSE STRING>
+	  (LCL? VALUE) <OR ATOM FALSE> (MS) SPACE (CURSPACE) <SPECIAL SPACE>)
+   <PROG ()
+     <COND (<NOT <EMPTY? .ADR>> <RETURN <AFALSE 3>>)>
+     <COND (<AND <SET EAL <DRDMSG "" <GETFIX "MORE-EXPANDED-ADDRESSEE-LIST">>>
+		 <NOT <EMPTY? .EAL>>>
+	    <SET MORADR .EAL>)
+	   (<SET EAL <DRDMSG "" <GETFIX "EXPANDED-ADDRESSEE-LIST">>>)>
+     <COND (<NOT .EAL> <RETURN <AFALSE 2>>)
+	   (<EMPTY? .EAL> <RETURN <AFALSE 1>>)>
+     <COND (<NOT <DRDMSG "" <GETFIX "ACTION-TO">>>
+	    <COND (<SET LL <DRDMSG "" "TO">>
+		   <DWT <ACOPY .MS .LL> "" <GETFIX "ACTION-TO">>)>)>
+     <SET V
+	  <MAPF
+	   ,ALVECTOR
+	   <FUNCTION (EA "AUX" (NAM <KEYGET .EA>))
+		#DECL ((EA) STRING (NAM) <OR STRING FALSE>)
+		<COND
+		 (<NOT .NAM>
+		  <DADD .EA "" <GETFIX "UNPROCESSABLE-ADDRESSEES">>
+		  <MAPRET>)
+		 (<AND <SET LCL? <==? ,HOSTNUMBER <EXTRACT-HOST .NAM>>>
+		       <SET FNM <FILE? .NAM>>>
+		  <DADD <ALIST .MS
+			       <ASTRING .MS .FNM>
+			       <ASTRING .MS ,FILE-ADDR-TYPE>
+			       <ASTRING .MS
+					<COND (<==? <DRD
+						      .ADR
+						      "RECEIVED-FROM-HOST">
+						    ,HOSTNUMBER>
+					       ,FILE-ADDR-FORMAT)
+					      (,NET-FILE-ADDR-FORMAT)>>>
+			<ASTRING .MS "FILSRV">
+			<GETFIX "RECEIVER-FILE-OUTPUT">>
+		  <PRCADD "FILSRV" "FILE-OUTPUT">
+		  <MAPRET <ACOPY .MS "FILSRV">>)
+		 (<AND <STRUC? .NAM> .LCL? <==? <1 .NAM> !\(>>
+		  <SET RX <STRUC-ADR .NAM>>
+		  <COND (<KEYGET .RX>
+			 <DWT <ACOPY .MS .NAM> .RX <GETFIX "ADDRESSED-TO">>
+			 <PRCADD .RX "RECEIVER-PROCESSING">
+			 <MAPRET .RX>)
+			(ELSE
+			 <DADD .EA "" <GETFIX "UNPROCESSABLE-ADDRESSEES">>
+			 <MAPRET>)>)
+		 (<AND <==? .NAM <MEMBER "BUG-" .NAM>> .LCL?>
+		  <SET RX <ACOPY .MS "BUG">>
+		  <DWT <ACOPY .MS .NAM> .RX <GETFIX "ADDRESSED-TO">>
+		  <PRCADD .RX "RECEIVER-PROCESSING">
+		  <MAPRET .RX>)
+		 (<AND <==? .NAM <MEMBER "FEATURE-" .NAM>> .LCL?>
+		  <SET RX <ACOPY .MS "FEATURE">>
+		  <DWT <ACOPY .MS .NAM> .RX <GETFIX "ADDRESSED-TO">>
+		  <PRCADD .RX "RECEIVER-PROCESSING">
+		  <MAPRET .RX>)
+		 (ELSE
+		  <DWT .EA .NAM <GETFIX "ADDRESSED-TO">>
+		  <COND (<OR <NOT <ATSIGN? .NAM>> .LCL?>
+			 <PRCADD .NAM "RECEIVER-PROCESSING">)
+			(<SET FR <RETURN-ADDRESS>>
+			 <DWT .FR .NAM <GETFIX "ERROR-TO">>)>
+		  <MAPRET <ACOPY .MS .NAM>>)>>
+	   .EAL>>
+     <SET TIM <DRD "" <GETFIX "REMIND">>>
+     <MAPF <>
+	   <FUNCTION (A)
+		#DECL ((A) STRING)
+		<PRCADD .A "DELIVERY" .TIM>>
+	   <SORT ,HOSTAGE .V>>
+     <ARELEASE .MS .V>
+     <COND (.MORADR
+	    <DAPP .MORADR .ADR <GETFIX "EXPANDED-ADDRESSEE-LIST">>
+	    <DWT <> .ADR <GETFIX "MORE-EXPANDED-ADDRESSEE-LIST">>)>
+     <SET-CONDITIONS>
+     <COND (<AND <SET LL <DRDMSG "" <GETFIX "UNPROCESSABLE-ADDRESSEES">>>
+		 <NOT <EMPTY? .LL>>>
+	    <SCROUT ">>>> Losers: " .LL " <<<<">
+	    <RETURN <AFALSE 1>>)
+	   (ELSE T)>>>
+
+\
+
+<DEFINE HOSTAGE (A B)
+	#DECL ((A B) STRING)
+	<G? <EXTRACT-HOST .A> <EXTRACT-HOST .B>>>
+
+<DEFINE STRUC-ADR (RX "AUX" RXS (MS ,MSG-SPACE) RXL RXN)
+	#DECL ((RX VALUE RXN) STRING (MS) SPACE (RXL) FIX
+	       (RXS) <OR FALSE STRING>)
+	<COND (<==? <1 .RX> !\(> <SET RX <REST .RX>>)>
+	<COND (<SET RXS <MEMQ !\  .RX>>
+	       <SET RXL <- <LENGTH .RX> <LENGTH .RXS>>>
+	       <SET RXN <AISTRING .MS .RXL>>
+	       <SUBSTRUC .RX 0 .RXL .RXN>
+	       <MAPR <>
+		     <FUNCTION (S "AUX" (C <1 .S>) (F <ASCII .C>)) 
+			#DECL ((S) STRING (C) CHARACTER (F) FIX)
+			<COND (<AND <G=? .F <ASCII !\A>>
+				    <L=? .F <ASCII !\Z>>>)
+			      (<AND <G=? .F <ASCII !\a>>
+				    <L=? .F <ASCII !\z>>>
+			       <PUT .S 1 <ASCII <+ .F 32>>>)
+			      (ELSE <MAPLEAVE>)>>
+		     .RXN>
+	       .RXN)
+	      (ELSE .RX)>>
+
+"grovel over 'from' and 'sender' to try to find a reasonable return address"
+
+<DEFINE RETURN-ADDRESS ("AUX" RT FR SND (RTN <>))
+	#DECL ((RTN FR) <OR STRING FALSE> (RT SND) <OR LIST STRING FALSE>)
+	<PROG ()
+	      <COND (<TYPE? <SET RT <DRD "" <GETFIX "REPLY-TO">>> STRING>
+		     <AND <NOT <MEMBER "UNKNOWN" .RT>>
+			  <RETURN <SET RTN .RT>>>)
+		    (<TYPE? .RT LIST>
+		     <COND (<SET RTN
+				 <MAPF <>
+				       <FUNCTION (F)
+					   #DECL ((F) STRING)
+					   <AND <NOT <MEMBER "UNKNOWN" .F>>
+						<MAPLEAVE .F>>>
+				       .RT>>
+			    <RETURN>)>)>
+	      <COND (<TYPE? <SET FR <DRD "" <GETFIX "FROM">>> STRING>
+		     <AND <NOT <MEMBER "UNKNOWN" .FR>>
+			  <RETURN <SET RTN .FR>>>)>
+	      <COND (<TYPE? <SET SND <DRD "" <GETFIX "SENDER">>> LIST>
+		     <COND (<SET RTN
+				 <MAPF <>
+				       <FUNCTION (F)
+					   #DECL ((F) STRING)
+					   <AND <NOT <MEMBER "UNKNOWN" .F>>
+						<MAPLEAVE .F>>>
+				       .SND>>
+			    <RETURN>)>)
+		    (<TYPE? .SND STRING>
+		     <AND <NOT <MEMBER "UNKNOWN" .SND>>
+			  <RETURN <SET RTN .SND>>>)>>
+	.RTN>
+
+\ 
+
+"SUBTITLE Sending and Correction"
+
+"sending process"
+
+<DEFINE SENDING (ADR "AUX" HST) 
+	#DECL ((ADR) STRING (VALUE) <OR ATOM FALSE> (HST) <OR FIX FALSE>)
+	<COND (<EMPTY? .ADR>
+	       <SET HST <DRDMSG "" <GETFIX "RECEIVED-FROM-HOST">>>
+	       <COND (<OR <NOT .HST> <==? .HST ,HOSTNUMBER>>
+		      <PRCADD "" "EXPANSION">
+		      <PRCADD "" "AUTHOR-PROCESSING">
+		      <PRCADD "" "TRANSMISSION">)
+		     (ELSE
+		      <PRCADD "" "PARSING">
+		      <PRCADD "" "EXPANSION">
+		      <PRCADD "" "TRANSMISSION">)>
+	       T)
+	      (ELSE <AFALSE 1>)>>
+
+"correction process -- flushes lossage created by having a bad addressee"
+
+<DEFINE CORRECTION (ADR "AUX" TO UA)
+	#DECL ((ADR) STRING (TO) <OR LIST FALSE> (UA) <OR LIST FALSE>)
+	<COND (<NOT <EMPTY? .ADR>> <AFALSE 1>)
+	      (<NOT <SET UA <DRD .ADR <GETFIX "UNPROCESSABLE-ADDRESSEES">>>>
+	       <AFALSE 2>)
+	      (ELSE
+	       <DWT <> .ADR <GETFIX "UNPROCESSABLE-ADDRESSEES">>
+	       <COND (<AND .UA <SET TO <DRD .ADR <GETFIX "TO">>>>
+		      <MAPF <>
+			    <FUNCTION (A)
+				      #DECL ((A) STRING)
+				      <DRMV .A .ADR <GETFIX "TO">>>
+			    .UA>)>
+	       <PRCADD .ADR "SENDING">
+	       T)>>
+
+\ 
+
+"SUBTITLE Error Analyzers for Transmission, Sending, Correction"
+
+<DEFINE TRA-ERR (PRC ERR ADR
+		 "AUX" EAL UA (ECOD <1 .ERR>) L (SS ,SCRATCH-SPACE)) 
+   #DECL ((UA EAL) <OR FALSE LIST> (ECOD) FIX (L) <OR LIST FALSE> (SS) SPACE
+	  (PRC ADR) STRING (ERR) <FALSE FIX>)
+   <SET L <ALIST .SS <ASTRING .SS
+"     The TRANSMISSION process failed because ">>>
+   <COND
+    (<==? .ECOD 1>
+     <SET UA <DRDMSG "" <GETFIX "UNPROCESSABLE-ADDRESSEES">>>
+     <SET EAL <DRDMSG "" <GETFIX "EXPANDED-ADDRESSEE-LIST">>>
+     <ADDBACK
+       .L
+       <ALIST .SS
+	      <ASTRING .SS
+		       			      "one or more of the
+addressees was unknown at this site.">>>
+     <COND (<AND .UA <NOT <EMPTY? .UA>>>
+	    <ADDBACK .L
+		     <ALIST .SS
+			    <ASTRING .SS "
+
+     The unprocessable addressee(s) were:
+">>>
+	    <ADR-LIST .L .SS .UA>)>
+     <COND (<AND .EAL <NOT <EMPTY? .EAL>>>
+	    <ADDBACK .L
+		     <ALIST .SS
+			    <ASTRING .SS "
+
+     The message was processed however for:
+">>>
+	    <ADR-LIST .L .SS .EAL>)>)
+    (<==? .ECOD 2>
+     <ADDBACK .L
+	      <ALIST .SS
+		     <ASTRING .SS	     " the message has no
+usable addressee list.  This situation could occur if there were
+originally no addressees, or if the list of addressees contained
+no names of valid mailboxes.">>>)
+    (<==? .ECOD 3>
+     <ADDBACK .L
+	      <ALIST .SS
+		     <ASTRING .SS	      "it was applied to
+the " .ADR " receiver area of the message.">>>)
+    (ELSE <SET L <>>)>
+   .L>
+
+<DEFINE ADR-LIST (L SS AL)
+	#DECL ((SS) SPACE (L AL) LIST)
+	<MAPF <>
+	      <FUNCTION (A "AUX" (R <KEYGET .A>))
+			#DECL ((A) STRING (R) <OR STRING <FALSE STRING>>)
+			<ADDBACK .L
+				 <ALIST .SS
+					<ASTRING .SS
+						 "
+     "
+						 <ACOPY .SS <S-ADDR .A>>>>>
+			<COND (<AND <NOT .R> <NOT <EMPTY? .R>>>
+			       <ADDBACK .L
+					<ALIST .SS
+					       <ASTRING .SS " -- " <1 .R>>>>)>>
+	      .AL>>
+
+\
+
+"SND-ERR -- errors in SENDING process"
+
+<DEFINE SND-ERR (PRC ERR ADR "AUX" (ECOD <1 .ERR>) (SS ,SCRATCH-SPACE) L) 
+	#DECL ((ECOD) FIX (PRC ADR) STRING (L VALUE) <OR LIST FALSE>
+	       (SS) SPACE (ERR) <FALSE FIX>)
+	<SET L
+	     <ALIST .SS
+		    <ASTRING .SS
+"     The " <ASTRING .SS .PRC> " process failed because ">>>
+	<COND (<==? .ECOD 1>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS "it was applied to the ">
+			       .ADR
+			       <ASTRING .SS "
+area of the message, rather than the author area.">>>
+	       .L)
+	      (ELSE <SET L <>>)>>
+
+"CORR-ERR -- errors in SENDING process"
+
+<DEFINE CORR-ERR (PRC ERR ADR "AUX" (ECOD <1 .ERR>) (SS ,SCRATCH-SPACE) L) 
+	#DECL ((ECOD) FIX (PRC ADR) STRING (L VALUE) <OR LIST FALSE>
+	       (SS) SPACE (ERR) <FALSE FIX>)
+	<SET L
+	     <ALIST .SS
+		    <ASTRING .SS
+"     The CORRECTION process failed because ">>>
+	<COND (<==? .ECOD 1>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS "it was applied to the ">
+			       .ADR
+			       <ASTRING .SS "
+area of the message, rather than the author area.">>>
+	       .L)
+	      (<==? .ECOD 2>
+	       <ADDBACK .L
+			<ALIST .SS
+			       <ASTRING .SS "there were no unprocessable
+addressees to correct.">>>
+	       .L)
+	      (ELSE <SET L <>>)>>
+
+<ENDPACKAGE>
+

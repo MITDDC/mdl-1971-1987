@@ -1,0 +1,50 @@
+
+<DEFINE SPEC-GEN (N D TPS OFFS
+		  "AUX" (K <REST <KIDS .N>>) (ABSF <==? <NODE-NAME .N> ABS>) S
+			TEM D1 OFFPT D2 AC MUNG?
+			(XX <COND (<==? .TPS UVECTOR> 1) (ELSE 2)>))
+	#DECL ((N) NODE (D) DATUM (TPS) ATOM (OFFS) FIX (K) <LIST [REST NODE]>)
+	<COND (<N==? .TPS LIST> <SET OFFS <+ <* <- .OFFS 1> .XX> -2 .XX>>)>
+	<SET OFFPT <OFFPTR .OFFS .D .TPS>>
+	<SET D1 <DATUM .TPS .OFFPT>>
+	<COND (<==? <NODE-TYPE .N> ,ABS-CODE>
+	       <COND (<G? <FREE-ACS T> 0>
+		      <SET D2 <DATUM FIX <SET AC <GETREG <>>>>>
+		      <SET PUT-COMMON-DAT .D2>)>
+	       <EMIT <INSTRUCTION <COND (.ABSF `MOVMS ) (ELSE `MOVNS )>
+				  <COND (<ASSIGNED? AC> <ACSYM .AC>) (ELSE 0)>
+				  !<ADDR:VALUE .D1>>>)
+	      (<AND <OR <==? <SET S <NODE-SUBR .N>> ,+> <==? .S ,->>
+		    <==? <LENGTH .K> 1>
+		    <==? <NODE-TYPE <1 .K>> ,QUOTE-CODE>
+		    <==? <NODE-NAME <1 .K>> 1>>
+	       <COND (<G? <FREE-ACS T> 0>
+		      <SET D2 <DATUM FIX <SET AC <GETREG <>>>>>
+		      <SET PUT-COMMON-DAT .D2>)>
+	       <EMIT <INSTRUCTION <COND (<==? .S ,+> `AOS ) (ELSE `SOS )>
+				  <COND (<ASSIGNED? AC> <ACSYM .AC>) (ELSE 0)>
+				  !<ADDR:VALUE .D1>>>)
+	      (ELSE
+	       <COND (<==? <LENGTH .K> 1> <SET TEM <GEN <1 .K> DONT-CARE>>)
+		     (ELSE <PUT .N ,KIDS .K> <SET TEM <GEN .N DONT-CARE>>)>
+	       <SET AC <DATVAL <SET TEM <TOACV .TEM>>>>
+	       <COND (<AND <NOT <ACPROT .AC>>
+			   <OR <EMPTY? <ACRESIDUE .AC>>
+			       <ALL-STORED? <ACRESIDUE .AC>>>
+			   <==? <LENGTH <ACLINK .AC>> 1>>
+		      <SET MUNG? T>)
+		     (ELSE
+		      <SET MUNG? <>>)>
+	       <EMIT <INSTRUCTION <COND (.MUNG? <COND (<==? .S ,+> `ADDB )
+						      (<==? .S ,*> `IMULB )>)
+					(<==? .S ,+> `ADDM)
+					(<==? .S ,*> `IMULM)>
+				  <ACSYM <DATVAL .TEM>>
+				  !<ADDR:VALUE .D1>>>
+	       <COND (.MUNG? <SET PUT-COMMON-DAT .TEM>)>
+	       <RET-TMP-AC .TEM>)>
+	<RET-TMP-AC .D>
+	<RET-TMP-AC .D1>>
+
+<DEFINE SPEC-PUT-GEN (N W)
+	<PUT-GEN .N .W T>>

@@ -1,0 +1,148 @@
+<PACKAGE "MLOAD">
+
+<ENTRY MOBY-LOAD PACKS GROUPS L-GIVE-UP LOAD-GBINS?>
+
+<USE "L" "DUMMY">
+
+<SETG L-GIVE-UP T>
+
+<SETG LOAD-GBINS? <>>
+
+<SETG DUMMY-FILE "MBPROG;DUMMY NBIN">
+
+<DEFINE MOBY-LOAD (FILE "OPTIONAL" (EXPFLOAD T) "AUX" R)
+	#DECL ((FILE) STRING (EXPFLOAD) <SPECIAL <OR ATOM FALSE>>
+	       (R) <OR ATOM FALSE>)
+	<UNWIND <PROG ()
+		      <SETG OLD-USE ,USE>
+		      <SETG USE ,NUSE>
+		      <SET R <NGL .FILE>>
+		      <SETG USE ,OLD-USE>
+		      .R>
+		<PROG ()
+		      <SETG USE ,OLD-USE>>>>
+
+<DEFINE NGL (FILE "OPTIONAL" NAME "AUX" ATM A G GRPS GR R DUMMYNAME) 
+	#DECL ((FILE) STRING (NAME DUMMYNAME) <SPECIAL ATOM>
+	       (GR GRPS) LIST (R) ATOM (A ATM) <OR ATOM FALSE>)
+	<SETG PACKS ()>
+	<SETG LOADING ()>
+	<COND (<SET A <GROUP-LOAD ,DUMMY-FILE DUMMYNAME>>
+	       <SETG GROUPS (.DUMMYNAME "DUMMY")>)
+	      (ELSE <ERROR CANT-FIND-DUMMY-FILE ,DUMMY-FILE .A>)>
+	<COND (<SET ATM
+		    <COND (<ASSIGNED? NAME> <GROUP-LOAD .FILE .NAME>)
+			  (ELSE <GROUP-LOAD .FILE>)>>
+	       <CHANGE-NAME .DUMMYNAME
+			    DUMMY\ 
+			    <SET R <INSERT <STRING <SPNAME .ATM> "-GROUP">
+					   <ROOT>>>>
+	       <SETG .R ,DUMMY\ >
+	       <PUT ,DUMMY\  2 .R>
+	       <SET G ..ATM>
+	       <SET GRPS ,GROUPS>
+	       <REPEAT ()
+		       <COND (<EMPTY? .GRPS> <SET .ATM .G> <RETURN .ATM>)>
+		       <SET GR <1 .GRPS>>
+		       <SET G (<FORM USE <2 .GRPS>> !.G)>
+		       <PUTREST <REST .GR <- <LENGTH .GR> 1>> .G>
+		       <SET G .GR>
+		       <SET GRPS <REST .GRPS 2>>>)>>
+
+<GDECL (LOADING) <LIST [REST STRING]>>
+
+<DEFINE NUSE ("TUPLE" PKG "AUX" F A (PKOB <GET PACKAGE OBLIST>) GRPNAME
+	      (OUTCHAN .OUTCHAN))
+	#DECL ((PKG) <TUPLE [REST STRING]> (PKOB) OBLIST (OUTCHAN) CHANNEL
+	       (A) <OR ATOM FALSE> (GRPNAME) <SPECIAL ATOM>)
+	<MAPF <>
+	      <FUNCTION (P "AUX" PA)
+		   #DECL ((P) STRING (PA) <OR ATOM FALSE>)
+		   <COND (<SET PA <LOOKUP .P .PKOB>>
+			  <COND (<MEMBER .P ,LOADING>
+				 <SETG GROUPS
+				       (<FAKE-GROUP .P .PA> .P !,GROUPS)>)>
+			  <OLD-USE .P>)
+			 (<SET F <OR <G-FILE .P>
+				     <AND <NOT ,L-GIVE-UP>
+					  <ERROR CANT-FIND-GBIN-OR-NBIN .P>>>>
+			  <PRINC !\+>
+			  <PRINC .P>
+			  <PRINC !\ >
+			  <SETG LOADING (.P !,LOADING)>
+			  <COND (<SET A <GROUP-LOAD <G-FILE .P> GRPNAME>>
+				 <OLD-USE .P>
+				 <SETG GROUPS (.GRPNAME .P !,GROUPS)>
+				 <SETG PACKS (.P !,PACKS)>
+				 <UNASSIGN GRPNAME>)
+				(ELSE <ERROR GROUP-LOAD .P .A>)>
+			  <SETG LOADING <REST ,LOADING>>)
+			 (ELSE
+			  <SETG USE ,OLD-USE>
+			  <OLD-USE .P>
+			  <SETG USE ,NUSE>)>>
+	      .PKG>
+	USE>
+
+<DEFINE FAKE-GROUP (P PA "AUX" O)
+	#DECL ((P) STRING (PA) <OR ATOM FALSE> (O) <OR OBLIST FALSE>)
+	<COND (<SET O <GETPROP .PA OBLIST>>
+	       <LIST <FORM PACKAGE .P>
+		     <FORM ENTRY
+			   !<MAPF ,LIST
+				  <FUNCTION (L)
+				       #DECL ((L) <LIST [REST <OR ATOM LINK>]>)
+				       <MAPRET !.L>>
+				  .O>>
+		     '<ENDPACKAGE>>)
+	      (ELSE <ERROR NO-SUCH-OBLIST .PA>)>>
+
+<DEFINE G-FILE (P "AUX" (L <L-FILE .P>) C)
+	#DECL ((P) STRING (L) <OR FALSE STRING> (C) <OR CHANNEL FALSE>)
+	<PROG GACT ()
+	      <COND (<AND .L <FILE-EXISTS? .L> <SET C <OPEN-NR "READ" .L>>>
+		     <CLOSE .C>
+		     <COND (<OR <AND ,LOAD-GBINS? <MEMBER <8 .C> "GBIN">>
+				<MEMBER <8 .C> "NBIN">>
+			    <RETURN .L>)>)>
+	      <MAPF <>
+		    <FUNCTION (D "AUX" (SNM <SNAME>))
+			 #DECL ((D) <OR STRING VECTOR> (SNM) <SPECIAL STRING>)
+			 <COND (<TYPE? .D VECTOR>
+				<COND (<EMPTY? .D>)
+				      (ELSE <SET SNM <1 .D>>)>
+				<MAPF <>
+				      <FUNCTION (NM2)
+					   #DECL ((NM2) <SPECIAL STRING>)
+					   <AND <FILE-EXISTS? .P>
+						<RETURN <FILNAM .P> .GACT>>>
+				      <COND (,LOAD-GBINS? '["GBIN" "NBIN"])
+					    (ELSE '["NBIN"])>>)>>
+		    ,L-SEARCH-PATH>>>
+
+<GDECL (L-SEARCH-PATH) <LIST [REST <OR STRING VECTOR>]>>
+<GDECL (MUDDLE) FIX>
+
+<DEFINE FILNAM (P)
+	#DECL ((P) STRING)
+	<COND (<G? ,MUDDLE 100>
+	       <STRING !\< .SNM !\> .P !\. <COND (<ASSIGNED? NM2> .NM2)
+						 (ELSE "MUD")>>)
+	      (ELSE
+	       <STRING .SNM !\; .P !\  <COND (<ASSIGNED? NM2> .NM2)
+					     (ELSE ">")>>)>>
+
+<DEFINE CHANGE-NAME (GG O A)
+	#DECL ((GG) ANY (O A) ATOM)
+	<COND (<TYPE? .GG LIST FORM>
+	       <MAPR <>
+		     <FUNCTION (G "AUX" (E <1 .G>))
+			  #DECL ((G) LIST (E) ANY)
+			  <COND (<AND <TYPE? .E ATOM>
+				      <==? .E .O>>
+				 <PUT .G 1 .A>)
+				(<TYPE? .E FORM LIST>
+				 <CHANGE-NAME .E .O .A>)>>
+		     .GG>)>>
+
+<ENDPACKAGE>

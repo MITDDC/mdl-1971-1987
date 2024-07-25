@@ -1,0 +1,294 @@
+<BLOCK (<ROOT>)> 
+
+USE
+
+FIXUP!-RSUBRS 
+
+KILL:PURITY GROUP-PURIFY IPURIFY GLUE PGLUE BOOLEAN ELSE
+
+<ENDBLOCK>
+
+
+<AND <NOT <GASSIGNED? USE>>
+	<PROG ((GLUE T) (SNM "MBPROG") (NM2 "FBIN"))
+		<MAPF <> ,FLOAD ("FIXUP" "PCK" "HELPLD")>
+		<USE "PP" "EDIT" "FR&" "GRLOAD">>>
+
+
+<SETG OTHER-LIST ()>
+
+<SET LIST-OF-RSUBRS ()>
+
+<DEFINE MAP-OBS (FCN "AUX" (A <ASSOCIATIONS>) OB)
+   <REPEAT ()
+        <COND (<TYPE? <ITEM .A> OBLIST>
+               <SET OB <ITEM .A>>
+                <MAPF <> <FUNCTION (L)
+                                <MAPF <> <FUNCTION (A) <APPLY .FCN <CHTYPE .A ATOM>>>
+					.L>> .OB>)>
+        <COND (<SET A <NEXT .A>>)
+              (ELSE <RETURN>)>>>
+
+
+<DEFINE RSMUNG (A "AUX" V)
+	<COND (<OR <AND <GASSIGNED? .A> <SET V ,.A>>
+		   <AND <ASSIGNED? .A> <SET V ..A>>>
+	       <COND (<TYPE? .V RSUBR RSUBR-ENTRY>
+		      <COND (<AND <TYPE? .V RSUBR>
+				  <NOT <OR <GET .V GLUE> <GET .V PGLUE>>>>
+			     <PRINT <2 .V>>)
+			    (<AND <TYPE? .V RSUBR-ENTRY>
+				  <NOT <OR <GET <1 .V> GLUE> <GET <1 .V> PGLUE>>>>
+				  <PRINT <2 .V>>)
+			    (<NOT <MEMQ .V .LIST-OF-RSUBRS>>
+			     <SET LIST-OF-RSUBRS (<FORM SETG .A .V>
+						  !.LIST-OF-RSUBRS)>)>)
+			    (<AND <STRUCTURED? .V> <NOT <MEMQ .V ,OTHER-LIST>>>
+			    <SETG OTHER-LIST (.A .V !,OTHER-LIST)>)>)>
+	T>
+
+
+
+
+
+<BLOCK (<MOBLIST IPURIFY> !.OBLIST)>
+
+<FLOAD "MUDDLE;PUREQ NBIN">
+
+<FLOAD "MUDDLE;REPUT NBIN">
+
+<FLOAD "CLR;BYTER NBIN">
+
+<MANIFEST R HW INDEX-FIELD>
+
+<SETG R 14>
+
+<SETG HW <BITS 18>>
+
+<SETG INDEX-FIELD <BITS 4 18>>
+
+<DEFINE GROUP-PURIFY EX1 (ROBJ
+			  "OPTIONAL" (CHN <>) "TUPLE" OTHERS
+			  "AUX" (FNLIST ()) (INFORM-LIST ()) NLIST (NNLIST ())
+				(XXLIST ()))
+	#DECL ((FNLIST INFORM-LIST) <SPECIAL LIST> (EX1) <SPECIAL ACTIVATION>
+	       (NLIST NNLIST XXLIST) <SPECIAL <LIST [REST <PRIMTYPE VECTOR>]>>
+	       (CHN) <SPECIAL <OR CHANNEL FALSE>> (ROBJ) ATOM)
+	<COND (<OR <NOT <ASSIGNED? .ROBJ>> <NOT <TYPE? ..ROBJ LIST>>>
+	       <RETURN <CHTYPE (ARGUMENT-NOT-A-GROUP!-ERRORS .ROBJ) FALSE>
+		       .EX1>)>
+	<SET NLIST
+	     <MAPF ,LIST
+		   <FUNCTION (OBJ) 
+			   <COND (<AND <TYPE? .OBJ FORM>
+				       <LENGTH? .OBJ 3>
+				       <==? <1 .OBJ> SETG>
+				       <TYPE? <3 .OBJ> RSUBR RSUBR-ENTRY>>
+				  <MAPRET <3 .OBJ>>)
+				 (ELSE <MAPRET>)>>
+		   ..ROBJ>>
+	<MAPF <>
+	      <FUNCTION (XOBJ) 
+		      <COND (<NOT <MEMQ .XOBJ .NNLIST>>
+			     <SET NNLIST (.XOBJ !.NNLIST)>
+			     <PCOMP .XOBJ []>)>>
+	      .NLIST>
+	<MAPF <>
+	      <FUNCTION (X) <PUT .X GLUE> <PUT .X PGLUE>>
+	      .FNLIST>
+	<OUT-INFO .CHN "BEGINNING PURIFICATION">
+	<UNASSIGN XXLIST>
+	<UNASSIGN NNLIST>
+	<UNASSIGN FNLIST>
+	<PURIFY !.OTHERS !.NLIST>
+	"DONE">
+
+<DEFINE PCOMP (POBJ OPOBJ "AUX" RCOD IDX RNEW FLG LN GB (NC 0) WD NM) 
+   #DECL ((OPOBJ) <PRIMTYPE VECTOR>
+	  (NLIST NNLIST XXLIST) <LIST [REST <PRIMTYPE VECTOR>]>
+	  (RCOD) <OR PCODE CODE> (POBJ) <PRIMTYPE VECTOR> (FLG) <OR FALSE ATOM>
+	  (GB) <OR FALSE <UVECTOR [REST <PRIMTYPE WORD>]>> (WD) <PRIMTYPE WORD>
+	  (NC) FIX (NM) ATOM)
+   <COND (<NOT <MEMQ .POBJ .FNLIST>> <SET FNLIST (.POBJ !.FNLIST)>)>
+   <OR
+    <PUREQ .POBJ>
+    <MEMQ .POBJ .XXLIST>
+    <COND
+     (<TYPE? .POBJ RSUBR>
+      <OUT-INFO .CHN "RSUBR named " <SET NM <2 .POBJ>>>
+      <SET RCOD <1 .POBJ>>
+      <COND
+       (<NOT <SET GB
+		  <GET .POBJ
+		       <COND (<SET FLG <TYPE? .RCOD PCODE>> PGLUE)
+			     (ELSE GLUE)>>>>
+	<RETURN <CHTYPE (CANT-PURIFY-RSUBR-WITHOUT-GLUE-BITS!-ERRORS .NM)
+			FALSE>
+		.EX1>)>
+      <SET LN
+	   <COND (.FLG <LENGTH .POBJ>)
+		 (ELSE
+		  <- <LENGTH .RCOD> <CHTYPE <NTH .RCOD <LENGTH .RCOD>> FIX> 1>)>>
+      <REPEAT ((GB <BYTER .GB>) XBIT IFIELD)
+	#DECL ((XBIT) <PRIMTYPE WORD> (IFIELD) FIX)
+	<AND <G? <SET NC <+ .NC 1>> .LN> <RETURN>>
+	<SET XBIT <CHTYPE <1 .GB> FIX>>
+	<OR .FLG <SET WD <NTH .RCOD .NC>>>
+	<COND
+	 (<AND <1? .XBIT>
+	       <OR .FLG <==? <CHTYPE <GETBITS .WD ,INDEX-FIELD> FIX> ,R>>>
+	  <RETURN
+	   <CHTYPE (CANT-PURIFY-RSUBR-WITH-IMPURE-LOCATION!-ERRORS .NM)
+		   FALSE>
+	   .EX1>)
+	 (<==? .XBIT 2>
+	  <COND
+	   (<TYPE?
+	     <SET IDX
+		  <NTH .POBJ
+		       <SET IFIELD
+			    <COND (.FLG .NC)
+				  (ELSE
+				   <+ 1
+				      </ <CHTYPE <GETBITS .WD ,HW> FIX> 2>>)>>>>
+	     ATOM>
+	    <COND (<AND <GASSIGNED? .IDX>
+			<TYPE? <SET RNEW ,.IDX> SUBR FSUBR RSUBR RSUBR-ENTRY>>
+		   <OR <MEMQ .RNEW .XXLIST> <PUT .POBJ .IFIELD .RNEW>>)
+		  (ELSE
+		   <COND (<NOT <MEMQ .IDX .INFORM-LIST>>
+			  <PRIN1 .NM>
+			  <PRINC " calls FUNCTION or UNASSIGNED ATOM ">
+			  <PRIN1 .IDX>
+			  <TERPRI>
+			  <SET INFORM-LIST (.IDX !.INFORM-LIST)>)>)>)
+	   (ELSE <SET RNEW .IDX>)>
+	  <COND
+	   (<ASSIGNED? RNEW>
+	    <COND
+	     (<TYPE? .RNEW RSUBR>
+	      <COND
+	       (<COND (<TYPE? <1 .RNEW> PCODE> <GET .RNEW PGLUE>)
+		      (ELSE <GET .RNEW GLUE>)>
+		<COND (<NOT <MEMQ .RNEW .FNLIST>>
+		       <PCOMP .RNEW .POBJ>)>
+		<COND
+		 (<MEMQ .RNEW .NLIST>
+		  <REPEAT ((ONLIST .NLIST) (NLI .NLIST))
+			  <COND (<==? <1 .NLI> .RNEW>
+				 <COND (<==? .NLI .NLIST>
+					<SET NLIST <REST .NLIST>>)
+				       (ELSE <PUTREST .ONLIST <REST .NLI>>)>
+				 <RETURN>)>
+			  <SET ONLIST .NLI>
+			  <SET NLI <REST .NLI>>>
+		  T)>)
+	       (ELSE
+		<PUT .POBJ .IFIELD <2 .RNEW>>
+		<SET XXLIST (.RNEW !.XXLIST)>
+		<COND (<NOT <MEMQ .IDX .INFORM-LIST>>
+		       <PRIN1 .NM>
+		       <PRINC " calls rsubr without GLUE BITS ">
+		       <PRIN1 <COND (<TYPE? .IDX ATOM> .IDX) (ELSE <2 .IDX>)>>
+		       <TERPRI>
+		       <SET INFORM-LIST (.IDX !.INFORM-LIST)>)>)>)
+	     (<TYPE? .RNEW RSUBR-ENTRY>
+	      <OR <MEMQ .RNEW .FNLIST> <PCOMP .RNEW .POBJ>>)>)>)>
+	<SET GB <REST .GB>>>)
+     (ELSE
+      <OUT-INFO .CHN "RSUBR-ENTRY named " <SET NM <2 .POBJ>>>
+      <COND (<TYPE? <SET IDX <1 .POBJ>> ATOM>
+	     <SET RNEW ,.IDX>
+	     <R-E-PUT .POBJ .RNEW>)
+	    (ELSE <SET RNEW <1 .POBJ>>)>
+      <COND
+       (<COND (<COND (<TYPE? <1 .RNEW> PCODE> <GET .RNEW PGLUE>)
+		     (ELSE <GET .RNEW GLUE>)>)>
+	<COND (<NOT <MEMQ .RNEW .FNLIST>>
+	       <MEMQ .RNEW .NLIST>
+	       <PCOMP .RNEW .OPOBJ>)>
+	<COND (<MEMQ .RNEW .NLIST>
+	       <REPEAT ((ONLIST .NLIST) (NLI .NLIST))
+		       <COND (<==? <1 .NLI> .RNEW>
+			      <COND (<==? .NLI .NLIST>
+				     <SET NLIST <REST .NLIST>>)
+				    (ELSE <PUTREST .ONLIST <REST .NLI>>)>
+			      <RETURN>)>
+		       <SET ONLIST .NLI>
+		       <SET NLI <REST .NLI>>>
+	       T)>)
+       (ELSE
+	<R-E-PUT .POBJ <2 .RNEW>>
+	<COND (<MEMQ .POBJ .OPOBJ> <PUT <MEMQ .POBJ .OPOBJ> 1 <2 .POBJ>>)>
+	<COND (<MEMQ .POBJ .NNLIST>
+	       <REPEAT ((ONLIST .NNLIST) (NLI .NNLIST))
+		       <COND (<==? <1 .NLI> .POBJ>
+			      <COND (<==? .NLI .NNLIST>
+				     <SET NNLIST <REST .NNLIST>>)
+				    (ELSE <PUTREST .ONLIST <REST .NLI>>)>
+			      <RETURN>)>
+		       <SET ONLIST .NLI>
+		       <SET NLI <REST .NLI>>>)>
+	<SET XXLIST (.POBJ !.XXLIST)>
+	<COND (<NOT <MEMQ .IDX .INFORM-LIST>>
+	       <PRIN1 .NM>
+	       <PRINC " calls rsubr without GLUE BITS ">
+	       <PRIN1 <COND (<TYPE? .IDX ATOM> .IDX) (ELSE <2 .IDX>)>>
+	       <TERPRI>
+	       <SET INFORM-LIST (.IDX !.INFORM-LIST)>)>)>)>>
+   .POBJ>
+
+<DEFINE OUT-INFO (CHN STR "OPTIONAL" ARG) 
+	#DECL ((STR) STRING (CHN) <OR FALSE CHANNEL>)
+	<COND (.CHN
+	       <PRINC .STR .CHN>
+	       <AND <ASSIGNED? ARG> <PRIN1 .ARG .CHN>>
+	       <TERPRI .CHN>)>
+	T>
+ 
+<DEFINE KILL:PURITY () 
+	<MAPF <>
+	      <FUNCTION (P1) 
+		      <MAPF <>
+			    <FUNCTION (X) 
+				    <COND (<NOT <MEMQ .X '![HW INDEX-FIELD R!]>>
+					   <GUNASSIGN .X>)>>
+			    .P1>>
+	      <GET IPURIFY OBLIST>>
+	<PUT <GET IPURIFY OBLIST> OBLIST>
+	<PUT IPURIFY OBLIST>
+	<MAPF <> ,GUNASSIGN '![GROUP-PURIFY KILL:PURITY!]>
+	<MAPF <> ,REMOVE '![GROUP-PURIFY KILL:PURITY IPURIFY!]>
+	"KILLED">    
+ 
+<ENDBLOCK>
+
+<USE "UNDECL">
+
+<SETG LR (,GOOD-CHRS!-IEDIT
+		  ,BREAK-CHRS!-IEDIT ,CHAN-MAX-TEMPLATE!-ISDML!-RPACKAGE)>
+
+<DEFINE FOO ()
+	<RSUBR-LINK <>>
+	
+	<USE-DEFER "SORTX">
+
+	<UNIQUE-DECLS>
+
+	<CLEAR-DECL-LISTS>
+
+	<DROP "UNDECL">
+
+	<L-UNUSE "UNDECL">
+
+	<MAP-OBS ,RSMUNG>
+
+	<GROUP-PURIFY LIST-OF-RSUBRS <> !,LR>
+
+	<KILL:PURITY>
+
+	<MAPF <> <FUNCTION (L) <MAPF <> <FUNCTION (A)
+						<GUNASSIGN .A> <UNASSIGN <REMOVE .A>>>
+				.L>> 	<1 .OBLIST>>
+	<RSUBR-LINK T> 
+"DONE">>

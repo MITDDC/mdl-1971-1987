@@ -1,0 +1,227 @@
+<PACKAGE "GET-FILE">
+
+<ENTRY GET-FILE>
+
+"	<GET-FILE <prompt> <.gjgen,,> <,,.gjgen> <.gjf2,,> >
+
+Does a long-form GTJFN.  The args, all optional, are the left half of
+.GJGEN (the flags), the right half of .GJGEN (the default generation
+number), and the left half of .GJF2 (more random flags).
+
+Returns the string produced by JFNS of the resulting JFN, or a false
+with the error code and reason (string)."
+
+<TITLE GET-FILE>
+	<DECLARE ("VALUE" <OR STRING FALSE>
+		  "OPTIONAL" <OR STRING FALSE> FIX FIX FIX)> 
+	<HLRE	C* AB>
+	<PUSH	TP* (AB)>
+	<AOBJN	AB* HERE -1>
+	<ASH	C* -1>
+	<ADDI	C* GFPUSH>
+	<PUSHJ	P* @ (C)>
+	<JRST	FINIS>
+
+	<IGETFILE4>
+	<IGETFILE3>
+	<IGETFILE2>
+	<IGETFILE1>
+GFPUSH	<IGETFILE0>
+
+<INTERNAL-ENTRY IGETFILE0 0>
+	<PUSH	TP* <TYPE-WORD FALSE>>
+	<PUSH	TP* [<0>]>
+
+<INTERNAL-ENTRY IGETFILE1 1>
+	<PUSH	TP* <TYPE-WORD FIX>>
+	<PUSH	TP* [<0>]>		;"DEFAULT FLAGS"
+
+<INTERNAL-ENTRY IGETFILE2 2>
+	<PUSH	TP* <TYPE-WORD FIX>>
+	<PUSH	TP* [<0>]>		;"DEFAULT GENERATION"	
+
+<INTERNAL-ENTRY IGETFILE3 3>
+	<PUSH	TP* <TYPE-WORD FIX>>
+	<PUSH	TP* [<*440000*>]>		;"MORE FLAGS (.GJF2)"	
+
+<INTERNAL-ENTRY IGETFILE4 4>
+	<SUBM	M* (P)>
+	<MOVE	E* P>			;"SAVE P, ALL HELL BREAKS LOOSE..."
+	<MOVEI	D* 1(P)>		;"START OF ARG BLOCK"
+	<ADD	P* [<13(13)>]>
+	<MOVEI	A* *101*>
+	<SKIPN	B* -6(TP)>
+	 <JRST	NOPRMT>
+	<HLRZ	O* B>
+	<CAIE	O* *010700*>
+	 <JRST	HERE 3>
+	  <ADDI	B* 1>
+	  <HRLI	B* *440700*>
+	<HRRZ	C* -7(TP)>
+	<JUMPE	C* NOPRMT>
+	<MOVNS	C>
+	<SOUT>
+NOPRMT	<MOVE	A* -2(TP)>
+	<HRL	A* -4(TP)>
+	<TLZ	A* *1*>			;"LONG FORM GTJFN"
+	<TLO	A* *4*>			;"EXTENDED ARG BLOCK"
+	<MOVEM	A* (D)>			;"FLAGS,,GEN"
+	<MOVE	A* [<*101* (*100*)>]>
+	<MOVEM	A* 1(D)>		;"JFNS FOR INPUT AND OUTPUT"
+;"NOW GROVEL OVER DEFAULT NAMES"
+	<MOVE	A* <MQUOTE "PS:">>
+	<MOVEM	A* 2(D)>		;"DEVICE"
+	<MOVE	B* <MQUOTE 'DEV>>
+	<PUSHJ	P* IDVAL 4>
+	<GETYP	O* A>
+	<CAIE	O* <TYPE-CODE STRING>>
+	 <JRST	GSNM>
+	<MOVEI	C* 1(P)>
+	<HLL	C* B>
+	<MOVEM	C* 2(D)>
+	<ADD	P* [<8(8)>]>
+	<PUSHJ	P* TNXSTR>
+
+GSNM	<SETZM	3(D)>			;"SNAME"
+	<MOVE	B* <MQUOTE 'SNM>>
+	<PUSHJ	P* IDVAL 4>
+	<GETYP	O* A>
+	<CAIE	O* <TYPE-CODE STRING>>
+	 <JRST	GNM1>
+	<MOVEI	C* 1(P)>
+	<HLL	C* B>
+	<MOVEM	C* 3(D)>
+	<ADD	P* [<8(8)>]>
+	<PUSHJ	P* TNXSTR>
+
+GNM1	<MOVE	A* <MQUOTE "INPUT">>
+	<MOVEM	A* 4(D)>		;"NM1"
+	<MOVE	B* <MQUOTE 'NM1>>
+	<PUSHJ	P* IDVAL 4>
+	<GETYP	O* A>
+	<CAIE	O* <TYPE-CODE STRING>>
+	 <JRST	GNM2>
+	<MOVEI	C* 1(P)>
+	<HLL	C* B>
+	<MOVEM	C* 4(D)>
+	<ADD	P* [<8(8)>]>
+	<PUSHJ	P* TNXSTR>
+
+GNM2	<MOVE	A* <MQUOTE "MUD">>
+	<MOVEM	A* 5(D)>		;"NM2"
+	<MOVE	B* <MQUOTE 'NM2>>
+	<PUSHJ	P* IDVAL 4>
+	<GETYP	O* A>
+	<CAIE	O* <TYPE-CODE STRING>>
+	 <JRST	GFIL>
+	<MOVEI	C* 1(P)>
+	<HLL	C* B>
+	<MOVEM	C* 5(D)>
+	<ADD	P* [<8(8)>]>
+	<PUSHJ	P* TNXSTR>
+
+GFIL	<SETZM	6(D)>			;"PROTECTION"
+	<SETZM	7(D)>			;"ACCOUNT"
+	<SETZM	8(D)>			;"JFN"
+	<HRLZ	A* (TP)>
+	<HRRI	A* 3>
+	<MOVEM	A* 9(D)>		;"MORE FLAGS"
+	<SETZM	10(D)>
+	<SETZM	11(D)>
+;"PROMPT STRING"
+	<MOVE	A* -7(TP)>
+	<SKIPN	B* -6(TP)>
+	 <JRST	GTCALL>
+	<MOVEI	C* 1(P)>
+	<HLL	C* B>
+	<MOVEM	C* 12(D)>
+	<ADD	P* [<8(8)>]>
+	<PUSHJ	P* TNXSTR>
+
+;"NOW ACTUALLY DO THE CALL"
+GTCALL	<MOVE	A* D>
+	<MOVEI	B* 0>
+	<GTJFN>
+	 <JRST	GTJERR>
+	<PUSH	P* A>
+	<MOVE	B* A>
+	<HRROI	A* (D)>
+	<HRLI	C* *111110*>
+	<HRRI	C* 1>
+	<JFNS>
+	<SKIPN	(A)>
+	 <SUBI	A* 1>
+	<HRRZS	A>
+	<SUB	A* D>
+	<MOVEI	O* IBLOCK>
+	<PUSHJ	P* RCALL>
+	<HRLZI	A* <TYPE-CODE STRING>>
+	<HRLI	B* 4544>
+	<SUBI	B* 1>
+	<MOVE	C* B>
+	<HRLI	D* *440700*>
+	<ILDB	O* D>
+	<JUMPE	O* STREND>
+	<IDPB	O* C>
+	<ADDI	A* 1>
+	<JRST	HERE -4>
+STREND	<EXCH	A* (P)>
+	<RLJFN>
+	 <JRST	GTJERR>
+	<POP	P* A>
+GFEXIT	<MOVE	P* E>
+      	<SUB	TP* [<8(8)>]>
+	<JRST	MPOPJ>
+
+GTJERR	<PUSH	TP* <TYPE-WORD FIX>>
+	<PUSH	TP* A>
+	<MOVE	B* A>		; "ERROR"
+	<HRLI	B* *400000*>	; "SELF"
+	<HRROI	A* (D)>
+	<SETZ	C*>
+	<ERSTR>
+	 <JRST DUMERR>
+	 <JRST DUMERR>
+	<SKIPN	(A)>
+	 <SUBI	A* 1>
+	<HRRZS	A>
+	<SUB	A* D>
+	<MOVEI	O* IBLOCK>
+	<PUSHJ	P* RCALL>
+	<MOVSI	A* <TYPE-CODE STRING>>
+	<HRLI	B* 4544>
+	<SUBI	B* 1>
+	<MOVE	C* B>
+	<HRLI	D* *440700*>
+	<ILDB	O* D>
+	<JUMPE	O* HERE 4>
+	<IDPB	O* C>
+	<ADDI	A* 1>
+	<JRST	HERE -4>
+	<EXCH	A* -1(TP)>
+	<EXCH	B* (TP)>
+	<PUSH	TP* A>
+	<PUSH	TP* B>
+	<MCALL	2 LIST>
+	<MOVSI	A* <TYPE-CODE FALSE>>
+	<JRST	GFEXIT>
+
+DUMERR	<MCALL	1 LIST>			; "HERE FOR J RANDOM ERROR"
+	<MOVSI	A* <TYPE-CODE FALSE>>
+	<JRST	GFEXIT>
+
+TNXSTR	<SUBM	M* (P)>
+	<HRRZS	A>
+	<ADDI	A* 4>
+	<MOVE	O* (B)>
+	<MOVEM	O* (C)>
+	<ADDI	B* 1>
+	<ADDI	C* 1>
+	<SUBI	A* 5>
+	<JUMPGE	A* HERE -5>
+	<SETZM	(C)>
+	<JRST	MPOPJ>
+
+<END>
+
+<ENDPACKAGE>

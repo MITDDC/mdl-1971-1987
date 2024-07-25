@@ -1,0 +1,22 @@
+PDUMP			PDL (4/28/75)
+
+	A new version of PDUMP exists.  There are several changes
+from the old version:
+
+1) New one is a PACKAGE, not an RPACKAGE.  It is also in the Library,
+   so you can dynamically load it.  Old PDMP is still around, in
+   MUDDLE; directory.  New one is "PDUMP" PACKAGE.
+
+2) Directory for FBIN output is <sname>;, not MBPROG;.  MBPROG is too
+   full to be randomly dumping in it.  Also outputs to a temporary file
+   and renames while open to prevent version clobberage.
+
+3) If open for output for the SAVnm or FIXUP file fails, the call to
+   PDUMP returns FALSE.
+
+4) If open for output for one of the FBIN files fails, ERROR.  You can
+   continue by ERRETing.
+
+For bugs, complain to PDL.
+
+				----pdl

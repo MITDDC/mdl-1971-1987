@@ -1,0 +1,60 @@
+'<PCODE "M-EXP">
+
+<PACKAGE "M-EXP"> 
+
+<ENTRY EXPANSION EXP-ERR> 
+
+<USE "M-READ" "M-DAC" "M-PRCD" "M-ERR" "M-DEFS" "MADMAN" "EXPUTI" "USRUTI" 
+"FIELDS"> 
+
+<DEMON-PROCESS "EXPANSION" EXPANSION EXP-ERR [,FATAL ,FATAL ,FATAL ,FATAL ,FATAL
+<> <> ,FATAL ,FATAL ,FATAL]> 
+
+\ 
+
+<SETG EXPANSION  %<RSUBR!- '[ %<PCODE!- "M-EXP" 0> EXPANSION #DECL ("VALUE" <OR 
+ATOM FALSE> STRING) GETSTRING ADDBACK DAPP DWT GOOD-BAD LA-EXP GETDB AFALSE OK? 
+DRD %<RGLOC MSG-SPACE T> %<TYPE-W SPACE VECTOR> "" "COPY-TO-ADDRESSEE-AREA" 
+"EXPAND-USING" "Data-Base-Not-Found?" %<INTERNAL-RSUBR ACOPY 2> T <LIST [REST <
+LIST <LIST [REST STRING]> ANY>]> %<INTERNAL-RSUBR ASTRING 262143> 
+%<INTERNAL-RSUBR ALIST 262143> %<INTERNAL-RSUBR ACONS 3> 
+"MORE-EXPANDED-ADDRESSEE-LIST" "MORE-TO" " 	" %<RGLOC SCRATCH-SPACE T> 
+"     The EXPANSION process failed because:
+
+" "One of the data base(s) specified could not be read:
+
+" 
+"The specification of the data base(s) to use (in the EXPAND-USING
+field) was unusable.  Either the specification of data bases could not
+be found, or it was not in proper form." 
+"No list of addressees was available as input to the procedure.  A
+message must have either a 'TO' or 'MORE-TO' field, containing a list
+of addressees to be expanded." 
+"One of the data base(s) specified was not in the proper format:
+
+" 
+"The specification of the identity of all fields to be 'split' is not
+in the correct format." 
+"Either the recursion depth limit was exceeded in attempting the
+expansion, or another error occurred.  This generally indicates that
+the data base used for the expansion is ill-formed." 
+"The data in a field specified as a 'split' field is not in the proper
+format.  The field which is bad is the " " field." 
+"Addressee(s) specified in a 'split' field were not legal addressee(s):
+" ".  The field which contained the bad addressee is the
+"]>> 
+<AND <ASSIGNED? GLUE> .GLUE <PUT ,EXPANSION PGLUE ![715828223 -1 -268435456!]>> 
+
+
+\ 
+
+"GET-ALIST -- finds addressee list to be expanded
+ -- returns list of 2 elements, addressee list, and flag
+     where t means it used 'to', and false 'more-to'" 
+
+\ 
+
+<SETG EXP-ERR %<RSUBR-ENTRY '[EXPANSION EXP-ERR #DECL ("VALUE" <OR LIST FALSE> 
+STRING <FALSE FIX> STRING)] 544>> 
+
+<ENDPACKAGE> 

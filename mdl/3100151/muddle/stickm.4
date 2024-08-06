@@ -1,0 +1,140 @@
+
+
+<SETG STICK <EXPR 
+       (NX)
+       <PROG (NDX NDDX NDDTH NDTH NTH)
+	     <COND (<G? <ABS .NX> .XMAX> <RETURN XLIMIT>)>
+	     <SET NDX </ <- .NX .X> .DT>>
+	     <COND (<G? <ABS .NDX> .DXMAX> <RETURN DXLIMIT>)>
+	     <SET NDDX </ <- .NDX .DX> .DT>>
+	     <COND (<G? <ABS .NDDX> .DDXMAX> <RETURN DDXLIMIT>)>
+	     <SETG VSIN <SIN .TH>>
+	     <SETG VCOS <COS .TH>>
+	     <SET NDDTH </ <- <* .G .VSIN> <* .NDDX .VCOS>> .R>>
+	     <SET NDTH <+ .DTH <* .NDDTH .DT>>>
+	     <SET NTH <+ .TH <* .NDTH .DT>>>
+	     <COND (<G? <ABS .TH> .THMAX> <RETURN THLIMIT>)>
+	     <SETG COMP <* .MASS <+ <* .G .VCOS>
+				    <* .NDDX .VSIN>
+				    <* -1.0 .NDTH .NDTH .R>>>>
+	     <COND (<-? .COMP> <RETURN FLEW-OFF>)>
+	     <SETG X .NX>
+	     <SETG DX .NDX>
+	     <SETG DDX .NDDX>
+	     <SETG TH .NTH>
+	     <SETG DTH .NDTH>
+	     <SETG DDTH .NDDTH>
+	     <UPDISP>
+	     <RETURN OK>>>>
+
+
+<SETG PINIT <EXPR ()
+	<SETG TIME 0.0>
+	<SETG X 0.0>
+	<SETG DT .01>
+	<SETG DX 0.0>
+	<SETG TH 0.0>
+	<SETG DTH 0.0>
+	<SETG COMP 0.0>
+	<SETG DDX 0.0>
+	<SETG DDTH 0.0>
+	()>>	
+
+<SETG XMAX 200.0>
+
+<SETG DXMAX 1000.0>
+
+<SETG DDXMAX 10000.0>
+
+<SETG G 980.0>
+
+<SETG R 100.0>
+
+<SETG THMAX 1.0>
+
+<SETG MASS 1000.0>
+
+<SETG SBAL <EXPR  ()
+	<PROG (DLINE HDLINE PHYSICS NXTPOS)
+		<PINIT>
+		<PERINIT>
+		<SET HDLINE <DELMAK>>
+		<SET DLINE <REST .HDLINE 2>>
+		LP
+		<OR <==? <SET PHYSICS <STICK <1 .DLINE>>> OK> <RETURN .PHYSICS>>
+		TRY
+		<COND (<SET NXTPOS <MODE>>)
+		      (<GO TRY>)>
+		<SETLOC <AT .DLINE 1> .NXTPOS>
+		<SET HDLINE <REST .HDLINE>>
+		<SET DLINE <REST .DLINE>>
+		<UPDERR>
+		<GO LP>>>>
+
+<SETG DELMAK <EXPR  ()
+	<PROG (N (L ()) )
+		<SET N <FIX </ .DELAY .DT>>>
+		LP
+		<COND (<0? .N> <RETURN <RPLACD <REST .L <- <LENGTH .L> 1>> .L>>)>
+		<SET L <CONS .X .L>>
+		<SET N <- .N 1>>
+		<GO LP>>>>
+
+<SETG WIN <EXPR  ()
+	<SETG DBV </ <+ <BVEL> <* .K .DBV>> <+ 1 .K>>>
+	<SETG DBP </ <+ <BPOS> <* .K .DBP>> <+ 1 .K>>>
+	<+ <* .CENTER .DBP> <* .DELAY .CHASE .DBV>>>>
+
+
+<SETG BPOS <EXPR  () <+ .X <* .R .VSIN> .BPOSERR>>>
+
+<SETG BVEL <EXPR  () <+ .DX <* .R .VCOS .DTH> .BVELERR>>>
+
+
+
+<SETG SGN <EXPR  (X) <COND (<-? .X> -1) (1)>>>
+
+<SETG ERROR1 <EXPR  (SIG)
+	<* .SIG
+		<+ 0.0
+			<RANDOM><RANDOM>
+			<RANDOM><RANDOM>
+			<RANDOM><RANDOM>
+			<RANDOM><RANDOM>
+			<RANDOM><RANDOM>
+			<RANDOM><RANDOM>>
+		.145519E-10>>>
+
+<SETG UPDERR <EXPR  ()
+	<SETG BPOSERR
+		</ <+ <ERROR1 .STEBPOS><* <- .NPER 1> .BPOSERR>>
+			 .NPER>>
+	<SETG BVELERR
+		</ <+ <ERROR1 .STEBVEL> <* <- .NPER 1> .BVELERR>>
+			 .NPER>>>>
+
+<SETG PERINIT <EXPR  ()
+	<SETG BPOSERR 0.0>
+	<SETG BVELERR 0.0>
+	<SETG NPER <FIX </ .TIMECONST .DT>>>
+	<SETG STEBPOS <* .EBPOS <SQRT .NPER>>>
+	<SETG STEBVEL <* .EBVEL <SQRT .NPER>>>
+	<SETG DBV 0.0>
+	<SETG DBP 0.0>
+	<SETG MODE .WIN>>>
+
+<SETG TIMECONST .5>
+
+<SETG DELAY .2>
+
+<SETG CENTER 1.01>
+
+<SETG CHASE 2.0>
+
+<SETG K 10.0>
+
+<SETG EBPOS 6.0>
+
+<SETG EBVEL 3.0>
+
+

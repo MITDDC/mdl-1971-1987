@@ -1,0 +1,411 @@
+
+TITLE OPEN - CHANNEL OPENER FOR MUDDLE
+
+RELOCATABLE
+
+;C. REEVE  JAN 1971
+
+.INSRT MUDDLE >
+
+;THIS PROGRAM HAS TWO ENTRIES.  FOPEN,FCLOSE AND FDELETE.
+;THESE SUBROUTINES HANDLE I/O STREAMS FOR THE MUDDLE SYSTEM.
+
+;	FOPEN - OPENS A FILE FOR EITHER READING OR WRITING.  IT TAKES
+;		FIVE OPTINAL ARGUMENTS AS FOLLOWS:
+
+;		FOPEN (<DIR>,<FILE NAME1>,<FILE NAME2>,<DEVICE>,<SYSTEM NAME>)
+;
+;		<DIR> - DIRECTION EITHER READ (INPUT) OR PRINT (OUPUT). DEFAULT IS READ
+
+;		<FILE NAME1> - FIRST FILE NAME.  DEFAULT INPUT OR OUTPUT.
+
+;		<FILE NAME2> - SECOND FILE NAME.  DEFAULT MUDDLE.
+
+;		<DEVICE> - DEVICE FROM WHICH TO OPEN.  DEFAULT IS DSK.
+
+;		<SNAME> - SYSTEM (DIRECTORY) NAME. DEFAULT UNAME.
+
+;	FOPEN RETURNS AN OBJECT OF TYPE CHANNEL IF IT SUCCEEDS OTHERWISE NIL
+
+
+;	FCLOSE - CLOSES A FILE.  TAKES A CHANNEL OBJECT AS ITS ARGUMENT.  IT ALSO TAKES
+;		A SPECIAL ARGUMENT, THE ATOM WHOSE PNAME IS "ALL", IN WHICH CASE ALL CHANNELS
+;		ARE CLOSED
+
+
+;A CHANNEL OBJECT IS A VECTOR CONTAINIG THE FOLLOWING INFORMATION
+
+;	CHANNO==1	;ITS I/O CHANNEL NUMBER.  0 MEANS NOT A REAL CHANNEL.
+;	DIRECT==3	;DIRECTION (EITHER READ OR PRINT)
+;	DEVICE==5	;DEVICE UPON WHICH THE CHANNEL IS OPEN
+;	NAME1==7	;FIRST NAME OF FILE AS OPENED.
+;	NAME2==11	;SECOND NAME OF FILE
+;	SNAME==13	;DIRECTORY NAME
+;	RDEVIC==15	;REAL DEVICE
+;	RNAME1=17	;REAL FIRST NAME (AS RETURNED BY READING CHANNEL STATUS)
+;	RNAME2==21	;REAL SECOND NAME
+;	RSNAME==23	;SYSTEM OR DIRECTORY NAME
+;	STATUS==25	;VARIOUS STATUS BITS
+;	IOINS==27	;INSTRUCTION EXECUTED TO INPUT OR OUTPUT ONE CHARACTER
+;	LINLN==31	;LENGTH OF A LINE IN CHARACTERS FOR THIS DEVICE
+;	CHRPOS==33	;CURRENT POSITION ON CURRENT LINE
+;	PAGLN==35	;LENGTH OF A PAGE
+;	LINPOS==37	;CURRENT LINE BEING WRITTEN ON
+;	ACCESS==41	;ACCESS POINTER FOR RAND ACCESS
+
+;CHANLNT==42	;LENGTH OF A CHANNEL OBJECT
+
+;THIS IRP DEFINES THE FIELDS AT ASSEMBLY TIME
+
+	CHANLNT==1	;INITIAL CHANNEL LENGTH
+
+; BUILD A PROTOTYPE CHANNEL AND DEFINE FILEDS
+
+PROCHN:
+
+IRP A,,[[CHANNO,FIX],[DIRECT,CHRS],[DEVICE,CHRS],[NAME1,CHRS],[NAME2,CHRS]
+[SNAME,CHRS],[RDEVIC,CHRS],[RNAME1,CHRS],[RNAME2,CHRS],[RSNAME,CHRS]
+[STATUS,FIX],[IOINS,FIX],[LINLN,FIX],[CHRPOS,FIX],[PAGLN,FIX],[LINPOS,FIX]
+[ACCESS,FIX]]
+
+	IRP B,C,[A]
+		B==CHANLNT
+		T!C,,0
+		0
+		.ISTOP
+		TERMIN
+	CHANLNT==CHANLNT+2
+TERMIN
+
+
+;PRESET LINE LENGTH AND PAGE LENGTH
+
+ZZZ==.	;SAVE CURRENT LOCATION
+
+LOC PROCHN+LINLN
+TTYLNL		;USE TTY LINE LENGTH
+
+LOC PROCHN+PAGLN
+TTYPGL	;USE TTY PAGE LENGTH
+
+LOC ZZZ	;RESET LOCATIN
+CHANLNT==CHANLNT-1
+
+
+INBIT==0	;LH BITS FOR INPUT
+OUTBIT==1	;AND FOR OUTPUT
+
+;PAGE AND LINE LENGTH FOR TTY
+
+TTYLNL==80.
+TTYPGL==60.
+
+
+
+
+.GLOBAL IPNAME,OPEN,CLOSE,IOT,ILOOKU,6TOCHS,ICLOS,OCLOS,OPNCHN,CHMAK,READCH,TYO
+
+
+;SUBROUTINE TO DO OPENING BEGINS HERE
+
+MFUNCTION FOPEN,SUBR,[OPEN]
+
+	ENTRY
+
+;NOW CYCLE THROUGH THE GIVEN ARGUMENTS
+
+	MOVSI A,-5	;NUMBER OF ARGUMENTS INTO A
+ARGLP:	JUMPGE AB,ARGDON	;IF AB>=0, NO MORE ARGS
+	HLRZ C,(AB)	;CHECK THE TYPE
+	CAIN C,TCHRS	;MUST BE AN CHRS
+	JRST ARGWIN
+	CAIE C,TCHSTR
+	JRST WRONGT
+ARGWIN:	PUSH TP,(AB)	;NOW TO TEMPS
+	PUSH TP,1(AB)
+	ADD AB,[2,,2]	;BUMP ARGG POINTER
+	AOBJN A,ARGLP	;CYCLE
+
+;NOW PUSH ANY MORE GOODIES FOR DEFAULTS
+
+ARGDON:
+	MOVEI A,(A)	;GET NUMBER DONE
+	CAIN A,5	;FINISHED?
+	JRST GETCHN	;YES
+	LSH A,1
+	JRST .+1(A)	;DISPATCH
+	PUSH TP,$TCHRS
+	PUSH TP,CHQUOTE READ,	;DEFAULT DIRECTION
+	PUSH TP,$TCHRS
+	PUSH TP,CHQUOTE INPUT,	;DEFAULT NAME1
+	PUSH TP,$TCHSTR
+	PUSH TP,CHQUOTE MUDDLE,	;DEFAULT NAME2
+	PUSH TP,$TCHRS
+	PUSH TP,CHQUOTE DSK,	;DEFAULT DEVICE
+	.SUSET [.RSNAM,,A]
+	PUSHJ P,6TOCHS
+	PUSH TP,A
+	PUSH TP,B		;AND DEFAULT SYS NAME
+
+GETCHN:	PUSH AP,$TFIX	;SETUP CALL TO VECTOR
+	PUSH AP,[CHANLN_-1]
+	MCALL 1,VECTOR	;GO GET STORAGE
+	HRLI C,PROCHN	;SETUP FOR BLT
+	HRRI C,(B)
+	BLT C,CHANLNT-1(B)	;BLT IN THE TYPES
+	MOVE A,(TB)	;GET TYPE
+	MOVEM A,DIRECT-1(B)	;AND CLOBBER
+	MOVE A,1(TB)	;GET THE DIRECTION
+	MOVEM A,DIRECT(B)	;STORE IT
+	MOVE A,2(TB)	;TYPE FIRST
+	MOVEM A,NAME1-1(B)
+	MOVEM A,RNAME1-1(B)
+	MOVE A,3(TB)	;GET NAME1
+	MOVEM A,NAME1(B)
+	MOVEM A,RNAME1(B)	;ALSO REAL NAME 1
+	MOVE A,4(TB)	;TYPE
+	MOVEM A,NAME2-1(B)
+	MOVEM A,RNAME2-1(B)
+	MOVE A,5(TB)	;MAME 2
+	MOVEM A,NAME2(B)
+	MOVEM A,RNAME2(B)	;ALSO REAL NAME 2
+	MOVE A,6(TB)
+	MOVEM A,DEVICE-1(B)
+	MOVEM A,RDEVICE-1(B)
+	MOVE A,7(TB)	;GET DEVICE NAME
+	MOVEM A,DEVICE(B)
+	MOVEM A,RDEVIC(B)
+	MOVE A,10(TB)
+	MOVEM A,SNAME-1(B)
+	MOVEM A,RSNAME-1(B)
+	MOVE A,11(TB)	;FINALLY UNAME
+	MOVEM A,SNAME(B)
+	MOVEM A,RSNAME(B)
+	SUB TP,[10.,,10.]	;GARBAGE COLLECT TP
+	PUSHJ P,OPNCHN	;OPEN THE SPECIFIED CHANNEL
+
+
+	JRST FINIS
+
+
+
+;OPEN THE CHANNEL POINTED TO BY B
+
+OPNCHN:	PUSH TP,$TCHAN	;SAVE THE CHANNEL
+	PUSH TP,B
+	MOVE A,DEVICE-1(B)	;TYPE OF DEVICE
+	MOVE B,DEVICE(B)	;GOBBLE THE DEVICE
+	CAMN B,CHQUOTE TTY,	;IS IT THE TTY?
+	JRST TTYCHK	;GO HACK THAT
+	PUSHJ P,STRTO6	;CONVERT TO 6-BIT
+	HLRZS (P)	;DEVICE TO RH
+	MOVE B,(TP)	;RESTORE B
+	MOVE A,NAME1-1(B)	;TYPE OF NAME1
+	MOVE B,NAME1(B)	;GET THE FIRST NAME
+	PUSHJ P,STRTO6	;TO 6-BIT
+	MOVE B,(TP)	;RESTORE B
+	MOVE A,NAME2-1(B)
+	MOVE B,NAME2(B)	;SECOND NAME
+	PUSHJ P,STRTO6	;ALSO TO 6 BIT
+	MOVE B,(TP)
+	MOVE C,DIRECT(B)	;GET DIRECTION
+	MOVSI A,INBIT	;GET BIT FOR INPUT OPEN
+	CAME C,CHQUOTE READ,	;REALLY INPUT?
+	MOVSI A,OUTBIT	;NO GET OUTPUT BIT
+	IORM A,-2(P)	;INTO OPEN STUFF
+	MOVE A,SNAME-1(B)
+	MOVE B,SNAME(B)	;GOBBLE SNAME
+	PUSHJ P,STRTO6	;6 BIT
+	POP P,A	;RESTORE RESULT
+	.SUSET [.SSNAM,,A]	;SET THE SYSTEM NAME
+	MOVEI A,-2(P)	;POINT TO OPEN BLOCK
+	MOVEI B,0	;SET B> 0
+	PUSHJ P,OPEN	;DO THE OPEN
+	MOVNI B,2	;OPEN FAILED, CLOBBER B
+	SUB P,[3,,3]	;FIX UP P
+	JUMPL B,OPNFAI	;OPEN FAILED, GO RETURN NIL
+	MOVE B,(TP)	;RESTORE B
+	PUSHJ P,DOSTAT	;GOBBLE THE STATUS
+	MOVEM A,CHANNO(B)	;RESTORE CHANNEL NUMBER
+	HRLZS A  	;CHANNEL NO. TO LH
+	MOVE C,A	;COPY TO C
+	ROT C,5	;INTO C'S AC FILED
+	IOR C,[.IOT 0,A]	;AND AN I/O INSTRUCTION
+	MOVEM C,IOINS(B)	;SAVE IN CHANNEL
+; THIS CODES SETS THE 'REAL' NAMES, DEVICES AND SNAMES
+
+	HRRI A,1(P)	;POINT INTO P
+	MOVEI C,(A)	;C ALSO POINTS
+	ADD P,[5,,5]	;ALLOCATE SOME P
+	JUMPGE P,[.VALUE [ASCIZ 'P/']]	;DIE ON PDL LOSSAGE
+	.RCHST A,	;READ THE STATUS
+	HRLZS (C)	;FOR NOW KILL LH OF DEVICE
+	HRLI C,-5	;5 GOODIES
+	PUSH P,C
+	PUSH P,[0]	;USED AS A COUNTER
+NXTREL:	MOVEM C,-1(P)	;SAVE C
+	SKIPN A,(C)	;WAS THIS ONE GIVEN?
+	JRST NXTLOK	;NO, SKIP CHANGE
+	PUSHJ P,6TOCHS	;YES, MAKE INTO ATOM
+	MOVEI C,RDTBL	;FIND OUT WHERE
+	ADD C,(P)	;FOR THIS ONE
+	MOVE C,(C)	;NOW HAVE TH OFFSET TO USE
+	ADD C,(TP)	;ADD TO POINTER
+	MOVEM A,-1(C)
+	MOVEM B,(C)	;CLOBBER THE NEW ATOM IN
+	MOVE C,-1(P)	;RESTORE C
+NXTLOK:	AOS (P)	;COUNT THE GOODIES
+	AOBJN C,NXTREL
+
+	SUB P,[7,,7]	;GC ON P
+OPNRET:	POP TP,B	;GET CHANNEL POINTER BACK
+
+	POP TP,A	;RESTORE TYPE OF CHANNEL
+	POPJ P,
+
+
+;TABLE USED TO DO THE 'REAL GOODIES'
+
+RDTBL:	RDEVIC
+	RNAME1
+	RNAME2
+	RSNAME
+	ACCESS
+
+
+;HERE TO DO STATUS FOR OPEN LOSSAGE ETC.
+
+DOSTAT:	PUSH P,A	;SAVE CHANNEL
+	ROT A,23.	;INTO AC FILED
+	IOR A,[.STATUS STATUS(B)]	;GOBBLE THE STATUS
+	XCT A	;DO IT
+	POP P,A
+	POPJ P,
+
+
+;CHECK WHETHER READ OR PRINT ON TTY
+
+TTYCHK:	MOVE D,(TP)	;GOBBLE BACK CHANNEL
+	MOVE C,DIRECT(D)	;GET DIRECTION
+	MOVE A,[PUSHJ P,READCH]	;GET TTY INPUT INS
+	CAME C,CHQUOTE READ
+	MOVE A,[PUSHJ P,TYO]	;TTY OUTPUT INS
+	MOVEM A,IOINS(D)	;CLOBBER THAT IN
+	JRST OPNRET
+
+
+;ARRIVE HERE IF FOPEN CALLED WITH WRONG TYPES OF ARGUMENTS
+
+WRONGT:	PUSH AP,$TATOM	;SET UP CALL TO ERROR
+	PUSH AP,MQUOTE WRONG-TYPE
+	JRST CALER1
+
+
+;THIS ROTINE CONVERTS MUDDLE CHARACTER STRINGS TO SIXBIT FILE NAMES
+
+STRTO6:	HLRZS A 	;CHECK THE TYPE (ONE WORD OR VECTOR)
+	PUSH TP,$TCHRS	;ASSUME FOR NOW ONE WORD
+	PUSH TP,B	;AND PUSH IT
+	CAIE A,TCHRS	;NOW LOOK AT REAL TYPE
+	JRST CHREAD	;REALLY A VECTOR, GO CONVERT IT
+	MOVEI B,-1(TP)	;MAKE A PHONY VECTOR POINTER
+	HRLI B,-2	;OF ONE ELEMENT
+CHREAD:	PUSH TP,$TCHSTR	;SAVE CHAR STRING
+	PUSH TP,B
+	MOVEI A,0	;INITIALIZE OUTPUT WORD
+	MOVE D,[440600,,A]	;AND  BYTE POINTER TO IT
+NEXWRD:	MOVSI C,10700+B	;BYTE POINTER TO ADDRESS POINTED TO BY B
+NEXCAR:	ILDB 0,C	;PICK UP A CHARACTER
+	TRNE C,2	;HAS THE BYTE POINTER BUMPED ITSELF
+	JRST BMPB	;YES, GO FUDGE B
+	JUMPE 0,SIXDON	;IF NULL, WE ARE FINISHED
+	CAIL 0,141	;IF IT IS GREATER OR EQUAL TO LOWER A
+	CAILE 0,172	;BUT LESS THAN OR EQUAL TO LOWER Z
+	JRST .+2	;THEN
+	SUBI 0,40	;CONVERT TO UPPER CASE
+	SUBI 0,40	;NOW TO SIX BIT
+	JUMPL 0,BAD6	;CHECK FOR A WINNER
+	CAILE 0,77
+	JRST BAD6
+	IDPB 0,D	;DEPOSIT INTO SIX BIT
+	TRNE A,77	;IS OUTPUT FULL
+	JRST SIXDON	;YES, LEAVE
+	JRST NEXCAR	;GOBBLE NEXT CHAR
+
+BMPB:	AOBJP B,.+2	;YES , GET NEXT WORD
+	AOBJN B,NEXWRD	;IF THERE ARE ANY
+
+SIXDON:	SUB TP,[4,,4]	;FIX UP TP
+	EXCH A,(P)	;LEAVE RESULT ON P-STACK
+	JRST (A)	;NOW RETURN
+
+
+;SUBROUTINE TO CONVERT SIXBIT TO ATOM
+
+6TOCHS:	MOVEI B,6	;MAX NUMBER OF CHARACTERS
+	PUSH P,[0]	;STRING WILL GO ON P SATCK
+	MOVEI C,(P)	;WILL BE OUTPUT POINTER
+	MOVEI E,-1(P)	;WILL BE BYTE POINTER
+	HRLI E,10700	;SET IT UP
+	PUSH P,[0]	;SECOND POSSIBLE WORD
+	MOVE D,[440600,,A]	;INPUT BYTE POINTER
+6LOOP:	ILDB 0,D	;START CHAR GOBBLING
+	JUMPE 0,GETATM	;IF ZERO, FINISHED
+	ADDI 0,40	;CHANGET TOASCII
+	IDPB 0,E	;AND STORE IT
+	SOJG B,6LOOP	;KEEP LOOKING
+	HRLI C,-2	;IF ARRIVE HERE, STRING IS 2 WORDS
+	JRST .+2
+GETATM:	HRLI C,-1	;MUST BE ONE WORD
+	PUSHJ P,CHMAK	;LOOK IT UP ON CURRENT OBLIST
+	SUB P,[2,,2]	;FIX UP THE WORLD
+	POPJ P,
+
+
+;HERE IF OPEN FAILS
+
+OPNFAI:	MOVE B,(TP)	;RESTORE CHANNEL POINTER
+	SETOM STATUS(B)	;SET TO -1
+	JUMPL A,.+2	;A<0 MEANS NO CHANNELS
+	PUSHJ P,DOSTAT	;GOBBLE STATUS
+	SUB TP,[2,,2]	;PATCH UP TP
+RETNIL:	MOVSI A,TLIST	;RETURN A NIL
+	MOVEI B,NIL
+	POPJ P,
+
+;ERROR FOR BAD CHARACTER IN SIX BIT STRING
+
+BAD6:	PUSH AP,$TATOM	;SETUP ERROR CALL
+	PUSH AP,MQUOTE FILE-NAME-NOT-6-BIT
+	JRST CALER1
+
+
+;THIS PROGRAM CLOSES THE SPECIFIED CHANNEL
+
+MFUNCTION FCLOSE,SUBR,[CLOSE]
+
+	ENTRY 1	;ONLY ONE ARG
+	HLRZ A,(AB)	;CHECK ARGS
+	CAIE A,TCHAN	;IS IT A CHANNEL
+	JRST WRONGT
+	MOVE B,1(AB)	;PICK UP THE CHANNEL
+	CLEARM IOINS(B)	;CLOBBER THE IO INS
+	MOVE A,DEVICE(B)	;GE THE NAME OF THE DEVICE
+	CAMN A,CHQUOTE TTY,	;IS IT THE TTY?
+	JRST TTYCLS	;YES, DO SPECIAL  HACK
+	SKIPE A,CHANNO(B)	;IS THERE A CHANNEL NO.?
+	PUSHJ P,CLOSE	;YES, CLOSE IT
+CFIN:	MOVSI A,TCHAN	;RETURN THE CHANNEL
+	JRST FINIS
+
+TTYCLS:	MOVE A,DIRECT(B)	;GET THE DIRECTION OF THE CHANNEL
+	CAMN A,CHQUOTE READ,	;IS IT READ
+	PUSHJ P,ICLOS	;YES, CLOSE THAT
+	CAMN A,CHQUOTE PRINT,	;IS IT PEINT
+	PUSHJ P,OCLOS	;YES CLOSE TTY OUT CHANNEL
+	JRST CFIN
+
+
+END
+
+                                                                                                                                                                                                                                                                                                                                                                                                      J@                                                                                                                                                                                  O`                                                                                                                                                                                                                                                                                                                         e@                                                                                                                      L\             M             uk`#           |                            QL             S0                                                                                                                                                    O8                           Q)                           U            >                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             Ge@ Y   @ Fð	0:A     Ge@ &`   @  Fð	06Á                    ð	0u     K2. &    @  F	 $`0<                    ð	.Å                     $`     ['   (    @ EA $\3                    ð	%ß§                     $`$                    ð	0#ñ                    ð	)¯_                    ð	.0‘     M?.  .    @ @K $S*                    ð	Y«q     g&h  "D      G+ %3+     g&h  E&p    GFð	Y¯í     g&h  "H      G=ð	Y¯“     g&h  "@      Gð	Y©S     R,;gò)º	@  D $[     a9 "    @ F$ð	0R     G>v=$    @ @ $LJ!     Ge@ CW@  @  F?ð	=¿     M@ Y   @  Cð	-1m     [>"0 Y   @ @ð	$	“     [?5 "    @  F6ð	=½     

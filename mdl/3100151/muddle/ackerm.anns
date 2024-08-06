@@ -1,0 +1,8 @@
+
+<SETG A <FUNCTION (X Y)
+	<COND   (<0? .X> <+ .Y 1>)
+		(<0? .Y> <A <- .X 1> 1>)
+		(<A <- .X 1> <A .X <- .Y 1>>>)>>>
+
+<SETG F <FUNCTION (N) <A .N .N>>>
+

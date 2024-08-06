@@ -1,0 +1,412 @@
+TITLE DISPLY ROUTINES ( E&S ) FOR THE MUDDLE SYSTEM
+
+RELOCATABLE
+
+.INSRT	ESDEFS >
+
+.INSRT MUDDLE >
+
+.INSRT	CHAR >
+PRINTC /End of Inserts
+/
+
+.GLOBAL	PARNEW,PARBOT,CODTOP,VECNEW,GETNUM
+
+O==0
+
+DSPSIZ==400	;Initial display area size
+EXTSIZ==200	;Extention to display area size
+STKSIZ==40	;Minimum E&S stack size
+DEFALT==1	;DEFAULT VALUE OF DISPLAY DEPTH
+
+STKVAL:	-STKSIZ,,-1
+
+
+DEFINE	PUT	PLACE
+	MOVE	O,PLACE
+	MOVEM	O,(E)
+	AOBJN	E,.+2
+	PUSHJ	P,EXTEND
+TERMIN
+
+;Initialization for display
+INIT:	.DSTART	[0]	;Display avaliable ?
+	JRST	NODIS
+	MOVE	E,PARBOT	;Find current display space
+	SUB	E,CODTOP
+	CAIGE	E,DSPSIZ	;Enough display space ?
+	JRST	GETSIZ	;Go get enough
+GOTSIZ:	MOVNS	E	;Make AOBJN pointer to display area in register E
+	HRL	E,E
+	HRR	E,CODTOP
+	ADD	E,[6,,6]	;Save places for initialization of SP & DSP later
+	POPJ	P,
+
+GETSIZ:	MOVEI	E,DSPSIZ	;Display size needed
+	MOVEM	E,PARNEW	;Give it to AGC
+	SETZM	VECNEW	;ZERO OTHER VARIABLES
+	SETZM	GETNUM
+	PUSHJ	P,AGC
+	SETZM	PARNEW	;ALSO ZERO THIS AFTER ITS USE
+	JRST	GOTSIZ
+
+NODIS:	PUSH	AP,$TATOM	;Display is unavailable now
+	PUSH	AP,MQUOTE DISPLAY-UNAVAILABLE
+	PUSH	AP,(AB)
+	PUSH	AP,(AB)+1
+	SETZM	VECNEW	;ZERO OTHER VARIABLES
+	SETZM	GETNUM
+	PUSHJ	P,AGC
+	SETZM	PARNEW	;ALSO ZERO THIS AFTER ITS USE
+
+;Extend the size of the display space and continue processing
+EXTEND:	PUSH	P,E	;Save register E
+	MOVEI	E,EXTSIZ	;Extra display size wanted
+	MOVEM	E,PARNEW	;Give it to AGC
+	MCALL	0,AGC
+	POP	P,E	;Restore register E
+	HRLI	E,-EXTSIZ	;Repair AOBJN pointer to display area
+	POPJ	P,	;Return
+
+;Main display routine for muddle that displays the structure of a goodie
+
+MFUNCTION	DISPLY,SUBR
+	ENTRY	1
+	PUSHJ	P,INIT
+	PUT	[[LOCLSA  WIND,(1)[100000,,40000]]]
+	PUT	[[LOCLA  VIEWLB,(2)VW]]
+	MOVE	D,AB	;Pointer to the current argument
+	MOVEI	B,DEFALT	;DISPLAY DEPTH
+	HRL	D,B
+	PUSHJ	P,DISVAL
+	PUT	[[JMP PARLOC"+4]]
+	CAMG	E,STKVAL	;Enough space for display stacks ?
+	JRST	GOTSTK
+	MOVEI	O,STKSIZ
+	MOVEM	O,PARNEW	;Give it to AGC
+	SETZM	VECNEW	;ZERO OTHER VARIABLES
+	SETZM	GETNUM
+	PUSHJ	P,AGC
+	SETZM	PARNEW	;ALSO ZERO THIS AFTER ITS USE
+GOTSTK:	MOVE	A,CODTOP	;Place reserved for DSP & SP initialization
+	HRLI	E,(LI  DSP,0)	;Add operand code to current location in E
+	MOVEM	E,(A)+4	;Save this E&S instruction
+	MOVE	E,PARBOT
+	SUBI	E,1
+	HRLI	E,(LI  SP,0)	;Add operand code to end location in E
+	MOVEM	E,(A)+5	;Save this E&S instruction
+	MOVEI	E,(A)+4	;Starting address for display
+	.DSTART	E
+	.VALUE
+
+;Return as value argument of DIS
+	MOVE	A,(AB)
+	MOVE	B,(AB)+1
+	JRST	FINIS
+
+
+VW:	-14000,,-4000
+	4000,,4000
+	2000,,2000
+	1253,,1253
+	1000,,1000
+;Discover the type of the goodie and go to the appropriate routine
+;and display its value
+
+DISVAL:	HLRZ	A,(D)	;Get type value
+	CAIG	A,NUMPRI	;A new type ?
+	JRST	@DSPTBL(A)
+	JRST	DISTYP
+
+DISTBL	DSPTBL,DISTYP,[[TATOM,DISATM],[TLIST,DISLST],[TEXPR,DISEXP],[TVEC,DISVEC],[TFIX,DISFIX],[TFLOT,DISFLT],[TSUBR,DISSBR],[TCHRS,DISCHR],[TCHSTR,DISCHR],[TCHVEC,DISCHR],[TUNBOU,DISUNB],[TLOCI,DISLOC],[TLMNT,DISLMT],[TSEG,DISSEG]]
+;Routine to handle LOCATIVE data
+		
+DISLOC:	HRR	D,(D)+1	;Get pointer to value
+	JRST	DISVAL	;Go display the value
+
+
+
+;Routine to handle character string data types
+
+DISCHR:	PUT	ESTABL+""
+	PUSHJ	P,CHRSTR	;Go print the characters
+	PUT	ESTABL+""
+	POPJ	P,
+
+
+
+;Routine to handle unbound values
+
+DISUNB:	PUT	[JMPPSH UNBDIS]
+	POPJ	P,
+
+
+;Routine to handle SUBRs
+
+DISSBR:	PUT	[JMPPSH SBRDIS]
+	POPJ	P,
+
+
+
+;ROUTINE TO HANDLE UNKNOWN OR UNIMPLEMENTED DATA TYPES
+
+DISLMT:
+DISSEG:
+DISTYP:	PUT	[JMPPSH TYPDIS]
+	POPJ	P,
+
+;ROUTINE TO HANDLE ATOMS
+
+DISATM:	HRR	D,(D)+1	;GET POINTER TO REAL ATOM
+	ADDI	D,POFF	;MAKE INTO POINTER TO PNAME
+	PUSHJ	P,CHRSTR	;GO PRINT PNAME
+	PUT	ESTABL+"=	;PRINT EQUAL SIGN
+	SUBI	D,POFF-VOFF	;MAKE INTO POINTER TO VALUE
+	JRST	DISVAL	;GO DISPLAY ITS VALUE
+
+POFF==4	;OFFSET OF PNAME IN AN ATOM
+VOFF==0	;OFFSET OF VALUE IN AN ATOM
+
+
+;ROUTINE FOR FIXED AND FLOATING POINT NUMBERS
+
+DISFLT:	MOVEI	B,FLOATB"
+	SKIPA
+DISFIX:	MOVEI	B,FIXB"
+	HRRI	A,(D)+1	;LOCATION OF NUMBER INTO A
+	HRLI	A,(P)+1	;LOCATION OF RETURN AREA ON STACK INTO A
+	ADD	P,[6,,6]	;ADD # OF WORDS IN RETURN AREA TO BOTH HALVES OF SP
+	JUMPGE	P,PDLERR"	;SP OVERFLOW ?
+	PUSHJ	P,(B)	;GO TO APPROPRIATE ROUTINE
+	SUB	P,[6,,6]	;RESET SP
+	MOVN	A,(P)+1	;GET NEGATIVE OF COUNT OF CHARS RETURNED
+	MOVEI	B,(P)+2	;LOCATION OF FIRST CHARACTER
+	HRLI	B,440700	;BYTE POINTER FIELD
+	JRST	CHLOOP	;GO PRINT THIS VECTOR OF CHARACTERS
+;Routines to handle lists, vectors, and exprs
+	;NOT YET IMPLEMENTED
+
+DISLST:
+
+DISVEC:
+
+DISEXP:	PUT	[[JMPPSH  TYPDIS]]
+	POPJ	P,
+;Character string routines
+
+CHRSTR:	HLRZ	A,(D)	;Get type of character string
+	CAIN	A,TCHRS
+	JRST	DISCHS
+	CAIN	A,TCHSTR
+	JRST	CHR
+DISCHV:	HLRE	A,(D)+1	;Get length of vector
+	IMULI	A,5	;Maximum # of characters
+	HRLI	B,440700
+	HRR	B,(D)+1	;Loacation of first character is at (D)+1
+	JRST	CHLOOP
+
+DISCHS:	MOVE	A,[-5]	;Maximum # of Characters
+	MOVE	B,[440704,,1]	;First character at (D)+1
+CHLOOP:	ILDB	C,B	;Get next character
+	JUMPE	C,FINCHR	;Null characters are padding
+	PUT	ESTABL(C)	;The appropriate drawing instruction
+	AOJL	A,CHLOOP	;Finished ?
+FINCHR:	POPJ	P,
+
+
+CHR:	MOVE	D,(D)+1	;Get real pointer to characters
+	MOVE	B,[440704,,1]
+CHRLOOP:	MOVE	A,[-5]	;Character count for one word
+	ILDB	C,B	;Get next character
+	JUMPE	C,FINCHR	;Null characters are padding
+	PUT	ESTABL(C)	;The appropriate drawing instruction
+	AOJL	A,CHRLOOP+1	;Finished with this word ?
+	ADD	D,[1,,0]	;Update word count
+	AOBJN	D,CHRLOOP	;Word count gone to zero ?
+	POPJ	P,
+;Basic drawing routines
+
+VECDIS:	TBL [LBK,LCV,LCE,LCC,RBK]
+	SETPTR	[XTTL,,0](PEELM)
+
+LSTDIS:	TBL [LPR,LCL,LCI,LCS,LCT,RPR]
+	SETPTR	[XTTL,,0](PEELM)
+		
+XPRDIS:	TBL [LES,LCE,LCX,LCP,LCR,GRT]
+	SETPTR	[XTTL,,0](PEELM)
+
+UNBDIS:	TBL [LCU,LCN,LCB,LCO,LCU,LCN,LCD]
+	PEEL
+
+SBRDIS:	TBL [LCS,LCU,LCB,LCR]
+	PEEL
+
+TYPDIS:	TBL [LCT,LCY,LCP,LCE,LCD]
+	PEEL
+
+END
+	MOVEM	E,PARNEW	;Give it to AGC
+	SETZM	VECNEW	;ZERO OTHER VARIABLES
+	SETZM	GETNUM
+	PUSHJ	P,AGC
+	SETZM	PARNEW	;ALSO ZERO THIS AFTER ITS USE
+	JRST	GOTSIZ
+
+NODIS:	PUSH	AP,$TATOM	;Display is unavailable now
+	PUSH	AP,MQUOTE DISPLAY-UNAVAILABLE
+	PUSH	AP,(AB)
+	PUSH	AP,(AB)+1
+	SETZM	VECNEW	;ZERO OTHER VARIABLES
+	SETZM	GETNUM
+	PUSHJ	P,AGC
+	SETZM	PARNEW	;ALSO ZERO THIS AFTER ITS USE
+
+;Extend the size of the display space and continue processing
+EXTEND:	PUSH	P,E	;Save register E
+	MOVEI	E,EXTSIZ	;Extra display size wanted
+	MOVEM	E,PARNEW	;Give it to AGC
+	MCALL	0,AGC
+	POP	P,E	;Restore register E
+	HRLI	E,-EXTSIZ	;Repair AOBJN pointer to display area
+	POPJ	P,	;Return
+
+;Main display routine for muddle that displays the structure of a goodie
+
+MFUNCTION	DISPLY,SUBR
+	ENTRY	1
+	PUSHJ	P,INIT
+	PUT	[[LOCLSA  WIND,(1)[100000,,40000]]]
+	PUT	[[LOCLA  VIEWLB,(2)VW]]
+	MOVE	D,AB	;Pointer to the current argument
+	MOVEI	B,DEFALT	;DISPLAY DEPTH
+	HRL	D,B
+	PUSHJ	P,DISVAL
+	PUT	[[JMP PARLOC"+4]]
+	CAMG	E,STKVAL	;Enough space for display stacks ?
+	JRST	GOTSTK
+	MOVEI	O,STKSIZ
+	MOVEM	O,PARNEW	;Give it to AGC
+	SETZM	VECNEW	;ZERO OTHER VARIABLES
+	SETZM	GETNUM
+	PUSHJ	P,AGC
+	SETZM	PARNEW	;ALSO ZERO THIS AFTER ITS USE
+GOTSTK:	MOVE	A,CODTOP	;Place reserved for DSP & SP initialization
+	HRLI	E,(LI  DSP,0)	;Add operand code to current location in E
+	MOVEM	E,(A)+4	;Save this E&S instruction
+	MOVE	E,PARBOT
+	SUBI	E,1
+	HRLI	E,(LI  SP,0)	;Add operand code to end location in E
+	MOVEM	E,(A)+5	;Save this E&S instruction
+	MOVEI	E,(A)+4	;Starting address for display
+	.DSTART	E
+	.VALUE
+
+;Return as value argument of DIS
+	MOVE	A,(AB)
+	MOVE	B,(AB)+1
+	JRST	FINIS
+
+
+VW:	-14000,,-4000
+	4000,,4000
+	2000,,2000
+	1253,,1253
+	1000,,1000
+;Discover the type of the goodie and go to the appropriate routine
+;and display its value
+
+DISVAL:	HLRZ	A,(D)	;Get type value
+	CAIG	A,NUMPRI	;A new type ?
+	JRST	@DSPTBL(A)
+	JRST	DISTYP
+
+DISTBL	DSPTBL,DISTYP,[[TATOM,DISATM],[TLIST,DISLST],[TEXPR,DISEXP],[TVEC,DISVEC],[TFIX,DISFIX],[TFLOT,DISFLT],[TSUBR,DISSBR],[TCHRS,DISCHR],[TCHSTR,DISCHR],[TCHVEC,DISCHR],[TUNBOU,DISUNB],[TLOCI,DISLOC],[TLMNT,DISLMT],[TSEG,DISSEG]]
+;Routine to handle LOCATIVE data
+		
+DISLOC:	HRR	D,(D)+1	;Get pointer to value
+	JRST	DISVAL	;Go display the value
+
+
+
+;Routine to handle character string data types
+
+DISCHR:	PUT	ESTABL+""
+	PUSHJ	P,CHRSTR	;Go print the characters
+	PUT	ESTABL+""
+	POPJ	P,
+
+
+
+;Routine to handle unbound values
+
+DISUNB:	PUT	[JMPPSH UNBDIS]
+	POPJ	P,
+
+
+;Routine to handle SUBRs
+
+DISSBR:	PUT	[JMPPSH SBRDIS]
+	POPJ	P,
+
+
+
+;ROUTINE TO HANDLE UNKNOWN OR UNIMPLEMENTED DATA TYPES
+
+DISLMT:
+DISSEG:
+DISTYP:	PUT	[JMPPSH TYPDIS]
+	POPJ	P,
+
+;ROUTINE TO HANDLE ATOMS
+
+DISATM:	HRR	D,(D)+1	;GET POINTER TO REAL ATOM
+	ADDI	D,POFF	;MAKE INTO POINTER TO PNAME
+	PUSHJ	P,CHRSTR	;GO PRINT PNAME
+	PUT	ESTABL+"=	;PRINT EQUAL SIGN
+	SUBI	D,POFF-VOFF	;MAKE INTO POINTER TO VALUE
+	JRST	DISVAL	;GO DISPLAY ITS VALUE
+
+POFF==4	;OFFSET OF PNAME IN AN ATOM
+VOFF==0	;OFFSET OF VALUE IN AN ATOM
+
+
+;ROUTINE FOR FIXED AND FLOATING POINT NUMBERS
+
+DISFLT:	MOVEI	B,FLOATB"
+	SKIPA
+DISFIX:	MOVEI	B,FIXB"
+	HRRI	A,(D)+1	;LOCATION OF NUMBER INTO A
+	HRLI	A,(P)+1	;LOCATION OF RETURN AREA ON STACK INTO A
+	ADD	P,[6,,6]	;ADD # OF WORDS IN RETURN AREA TO BOTH HALVES OF SP
+	JUMPGE	P,PDLERR"	;SP OVERFLOW ?
+	PUSHJ	P,(B)	;GO TO APPROPRIATE ROUTINE
+	SUB	P,[6,,6]	;RESET SP
+	MOVN	A,(P)+1	;GET NEGATIVE OF COUNT OF CHARS RETURNED
+	MOVEI	B,(P)+2	;LOCATION OF FIRST CHARACTER
+	HRLI	B,440700	;BYTE POINTER FIELD
+	JRST	CHLOOP	;GO PRINT THIS VECTOR OF CHARACTERS
+;Routines to handle lists, vectors, and exprs
+	;NOT YET IMPLEMENTED
+
+DISLST:
+
+DISVEC:
+
+DISEXP:	PUT	[[JMPPSH  TYPDIS]]
+	POPJ	P,
+;Character string routines
+
+CHRSTR:	HLRZ	A,(D)	;Get type of character string
+	CAIN	A,TCHRS
+	JRST	DISCHS
+	CAIN	A,TCHSTR
+	JRST	CHR
+DISCHV:	HLRE	A,(D)+1	;Get length of vector
+	IMULI	A,5	;Maximum # of characters
+	HRLI	B,440700
+	HRR	B,(D)+1	;Loacation of first character is at (D)+1
+	JRST	CHLOOP
+
+DISCHS:	MOVE	A,[-5]	;Maximum # of Characters
+	MOVE	B,[440704,,1]	;First character at (D)+1
+CHLOOP:	ILDB	C,B	;Get next character

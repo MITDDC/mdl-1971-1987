@@ -1,0 +1,22 @@
+<SETG LOSLIST ()>
+
+<SETG D <FUNCTION () <1? <MOD <RANDOM> 2>>>>
+
+<SETG SCREW <FUNCTION FOO (N "AUX"  (M 0) G H) 
+	<SET G (.N .M)>
+	<COND (<D> <SETG LOSLIST (.G !,LOSLIST)>)>
+	<SET G <VECTOR .M>>
+	<COND (<D> <SETG LOSLIST (.G !,LOSLIST)>)>
+	<SET G <VECTOR .N>>
+	<COND (<D> <SETG LOSLIST (.G !,LOSLIST)>)>
+	<COND (<0? .N> <EXIT .FOO "WIN">)>
+	<SET N <- .N 1>>
+	<SET M <+ .M 1>>
+	<COND (<EMPTY? ,LOSLIST> <AGAIN .FOO>)>
+	<SET G <MOD <RANDOM> <LENGTH ,LOSLIST>>>
+	<SET H <+ .G <MOD <RANDOM> <LENGTH ,LOSLIST>>>>
+	<COND (<L? .H <LENGTH ,LOSLIST>>)
+	      (<SET H .G>)>
+	<RPLACD <REST ,LOSLIST .H> (<VECTOR <MOD <RANDOM> 5000>>) >
+	<AGAIN .FOO>>>
+

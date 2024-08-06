@@ -1,0 +1,10 @@
+<SETG BIG-ENOUGH? 
+   <FUNCTION FOO (K)
+      <COND (<G? .K 0> ())
+            (T <FAIL>)>>> 
+
+<SETG TL
+   <FUNCTION (K)
+      <GATE M (T <SET K <+ .K 1>>)>
+      <BIG-ENOUGH? .K>
+      .K>>
